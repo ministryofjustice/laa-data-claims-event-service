@@ -1,0 +1,39 @@
+# To get started with Dependabot version updates, you'll need to specify which
+# package ecosystems to update and where the package manifests are located.
+# Please see the documentation for all configuration options:
+# https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+
+version: 2
+
+# Uncomment 'registries' section to receive dependabot updates for 'laa-ccms-spring-boot-common'.
+# Ensure you have created a personal access token in GitHub and configured it with repo, write:packages and read:packages access.
+# The token must also be authorized with (MoJ) SSO. See link below for guidance:
+# https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic
+#registries:
+#  spring-boot-common-github-packages:
+#    type: maven-repository
+#    url: https://maven.pkg.github.com/ministryofjustice/laa-ccms-spring-boot-common
+#    username: <your-username-here>
+#    password: ${{ secrets.REPO_TOKEN }}
+
+updates:
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    registries: "*"
+    groups:
+      gradle-updates:
+        exclude-patterns:
+          - "uk.gov.laa.springboot.microservice.*"
+      internal-packages:
+        patterns:
+          - "uk.gov.laa.springboot.microservice*"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      github-actions:
+        patterns:
+          - "**"

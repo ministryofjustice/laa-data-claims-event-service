@@ -1,0 +1,51 @@
+plugins {
+    id 'org.openapi.generator' version '7.12.0'
+    id 'uk.gov.laa.ccms.springboot.laa-ccms-spring-boot-gradle-plugin'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6'
+    implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
+}
+
+sourceSets.main.java.srcDirs += ['generated/src/main/java']
+
+checkstyleMain.exclude "*"
+
+openApiGenerate {
+    generatorName = "spring"
+    inputSpec = "$rootDir/spring-boot-microservice-api/open-api-specification.yml".toString()
+    outputDir = "$rootDir/spring-boot-microservice-api/generated".toString()
+    apiPackage = "uk.gov.justice.laa.springboot.microservice.api"
+    invokerPackage = "uk.gov.justice.laa.springboot.microservice.invoker"
+    modelPackage = "uk.gov.justice.laa.springboot.microservice.model"
+    configOptions = [
+            generateBuilders    : "true",
+            interfaceOnly       : "true", // This will only generate interfaces, not implementations
+            serializableModel   : "true",
+            skipDefaultInterface: "true",
+            useJakartaEe        : "true",
+            useSpringBoot3      : "true",
+            useTags             : "true",
+    ]
+}
+
+compileJava.dependsOn 'openApiGenerate'
+
+clean {
+    delete "$rootDir/spring-boot-microservice-api/generated"
+}
+
+// disable for overall project when running a build
+tasks.named('bootJar') {
+    enabled = false
+}
+
+tasks.named('bootRun') {
+    enabled = false
+}

@@ -1,0 +1,24 @@
+pluginManagement {
+    repositories {
+        maven {
+            name = "gitHubPackages"
+            url = 'https://maven.pkg.github.com/ministryofjustice/laa-ccms-spring-boot-common'
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")?.trim() ?: settings.ext.find('project.ext.gitPackageUser')
+                password = System.getenv("GITHUB_TOKEN")?.trim() ?: settings.ext.find('project.ext.gitPackageKey')
+            }
+        }
+        maven { url = "https://plugins.gradle.org/m2/" }
+        gradlePluginPortal()
+    }
+
+    plugins {
+        id 'uk.gov.laa.ccms.springboot.laa-ccms-spring-boot-gradle-plugin' version '0.0.32'
+    }
+}
+
+rootProject.name = 'laa-spring-boot-microservice-template'
+
+include 'spring-boot-microservice-api'
+include 'spring-boot-microservice-service'
+
