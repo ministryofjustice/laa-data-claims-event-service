@@ -80,6 +80,6 @@ public class ItemService {
     return itemRepository
         .findById(id)
         .orElseThrow(
-            () -> new ItemNotFoundException(String.format("No item found with id: %s", id)));
+            () -> new ItemNotFoundException("No item found with id: %s".formatted(id)));
   }
 }

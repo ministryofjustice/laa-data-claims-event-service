@@ -21,7 +21,7 @@ import uk.gov.justice.laa.bulk.claim.BulkClaimsApplication;
 @SpringBootTest(classes = BulkClaimsApplication.class)
 @AutoConfigureMockMvc
 @Transactional
-public class ItemControllerIntegrationTest {
+class ItemControllerIntegrationTest {
 
   @Autowired private MockMvc mockMvc;
 

@@ -1,7 +1,7 @@
 package uk.gov.justice.laa.bulk.claim.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -69,7 +69,7 @@ class ItemServiceTest {
     Long id = 5L;
     when(mockItemRepository.findById(id)).thenReturn(Optional.empty());
 
-    assertThrows(ItemNotFoundException.class, () -> itemService.getItem(id));
+    assertThatExceptionOfType(ItemNotFoundException.class).isThrownBy(() -> itemService.getItem(id));
 
     verify(mockItemMapper, never()).toItem(any(ItemEntity.class));
   }
@@ -109,7 +109,7 @@ class ItemServiceTest {
         ItemRequestBody.builder().name("Item Five").description("This is Item Five.").build();
     when(mockItemRepository.findById(id)).thenReturn(Optional.empty());
 
-    assertThrows(ItemNotFoundException.class, () -> itemService.updateItem(id, itemRequestBody));
+    assertThatExceptionOfType(ItemNotFoundException.class).isThrownBy(() -> itemService.updateItem(id, itemRequestBody));
 
     verify(mockItemRepository, never()).save(any(ItemEntity.class));
   }
@@ -130,7 +130,7 @@ class ItemServiceTest {
     Long id = 5L;
     when(mockItemRepository.findById(id)).thenReturn(Optional.empty());
 
-    assertThrows(ItemNotFoundException.class, () -> itemService.deleteItem(id));
+    assertThatExceptionOfType(ItemNotFoundException.class).isThrownBy(() -> itemService.deleteItem(id));
 
     verify(mockItemRepository, never()).deleteById(id);
   }
