@@ -1,9 +1,3 @@
-# laa-spring-boot-microservice-template
-[![Ministry of Justice Repository Compliance Badge](https://github-community.service.justice.gov.uk/repository-standards/api/laa-spring-boot-microservice-template/badge)](https://github-community.service.justice.gov.uk/repository-standards/laa-spring-boot-microservice-template)
-
-### ⚠️ WORK IN PROGRESS ⚠️
-This template is still under development and features may be added or subject to change.
-
 ## Overview
 
 Template GitHub repository used for Spring Boot Java microservice projects.
@@ -48,7 +42,7 @@ Ensure branch protection is set up on the `main` branch.
 (Optional) Modify the `CODEOWNERS` file to specify the teams or users authorized to approve pull requests.
 
 ### Configure Dependabot
-Change all `uk.gov.laa.springboot.microservice.*` package references to `uk.gov.laa.{application-package-name}.*`.
+Change all `uk.gov.laa.bulk.claim.*` package references to `uk.gov.laa.{application-package-name}.*`.
 
 Uncomment the `registries` section and follow the instructions in the comments.
 
@@ -89,7 +83,7 @@ Update the following files found in the `{application-name}-api` directory:
 
 #### 3. Update service subproject
 
-Rename the package name/directory - `uk.gov.justice.laa.springboot.microservice` to `uk.gov.justice.laa.{application-package-name}`
+Rename the package name/directory - `uk.gov.justice.laa.bulk.claim` to `uk.gov.justice.laa.{application-package-name}`
 under `src/integrationTest/java`, `src/main/java`, `src/test/java`.
 
 Update the following properties in `src/main/resources/application.yml` with your application details:

@@ -1,12 +1,12 @@
 # Specify java runtime base image
-FROM amazoncorretto:21-alpine
+FROM eclipse-temurin:21
 
 # Set up working directory in the container
-RUN mkdir -p /opt/laa-spring-boot-microservice/
-WORKDIR /opt/laa-spring-boot-microservice/
+RUN mkdir -p /opt/bulk-claim-service/
+WORKDIR /opt/bulk-claim-service/
 
 # Copy the JAR file into the container
-COPY spring-boot-microservice-service/build/libs/spring-boot-microservice-service-1.0.0.jar app.jar
+COPY bulk-claim-service/build/libs/bulk-claim-service-1.0.0.jar app.jar
 
 # Create a group and non-root user
 RUN addgroup -S appgroup && adduser -u 1001 -S appuser -G appgroup

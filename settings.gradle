@@ -17,8 +17,8 @@ pluginManagement {
     }
 }
 
-rootProject.name = 'laa-spring-boot-microservice-template'
+rootProject.name = 'laa-submit-a-bulk-claim-api'
 
-include 'spring-boot-microservice-api'
-include 'spring-boot-microservice-service'
+include 'bulk-claim-api'
+include 'bulk-claim-service'
 

@@ -6,7 +6,6 @@ build/
 !**/src/test/**/build/
 .DS_Store
 
-spring-boot-microservice-api/generated
 
 ### IntelliJ IDEA ###
 .idea
@@ -19,3 +18,5 @@ out/
 
 ### VS Code ###
 .vscode/
+
+bulk-claim-api/generated

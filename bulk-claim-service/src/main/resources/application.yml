@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: laa-submit-a-bulk-claim-api
+server:
+  port: 8085
+  # example database
+  datasource:
+    url: jdbc:h2:mem:itemsDb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
+  h2:
+    console:
+      enabled: true
+
+  #do not auto create db schema, use .sql scripts
+  jpa:
+    hibernate:
+      ddl-auto: none
+
+# used by actuator info endpoint
+info:
+  app:
+    name: laa-submit-a-bulk-claim-api
+    description: laa-submit-a-bulk-claim-api application that provides a REST API.
+    version: 1.0.0
+
+management:
+  # specify actuator endpoints to enable
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+  # show detailed health status
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    "org.springframework.web.filter.CommonsRequestLoggingFilter": debug
