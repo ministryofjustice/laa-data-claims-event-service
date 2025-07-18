@@ -1,8 +1,6 @@
 spring:
   application:
     name: laa-submit-a-bulk-claim-api
-server:
-  port: 8085
   # example database
   datasource:
     url: jdbc:h2:mem:itemsDb
@@ -40,3 +38,6 @@ management:
 logging:
   level:
     "org.springframework.web.filter.CommonsRequestLoggingFilter": debug
+
+server:
+  port: 8085
