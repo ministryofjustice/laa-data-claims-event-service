@@ -79,7 +79,6 @@ public class ItemService {
   private ItemEntity checkIfItemExist(Long id) {
     return itemRepository
         .findById(id)
-        .orElseThrow(
-            () -> new ItemNotFoundException("No item found with id: %s".formatted(id)));
+        .orElseThrow(() -> new ItemNotFoundException("No item found with id: %s".formatted(id)));
   }
 }

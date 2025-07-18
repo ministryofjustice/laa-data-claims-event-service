@@ -69,7 +69,8 @@ class ItemServiceTest {
     Long id = 5L;
     when(mockItemRepository.findById(id)).thenReturn(Optional.empty());
 
-    assertThatExceptionOfType(ItemNotFoundException.class).isThrownBy(() -> itemService.getItem(id));
+    assertThatExceptionOfType(ItemNotFoundException.class)
+        .isThrownBy(() -> itemService.getItem(id));
 
     verify(mockItemMapper, never()).toItem(any(ItemEntity.class));
   }
@@ -109,7 +110,8 @@ class ItemServiceTest {
         ItemRequestBody.builder().name("Item Five").description("This is Item Five.").build();
     when(mockItemRepository.findById(id)).thenReturn(Optional.empty());
 
-    assertThatExceptionOfType(ItemNotFoundException.class).isThrownBy(() -> itemService.updateItem(id, itemRequestBody));
+    assertThatExceptionOfType(ItemNotFoundException.class)
+        .isThrownBy(() -> itemService.updateItem(id, itemRequestBody));
 
     verify(mockItemRepository, never()).save(any(ItemEntity.class));
   }
@@ -130,7 +132,8 @@ class ItemServiceTest {
     Long id = 5L;
     when(mockItemRepository.findById(id)).thenReturn(Optional.empty());
 
-    assertThatExceptionOfType(ItemNotFoundException.class).isThrownBy(() -> itemService.deleteItem(id));
+    assertThatExceptionOfType(ItemNotFoundException.class)
+        .isThrownBy(() -> itemService.deleteItem(id));
 
     verify(mockItemRepository, never()).deleteById(id);
   }
