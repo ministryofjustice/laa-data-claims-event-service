@@ -25,7 +25,7 @@ public class WebClientConfiguration {
    * using a WebClient instance.
    *
    * @param properties The configuration properties required to initialize the WebClient, including
-   *                   the base URL and access token for the Provider Details API.
+   *     the base URL and access token for the Provider Details API.
    * @return An instance of {@link ProviderDetailsRestService} for interacting with the Provider
    *     Details API.
    */
@@ -41,9 +41,7 @@ public class WebClientConfiguration {
 
   private WebClient createWebClient(final ApiProperties apiProperties) {
     final ExchangeStrategies strategies =
-        ExchangeStrategies.builder()
-            .codecs(ClientCodecConfigurer::defaultCodecs)
-            .build();
+        ExchangeStrategies.builder().codecs(ClientCodecConfigurer::defaultCodecs).build();
     return WebClient.builder()
         .baseUrl(apiProperties.getUrl())
         .defaultHeader(HttpHeaders.AUTHORIZATION, apiProperties.getAccessToken())
