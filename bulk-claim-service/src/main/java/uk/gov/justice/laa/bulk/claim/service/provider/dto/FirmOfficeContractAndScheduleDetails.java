@@ -4,9 +4,10 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * A data transfer object (DTO) representing the details of a firm's office contract and its schedule.
+ * A data transfer object (DTO) representing the details of a firm's office contract and its
+ * schedule.
  *
- * <p>The information from this record was taken from the Provider Details API.</p>
+ * <p>The information from this record was taken from the Provider Details API.
  *
  * @param contractType: The type of the contract.
  * @param contractDescription: A description of the contract.
@@ -48,7 +49,4 @@ public record FirmOfficeContractAndScheduleDetails(
     LocalDate scheduleStartDate,
     LocalDate scheduleEndDate,
     List<FirmOfficeContractAndScheduleLine> scheduleLines,
-    List<NmsAuthDetails> nmsAuths
-) {
-
-}
+    List<NmsAuthDetails> nmsAuths) {}

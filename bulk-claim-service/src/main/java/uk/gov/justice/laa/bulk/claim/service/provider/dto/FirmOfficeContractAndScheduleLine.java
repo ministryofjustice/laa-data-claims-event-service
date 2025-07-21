@@ -2,11 +2,10 @@ package uk.gov.justice.laa.bulk.claim.service.provider.dto;
 
 import java.time.LocalDate;
 
-
 /**
  * A data transfer object (DTO) representing a line item in a firm's office contract and schedule.
  *
- * <p>The information from this record was taken from the Provider Details API.</p>
+ * <p>The information from this record was taken from the Provider Details API.
  *
  * @param areaOfLaw The area of law relevant to the contract line.
  * @param categoryOfLaw The category of law relevant to the contract line.
@@ -52,7 +51,4 @@ public record FirmOfficeContractAndScheduleLine(
     String cancelReason,
     LocalDate cancelDate,
     LocalDate closedDate,
-    String closedReason
-) {
-
-}
+    String closedReason) {}

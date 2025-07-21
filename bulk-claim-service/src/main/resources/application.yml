@@ -41,3 +41,10 @@ logging:
 
 server:
   port: 8085
+
+laa:
+  bulk:
+    provider-details-api:
+      hostname: ${CAAB_EBS_API_HOSTNAME}
+      url: ${laa.ccms.ebs-api.hostname}
+      accessToken: ${CAAB_EBS_API_ACCESS_TOKEN}

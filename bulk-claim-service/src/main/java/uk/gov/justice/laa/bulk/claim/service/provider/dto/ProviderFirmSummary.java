@@ -3,7 +3,7 @@ package uk.gov.justice.laa.bulk.claim.service.provider.dto;
 /**
  * A data transfer object (DTO) that represents a summary of a provider firm.
  *
- * <p>The information from this record was taken from the Provider Details API.</p>
+ * <p>The information from this record was taken from the Provider Details API.
  *
  * @param firmNumber The firm number.
  * @param firmId The firm ID.
@@ -18,12 +18,15 @@ package uk.gov.justice.laa.bulk.claim.service.provider.dto;
  * @param companyHouseNumber The company house number.
  * @author Jamie Briggs
  */
-
-public record ProviderFirmSummary(String firmNumber, int firmId, int ccmsFirmId,
-                                  Integer parentFirmId,
-                                  String firmName, String firmType, String constitutionalStatus,
-                                  String solicitorAdvocateYN, String advocateLevel,
-                                  String barCouncilRoll,
-                                  String companyHouseNumber) {
-
-}
+public record ProviderFirmSummary(
+    String firmNumber,
+    int firmId,
+    int ccmsFirmId,
+    Integer parentFirmId,
+    String firmName,
+    String firmType,
+    String constitutionalStatus,
+    String solicitorAdvocateYN,
+    String advocateLevel,
+    String barCouncilRoll,
+    String companyHouseNumber) {}
