@@ -8,10 +8,10 @@ import java.util.List;
  *
  * <p>The information from this record was taken from the Provider Details API.
  *
- * @param firm: A summary of the provider firm.
- * @param office: A summary of the office associated with the provider firm.
- * @param pds: A flag indicating if the Provider Direct Services (PDS) is applicable.
- * @param schedules: A list of detailed records containing contract and schedule information for the
+ * @param firm A summary of the provider firm.
+ * @param office A summary of the office associated with the provider firm.
+ * @param pds A flag indicating if the Provider Direct Services (PDS) is applicable.
+ * @param schedules A list of detailed records containing contract and schedule information for the
  *     firm office.
  * @author Jamie Briggs
  */

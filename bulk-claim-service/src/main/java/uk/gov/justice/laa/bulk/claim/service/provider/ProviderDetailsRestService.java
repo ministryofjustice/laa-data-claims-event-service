@@ -1,21 +1,29 @@
 package uk.gov.justice.laa.bulk.claim.service.provider;
 
-import java.time.LocalDate;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.service.annotation.GetExchange;
+import org.springframework.web.service.annotation.HttpExchange;
 import reactor.core.publisher.Mono;
-import uk.gov.justice.laa.bulk.claim.service.provider.dto.ProviderFirmSummary;
+import uk.gov.justice.laa.bulk.claim.service.provider.dto.ProviderFirmOfficeContractAndSchedule;
 
-@Component
-@RequiredArgsConstructor
-public class ProviderDetailsRestService implements ProviderDetailsService {
+/**
+ * REST service interface for fetching provider office details and schedules. This interface
+ * communicates with the Provider Details API.
+ *
+ * @author Jamie Briggs
+ */
+@HttpExchange("/provider-offices")
+public interface ProviderDetailsRestService {
 
-  private final WebClient providerDetailsWebClient;
-
-  @Override
-  public Mono<ProviderFirmSummary> getProviderFirmSummary(
-      String firmNumber, String areaOfLaw, LocalDate effectiveDate) {
-    return Mono.empty();
-  }
+  /**
+   * Get all provider office schedule details based on the provider office code.
+   *
+   * @param officeCode The firm office code
+   * @param areaOfLaw The area of law code
+   * @return The provider firm summary
+   */
+  @GetExchange("/{officeCode}/schedules")
+  Mono<ProviderFirmOfficeContractAndSchedule> getProviderFirmSchedules(
+      @PathVariable String officeCode, @RequestParam String areaOfLaw);
 }

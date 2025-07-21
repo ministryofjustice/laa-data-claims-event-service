@@ -44,6 +44,8 @@ dependencies {
     runtimeOnly 'com.h2database:h2'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.testcontainers:mockserver:1.21.3'
+    testImplementation 'org.mock-server:mockserver-client-java:5.15.0'
 
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
