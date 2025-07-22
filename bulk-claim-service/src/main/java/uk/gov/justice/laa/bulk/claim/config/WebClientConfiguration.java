@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.bulk.claim.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,6 +17,7 @@ import uk.gov.justice.laa.bulk.claim.service.provider.ProviderDetailsRestService
  *
  * @author Jamie Briggs
  */
+@Slf4j
 @Configuration
 @EnableConfigurationProperties({ProviderDetailsApiProperties.class})
 public class WebClientConfiguration {
@@ -39,7 +41,13 @@ public class WebClientConfiguration {
     return factory.createClient(ProviderDetailsRestService.class);
   }
 
-  private WebClient createWebClient(final ApiProperties apiProperties) {
+  /**
+   * Creates a WebClient instance using the provided configuration properties.
+   *
+   * @param apiProperties The configuration properties for the API.
+   * @return A WebClient instance.
+   */
+  public static WebClient createWebClient(final ApiProperties apiProperties) {
     final ExchangeStrategies strategies =
         ExchangeStrategies.builder().codecs(ClientCodecConfigurer::defaultCodecs).build();
     return WebClient.builder()
