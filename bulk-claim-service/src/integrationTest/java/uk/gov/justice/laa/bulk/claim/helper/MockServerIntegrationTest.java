@@ -4,9 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.text.SimpleDateFormat;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.mockserver.client.MockServerClient;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.support.WebClientAdapter;
@@ -24,13 +25,13 @@ public class MockServerIntegrationTest {
       DockerImageName.parse("mockserver/mockserver")
           .withTag("mockserver-" + MockServerClient.class.getPackage().getImplementationVersion());
 
-  protected MockServerContainer mockServerContainer;
-  protected MockServerClient mockServerClient;
+  protected static MockServerContainer mockServerContainer;
+  protected static MockServerClient mockServerClient;
 
-  protected ObjectMapper objectMapper = new ObjectMapper();
+  protected static ObjectMapper objectMapper = new ObjectMapper();
 
-  @BeforeEach
-  void beforeEveryTest() {
+  @BeforeAll
+  static void beforeEveryTest() {
     // Skip tests if Docker is unavailable
     Assumptions.assumeTrue(
         DockerClientFactory.instance().isDockerAvailable(),
@@ -75,16 +76,11 @@ public class MockServerIntegrationTest {
 
   @AfterEach
   void tearDown() {
-    try {
-      if (mockServerClient != null) {
-        mockServerClient.reset();
-      }
-    } catch (Exception e) {
-      System.err.println("Error resetting MockServerClient: " + e.getMessage());
-    } finally {
-      if (mockServerContainer != null && mockServerContainer.isRunning()) {
-        mockServerContainer.stop();
-      }
-    }
+    mockServerClient.reset();
+  }
+
+  @AfterAll
+  static void afterAll() {
+    mockServerContainer.stop();
   }
 }
