@@ -32,7 +32,7 @@ import reactor.core.publisher.Mono;
 import uk.gov.justice.laa.bulk.claim.service.provider.dto.ProviderFirmOfficeContractAndSchedule;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class ProviderDetailsRestServiceIT {
+class ProviderDetailsRestServiceIntegrationTest {
 
   private static final DockerImageName MOCKSERVER_IMAGE =
       DockerImageName.parse("mockserver/mockserver")

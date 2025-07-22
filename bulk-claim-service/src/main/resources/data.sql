@@ -1,4 +1,5 @@
 -- Used to seed the example Items database
+DELETE FROM ITEMS;
 INSERT INTO ITEMS(NAME, DESCRIPTION) VALUES('Item One', 'This is a description of Item One.');
 INSERT INTO ITEMS(NAME, DESCRIPTION) VALUES('Item Two', 'This is a description of Item Two.');
 INSERT INTO ITEMS(NAME, DESCRIPTION) VALUES('Item Three', 'This is a description of Item Three.');
