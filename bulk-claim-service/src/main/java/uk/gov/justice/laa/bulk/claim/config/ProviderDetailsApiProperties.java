@@ -7,7 +7,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *
  * @author Jamie Briggs
  */
-@ConfigurationProperties(prefix = "laa.bulk.provider-details-api")
+@ConfigurationProperties(prefix = "laa.provider-details-api")
 public class ProviderDetailsApiProperties extends ApiProperties {
 
   public ProviderDetailsApiProperties(String url, String host, int port, String accessToken) {

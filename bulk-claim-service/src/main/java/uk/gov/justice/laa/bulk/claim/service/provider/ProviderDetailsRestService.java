@@ -1,5 +1,7 @@
 package uk.gov.justice.laa.bulk.claim.service.provider;
 
+import java.time.LocalDate;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -29,11 +31,37 @@ public interface ProviderDetailsRestService {
    * </ul>
    *
    * @param officeCode The firm office code
-   * @param areaOfLaw The area of law code
+   * @param areaOfLaw  The area of law code
    * @return The provider firm summary
    */
   @GetExchange("/{officeCode}/schedules")
   Mono<ProviderFirmOfficeContractAndScheduleDto> getProviderFirmSchedules(
       final @PathVariable String officeCode,
       final @RequestParam(required = false) String areaOfLaw);
+
+  /**
+   * Get all provider office schedule details based on the provider office code. Can return the
+   * following HTTP statuses:
+   *
+   * <ul>
+   *   <li>200 - Success
+   *   <li>204 - No content (Happens when a firm has no schedules).
+   *   <li>409 - Conflict - Ex Cache being Loaded.
+   *   <li>500 - Internal Server Error.
+   * </ul>
+   *
+   * @param officeCode    The firm office code
+   * @param areaOfLaw     The area of law code
+   * @param effectiveDate The contract effective date for testing on lower environments. Should not
+   *                      be used for production environments.
+   * @return The provider firm summary
+   */
+  @GetExchange("/{officeCode}/schedules")
+  Mono<ProviderFirmOfficeContractAndScheduleDto> getProviderFirmSchedules(
+      final @PathVariable String officeCode,
+      final @RequestParam(required = false) String areaOfLaw,
+      final @RequestParam(required = false)
+      @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate effectiveDate);
+
+
 }
