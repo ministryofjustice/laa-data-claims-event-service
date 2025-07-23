@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.service.annotation.GetExchange;
 import org.springframework.web.service.annotation.HttpExchange;
 import reactor.core.publisher.Mono;
-import uk.gov.justice.laa.bulk.claim.service.provider.dto.ProviderFirmOfficeContractAndSchedule;
+import uk.gov.justice.laa.bulk.provider.model.ProviderFirmOfficeContractAndScheduleDto;
 
 /**
  * REST service interface for fetching provider office details and schedules. This interface
@@ -33,7 +33,7 @@ public interface ProviderDetailsRestService {
    * @return The provider firm summary
    */
   @GetExchange("/{officeCode}/schedules")
-  Mono<ProviderFirmOfficeContractAndSchedule> getProviderFirmSchedules(
+  Mono<ProviderFirmOfficeContractAndScheduleDto> getProviderFirmSchedules(
       final @PathVariable String officeCode,
       final @RequestParam(required = false) String areaOfLaw);
 }

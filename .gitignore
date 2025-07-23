@@ -20,6 +20,7 @@ out/
 .vscode/
 
 bulk-claim-api/generated
+provider-details-api-reference/generated
 
 # Ignore local application config
 application-local.yaml

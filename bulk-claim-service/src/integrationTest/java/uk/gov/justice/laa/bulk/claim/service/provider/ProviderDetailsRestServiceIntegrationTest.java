@@ -16,7 +16,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 import uk.gov.justice.laa.bulk.claim.helper.MockServerIntegrationTest;
-import uk.gov.justice.laa.bulk.claim.service.provider.dto.ProviderFirmOfficeContractAndSchedule;
+import uk.gov.justice.laa.bulk.provider.model.ProviderFirmOfficeContractAndScheduleDto;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class ProviderDetailsRestServiceIntegrationTest extends MockServerIntegrationTest {
@@ -51,11 +51,11 @@ class ProviderDetailsRestServiceIntegrationTest extends MockServerIntegrationTes
                 .withBody(expectedBody));
 
     // When
-    Mono<ProviderFirmOfficeContractAndSchedule> result =
+    Mono<ProviderFirmOfficeContractAndScheduleDto> result =
         providerDetailsRestService.getProviderFirmSchedules(officeCode, areaOfLaw);
 
     // Then
-    Optional<ProviderFirmOfficeContractAndSchedule> providerFirmSummary = result.blockOptional();
+    Optional<ProviderFirmOfficeContractAndScheduleDto> providerFirmSummary = result.blockOptional();
     assertThat(providerFirmSummary).isPresent();
     // Check all fields mapped correctly by serializing the result and comparing to expected JSON
     String resultJson = objectMapper.writeValueAsString(providerFirmSummary.get());
@@ -84,11 +84,11 @@ class ProviderDetailsRestServiceIntegrationTest extends MockServerIntegrationTes
                 .withBody(expectedBody));
 
     // When
-    Mono<ProviderFirmOfficeContractAndSchedule> result =
+    Mono<ProviderFirmOfficeContractAndScheduleDto> result =
         providerDetailsRestService.getProviderFirmSchedules(officeCode, areaOfLaw);
 
     // Then
-    Optional<ProviderFirmOfficeContractAndSchedule> providerFirmSummary = result.blockOptional();
+    Optional<ProviderFirmOfficeContractAndScheduleDto> providerFirmSummary = result.blockOptional();
     assertThat(providerFirmSummary).isPresent();
     // Check all fields mapped correctly by serializing the result and comparing to expected JSON
     String resultJson = objectMapper.writeValueAsString(providerFirmSummary.get());
@@ -115,13 +115,13 @@ class ProviderDetailsRestServiceIntegrationTest extends MockServerIntegrationTes
                 .withHeader("Content-Type", "text/html"));
 
     // When
-    Mono<ProviderFirmOfficeContractAndSchedule> result =
+    Mono<ProviderFirmOfficeContractAndScheduleDto> result =
         providerDetailsRestService
             .getProviderFirmSchedules(officeCode, areaOfLaw)
             .onErrorResume(throwable -> Mono.empty());
 
     // Then
-    Optional<ProviderFirmOfficeContractAndSchedule> providerFirmSummary = result.blockOptional();
+    Optional<ProviderFirmOfficeContractAndScheduleDto> providerFirmSummary = result.blockOptional();
     // Expect empty Optional as no body returned, but due to no active contracts therefor an
     assertThat(providerFirmSummary).isEmpty();
   }
@@ -145,7 +145,7 @@ class ProviderDetailsRestServiceIntegrationTest extends MockServerIntegrationTes
                 .withHeader("Content-Type", "application/json"));
 
     // When
-    Mono<ProviderFirmOfficeContractAndSchedule> result =
+    Mono<ProviderFirmOfficeContractAndScheduleDto> result =
         providerDetailsRestService.getProviderFirmSchedules(officeCode, areaOfLaw);
 
     // Then
@@ -173,7 +173,7 @@ class ProviderDetailsRestServiceIntegrationTest extends MockServerIntegrationTes
                 .withHeader("Content-Type", "application/json"));
 
     // When
-    Mono<ProviderFirmOfficeContractAndSchedule> result =
+    Mono<ProviderFirmOfficeContractAndScheduleDto> result =
         providerDetailsRestService.getProviderFirmSchedules(officeCode, areaOfLaw);
 
     // Then

@@ -21,13 +21,14 @@ jacocoTestReport {
 jacocoTestCoverageVerification {
     afterEvaluate {
         classDirectories.setFrom(files(classDirectories.files.collect {
-            fileTree(dir: it, exclude: ['**/BulkClaimsApplication.class', '**/dto/**']) // Exclude all "dto" packages
+            fileTree(dir: it, exclude: ['**/BulkClaimsApplication.class']) // Exclude all "dto" packages
         }))
     }
 }
 
 dependencies {
     implementation project(':bulk-claim-api')
+    implementation project(':provider-details-api-reference')
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
