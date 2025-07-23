@@ -45,5 +45,5 @@ server:
 laa:
   provider-details-api:
     hostname: ${PROVIDER_DETAILS_API_HOSTNAME}
-    url: ${laa.bulk.provider-details-api.hostname}
+    url: ${laa.provider-details-api.hostname}
     accessToken: ${PROVIDER_DETAILS_API_ACCESS_TOKEN}

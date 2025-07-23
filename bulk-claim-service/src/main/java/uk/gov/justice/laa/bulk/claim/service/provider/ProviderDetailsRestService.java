@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.service.annotation.GetExchange;
 import org.springframework.web.service.annotation.HttpExchange;
 import reactor.core.publisher.Mono;
-import uk.gov.justice.laa.bulk.provider.model.ProviderFirmOfficeContractAndScheduleDto;
+import uk.gov.justice.laa.provider.model.ProviderFirmOfficeContractAndScheduleDto;
 
 /**
  * REST service interface for fetching provider office details and schedules. This interface
@@ -31,7 +31,7 @@ public interface ProviderDetailsRestService {
    * </ul>
    *
    * @param officeCode The firm office code
-   * @param areaOfLaw  The area of law code
+   * @param areaOfLaw The area of law code
    * @return The provider firm summary
    */
   @GetExchange("/{officeCode}/schedules")
@@ -50,18 +50,16 @@ public interface ProviderDetailsRestService {
    *   <li>500 - Internal Server Error.
    * </ul>
    *
-   * @param officeCode    The firm office code
-   * @param areaOfLaw     The area of law code
+   * @param officeCode The firm office code
+   * @param areaOfLaw The area of law code
    * @param effectiveDate The contract effective date for testing on lower environments. Should not
-   *                      be used for production environments.
+   *     be used for production environments.
    * @return The provider firm summary
    */
   @GetExchange("/{officeCode}/schedules")
   Mono<ProviderFirmOfficeContractAndScheduleDto> getProviderFirmSchedules(
       final @PathVariable String officeCode,
       final @RequestParam(required = false) String areaOfLaw,
-      final @RequestParam(required = false)
-      @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate effectiveDate);
-
-
+      final @RequestParam(required = false) @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate
+              effectiveDate);
 }

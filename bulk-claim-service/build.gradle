@@ -21,7 +21,7 @@ jacocoTestReport {
 jacocoTestCoverageVerification {
     afterEvaluate {
         classDirectories.setFrom(files(classDirectories.files.collect {
-            fileTree(dir: it, exclude: ['**/BulkClaimsApplication.class']) // Exclude all "dto" packages
+            fileTree(dir: it, exclude: ['**/BulkClaimsApplication.class'])
         }))
     }
 }

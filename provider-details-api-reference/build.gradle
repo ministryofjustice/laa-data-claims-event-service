@@ -21,9 +21,9 @@ openApiGenerate {
     generatorName = "spring"
     inputSpec = "$rootDir/provider-details-api-reference/open-api-specification.json".toString()
     outputDir = "$rootDir/provider-details-api-reference/generated".toString()
-    apiPackage = "uk.gov.justice.laa.bulk.provider.api"
-    invokerPackage = "uk.gov.justice.laa.bulk.provider.invoker"
-    modelPackage = "uk.gov.justice.laa.bulk.provider.model"
+    apiPackage = "uk.gov.justice.laa.provider.api"
+    invokerPackage = "uk.gov.justice.laa.provider.invoker"
+    modelPackage = "uk.gov.justice.laa.provider.model"
     configOptions = [
             generateBuilders    : "true",
             interfaceOnly       : "true", // This will only generate interfaces, not implementations
