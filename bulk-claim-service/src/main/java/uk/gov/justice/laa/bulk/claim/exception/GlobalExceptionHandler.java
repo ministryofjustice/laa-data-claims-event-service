@@ -1,7 +1,5 @@
 package uk.gov.justice.laa.bulk.claim.exception;
 
-import static org.springframework.http.HttpStatus.NOT_FOUND;
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -12,17 +10,6 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
-
-  /**
-   * The handler for ItemNotFoundException.
-   *
-   * @param exception the exception
-   * @return the response status with error message
-   */
-  @ExceptionHandler(ItemNotFoundException.class)
-  public ResponseEntity<String> handleItemNotFound(ItemNotFoundException exception) {
-    return ResponseEntity.status(NOT_FOUND).body(exception.getMessage());
-  }
 
   /**
    * The handler for Exception.
