@@ -8,6 +8,7 @@ repositories {
 }
 
 dependencies {
+
     /**
      * Upgrades to resolve vulnerabilities
      */
@@ -27,11 +28,11 @@ checkstyleMain.exclude "*"
 
 openApiGenerate {
     generatorName = "spring"
-    inputSpec = "$rootDir/bulk-claim-api/open-api-specification.yml".toString()
-    outputDir = "$rootDir/bulk-claim-api/generated".toString()
-    apiPackage = "uk.gov.justice.laa.bulk.claim.api"
-    invokerPackage = "uk.gov.justice.laa.bulk.claim.invoker"
-    modelPackage = "uk.gov.justice.laa.bulk.claim.model"
+    inputSpec = "$rootDir/provider-details-api-reference/open-api-specification.json".toString()
+    outputDir = "$rootDir/provider-details-api-reference/generated".toString()
+    apiPackage = "uk.gov.justice.laa.provider.api"
+    invokerPackage = "uk.gov.justice.laa.provider.invoker"
+    modelPackage = "uk.gov.justice.laa.provider.model"
     configOptions = [
             generateBuilders    : "true",
             interfaceOnly       : "true", // This will only generate interfaces, not implementations
@@ -46,7 +47,7 @@ openApiGenerate {
 compileJava.dependsOn 'openApiGenerate'
 
 clean {
-    delete "$rootDir/bulk-claim-api/generated"
+    delete "$rootDir/provider-details-api-reference/generated"
 }
 
 // disable for overall project when running a build

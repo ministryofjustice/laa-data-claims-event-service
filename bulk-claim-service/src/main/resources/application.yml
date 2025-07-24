@@ -41,3 +41,9 @@ logging:
 
 server:
   port: 8085
+
+laa:
+  provider-details-api:
+    hostname: ${PROVIDER_DETAILS_API_HOSTNAME}
+    url: ${laa.provider-details-api.hostname}
+    accessToken: ${PROVIDER_DETAILS_API_ACCESS_TOKEN}

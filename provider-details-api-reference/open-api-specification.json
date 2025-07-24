@@ -1,0 +1,1162 @@
+{
+  "openapi" : "3.1.0",
+  "info" : {
+    "title" : "Provider and User Data APIs",
+    "description" : "<table>\n    <tr>\n        <td colspan=\"100%\" padding-top=\"0px\" padding-bottom=\"0px\">\n            <b>This API enables seamless access to comprehensive details about provider firms, their offices, associated\n                users, and internal user. </b>\n        </td>\n    </tr>\n    <tr>\n        <td colspan=\"50%\" padding-right=\"50px\">\n            <b>Provider Firm Overview</b>\n            <ul>\n                <li>High-level information about the provider firm.</li>\n                <li>Details about all offices linked to the provider firm.</li>\n                <li>Information on users and fee earners associated with the provider firm.</li>\n            </ul>\n            <b>Provider Office Details</b>\n            <p>Key information about individual offices, including:</p>\n            <ul>\n                <li>Bank account details.</li>\n                <li>Contract and schedule details.</li>\n                <li>NMS authorizations.</li>\n                <li>Users associated with each office.</li>\n            </ul>\n            <b>Provider User Details</b>\n            <p>Granular information about individual users, including:</p>\n            <ul>\n                <li>User roles.</li>\n                <li>Associations with provider offices.</li>\n            </ul>\n            <b>Useful Links</b>\n            <ul>\n                <li>\n                    <a href=\"https://dsdmoj.atlassian.net/wiki/spaces/PDA/pages/4737466388/PDA+Runbook\" target=\"_blank\" rel=\"noopener noreferrer\">Runbook</a>\n                </li>\n                <li>\n                    <a href=\"https://mojdt.slack.com/archives/C06F768A3F1\" target=\"_blank\" rel=\"noopener noreferrer\">Slack Channel</a>\n                </li>\n                <li>\n                    <a href=\"https://grafana.live.cloud-platform.service.justice.gov.uk/dashboards?query=provider%20details%20api\" target=\"_blank\" rel=\"noopener noreferrer\">Grafana Dashboards</a>\n                </li>\n                <li>\n                    <a href=\"https://github.com/ministryofjustice/laa-cwa-data-api\" target=\"_blank\" rel=\"noopener noreferrer\">Github Source Code</a>\n                </li>\n            </ul>\n        </td>\n        <td colspan=\"50%\" padding-left=\"50px\"  horizontal-align=\"right\"><img src=\"/images/firmhierarchy.png\"/></td>\n    </tr>\n</table>\n\n<br>\n<b>This service is under active development and is deployed frequently.</b><br>\n    While we strive not to change endpoint contracts, we may deprecate existing endpoints and introduce new ones.\n    Please check the Swagger page regularly for up-to-date information.\n\n\n",
+    "version" : "0.6.41"
+  },
+  "components" : {
+    "schemas" : {
+      "OfficeCodesDto" : {
+        "type" : "object",
+        "properties" : {
+          "officeCodes" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        }
+      },
+      "GeoLocation" : {
+        "type" : "object",
+        "properties" : {
+          "longitude" : {
+            "type" : "number",
+            "format" : "double"
+          },
+          "latitude" : {
+            "type" : "number",
+            "format" : "double"
+          },
+          "easting" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "northing" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "statusMessage" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ProviderFirmOffice" : {
+        "type" : "object",
+        "properties" : {
+          "firmOfficeId" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "ccmsFirmOfficeId" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "firmOfficeCode" : {
+            "type" : "string"
+          },
+          "officeName" : {
+            "type" : "string"
+          },
+          "officeCodeAlt" : {
+            "type" : "string"
+          },
+          "type" : {
+            "type" : "string"
+          },
+          "addressLine1" : {
+            "type" : "string"
+          },
+          "addressLine2" : {
+            "type" : "string"
+          },
+          "addressLine3" : {
+            "type" : "string"
+          },
+          "addressLine4" : {
+            "type" : "string"
+          },
+          "city" : {
+            "type" : "string"
+          },
+          "county" : {
+            "type" : "string"
+          },
+          "postCode" : {
+            "type" : "string"
+          },
+          "dxCentre" : {
+            "type" : "string"
+          },
+          "dxNumber" : {
+            "type" : "string"
+          },
+          "telephoneAreaCode" : {
+            "type" : "string"
+          },
+          "telephoneNumber" : {
+            "type" : "string"
+          },
+          "faxAreaCode" : {
+            "type" : "string"
+          },
+          "faxNumber" : {
+            "type" : "string"
+          },
+          "emailAddress" : {
+            "type" : "string"
+          },
+          "vatRegistrationNumber" : {
+            "type" : "string"
+          },
+          "headOffice" : {
+            "type" : "string"
+          },
+          "creationDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "lscRegion" : {
+            "type" : "string"
+          },
+          "lscBidZone" : {
+            "type" : "string"
+          },
+          "lscAreaOffice" : {
+            "type" : "string"
+          },
+          "cjsForceName" : {
+            "type" : "string"
+          },
+          "localAuthority" : {
+            "type" : "string"
+          },
+          "policeStationAreaName" : {
+            "type" : "string"
+          },
+          "dutySolicitorAreaName" : {
+            "type" : "string"
+          },
+          "geoLocation" : {
+            "$ref" : "#/components/schemas/GeoLocation"
+          }
+        }
+      },
+      "ProviderFirmOfficeListDto" : {
+        "type" : "object",
+        "properties" : {
+          "firm" : {
+            "$ref" : "#/components/schemas/ProviderFirmSummary"
+          },
+          "offices" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ProviderFirmOffice"
+            }
+          }
+        }
+      },
+      "ProviderFirmSummary" : {
+        "type" : "object",
+        "properties" : {
+          "firmNumber" : {
+            "type" : "string"
+          },
+          "firmId" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "ccmsFirmId" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "parentFirmId" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "firmName" : {
+            "type" : "string"
+          },
+          "firmType" : {
+            "type" : "string"
+          },
+          "constitutionalStatus" : {
+            "type" : "string"
+          },
+          "solicitorAdvocateYN" : {
+            "type" : "string"
+          },
+          "advocateLevel" : {
+            "type" : "string"
+          },
+          "barCouncilRoll" : {
+            "type" : "string"
+          },
+          "companyHouseNumber" : {
+            "type" : "string"
+          }
+        }
+      },
+      "OfficeSearchForSchedulesDto" : {
+        "type" : "object",
+        "properties" : {
+          "categoriesOfLaw" : {
+            "type" : "array",
+            "description" : "The categories of law that are needed",
+            "enum" : [ "CRIME LOWER.APPEALS", "CRIME LOWER.INVEST", "CRIME LOWER.PRISON", "LEGAL HELP.AAP", "LEGAL HELP.COM", "LEGAL HELP.CON", "LEGAL HELP.DEB", "LEGAL HELP.DISC", "LEGAL HELP.EDU", "LEGAL HELP.ELA", "LEGAL HELP.EMP", "LEGAL HELP.HOU", "LEGAL HELP.IMMAS", "LEGAL HELP.IMMOT", "LEGAL HELP.MAT", "LEGAL HELP.MED", "LEGAL HELP.MHE", "LEGAL HELP.MSC", "LEGAL HELP.PI", "LEGAL HELP.PUB", "LEGAL HELP.WB", "MEDIATION.MEDI" ],
+            "example" : [ "CRIME LOWER.ALL", "CRIME LOWER.APPEALS", "CRIME LOWER.INVEST", "CRIME LOWER.PRISON", "LEGAL HELP.AAP", "LEGAL HELP.COM", "LEGAL HELP.CON", "LEGAL HELP.DEB", "LEGAL HELP.DISC", "LEGAL HELP.EDU", "LEGAL HELP.ELA", "LEGAL HELP.EMP", "LEGAL HELP.HOU", "LEGAL HELP.IMMAS", "LEGAL HELP.IMMOT", "LEGAL HELP.MAT", "LEGAL HELP.MED", "LEGAL HELP.MHE", "LEGAL HELP.MSC", "LEGAL HELP.PI", "LEGAL HELP.PUB", "LEGAL HELP.WB", "MEDIATION.MEDI" ],
+            "items" : {
+              "type" : "string"
+            },
+            "minItems" : 1
+          }
+        },
+        "required" : [ "categoriesOfLaw" ]
+      },
+      "LegalAdviseSearchDto" : {
+        "type" : "object",
+        "properties" : {
+          "postCode" : {
+            "type" : "string",
+            "description" : "The postcode to search for legal advice",
+            "example" : "SW1A 1AA",
+            "minLength" : 1
+          },
+          "miles" : {
+            "type" : "number",
+            "format" : "double",
+            "description" : "The radius in miles to search for legal advice",
+            "example" : 5,
+            "minimum" : 0
+          },
+          "categoriesOfLaw" : {
+            "type" : "array",
+            "description" : "The categories of law that are needed",
+            "enum" : [ "Crime Lower.All Classes", "Crime Lower.Appeals and Reviews", "Crime Lower.Criminal Investigations and Criminal Proceedings", "Crime Lower.Prison Law", "Legal Help (Civil).Claims Against Public Authorities", "Legal Help (Civil).Clinical Negligence", "Legal Help (Civil).Community Care", "Legal Help (Civil).Consumer General Contract", "Legal Help (Civil).Debt", "Legal Help (Civil).Discrimination", "Legal Help (Civil).Early Legal Advice", "Legal Help (Civil).Education", "Legal Help (Civil).Employment", "Legal Help (Civil).Family", "Legal Help (Civil).Housing", "Legal Help (Civil).Immigration", "Legal Help (Civil).Immigration - Asylum", "Legal Help (Civil).Mental Health", "Legal Help (Civil).Personal Injury", "Legal Help (Civil).Public Law", "Legal Help (Civil).Residual(Miscellaneous)", "Legal Help (Civil).Welfare Benefits", "Mediation.Mediation" ],
+            "example" : [ "Crime Lower.All Classes", "Crime Lower.Appeals and Reviews", "Crime Lower.Criminal Investigations and Criminal Proceedings", "Crime Lower.Prison Law", "Legal Help (Civil).Claims Against Public Authorities", "Legal Help (Civil).Clinical Negligence", "Legal Help (Civil).Community Care", "Legal Help (Civil).Consumer General Contract", "Legal Help (Civil).Debt", "Legal Help (Civil).Discrimination", "Legal Help (Civil).Early Legal Advice", "Legal Help (Civil).Education", "Legal Help (Civil).Employment", "Legal Help (Civil).Family", "Legal Help (Civil).Housing", "Legal Help (Civil).Immigration", "Legal Help (Civil).Immigration - Asylum", "Legal Help (Civil).Mental Health", "Legal Help (Civil).Personal Injury", "Legal Help (Civil).Public Law", "Legal Help (Civil).Residual(Miscellaneous)", "Legal Help (Civil).Welfare Benefits", "Mediation.Mediation" ],
+            "items" : {
+              "type" : "string"
+            },
+            "minItems" : 1
+          }
+        },
+        "required" : [ "categoriesOfLaw", "miles", "postCode" ]
+      },
+      "ProviderFirmUser" : {
+        "type" : "object",
+        "properties" : {
+          "userId" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "ccmsContactId" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "userLogin" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "emailAddress" : {
+            "type" : "string"
+          },
+          "portalStatus" : {
+            "type" : "string"
+          },
+          "jobTitle" : {
+            "type" : "string"
+          },
+          "phoneNumber" : {
+            "type" : "string"
+          },
+          "startDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "attributeCode" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ProviderFirmUserDto" : {
+        "type" : "object",
+        "properties" : {
+          "firm" : {
+            "$ref" : "#/components/schemas/ProviderFirmSummary"
+          },
+          "user" : {
+            "$ref" : "#/components/schemas/ProviderFirmUser"
+          },
+          "associatedFirms" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ProviderFirmSummary"
+            }
+          }
+        }
+      },
+      "ProviderFirmOfficeSummary" : {
+        "type" : "object",
+        "properties" : {
+          "firmOfficeId" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "ccmsFirmOfficeId" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "firmOfficeCode" : {
+            "type" : "string"
+          },
+          "officeName" : {
+            "type" : "string"
+          },
+          "officeCodeAlt" : {
+            "type" : "string"
+          },
+          "type" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ProviderFirmUserFirmOfficesDtoV1" : {
+        "type" : "object",
+        "properties" : {
+          "firm" : {
+            "$ref" : "#/components/schemas/ProviderFirmSummary"
+          },
+          "officeCodes" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ProviderFirmOfficeSummary"
+            }
+          }
+        }
+      },
+      "ProviderFirmUserOfficeListDtoV1" : {
+        "type" : "object",
+        "properties" : {
+          "firm" : {
+            "$ref" : "#/components/schemas/ProviderFirmSummary"
+          },
+          "user" : {
+            "$ref" : "#/components/schemas/ProviderFirmUserSummary"
+          },
+          "offices" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ProviderFirmUserFirmOfficesDtoV1"
+            }
+          }
+        }
+      },
+      "ProviderFirmUserSummary" : {
+        "type" : "object",
+        "properties" : {
+          "userId" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "ccmsContactId" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "userLogin" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "emailAddress" : {
+            "type" : "string"
+          },
+          "portalStatus" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ProviderFirmUserListDto" : {
+        "type" : "object",
+        "properties" : {
+          "firm" : {
+            "$ref" : "#/components/schemas/ProviderFirmSummary"
+          },
+          "users" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ProviderFirmUser"
+            }
+          }
+        }
+      },
+      "ProviderFirmOfficeDto" : {
+        "type" : "object",
+        "properties" : {
+          "firm" : {
+            "$ref" : "#/components/schemas/ProviderFirmSummary"
+          },
+          "office" : {
+            "$ref" : "#/components/schemas/ProviderFirmOffice"
+          }
+        }
+      },
+      "FirmOfficeContractAndScheduleDetails" : {
+        "type" : "object",
+        "properties" : {
+          "contractType" : {
+            "type" : "string"
+          },
+          "contractDescription" : {
+            "type" : "string"
+          },
+          "contractNumber" : {
+            "type" : "string"
+          },
+          "contractReference" : {
+            "type" : "string"
+          },
+          "contractStatus" : {
+            "type" : "string"
+          },
+          "contractAuthorizationStatus" : {
+            "type" : "string"
+          },
+          "contractStartDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "contractEndDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "areaOfLaw" : {
+            "type" : "string"
+          },
+          "scheduleType" : {
+            "type" : "string"
+          },
+          "scheduleNumber" : {
+            "type" : "string"
+          },
+          "scheduleContractNumber" : {
+            "type" : "string"
+          },
+          "scheduleContractReference" : {
+            "type" : "string"
+          },
+          "scheduleAuthorizationStatus" : {
+            "type" : "string"
+          },
+          "scheduleStatus" : {
+            "type" : "string"
+          },
+          "scheduleStartDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "scheduleEndDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "scheduleLines" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FirmOfficeContractAndScheduleLine"
+            }
+          },
+          "nmsAuths" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/NmsAuthDetails"
+            }
+          }
+        }
+      },
+      "FirmOfficeContractAndScheduleLine" : {
+        "type" : "object",
+        "properties" : {
+          "areaOfLaw" : {
+            "type" : "string"
+          },
+          "categoryOfLaw" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "devolvedPowersStatus" : {
+            "type" : "string"
+          },
+          "dpTypeOfChange" : {
+            "type" : "string"
+          },
+          "dpReasonForChange" : {
+            "type" : "string"
+          },
+          "dpDateOfChange" : {
+            "type" : "string"
+          },
+          "remainderWorkFlag" : {
+            "type" : "string"
+          },
+          "minimumCasesAllowedCount" : {
+            "type" : "string"
+          },
+          "maximumCasesAllowedCount" : {
+            "type" : "string"
+          },
+          "minimumToleranceCount" : {
+            "type" : "string"
+          },
+          "maximumToleranceCount" : {
+            "type" : "string"
+          },
+          "minimumLicenseCount" : {
+            "type" : "string"
+          },
+          "maximumLicenseCount" : {
+            "type" : "string"
+          },
+          "workInProgressCount" : {
+            "type" : "string"
+          },
+          "outreach" : {
+            "type" : "string"
+          },
+          "cancelFlag" : {
+            "type" : "string"
+          },
+          "cancelReason" : {
+            "type" : "string"
+          },
+          "cancelDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "closedDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "closedReason" : {
+            "type" : "string"
+          }
+        }
+      },
+      "NmsAuthDetails" : {
+        "type" : "object",
+        "properties" : {
+          "description" : {
+            "type" : "string"
+          },
+          "minMatterStarts" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "maxMatterStarts" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "authorisedLitigator" : {
+            "type" : "string"
+          },
+          "supervision" : {
+            "type" : "string"
+          },
+          "serviceCombinations" : {
+            "type" : "string"
+          },
+          "typeOfPresence" : {
+            "type" : "string"
+          },
+          "lawSocietyChildrenFlag" : {
+            "type" : "string"
+          },
+          "advLawSocFamVioFlag" : {
+            "type" : "string"
+          },
+          "advLawSocFamNoVioFlag" : {
+            "type" : "string"
+          },
+          "resAccrSpecDomAbuseFlag" : {
+            "type" : "string"
+          },
+          "resAccrSpecOtherFlag" : {
+            "type" : "string"
+          },
+          "consortiaId" : {
+            "type" : "string"
+          },
+          "authorisationStatus" : {
+            "type" : "string"
+          },
+          "withdrawalType" : {
+            "type" : "string"
+          },
+          "withdrawalReason" : {
+            "type" : "string"
+          },
+          "attributeCategory" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ProviderFirmOfficeContractAndScheduleDto" : {
+        "type" : "object",
+        "properties" : {
+          "firm" : {
+            "$ref" : "#/components/schemas/ProviderFirmSummary"
+          },
+          "office" : {
+            "$ref" : "#/components/schemas/ProviderFirmOfficeSummary"
+          },
+          "pds" : {
+            "type" : "boolean"
+          },
+          "schedules" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FirmOfficeContractAndScheduleDetails"
+            }
+          }
+        }
+      },
+      "ProviderFirmOfficeUserListDto" : {
+        "type" : "object",
+        "properties" : {
+          "firm" : {
+            "$ref" : "#/components/schemas/ProviderFirmSummary"
+          },
+          "office" : {
+            "$ref" : "#/components/schemas/ProviderFirmOfficeSummary"
+          },
+          "users" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ProviderFirmUser"
+            }
+          }
+        }
+      },
+      "FirmOfficeContractDetails" : {
+        "type" : "object",
+        "properties" : {
+          "categoryOfLaw" : {
+            "type" : "string"
+          },
+          "subCategoryLaw" : {
+            "type" : "string"
+          },
+          "authorisationType" : {
+            "type" : "string"
+          },
+          "newMatters" : {
+            "type" : "string"
+          },
+          "contractualDevolvedPowers" : {
+            "type" : "string"
+          },
+          "remainderAuthorisation" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ProviderFirmOfficeContractDto" : {
+        "type" : "object",
+        "properties" : {
+          "firm" : {
+            "$ref" : "#/components/schemas/ProviderFirmSummary"
+          },
+          "office" : {
+            "$ref" : "#/components/schemas/ProviderFirmOfficeSummary"
+          },
+          "contracts" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FirmOfficeContractDetails"
+            }
+          }
+        }
+      },
+      "ProviderFirm" : {
+        "type" : "object",
+        "properties" : {
+          "firmNumber" : {
+            "type" : "string"
+          },
+          "firmId" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "ccmsFirmId" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "parentFirmId" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "firmName" : {
+            "type" : "string"
+          },
+          "firmType" : {
+            "type" : "string"
+          },
+          "constitutionalStatus" : {
+            "type" : "string"
+          },
+          "solicitorAdvocateYN" : {
+            "type" : "string"
+          },
+          "advocateLevel" : {
+            "type" : "string"
+          },
+          "barCouncilRoll" : {
+            "type" : "string"
+          },
+          "companyHouseNumber" : {
+            "type" : "string"
+          },
+          "indemnityReceivedDate" : {
+            "type" : "string"
+          },
+          "highRiskSupplier" : {
+            "type" : "string"
+          },
+          "holdAllPaymentsFlag" : {
+            "type" : "string"
+          },
+          "holdReason" : {
+            "type" : "string"
+          },
+          "nonProfitOrganisation" : {
+            "type" : "string"
+          },
+          "smallBusinessFlag" : {
+            "type" : "string"
+          },
+          "womenOwnedFlag" : {
+            "type" : "string"
+          },
+          "websiteUrl" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ProviderFirmListDto" : {
+        "type" : "object",
+        "properties" : {
+          "firms" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ProviderFirm"
+            }
+          }
+        }
+      },
+      "ProviderFirmDto" : {
+        "type" : "object",
+        "properties" : {
+          "firm" : {
+            "$ref" : "#/components/schemas/ProviderFirm"
+          }
+        }
+      },
+      "AssignedApplicationRoles" : {
+        "type" : "object",
+        "properties" : {
+          "applicationName" : {
+            "type" : "string"
+          },
+          "roles" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RoleDetails"
+            }
+          }
+        }
+      },
+      "ProviderFirmUserRoleListDto" : {
+        "type" : "object",
+        "properties" : {
+          "firm" : {
+            "$ref" : "#/components/schemas/ProviderFirmSummary"
+          },
+          "user" : {
+            "$ref" : "#/components/schemas/ProviderFirmUserSummary"
+          },
+          "applicationRoles" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AssignedApplicationRoles"
+            }
+          }
+        }
+      },
+      "RoleDetails" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "role" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ProviderFirmUserOfficeListDto" : {
+        "type" : "object",
+        "properties" : {
+          "firm" : {
+            "$ref" : "#/components/schemas/ProviderFirmSummary"
+          },
+          "user" : {
+            "$ref" : "#/components/schemas/ProviderFirmUserSummary"
+          },
+          "officeCodes" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ProviderFirmOfficeSummary"
+            }
+          }
+        }
+      },
+      "NmsAuthorisationOutreachOffice" : {
+        "type" : "object",
+        "properties" : {
+          "vendorSiteCode" : {
+            "type" : "string"
+          },
+          "address1" : {
+            "type" : "string"
+          },
+          "address2" : {
+            "type" : "string"
+          },
+          "address3" : {
+            "type" : "string"
+          },
+          "postCode" : {
+            "type" : "string"
+          },
+          "startDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "endDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "creationDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "outreachLocId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "additionalAgreements" : {
+            "type" : "string"
+          },
+          "frequency" : {
+            "type" : "string"
+          },
+          "authNewMatterStarts" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "geoLocation" : {
+            "$ref" : "#/components/schemas/GeoLocation"
+          }
+        }
+      },
+      "NmsAuthorisationParttimeOffice" : {
+        "type" : "object",
+        "properties" : {
+          "vendorSiteCode" : {
+            "type" : "string"
+          },
+          "address1" : {
+            "type" : "string"
+          },
+          "address2" : {
+            "type" : "string"
+          },
+          "address3" : {
+            "type" : "string"
+          },
+          "postCode" : {
+            "type" : "string"
+          },
+          "startDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "endDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "creationDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "parttimeLocId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "geoLocation" : {
+            "$ref" : "#/components/schemas/GeoLocation"
+          }
+        }
+      },
+      "ProviderFirmNmsAuthorisationOutreachOfficeListDto" : {
+        "type" : "object",
+        "properties" : {
+          "firm" : {
+            "$ref" : "#/components/schemas/ProviderFirmSummary"
+          },
+          "nmsAuthorisationOffices" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/NmsAuthorisationOutreachOffice"
+            }
+          },
+          "nmsAuthorisationParttimeOffices" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/NmsAuthorisationParttimeOffice"
+            }
+          }
+        }
+      },
+      "MediationOutreachOffice" : {
+        "type" : "object",
+        "properties" : {
+          "vendorSiteCode" : {
+            "type" : "string"
+          },
+          "outreachLocNumCode" : {
+            "type" : "string"
+          },
+          "address1" : {
+            "type" : "string"
+          },
+          "address2" : {
+            "type" : "string"
+          },
+          "address3" : {
+            "type" : "string"
+          },
+          "postCode" : {
+            "type" : "string"
+          },
+          "outreachLocStatus" : {
+            "type" : "string"
+          },
+          "retirementReason" : {
+            "type" : "string"
+          },
+          "effectiveFromDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "effectiveToDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "attributeCategory" : {
+            "type" : "string"
+          },
+          "geoLocation" : {
+            "$ref" : "#/components/schemas/GeoLocation"
+          }
+        }
+      },
+      "ProviderFirmMediationOutreachOfficeListDto" : {
+        "type" : "object",
+        "properties" : {
+          "firm" : {
+            "$ref" : "#/components/schemas/ProviderFirmSummary"
+          },
+          "mediationOutreachOffices" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MediationOutreachOffice"
+            }
+          }
+        }
+      },
+      "ProviderFirmOfficeBankAccountDetails" : {
+        "type" : "object",
+        "properties" : {
+          "vendorSiteId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "bankName" : {
+            "type" : "string"
+          },
+          "bankBranchName" : {
+            "type" : "string"
+          },
+          "sortCode" : {
+            "type" : "string"
+          },
+          "accountNumber" : {
+            "type" : "string"
+          },
+          "bankAccountName" : {
+            "type" : "string"
+          },
+          "currencyCode" : {
+            "type" : "string"
+          },
+          "accountType" : {
+            "type" : "string"
+          },
+          "primaryFlag" : {
+            "type" : "string"
+          },
+          "addressLine1" : {
+            "type" : "string"
+          },
+          "addressLine2" : {
+            "type" : "string"
+          },
+          "addressLine3" : {
+            "type" : "string"
+          },
+          "city" : {
+            "type" : "string"
+          },
+          "county" : {
+            "type" : "string"
+          },
+          "country" : {
+            "type" : "string"
+          },
+          "zip" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ProviderFirmOfficeBankAccountDto" : {
+        "type" : "object",
+        "properties" : {
+          "firm" : {
+            "$ref" : "#/components/schemas/ProviderFirmSummary"
+          },
+          "office" : {
+            "$ref" : "#/components/schemas/ProviderFirmOfficeSummary"
+          },
+          "accountDetails" : {
+            "$ref" : "#/components/schemas/ProviderFirmOfficeBankAccountDetails"
+          }
+        }
+      },
+      "FeeEarner" : {
+        "type" : "object",
+        "properties" : {
+          "subjectId" : {
+            "type" : "string"
+          },
+          "firstName" : {
+            "type" : "string"
+          },
+          "lastName" : {
+            "type" : "string"
+          },
+          "emailAddress" : {
+            "type" : "string"
+          },
+          "practitionerType" : {
+            "type" : "string"
+          },
+          "practitionerNumber" : {
+            "type" : "string"
+          },
+          "practitionerStartDate" : {
+            "type" : "string"
+          },
+          "practitionerEndDate" : {
+            "type" : "string"
+          },
+          "department" : {
+            "type" : "string"
+          },
+          "firmOfficeCodes" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        }
+      },
+      "ProviderFirmFeeEarnerListDto" : {
+        "type" : "object",
+        "properties" : {
+          "firm" : {
+            "$ref" : "#/components/schemas/ProviderFirmSummary"
+          },
+          "feeEarners" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FeeEarner"
+            }
+          }
+        }
+      },
+      "InternalUser" : {
+        "type" : "object",
+        "properties" : {
+          "username" : {
+            "type" : "string"
+          },
+          "fullname" : {
+            "type" : "string"
+          },
+          "jobTitle" : {
+            "type" : "string"
+          },
+          "emailAddress" : {
+            "type" : "string"
+          },
+          "portalStatus" : {
+            "type" : "string"
+          },
+          "lscAreaOffice" : {
+            "type" : "string"
+          },
+          "enrolmentDate" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }
+      },
+      "InternalUserRoleListDto" : {
+        "type" : "object",
+        "properties" : {
+          "user" : {
+            "$ref" : "#/components/schemas/InternalUser"
+          },
+          "applicationRoles" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AssignedApplicationRoles"
+            }
+          }
+        }
+      }
+    },
+    "securitySchemes" : {
+      "ApiKeyAuth" : {
+        "type" : "apiKey",
+        "name" : "X-Authorization",
+        "in" : "header"
+      }
+    }
+  }
+}

@@ -27,12 +27,24 @@ jacocoTestCoverageVerification {
 }
 
 dependencies {
+
+    /**
+     * Upgrades to resolve vulnerabilities
+     */
+    // Upgrade to fix Uncontrolled Recursion vulnerability in commons-lang3
+    implementation 'org.apache.commons:commons-lang3:3.18.0'
+    // Upgrade to fix vulnerabilities in tomcat-embed-core
+    implementation 'org.apache.tomcat.embed:tomcat-embed-core:10.1.43'
+
+
     implementation project(':bulk-claim-api')
+    implementation project(':provider-details-api-reference')
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
     implementation 'io.micrometer:micrometer-tracing-bridge-brave'
 
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9'
@@ -43,6 +55,8 @@ dependencies {
     runtimeOnly 'com.h2database:h2'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.testcontainers:mockserver:1.21.3'
+    testImplementation 'org.mock-server:mockserver-client-java:5.15.0'
 
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
