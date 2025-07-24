@@ -38,6 +38,7 @@ jobs:
       contents: read
       id-token: write
     with:
+      jar_subproject: 'bulk-claim-service'
       image_version: ${{ format('{0}-{1}', vars.IMAGE_PREFIX, needs.build.outputs.published_artifact_version) }}
       publish: false
     secrets:
