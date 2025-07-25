@@ -1,7 +1,7 @@
 plugins {
     id 'io.freefair.lombok' version '8.14'
     id 'net.researchgate.release' version '3.1.0'
-    id("com.diffplug.spotless") version "7.1.0"
+    id("com.diffplug.spotless") version "7.2.1"
     id 'uk.gov.laa.ccms.springboot.laa-ccms-spring-boot-gradle-plugin' version '0.0.41'
 }
 
@@ -34,7 +34,7 @@ dependencies {
     // Upgrade to fix Uncontrolled Recursion vulnerability in commons-lang3
     implementation 'org.apache.commons:commons-lang3:3.18.0'
     // Upgrade to fix vulnerabilities in tomcat-embed-core
-    implementation 'org.apache.tomcat.embed:tomcat-embed-core:10.1.43'
+    implementation 'org.apache.tomcat.embed:tomcat-embed-core:11.0.9'
 
 
     implementation project(':bulk-claim-api')
@@ -52,7 +52,7 @@ dependencies {
     implementation 'org.mapstruct:mapstruct:1.6.3'
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
 
-    implementation platform('com.fasterxml.jackson:jackson-bom:2.19.1')
+    implementation platform('com.fasterxml.jackson:jackson-bom:2.19.2')
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml'
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
