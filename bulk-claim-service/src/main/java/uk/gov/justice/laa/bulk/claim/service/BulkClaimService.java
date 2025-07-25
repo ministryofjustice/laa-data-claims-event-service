@@ -1,7 +1,10 @@
 package uk.gov.justice.laa.bulk.claim.service;
 
 import java.io.File;
+import java.io.IOException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.bulk.claim.converter.BulkClaimConverterFactory;
 import uk.gov.justice.laa.bulk.claim.exception.BulkClaimFileReadException;
@@ -12,6 +15,7 @@ import uk.gov.justice.laa.bulk.claim.model.FileSubmission;
 
 /** Service responsible for handling the processing of bulk claim submission objects. */
 @Service
+@Slf4j
 public class BulkClaimService {
 
   private final BulkClaimConverterFactory bulkClaimConverterFactory;

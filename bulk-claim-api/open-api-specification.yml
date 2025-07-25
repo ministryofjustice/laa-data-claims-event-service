@@ -144,11 +144,24 @@ paths:
   /api/v1/submissions:
     post:
       summary:
-        Submits a claim in the format of CSV or XML, which is then processed and forwarded 
+        Submits a claim in the format of CSV or XML, which is then processed and forwarded
         to the Claims API.
       operationId: postSubmission
       tags:
         - submissions
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: The submission file in CSV or XML format
+              required:
+                - file
+      
       responses:
         '201':
           description: 'Created'

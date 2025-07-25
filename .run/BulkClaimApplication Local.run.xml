@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="BulkClaimApplication Local" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+    <option name="ACTIVE_PROFILES" value="local" />
+    <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UpdateClassesAndResources" />
+    <module name="laa-submit-a-bulk-claim-api.bulk-claim-service.main" />
+    <option name="SPRING_BOOT_MAIN_CLASS" value="uk.gov.justice.laa.bulk.claim.BulkClaimApplication" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
