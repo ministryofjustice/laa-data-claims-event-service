@@ -8,8 +8,7 @@ Describe what you did and why.
 
 Before you ask people to review this PR, please confirm:
 
-- [ ] Tests are passing.
+- [ ] The build pipeline is passing.
 - [ ] There are no conflicts with the target branch.
 - [ ] There are no whitespace-only changes.
 - [ ] There are no unexpected changes.
-- [ ] The build pipeline is passing.
