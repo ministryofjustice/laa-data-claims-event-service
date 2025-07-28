@@ -20,12 +20,9 @@ class FileUtilTest {
   @DisplayName("Should create temporary file")
   void shouldCreateTemporaryFile() {
     // Given
-    MockMultipartFile mockMultipartFile = new MockMultipartFile(
-        "test-file",
-        "test-file.txt",
-        "text/plain",
-        "This is a test file".getBytes()
-    );
+    MockMultipartFile mockMultipartFile =
+        new MockMultipartFile(
+            "test-file", "test-file.txt", "text/plain", "This is a test file".getBytes());
 
     // When
     File tempFile = FileUtil.createTempFile(mockMultipartFile);
@@ -41,12 +38,8 @@ class FileUtilTest {
   @DisplayName("Should throw BulkClaimFileReadException")
   void shouldThrowException() throws IOException {
     // Given
-    MockMultipartFile mockMultipartFile = new MockMultipartFile(
-        "test-file",
-        "test-file.txt",
-        "text/plain",
-        new byte[0]
-    );
+    MockMultipartFile mockMultipartFile =
+        new MockMultipartFile("test-file", "test-file.txt", "text/plain", new byte[0]);
 
     MockMultipartFile spyMultipartFile = spy(mockMultipartFile);
     doThrow(IOException.class).when(spyMultipartFile).transferTo(any(File.class));
@@ -56,5 +49,4 @@ class FileUtilTest {
         .isInstanceOf(BulkClaimFileReadException.class)
         .hasMessageContaining("Could not open file");
   }
-
 }

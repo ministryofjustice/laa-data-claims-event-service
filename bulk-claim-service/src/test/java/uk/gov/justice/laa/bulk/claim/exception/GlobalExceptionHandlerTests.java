@@ -28,7 +28,8 @@ class GlobalExceptionHandlerTests {
   @DisplayName("Handle IllegalArgumentException")
   void handleIllegalArgumentException_returnsBadRequestStatusAndErrorMessage() {
     ResponseEntity<String> result =
-        globalExceptionHandler.handleValidationException(new IllegalArgumentException("Field is required"));
+        globalExceptionHandler.handleValidationException(
+            new IllegalArgumentException("Field is required"));
 
     assertThat(result).isNotNull();
     assertThat(result.getStatusCode()).isEqualTo(BAD_REQUEST);

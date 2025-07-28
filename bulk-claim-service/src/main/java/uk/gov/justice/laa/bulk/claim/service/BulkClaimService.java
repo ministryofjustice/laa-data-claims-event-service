@@ -2,6 +2,8 @@ package uk.gov.justice.laa.bulk.claim.service;
 
 import jakarta.validation.constraints.NotNull;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,9 +17,7 @@ import uk.gov.justice.laa.bulk.claim.model.FileSubmission;
 import uk.gov.justice.laa.bulk.claim.model.SubmissionResponse;
 import uk.gov.justice.laa.bulk.claim.util.FileUtil;
 
-/**
- * Service responsible for handling the processing of bulk claim submission objects.
- */
+/** Service responsible for handling the processing of bulk claim submission objects. */
 @Service
 @Slf4j
 public class BulkClaimService {
@@ -46,11 +46,28 @@ public class BulkClaimService {
     return submissionMapper.toBulkClaimSubmission(submission);
   }
 
-
+  /**
+   * Processes a bulk claim submission from the provided multipart file and returns a response with
+   * a submission ID. The method converts the multipart file into a temporary file, processes the
+   * bulk claim details, and then deletes the temporary file upon completion.
+   *
+   * @param file the multipart file containing bulk claim data; must not be null.
+   * @return a {@link SubmissionResponse} object containing the ID of the submitted claim.
+   */
   public SubmissionResponse submitBulkClaim(@NotNull MultipartFile file) {
     File submissionFile = FileUtil.createTempFile(file);
 
     BulkClaimSubmission bulkClaimSubmission = getBulkClaimSubmission(submissionFile);
+
+    // TODO: Submit bulk claim
+
+    // Delete file now that the submission has been submitted.
+    try {
+      Files.delete(submissionFile.toPath());
+    } catch (IOException e) {
+      log.error(
+          "Failed to delete temporary file: %s".formatted(submissionFile.getAbsolutePath()), e);
+    }
 
     return new SubmissionResponse("12345");
   }
