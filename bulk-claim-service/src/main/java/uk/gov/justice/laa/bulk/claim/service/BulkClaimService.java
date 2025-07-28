@@ -1,19 +1,23 @@
 package uk.gov.justice.laa.bulk.claim.service;
 
+import jakarta.validation.constraints.NotNull;
 import java.io.File;
-import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import uk.gov.justice.laa.bulk.claim.converter.BulkClaimConverterFactory;
 import uk.gov.justice.laa.bulk.claim.exception.BulkClaimFileReadException;
 import uk.gov.justice.laa.bulk.claim.mapper.BulkClaimSubmissionMapper;
 import uk.gov.justice.laa.bulk.claim.model.BulkClaimSubmission;
 import uk.gov.justice.laa.bulk.claim.model.FileExtension;
 import uk.gov.justice.laa.bulk.claim.model.FileSubmission;
+import uk.gov.justice.laa.bulk.claim.model.SubmissionResponse;
+import uk.gov.justice.laa.bulk.claim.util.FileUtil;
 
-/** Service responsible for handling the processing of bulk claim submission objects. */
+/**
+ * Service responsible for handling the processing of bulk claim submission objects.
+ */
 @Service
 @Slf4j
 public class BulkClaimService {
@@ -40,6 +44,15 @@ public class BulkClaimService {
     FileSubmission submission = convert(file);
 
     return submissionMapper.toBulkClaimSubmission(submission);
+  }
+
+
+  public SubmissionResponse submitBulkClaim(@NotNull MultipartFile file) {
+    File submissionFile = FileUtil.createTempFile(file);
+
+    BulkClaimSubmission bulkClaimSubmission = getBulkClaimSubmission(submissionFile);
+
+    return new SubmissionResponse("12345");
   }
 
   private FileSubmission convert(File file) {

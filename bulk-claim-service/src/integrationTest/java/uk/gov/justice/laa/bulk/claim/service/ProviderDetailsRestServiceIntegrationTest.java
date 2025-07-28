@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.bulk.claim.service.provider;
+package uk.gov.justice.laa.bulk.claim.service;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -18,6 +18,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 import uk.gov.justice.laa.bulk.claim.helper.MockServerIntegrationTest;
+import uk.gov.justice.laa.bulk.claim.service.ProviderDetailsRestService;
 import uk.gov.justice.laa.provider.model.ProviderFirmOfficeContractAndScheduleDto;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
