@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.mock.web.MockMultipartFile;
+import uk.gov.justice.laa.bulk.claim.exception.BulkClaimInvalidFileException;
 
 @DisplayName("BulkClaimFileValidator Tests")
 class BulkClaimFileValidatorTest {
@@ -69,7 +70,7 @@ class BulkClaimFileValidatorTest {
 
     // When / Then
     assertThatThrownBy(() -> bulkClaimFileValidator.validate(file))
-        .isInstanceOf(IllegalArgumentException.class)
+        .isInstanceOf(BulkClaimInvalidFileException.class)
         .hasMessage("Only .csv and .xml files are allowed");
   }
 
@@ -84,7 +85,7 @@ class BulkClaimFileValidatorTest {
 
     // When / Then
     assertThatThrownBy(() -> bulkClaimFileValidator.validate(file))
-        .isInstanceOf(IllegalArgumentException.class)
+        .isInstanceOf(BulkClaimInvalidFileException.class)
         .hasMessage("Mime type does not match the .csv file extension");
   }
 
@@ -99,7 +100,7 @@ class BulkClaimFileValidatorTest {
 
     // When / Then
     assertThatThrownBy(() -> bulkClaimFileValidator.validate(file))
-        .isInstanceOf(IllegalArgumentException.class)
+        .isInstanceOf(BulkClaimInvalidFileException.class)
         .hasMessage("Mime type does not match the .xml file extension");
   }
 }

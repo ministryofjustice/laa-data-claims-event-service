@@ -36,4 +36,17 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
   public ResponseEntity<String> handleValidationException(IllegalArgumentException ex) {
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
   }
+
+  /**
+   * Handles validation-related exceptions by returning a HTTP 400 Bad Request status with the
+   * corresponding error message from the exception.
+   *
+   * @param ex the BulkClaimInvalidFileException encountered during validation
+   * @return a ResponseEntity containing the HTTP unsupported media type status and the exception
+   *     message
+   */
+  @ExceptionHandler(BulkClaimInvalidFileException.class)
+  public ResponseEntity<String> handleUnsupportedValidationException(IllegalArgumentException ex) {
+    return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(ex.getMessage());
+  }
 }

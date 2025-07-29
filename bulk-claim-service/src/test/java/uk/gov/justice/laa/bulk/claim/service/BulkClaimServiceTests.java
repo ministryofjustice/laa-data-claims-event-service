@@ -2,6 +2,7 @@ package uk.gov.justice.laa.bulk.claim.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -16,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.justice.laa.bulk.claim.converter.BulkClaimConverterFactory;
 import uk.gov.justice.laa.bulk.claim.converter.BulkClaimCsvConverter;
+import uk.gov.justice.laa.bulk.claim.data.client.http.BulkClaimsSubmissionApiClient;
 import uk.gov.justice.laa.bulk.claim.exception.BulkClaimFileReadException;
 import uk.gov.justice.laa.bulk.claim.mapper.BulkClaimSubmissionMapper;
 import uk.gov.justice.laa.bulk.claim.model.BulkClaimSubmission;
@@ -29,6 +31,8 @@ public class BulkClaimServiceTests {
   @Mock BulkClaimSubmissionMapper bulkClaimSubmissionMapper;
 
   @Mock BulkClaimConverterFactory bulkClaimConverterFactory;
+
+  @Mock BulkClaimsSubmissionApiClient bulkClaimsSubmissionApiClient;
 
   @InjectMocks BulkClaimService bulkClaimService;
 
@@ -61,6 +65,17 @@ public class BulkClaimServiceTests {
           BulkClaimFileReadException.class,
           () -> bulkClaimService.getBulkClaimSubmission(file),
           "Expected BulkClaimFileReadException to be thrown");
+    }
+  }
+
+  @Nested
+  @DisplayName("submitBulkClaim")
+  class SubmitBulkClaimTests {
+
+    @Test
+    @DisplayName("Should submit a bulk claim submission")
+    void shouldSubmitABulkClaimSubmission() {
+      fail("Need to implement this test");
     }
   }
 }

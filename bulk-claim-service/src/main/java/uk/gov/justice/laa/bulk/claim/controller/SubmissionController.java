@@ -1,6 +1,5 @@
 package uk.gov.justice.laa.bulk.claim.controller;
 
-import jakarta.validation.constraints.NotNull;
 import java.net.URI;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,19 +30,20 @@ public class SubmissionController implements SubmissionsApi {
   /**
    * Submits a bulk claim file for further processing by the Claims API.
    *
+   * @param userId The user ID of the user submitting the claim.
    * @param file The submission file in CSV or XML format.
    * @return A response entity containing the ID of the submitted claim.
    */
   @Override
-  public ResponseEntity<SubmissionResponse> postSubmission(@NotNull MultipartFile file) {
+  public ResponseEntity<SubmissionResponse> postSubmission(String userId, MultipartFile file) {
     // Validate file
     bulkClaimFileValidator.validate(file);
 
     // Submit bulk claim
-    SubmissionResponse submissionResponse = bulkClaimService.submitBulkClaim(file);
+    SubmissionResponse submissionResponse = bulkClaimService.submitBulkClaim(userId, file);
     URI location =
-        ServletUriComponentsBuilder.fromCurrentRequest()
-            .path("/{id}")
+        ServletUriComponentsBuilder.fromCurrentContextPath()
+            .path("/api/v1/submissions/{id}")
             .buildAndExpand(submissionResponse.getSubmissionId())
             .toUri();
 

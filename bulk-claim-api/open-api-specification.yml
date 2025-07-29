@@ -18,6 +18,8 @@ paths:
                 $ref: "#/components/schemas/Items"
         '400':
           description: 'Bad request'
+        '415':
+          description: 'Unsupported Media Type'
         '401':
           description: 'Unauthorized'
         '403':
@@ -149,6 +151,13 @@ paths:
       operationId: postSubmission
       tags:
         - submissions
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          description: The user ID of the user performing the bulk submission
+          schema:
+            type: string
       requestBody:
         content:
           multipart/form-data:

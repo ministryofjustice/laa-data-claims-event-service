@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -68,12 +69,13 @@ class SubmissionControllerTest {
     void shouldReturn201Response() throws IOException {
       SubmissionResponse expected = new SubmissionResponse("1234567890");
 
-      when(bulkClaimService.submitBulkClaim(any())).thenReturn(expected);
+      when(bulkClaimService.submitBulkClaim(any(), any())).thenReturn(expected);
 
       // Perform POST with multipart file
       assertThat(
               mockMvc.perform(
-                  multipart("/api/v1/submissions").file("file", mockMultipartFile.getBytes())))
+                  multipart("/api/v1/submissions?userId=12345")
+                      .file("file", mockMultipartFile.getBytes())))
           .hasStatus(201)
           .hasHeader("Location", "http://localhost/api/v1/submissions/1234567890")
           .bodyJson()
@@ -90,10 +92,38 @@ class SubmissionControllerTest {
       // Perform POST with multipart file
       assertThat(
               mockMvc.perform(
-                  multipart("/api/v1/submissions").file("file", mockMultipartFile.getBytes())))
+                  multipart("/api/v1/submissions")
+                      .file("file", mockMultipartFile.getBytes())
+                      .param("userId", "12345")))
           .hasStatus(400)
           .bodyText()
           .isEqualTo("This error was found");
+    }
+
+    @Test
+    @DisplayName("Should return 400 response when user ID is missing")
+    void shouldReturn400ResponseWhenUserIdIsMissing() throws IOException {
+      doThrow(new IllegalArgumentException("This error was found"))
+          .when(bulkClaimFileValidator)
+          .validate(any(MockMultipartFile.class));
+      // Perform POST with multipart file
+      assertThat(
+              mockMvc.perform(
+                  multipart("/api/v1/submissions").file("file", mockMultipartFile.getBytes())))
+          .hasStatus(400)
+          .bodyText()
+          .contains("Required parameter 'userId' is not present.");
+    }
+
+    @Test
+    @DisplayName("Should return 415 response when file is missing")
+    void shouldReturn415ResponseWhenFileIsMissing() {
+      doThrow(new IllegalArgumentException("This error was found"))
+          .when(bulkClaimFileValidator)
+          .validate(any(MockMultipartFile.class));
+      // Perform POST with multipart file
+      assertThat(mockMvc.perform(post("/api/v1/submissions").param("userId", "12345")))
+          .hasStatus(415);
     }
   }
 }
