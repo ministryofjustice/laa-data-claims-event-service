@@ -10,7 +10,7 @@ import uk.gov.justice.laa.bulk.claim.data.client.http.ClaimsApiClient;
 @Configuration
 public class WebClientConfig {
 
-  @Value("${laa.claims-api.base-url}")
+  @Value("#{systemProperties['laa.claims-api.base-url']}")
   private String baseUrl;
 
   @Bean
