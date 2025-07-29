@@ -4,6 +4,7 @@ import java.net.URI;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.client.WebClient;
 import uk.gov.justice.laa.bulk.claim.data.client.dto.BulkSubmissionRequest;
 import uk.gov.justice.laa.bulk.claim.data.client.dto.BulkSubmissionResponse;
@@ -13,7 +14,7 @@ import uk.gov.justice.laa.bulk.claim.data.client.exceptions.ClaimsApiServerError
 import uk.gov.justice.laa.bulk.claim.data.client.util.ValidationUtil;
 
 /** laa-data-stewardship-claims-api Client. */
-public class Client implements BulkSubmissionClient {
+public class ClaimsApiClient implements BulkClaimsSubmissionApiClient {
 
   private final WebClient webClient;
 
@@ -22,7 +23,7 @@ public class Client implements BulkSubmissionClient {
    *
    * @param baseUrl the base url via
    */
-  public Client(String baseUrl) {
+  public ClaimsApiClient(String baseUrl) {
     this.webClient =
         WebClient.builder()
             .baseUrl(baseUrl)
@@ -59,12 +60,15 @@ public class Client implements BulkSubmissionClient {
               .map(response -> response.getHeaders().getLocation())
               .block();
 
-      if (location == null || location.getPath() == null) {
+      if (location == null || !StringUtils.hasText(location.getPath())) {
         throw new ClaimsApiClientException("Location header missing or malformed");
       }
 
       String[] pathParts = location.getPath().split("/");
       String submissionId = pathParts[pathParts.length - 1];
+      if (!StringUtils.hasText(submissionId)) {
+        throw new ClaimsApiClientException("Submission ID missing from location header");
+      }
 
       return new BulkSubmissionResponse(submissionId);
 

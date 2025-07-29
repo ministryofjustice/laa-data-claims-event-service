@@ -18,14 +18,14 @@ import uk.gov.justice.laa.bulk.claim.data.client.dto.BulkSubmissionResponse;
 import uk.gov.justice.laa.bulk.claim.data.client.exceptions.ClaimsApiBadRequestException;
 import uk.gov.justice.laa.bulk.claim.data.client.exceptions.ClaimsApiClientException;
 import uk.gov.justice.laa.bulk.claim.data.client.exceptions.ClaimsApiServerErrorException;
-import uk.gov.justice.laa.bulk.claim.data.client.http.BulkSubmissionClient;
-import uk.gov.justice.laa.bulk.claim.data.client.http.Client;
+import uk.gov.justice.laa.bulk.claim.data.client.http.BulkClaimsSubmissionApiClient;
+import uk.gov.justice.laa.bulk.claim.data.client.http.ClaimsApiClient;
 import uk.gov.justice.laa.bulk.claim.helper.MockServerIntegrationTest;
 import uk.gov.justice.laa.bulk.claim.model.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class BulkSubmissionClientIntegrationTest extends MockServerIntegrationTest {
-  protected BulkSubmissionClient bulkSubmissionClient;
+public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerIntegrationTest {
+  protected BulkClaimsSubmissionApiClient bulkClaimsSubmissionApiClient;
 
   @AfterAll
   static void cleanup() {
@@ -33,19 +33,18 @@ public class BulkSubmissionClientIntegrationTest extends MockServerIntegrationTe
   }
 
   private static @NotNull BulkSubmissionRequest getBulkSubmissionRequest() {
-    BulkSubmissionRequest request = new BulkSubmissionRequest();
-    request.setUserId("123");
     List<BulkClaimOutcome> bulkClaimOutcomes = new java.util.ArrayList<>();
     List<BulkClaimMatterStarts> bulkClaimMatterStarts = new java.util.ArrayList<>();
 
-    request.setSubmissions(
+    return new BulkSubmissionRequest(
+        "123",
+        null,
         List.of(
             new BulkClaimSubmission(
                 new BulkClaimOffice("office_account"),
                 new BulkClaimSchedule("submission_period", "area_of_law", "00"),
                 bulkClaimOutcomes,
                 bulkClaimMatterStarts)));
-    return request;
   }
 
   @BeforeEach
@@ -53,7 +52,7 @@ public class BulkSubmissionClientIntegrationTest extends MockServerIntegrationTe
     String baseUrl =
         "http://" + mockServerContainer.getHost() + ":" + mockServerContainer.getServerPort();
 
-    bulkSubmissionClient = new Client(baseUrl);
+    bulkClaimsSubmissionApiClient = new ClaimsApiClient(baseUrl);
   }
 
   @Test
@@ -69,23 +68,24 @@ public class BulkSubmissionClientIntegrationTest extends MockServerIntegrationTe
 
     BulkSubmissionRequest request = getBulkSubmissionRequest();
     // execute
-    BulkSubmissionResponse response = bulkSubmissionClient.submitBulkClaim(request);
+    BulkSubmissionResponse response = bulkClaimsSubmissionApiClient.submitBulkClaim(request);
 
     // Assert
     assertThat(response).isNotNull();
-    assertThat(response.getSubmissionId()).isEqualTo(submissionId);
+    assertThat(response.submissionId()).isEqualTo(submissionId);
   }
 
   @Test
   @DisplayName("Should return Client API exception with error message.")
   void testSubmitBulkClaimRequestValidationFails() throws ClaimsApiClientException {
     // setup
-    BulkSubmissionRequest request = new BulkSubmissionRequest();
+    BulkSubmissionRequest request = new BulkSubmissionRequest(null, null, null);
 
     // Assert
     ClaimsApiClientException clientException =
         assertThrows(
-            ClaimsApiClientException.class, () -> bulkSubmissionClient.submitBulkClaim(request));
+            ClaimsApiClientException.class,
+            () -> bulkClaimsSubmissionApiClient.submitBulkClaim(request));
 
     assertThat(clientException.getMessage()).isEqualTo("Submission failed");
     assertThat(clientException.getCause().getMessage()).contains("userId: must not be null");
@@ -108,7 +108,8 @@ public class BulkSubmissionClientIntegrationTest extends MockServerIntegrationTe
     // Assert
     ClaimsApiClientException clientException =
         assertThrows(
-            ClaimsApiClientException.class, () -> bulkSubmissionClient.submitBulkClaim(request));
+            ClaimsApiClientException.class,
+            () -> bulkClaimsSubmissionApiClient.submitBulkClaim(request));
 
     assertThat(clientException.getMessage()).isEqualTo("Submission failed");
     assertThat(clientException).hasCauseInstanceOf(ClaimsApiBadRequestException.class);
@@ -131,7 +132,8 @@ public class BulkSubmissionClientIntegrationTest extends MockServerIntegrationTe
     // Assert
     ClaimsApiClientException clientException =
         assertThrows(
-            ClaimsApiClientException.class, () -> bulkSubmissionClient.submitBulkClaim(request));
+            ClaimsApiClientException.class,
+            () -> bulkClaimsSubmissionApiClient.submitBulkClaim(request));
 
     assertThat(clientException.getMessage()).isEqualTo("Submission failed");
     assertThat(clientException).hasCauseInstanceOf(ClaimsApiServerErrorException.class);
