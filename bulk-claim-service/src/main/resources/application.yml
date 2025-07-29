@@ -47,3 +47,5 @@ laa:
     hostname: ${PROVIDER_DETAILS_API_HOSTNAME}
     url: ${laa.provider-details-api.hostname}
     accessToken: ${PROVIDER_DETAILS_API_ACCESS_TOKEN}
+  claims-api:
+    base-url: ${CLAIMS_API_URL}
