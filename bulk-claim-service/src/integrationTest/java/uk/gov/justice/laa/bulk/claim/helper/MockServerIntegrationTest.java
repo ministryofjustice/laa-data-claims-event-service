@@ -81,6 +81,8 @@ public class MockServerIntegrationTest {
 
   @AfterAll
   static void afterAll() {
-    mockServerContainer.stop();
+    if (mockServerContainer != null) {
+      mockServerContainer.stop();
+    }
   }
 }
