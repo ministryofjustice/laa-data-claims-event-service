@@ -189,8 +189,8 @@ class ProviderDetailsRestServiceIntegrationTest extends MockServerIntegrationTes
       assertThatThrownBy(result::block)
           .isInstanceOf(WebClientResponseException.class)
           .hasMessageContaining(
-              "409 Conflict from GET http://localhost:%d/provider-offices/1234/schedules"
-                  .formatted(mockServerContainer.getServerPort()));
+              "409 Conflict from GET http://%s:%d/provider-offices/1234/schedules"
+                  .formatted(mockServerContainer.getHost(), mockServerContainer.getServerPort()));
     }
   }
 
@@ -357,8 +357,8 @@ class ProviderDetailsRestServiceIntegrationTest extends MockServerIntegrationTes
       assertThatThrownBy(result::block)
           .isInstanceOf(WebClientResponseException.class)
           .hasMessageContaining(
-              "409 Conflict from GET http://localhost:%d/provider-offices/1234/schedules"
-                  .formatted(mockServerContainer.getServerPort()));
+              "409 Conflict from GET http://%s:%d/provider-offices/1234/schedules"
+                  .formatted(mockServerContainer.getHost(), mockServerContainer.getServerPort()));
     }
   }
 
