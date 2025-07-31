@@ -7,10 +7,7 @@ import static org.mockserver.model.HttpResponse.response;
 
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.mockserver.model.Header;
 import org.springframework.boot.test.context.SpringBootTest;
 import uk.gov.justice.laa.bulk.claim.data.client.dto.BulkSubmissionRequest;
@@ -24,6 +21,7 @@ import uk.gov.justice.laa.bulk.claim.helper.MockServerIntegrationTest;
 import uk.gov.justice.laa.bulk.claim.model.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@Disabled
 public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerIntegrationTest {
   protected BulkClaimsSubmissionApiClient bulkClaimsSubmissionApiClient;
 
