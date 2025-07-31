@@ -29,11 +29,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
    * Handles validation-related exceptions by returning a HTTP 400 Bad Request status with the
    * corresponding error message from the exception.
    *
-   * @param ex the IllegalArgumentException encountered during validation
+   * @param ex the BulkClaimValidationException encountered during validation
    * @return a ResponseEntity containing the HTTP Bad Request status and the exception message
    */
-  @ExceptionHandler(IllegalArgumentException.class)
-  public ResponseEntity<String> handleValidationException(IllegalArgumentException ex) {
+  @ExceptionHandler(BulkClaimValidationException.class)
+  public ResponseEntity<String> handleValidationException(BulkClaimValidationException ex) {
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
   }
 

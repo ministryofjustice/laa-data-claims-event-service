@@ -19,7 +19,7 @@ public class ClaimsApiClient implements BulkClaimsSubmissionApiClient {
   /**
    * Client constructor.
    *
-   * @param webClient the base url via
+   * @param webClient the webClient to use for requests to the claims api
    */
   public ClaimsApiClient(WebClient webClient) {
     this.webClient = webClient;

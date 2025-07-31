@@ -24,6 +24,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
+import uk.gov.justice.laa.bulk.claim.exception.BulkClaimValidationException;
 import uk.gov.justice.laa.bulk.claim.exception.GlobalExceptionHandler;
 import uk.gov.justice.laa.bulk.claim.model.SubmissionResponse;
 import uk.gov.justice.laa.bulk.claim.service.BulkClaimService;
@@ -86,7 +87,7 @@ class SubmissionControllerTest {
     @Test
     @DisplayName("Should return 400 response")
     void shouldReturn400Response() throws IOException {
-      doThrow(new IllegalArgumentException("This error was found"))
+      doThrow(new BulkClaimValidationException("This error was found"))
           .when(bulkClaimFileValidator)
           .validate(any(MockMultipartFile.class));
       // Perform POST with multipart file

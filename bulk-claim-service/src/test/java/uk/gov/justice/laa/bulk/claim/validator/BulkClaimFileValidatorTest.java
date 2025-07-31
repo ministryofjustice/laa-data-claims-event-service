@@ -10,6 +10,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.mock.web.MockMultipartFile;
 import uk.gov.justice.laa.bulk.claim.exception.BulkClaimInvalidFileException;
+import uk.gov.justice.laa.bulk.claim.exception.BulkClaimValidationException;
 
 @DisplayName("BulkClaimFileValidator Tests")
 class BulkClaimFileValidatorTest {
@@ -29,7 +30,7 @@ class BulkClaimFileValidatorTest {
 
     // When / Then
     assertThatThrownBy(() -> bulkClaimFileValidator.validate(file))
-        .isInstanceOf(IllegalArgumentException.class)
+        .isInstanceOf(BulkClaimValidationException.class)
         .hasMessage("The uploaded file is empty");
   }
 

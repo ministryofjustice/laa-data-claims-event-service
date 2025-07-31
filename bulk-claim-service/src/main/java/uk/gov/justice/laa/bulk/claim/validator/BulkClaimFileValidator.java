@@ -3,6 +3,7 @@ package uk.gov.justice.laa.bulk.claim.validator;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 import uk.gov.justice.laa.bulk.claim.exception.BulkClaimInvalidFileException;
+import uk.gov.justice.laa.bulk.claim.exception.BulkClaimValidationException;
 
 /**
  * This class is responsible for validating bulk claim files uploaded as part of the submission
@@ -38,7 +39,7 @@ public class BulkClaimFileValidator {
     // Step 1: Check if file is null or empty
     if (file.isEmpty()) {
       // Causes a 400 Bad Request response to be returned to the client.
-      throw new IllegalArgumentException("The uploaded file is empty");
+      throw new BulkClaimValidationException("The uploaded file is empty");
     }
 
     // Step 2: Validate file extension
