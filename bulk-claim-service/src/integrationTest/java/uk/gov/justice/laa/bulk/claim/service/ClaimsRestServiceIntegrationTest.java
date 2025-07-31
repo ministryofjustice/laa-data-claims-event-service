@@ -11,8 +11,14 @@ import static org.mockserver.model.HttpResponse.response;
 import jakarta.validation.ConstraintViolationException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockserver.model.Header;
@@ -33,12 +39,18 @@ import uk.gov.justice.laa.bulk.claim.data.client.exceptions.ClaimsApiServerError
 import uk.gov.justice.laa.bulk.claim.data.client.http.BulkClaimsSubmissionApiClient;
 import uk.gov.justice.laa.bulk.claim.data.client.http.ClaimsApiClient;
 import uk.gov.justice.laa.bulk.claim.helper.MockServerIntegrationTest;
-import uk.gov.justice.laa.bulk.claim.model.*;
+import uk.gov.justice.laa.bulk.claim.model.BulkClaimMatterStarts;
+import uk.gov.justice.laa.bulk.claim.model.BulkClaimOffice;
+import uk.gov.justice.laa.bulk.claim.model.BulkClaimOutcome;
+import uk.gov.justice.laa.bulk.claim.model.BulkClaimSchedule;
+import uk.gov.justice.laa.bulk.claim.model.BulkClaimSubmission;
 import uk.gov.justice.laa.bulk.claim.service.dto.BulkSubmissionRequest;
 import uk.gov.justice.laa.bulk.claim.service.dto.BulkSubmissionResponse;
+import uk.gov.justice.laa.claims.model.ClaimDto;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class ClaimsRestServiceIntegrationTest extends MockServerIntegrationTest {
+
   protected ClaimsService claimsService;
 public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerIntegrationTest {
   private BulkClaimsSubmissionApiClient bulkClaimsSubmissionApiClient;
@@ -64,12 +76,37 @@ public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerInte
   }
 
   @Nested
-  @DisplayName("POST: /api/bulk-submissions")
-  class PostBulkSubmissions {
+  @DisplayName("GET: /api/claims/{claimId} tests")
+  class GetClaimTests {
+
+    @Test
+    @DisplayName("Should return 200 response")
+    void shouldReturn200Response() throws Exception {
+      // Given
+      String claimId = "123456789";
+      mockServerClient
+          .when(request().withMethod("GET").withPath("/api/claims/" + claimId))
+          .respond(
+              response()
+                  .withStatusCode(200)
+                  .withHeader("Content-Type", "application/json")
+                  // TODO: Update this file to contain actual response when open API spec is updated
+                  .withBody(readJsonFromFile("get-claim-openapi-200.json")));
+      // When
+      Optional<ClaimDto> result = claimsService.getClaim(claimId);
+      // Then
+      assertThat(result).isNotNull();
+      assertThat(result).isEqualTo(readJsonFromFile("get-claim-openapi-200.json"));
+    }
+  }
+
+    @Nested
+  @DisplayName("POST: /api/bulk-submissions tests")
+  class SubmitBulkClaimTests {
 
     @Test
     @DisplayName("Should return 201 status and return bulk claims upload response ID.")
-    void submitBulkClaimReturns() {
+    void testSubmitBulkClaimReturns() {
       // setup
       String submissionId = "abc123";
       String locationHeader = "/api/bulk-submissions/" + submissionId;
@@ -96,10 +133,12 @@ public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerInte
 
       // Assert
       ConstraintViolationException clientException =
-        assertThrows(ConstraintViolationException.class, () -> claimsService.submitBulkClaim(request));
+          assertThrows(
+              ConstraintViolationException.class, () -> claimsService.submitBulkClaim(request));
 
       assertThat(clientException.getMessage()).contains("userId: must not be null");
-      assertThat(clientException.getMessage()).contains("submissions: must not be empty");
+      assertThat(clientException.getMessage()).contains(
+          "submissions: must not be empty");
     }
 
     @Test
@@ -114,13 +153,15 @@ public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerInte
 
       BulkSubmissionRequest request = getBulkSubmissionRequest();
 
+
       // Assert
       ClaimsApiClientErrorException clientException =
-        assertThrows(ClaimsApiClientErrorException.class, () -> claimsService.submitBulkClaim(request));
+          assertThrows(
+              ClaimsApiClientErrorException.class, () -> claimsService.submitBulkClaim(request));
 
       assertThat(clientException).isNotNull();
       assertThat(clientException.getMessage())
-          .isEqualTo("400 response from POST /api/bulk-submissions: failed with user error");
+      .isEqualTo("400 response from POST /api/bulk-submissions: failed with user error");
     }
 
     @Test
@@ -135,9 +176,11 @@ public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerInte
 
       BulkSubmissionRequest request = getBulkSubmissionRequest();
 
+
       // Assert
       ClaimsApiServerErrorException serverException =
-        assertThrows(ClaimsApiServerErrorException.class, () -> claimsService.submitBulkClaim(request));
+          assertThrows(
+              ClaimsApiServerErrorException.class, () -> claimsService.submitBulkClaim(request));
 
       assertThat(serverException).isNotNull();
       assertThat(serverException.getMessage())

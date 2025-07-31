@@ -105,6 +105,18 @@ public abstract class MockServerIntegrationTest {
     assertThat(normalizedActual).isEqualTo(normalizedExpected);
   }
 
+  protected static String readJsonFromFile(final String fileName) throws Exception {
+    Path path = Paths.get("src/integrationTest/resources/responses", fileName);
+    return Files.readString(path);
+  }
+
+  protected static void assertThatJsonMatches(final String expectedJson, final String actualJson) {
+    // Remove whitespace to make comparison easier
+    String normalizedExpected = expectedJson.replaceAll("\\s+", "");
+    String normalizedActual = actualJson.replaceAll("\\s+", "");
+    assertThat(normalizedActual).isEqualTo(normalizedExpected);
+  }
+
   @AfterEach
   void tearDown() {
     mockServerClient.reset();

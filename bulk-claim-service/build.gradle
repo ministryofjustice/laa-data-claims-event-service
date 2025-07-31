@@ -38,6 +38,7 @@ dependencies {
 
 
     implementation project(':bulk-claim-api')
+    implementation project(':claims-api-reference')
     implementation project(':provider-details-api-reference')
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'

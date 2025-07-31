@@ -1,6 +1,9 @@
 package uk.gov.justice.laa.bulk.claim.service;
 
 import java.net.URI;
+import java.util.Optional;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import java.util.function.Function;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatusCode;
@@ -14,6 +17,7 @@ import uk.gov.justice.laa.bulk.claim.exception.ClaimsApiServerErrorException;
 import uk.gov.justice.laa.bulk.claim.service.dto.BulkSubmissionRequest;
 import uk.gov.justice.laa.bulk.claim.service.dto.BulkSubmissionResponse;
 import uk.gov.justice.laa.bulk.claim.util.ValidationUtil;
+import uk.gov.justice.laa.claims.model.ClaimDto;
 import reactor.core.publisher.Mono;
 import uk.gov.justice.laa.bulk.claim.data.client.dto.BulkSubmissionRequest;
 import uk.gov.justice.laa.bulk.claim.data.client.dto.BulkSubmissionResponse;
@@ -109,5 +113,10 @@ public class ClaimsRestService implements ClaimsService {
                         response.statusCode());
                   }
                 });
+  }
+
+  @Override
+  public Optional<ClaimDto> getClaim(String claimId) {
+    return Optional.empty();
   }
 }

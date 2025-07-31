@@ -15,6 +15,7 @@ pluginManagement {
 
 rootProject.name = 'laa-submit-a-bulk-claim-api'
 
+include 'claims-api-reference'
 include 'provider-details-api-reference'
 include 'bulk-claim-api'
 include 'bulk-claim-service'
