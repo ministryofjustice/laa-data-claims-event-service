@@ -21,7 +21,6 @@ import uk.gov.justice.laa.bulk.claim.helper.MockServerIntegrationTest;
 import uk.gov.justice.laa.bulk.claim.model.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Disabled
 public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerIntegrationTest {
   protected BulkClaimsSubmissionApiClient bulkClaimsSubmissionApiClient;
 
