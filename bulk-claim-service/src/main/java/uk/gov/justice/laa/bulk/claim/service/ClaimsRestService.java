@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.bulk.claim.data.client.http;
+package uk.gov.justice.laa.bulk.claim.service;
 
 import java.net.URI;
 import java.util.function.Function;
@@ -8,6 +8,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
+import uk.gov.justice.laa.bulk.claim.exception.ClaimsApiBadRequestException;
+import uk.gov.justice.laa.bulk.claim.exception.ClaimsApiClientException;
+import uk.gov.justice.laa.bulk.claim.exception.ClaimsApiServerErrorException;
+import uk.gov.justice.laa.bulk.claim.service.dto.BulkSubmissionRequest;
+import uk.gov.justice.laa.bulk.claim.service.dto.BulkSubmissionResponse;
+import uk.gov.justice.laa.bulk.claim.util.ValidationUtil;
 import reactor.core.publisher.Mono;
 import uk.gov.justice.laa.bulk.claim.data.client.dto.BulkSubmissionRequest;
 import uk.gov.justice.laa.bulk.claim.data.client.dto.BulkSubmissionResponse;
@@ -18,7 +24,7 @@ import uk.gov.justice.laa.bulk.claim.data.client.exceptions.ClaimsApiServerError
 import uk.gov.justice.laa.bulk.claim.data.client.util.ValidationUtil;
 
 /** laa-data-stewardship-claims-api Client. */
-public class ClaimsApiClient implements BulkClaimsSubmissionApiClient {
+public class ClaimsRestService implements ClaimsService {
 
   private final WebClient webClient;
 
@@ -29,7 +35,7 @@ public class ClaimsApiClient implements BulkClaimsSubmissionApiClient {
    *
    * @param webClient the webClient to use for requests to the claims api
    */
-  public ClaimsApiClient(WebClient webClient) {
+  public ClaimsRestService(WebClient webClient) {
     this.webClient = webClient;
   }
 
@@ -53,7 +59,7 @@ public class ClaimsApiClient implements BulkClaimsSubmissionApiClient {
                 HttpStatusCode::isError,
                 handleErrorResponse(HttpMethod.POST.name(), SUBMISSIONS_ENDPOINT))
             .toBodilessEntity()
-            .map(response -> response.getHeaders().getLocation())
+            .mapNotNull(response -> response.getHeaders().getLocation())
             .block();
 
     if (location == null || !StringUtils.hasText(location.getPath())) {

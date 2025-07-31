@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.bulk.claim.data.client.exceptions;
+package uk.gov.justice.laa.bulk.claim.exception;
 
 import org.springframework.http.HttpStatusCode;
 

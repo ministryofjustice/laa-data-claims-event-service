@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.bulk.claim.service.claim;
+package uk.gov.justice.laa.bulk.claim.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -17,6 +17,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockserver.model.Header;
 import org.springframework.boot.test.context.SpringBootTest;
+import uk.gov.justice.laa.bulk.claim.exception.ClaimsApiBadRequestException;
+import uk.gov.justice.laa.bulk.claim.exception.ClaimsApiClientException;
+import uk.gov.justice.laa.bulk.claim.exception.ClaimsApiServerErrorException;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.Mono;
@@ -31,8 +34,12 @@ import uk.gov.justice.laa.bulk.claim.data.client.http.BulkClaimsSubmissionApiCli
 import uk.gov.justice.laa.bulk.claim.data.client.http.ClaimsApiClient;
 import uk.gov.justice.laa.bulk.claim.helper.MockServerIntegrationTest;
 import uk.gov.justice.laa.bulk.claim.model.*;
+import uk.gov.justice.laa.bulk.claim.service.dto.BulkSubmissionRequest;
+import uk.gov.justice.laa.bulk.claim.service.dto.BulkSubmissionResponse;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+public class ClaimsRestServiceIntegrationTest extends MockServerIntegrationTest {
+  protected ClaimsService claimsService;
 public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerIntegrationTest {
   private BulkClaimsSubmissionApiClient bulkClaimsSubmissionApiClient;
 
@@ -74,7 +81,7 @@ public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerInte
 
       BulkSubmissionRequest request = getBulkSubmissionRequest();
       // execute
-      BulkSubmissionResponse response = bulkClaimsSubmissionApiClient.submitBulkClaim(request);
+      BulkSubmissionResponse response = claimsService.submitBulkClaim(request);
 
       // Assert
       assertThat(response).isNotNull();
@@ -89,9 +96,7 @@ public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerInte
 
       // Assert
       ConstraintViolationException clientException =
-          assertThrows(
-              ConstraintViolationException.class,
-              () -> bulkClaimsSubmissionApiClient.submitBulkClaim(request));
+        assertThrows(ConstraintViolationException.class, () -> claimsService.submitBulkClaim(request));
 
       assertThat(clientException.getMessage()).contains("userId: must not be null");
       assertThat(clientException.getMessage()).contains("submissions: must not be empty");
@@ -111,9 +116,7 @@ public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerInte
 
       // Assert
       ClaimsApiClientErrorException clientException =
-          assertThrows(
-              ClaimsApiClientErrorException.class,
-              () -> bulkClaimsSubmissionApiClient.submitBulkClaim(request));
+        assertThrows(ClaimsApiClientErrorException.class, () -> claimsService.submitBulkClaim(request));
 
       assertThat(clientException).isNotNull();
       assertThat(clientException.getMessage())
@@ -134,9 +137,7 @@ public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerInte
 
       // Assert
       ClaimsApiServerErrorException serverException =
-          assertThrows(
-              ClaimsApiServerErrorException.class,
-              () -> bulkClaimsSubmissionApiClient.submitBulkClaim(request));
+        assertThrows(ClaimsApiServerErrorException.class, () -> claimsService.submitBulkClaim(request));
 
       assertThat(serverException).isNotNull();
       assertThat(serverException.getMessage())
