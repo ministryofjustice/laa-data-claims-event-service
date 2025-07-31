@@ -3,9 +3,6 @@ package uk.gov.justice.laa.bulk.claim.service;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -360,17 +357,5 @@ class ProviderDetailsRestServiceIntegrationTest extends MockServerIntegrationTes
               "409 Conflict from GET http://%s:%d/provider-offices/1234/schedules"
                   .formatted(mockServerContainer.getHost(), mockServerContainer.getServerPort()));
     }
-  }
-
-  private static String readJsonFromFile(final String fileName) throws Exception {
-    Path path = Paths.get("src/test/resources/responses", fileName);
-    return Files.readString(path);
-  }
-
-  private static void assertThatJsonMatches(final String expectedJson, final String actualJson) {
-    // Remove whitespace to make comparison easier
-    String normalizedExpected = expectedJson.replaceAll("\\s+", "");
-    String normalizedActual = actualJson.replaceAll("\\s+", "");
-    assertThat(normalizedActual).isEqualTo(normalizedExpected);
   }
 }

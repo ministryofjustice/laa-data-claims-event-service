@@ -1,8 +1,13 @@
 package uk.gov.justice.laa.bulk.claim.helper;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
@@ -86,6 +91,18 @@ public abstract class MockServerIntegrationTest {
             0,
             "");
     return WebClientConfiguration.createWebClient(apiProperties);
+  }
+
+  protected static String readJsonFromFile(final String fileName) throws Exception {
+    Path path = Paths.get("src/integrationTest/resources/responses", fileName);
+    return Files.readString(path);
+  }
+
+  protected static void assertThatJsonMatches(final String expectedJson, final String actualJson) {
+    // Remove whitespace to make comparison easier
+    String normalizedExpected = expectedJson.replaceAll("\\s+", "");
+    String normalizedActual = actualJson.replaceAll("\\s+", "");
+    assertThat(normalizedActual).isEqualTo(normalizedExpected);
   }
 
   @AfterEach
