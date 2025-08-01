@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.bulk.claim.service;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -14,13 +15,18 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockMultipartFile;
 import uk.gov.justice.laa.bulk.claim.converter.BulkClaimConverterFactory;
 import uk.gov.justice.laa.bulk.claim.converter.BulkClaimCsvConverter;
+import uk.gov.justice.laa.bulk.claim.data.client.dto.BulkSubmissionRequest;
+import uk.gov.justice.laa.bulk.claim.data.client.dto.BulkSubmissionResponse;
+import uk.gov.justice.laa.bulk.claim.data.client.http.BulkClaimsSubmissionApiClient;
 import uk.gov.justice.laa.bulk.claim.exception.BulkClaimFileReadException;
 import uk.gov.justice.laa.bulk.claim.mapper.BulkClaimSubmissionMapper;
 import uk.gov.justice.laa.bulk.claim.model.BulkClaimSubmission;
 import uk.gov.justice.laa.bulk.claim.model.FileExtension;
 import uk.gov.justice.laa.bulk.claim.model.FileSubmission;
+import uk.gov.justice.laa.bulk.claim.model.SubmissionResponse;
 import uk.gov.justice.laa.bulk.claim.model.csv.CsvSubmission;
 
 @ExtendWith(MockitoExtension.class)
@@ -29,6 +35,8 @@ public class BulkClaimServiceTests {
   @Mock BulkClaimSubmissionMapper bulkClaimSubmissionMapper;
 
   @Mock BulkClaimConverterFactory bulkClaimConverterFactory;
+
+  @Mock BulkClaimsSubmissionApiClient bulkClaimsSubmissionApiClient;
 
   @InjectMocks BulkClaimService bulkClaimService;
 
@@ -61,6 +69,30 @@ public class BulkClaimServiceTests {
           BulkClaimFileReadException.class,
           () -> bulkClaimService.getBulkClaimSubmission(file),
           "Expected BulkClaimFileReadException to be thrown");
+    }
+  }
+
+  @Nested
+  @DisplayName("submitBulkClaim")
+  class SubmitBulkClaimTests {
+
+    @Test
+    @DisplayName("Should submit a bulk claim submission")
+    void shouldSubmitABulkClaimSubmission() {
+      // Given
+      MockMultipartFile mockMultipartFile =
+          new MockMultipartFile("test-file", "test-file.csv", "text/csv", "one,two".getBytes());
+      String userId = "12345";
+      BulkClaimCsvConverter mockBulkClaimCsvConverter = mock(BulkClaimCsvConverter.class);
+      when(bulkClaimConverterFactory.converterFor(FileExtension.CSV))
+          .thenReturn(mockBulkClaimCsvConverter);
+      when(bulkClaimsSubmissionApiClient.submitBulkClaim(any(BulkSubmissionRequest.class)))
+          .thenReturn(new BulkSubmissionResponse("789"));
+
+      // When
+      SubmissionResponse result = bulkClaimService.submitBulkClaim(userId, mockMultipartFile);
+      // Then
+      assertThat(result.getSubmissionId()).isEqualTo("789");
     }
   }
 }

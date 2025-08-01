@@ -1,9 +1,7 @@
 package uk.gov.justice.laa.bulk.claim.data.client.http;
 
 import java.net.URI;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.client.WebClient;
 import uk.gov.justice.laa.bulk.claim.data.client.dto.BulkSubmissionRequest;
@@ -21,14 +19,10 @@ public class ClaimsApiClient implements BulkClaimsSubmissionApiClient {
   /**
    * Client constructor.
    *
-   * @param baseUrl the base url via
+   * @param webClient the webClient to use for requests to the claims api
    */
-  public ClaimsApiClient(String baseUrl) {
-    this.webClient =
-        WebClient.builder()
-            .baseUrl(baseUrl)
-            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-            .build();
+  public ClaimsApiClient(WebClient webClient) {
+    this.webClient = webClient;
   }
 
   /**

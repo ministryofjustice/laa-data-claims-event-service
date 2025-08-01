@@ -21,14 +21,8 @@ import uk.gov.justice.laa.bulk.claim.helper.MockServerIntegrationTest;
 import uk.gov.justice.laa.bulk.claim.model.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Disabled
 public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerIntegrationTest {
   protected BulkClaimsSubmissionApiClient bulkClaimsSubmissionApiClient;
-
-  @AfterAll
-  static void cleanup() {
-    mockServerClient.stop();
-  }
 
   private static @NotNull BulkSubmissionRequest getBulkSubmissionRequest() {
     List<BulkClaimOutcome> bulkClaimOutcomes = new java.util.ArrayList<>();
@@ -47,10 +41,7 @@ public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerInte
 
   @BeforeEach
   void setUp() {
-    String baseUrl =
-        "http://" + mockServerContainer.getHost() + ":" + mockServerContainer.getServerPort();
-
-    bulkClaimsSubmissionApiClient = new ClaimsApiClient(baseUrl);
+    bulkClaimsSubmissionApiClient = new ClaimsApiClient(createWebClient());
   }
 
   @Test
@@ -101,7 +92,6 @@ public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerInte
         .respond(response().withStatusCode(400).withBody(errorMessage));
 
     BulkSubmissionRequest request = getBulkSubmissionRequest();
-    ;
 
     // Assert
     ClaimsApiClientException clientException =
@@ -125,7 +115,6 @@ public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerInte
         .respond(response().withStatusCode(500).withBody(errorMessage));
 
     BulkSubmissionRequest request = getBulkSubmissionRequest();
-    ;
 
     // Assert
     ClaimsApiClientException clientException =

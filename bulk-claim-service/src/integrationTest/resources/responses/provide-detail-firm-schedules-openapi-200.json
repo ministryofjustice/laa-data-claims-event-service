@@ -29,8 +29,8 @@
       "contractReference": "string",
       "contractStatus": "string",
       "contractAuthorizationStatus": "string",
-      "contractStartDate": "2025-07-21",
-      "contractEndDate": "2025-07-21",
+      "contractStartDate": "2025-07-31",
+      "contractEndDate": "2025-07-31",
       "areaOfLaw": "string",
       "scheduleType": "string",
       "scheduleNumber": "string",
@@ -38,8 +38,8 @@
       "scheduleContractReference": "string",
       "scheduleAuthorizationStatus": "string",
       "scheduleStatus": "string",
-      "scheduleStartDate": "2025-07-21",
-      "scheduleEndDate": "2025-07-21",
+      "scheduleStartDate": "2025-07-31",
+      "scheduleEndDate": "2025-07-31",
       "scheduleLines": [
         {
           "areaOfLaw": "string",
@@ -60,8 +60,8 @@
           "outreach": "string",
           "cancelFlag": "string",
           "cancelReason": "string",
-          "cancelDate": "2025-07-21",
-          "closedDate": "2025-07-21",
+          "cancelDate": "2025-07-31",
+          "closedDate": "2025-07-31",
           "closedReason": "string"
         }
       ],

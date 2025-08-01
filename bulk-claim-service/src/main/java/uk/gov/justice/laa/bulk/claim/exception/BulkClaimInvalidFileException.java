@@ -1,0 +1,13 @@
+package uk.gov.justice.laa.bulk.claim.exception;
+
+/** Exception for issues when the uploaded file is the wrong file type. */
+public class BulkClaimInvalidFileException extends RuntimeException {
+
+  public BulkClaimInvalidFileException(String message) {
+    super(message);
+  }
+
+  public BulkClaimInvalidFileException(String message, Exception cause) {
+    super(message, cause);
+  }
+}

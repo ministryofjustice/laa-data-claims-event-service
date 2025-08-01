@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.bulk.claim.service.provider;
+package uk.gov.justice.laa.bulk.claim.service;
 
 import java.time.LocalDate;
 import org.springframework.format.annotation.DateTimeFormat;
