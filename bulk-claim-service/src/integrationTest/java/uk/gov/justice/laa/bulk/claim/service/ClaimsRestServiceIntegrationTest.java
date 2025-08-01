@@ -15,7 +15,6 @@ import java.util.Optional;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -23,6 +22,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockserver.model.Header;
 import org.springframework.boot.test.context.SpringBootTest;
+import reactor.core.publisher.Mono;
 import uk.gov.justice.laa.bulk.claim.exception.ClaimsApiBadRequestException;
 import uk.gov.justice.laa.bulk.claim.exception.ClaimsApiClientException;
 import uk.gov.justice.laa.bulk.claim.exception.ClaimsApiServerErrorException;
@@ -80,10 +80,11 @@ public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerInte
   class GetClaimTests {
 
     @Test
-    @DisplayName("Should return 200 response")
-    void shouldReturn200Response() throws Exception {
+    @DisplayName("Should handle 200 response")
+    void shouldHandle200Response() throws Exception {
       // Given
       String claimId = "123456789";
+      String expectedJson = readJsonFromFile("get-claim-openapi-200.json");
       mockServerClient
           .when(request().withMethod("GET").withPath("/api/claims/" + claimId))
           .respond(
@@ -91,16 +92,84 @@ public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerInte
                   .withStatusCode(200)
                   .withHeader("Content-Type", "application/json")
                   // TODO: Update this file to contain actual response when open API spec is updated
-                  .withBody(readJsonFromFile("get-claim-openapi-200.json")));
+                  .withBody(expectedJson));
       // When
-      Optional<ClaimDto> result = claimsService.getClaim(claimId);
+      Mono<ClaimDto> result = claimsService.getClaim(claimId);
       // Then
-      assertThat(result).isNotNull();
-      assertThat(result).isEqualTo(readJsonFromFile("get-claim-openapi-200.json"));
+      Optional<ClaimDto> claimDto = result.blockOptional();
+      assertThat(claimDto).isNotNull();
+      assertThat(claimDto).isPresent();
+      String resultJson = objectMapper.writeValueAsString(claimDto.get());
+      assertThatJsonMatches(expectedJson, resultJson);
+    }
+
+    @Test
+    @DisplayName("Should handle 404 response")
+    void shouldHandle404Response() {
+      // Given
+      String claimId = "123456789";
+      mockServerClient
+          .when(request().withMethod("GET").withPath("/api/claims/" + claimId))
+          .respond(response().withStatusCode(404));
+      // When
+      Mono<ClaimDto> result = claimsService.getClaim(claimId);
+      // Then
+      Optional<ClaimDto> claimDto = result.blockOptional();
+      assertThat(claimDto).isNotNull();
+      assertThat(claimDto).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Should handle 401 response")
+    void shouldHandle401Response() {
+      // Given
+      String claimId = "123456789";
+      mockServerClient
+          .when(request().withMethod("GET").withPath("/api/claims/" + claimId))
+          .respond(response().withStatusCode(401));
+      // When
+      Mono<ClaimDto> result = claimsService.getClaim(claimId);
+      // Then
+      ClaimsApiServerErrorException exception =
+          assertThrows(ClaimsApiServerErrorException.class, result::block);
+      assertThat(exception.getMessage())
+          .isEqualTo("Server error from Claims API: 401 UNAUTHORIZED");
+    }
+
+    @Test
+    @DisplayName("Should handle 403 response")
+    void shouldHandle403Response() {
+      // Given
+      String claimId = "123456789";
+      mockServerClient
+          .when(request().withMethod("GET").withPath("/api/claims/" + claimId))
+          .respond(response().withStatusCode(403));
+      // When
+      Mono<ClaimDto> result = claimsService.getClaim(claimId);
+      // Then
+      ClaimsApiServerErrorException exception =
+          assertThrows(ClaimsApiServerErrorException.class, result::block);
+      assertThat(exception.getMessage()).isEqualTo("Server error from Claims API: 403 FORBIDDEN");
+    }
+
+    @Test
+    @DisplayName("Should handle 500 response")
+    void shouldHandle500Response() {
+      // Given
+      String claimId = "123456789";
+      mockServerClient
+          .when(request().withMethod("GET").withPath("/api/claims/" + claimId))
+          .respond(response().withStatusCode(500).withBody("Server error"));
+      // When
+      Mono<ClaimDto> result = claimsService.getClaim(claimId);
+      // Then
+      ClaimsApiServerErrorException exception =
+          assertThrows(ClaimsApiServerErrorException.class, result::block);
+      assertThat(exception.getMessage()).isEqualTo("Server error from Claims API: Server error");
     }
   }
 
-    @Nested
+  @Nested
   @DisplayName("POST: /api/bulk-submissions tests")
   class SubmitBulkClaimTests {
 
@@ -137,8 +206,8 @@ public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerInte
               ConstraintViolationException.class, () -> claimsService.submitBulkClaim(request));
 
       assertThat(clientException.getMessage()).contains("userId: must not be null");
-      assertThat(clientException.getMessage()).contains(
-          "submissions: must not be empty");
+      assertThat(clientException.getMessage())
+          .contains("submissions: must not be empty");
     }
 
     @Test
@@ -175,7 +244,6 @@ public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerInte
           .respond(response().withStatusCode(500).withBody(errorMessage));
 
       BulkSubmissionRequest request = getBulkSubmissionRequest();
-
 
       // Assert
       ClaimsApiServerErrorException serverException =

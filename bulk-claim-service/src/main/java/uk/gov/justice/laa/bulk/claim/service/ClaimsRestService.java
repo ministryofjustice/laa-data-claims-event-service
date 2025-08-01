@@ -1,7 +1,6 @@
 package uk.gov.justice.laa.bulk.claim.service;
 
 import java.net.URI;
-import java.util.Optional;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import java.util.function.Function;
@@ -11,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 import uk.gov.justice.laa.bulk.claim.exception.ClaimsApiBadRequestException;
 import uk.gov.justice.laa.bulk.claim.exception.ClaimsApiClientException;
 import uk.gov.justice.laa.bulk.claim.exception.ClaimsApiServerErrorException;
@@ -115,8 +115,41 @@ public class ClaimsRestService implements ClaimsService {
                 });
   }
 
+  /**
+   * Retrieves a claim by its unique identifier from the Claims API.
+   *
+   * @param claimId the unique identifier of the claim to be retrieved
+   * @return a {@link Mono} containing the {@link ClaimDto} object representing the claim, or an
+   *     empty {@link Mono} if the claim is not found.
+   * @throws ClaimsApiServerErrorException if the Claims API returns a server error (5xx status
+   *     code)
+   */
   @Override
-  public Optional<ClaimDto> getClaim(String claimId) {
-    return Optional.empty();
+  public Mono<ClaimDto> getClaim(String claimId) {
+    return webClient
+        .get()
+        .uri("/api/claims/{claimId}", claimId)
+        .retrieve()
+        .onStatus(
+            http -> http.equals(HttpStatus.NOT_FOUND),
+            response -> Mono.empty() // This behavior is fine for 4xx
+            )
+        .onStatus(
+            http -> http.equals(HttpStatus.UNAUTHORIZED) || http.equals(HttpStatus.FORBIDDEN),
+            response ->
+                response
+                    .bodyToMono(String.class)
+                    .defaultIfEmpty(response.statusCode().toString())
+                    .flatMap(error -> Mono.error(new ClaimsApiServerErrorException(error))))
+        .onStatus(
+            HttpStatus.INTERNAL_SERVER_ERROR::equals,
+            response ->
+                response
+                    .bodyToMono(String.class)
+                    .defaultIfEmpty(response.statusCode().toString())
+                    .flatMap(error -> Mono.error(new ClaimsApiServerErrorException(error))))
+        .bodyToMono(ClaimDto.class)
+        // This ensures any error is directly propagated downstream in case of unexpected scenarios
+        .onErrorResume(ClaimsApiServerErrorException.class, Mono::error);
   }
 }

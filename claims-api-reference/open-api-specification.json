@@ -10,7 +10,16 @@
       "ClaimDto": {
         "type": "object",
         "properties": {
-          "claimId": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "feeCode": {
+            "type": "string"
+          },
+          "submissionStatus": {
             "type": "string"
           }
         }
