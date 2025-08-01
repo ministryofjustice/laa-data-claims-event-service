@@ -7,7 +7,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.File;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -16,6 +15,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 import uk.gov.justice.laa.bulk.claim.converter.BulkClaimConverterFactory;
 import uk.gov.justice.laa.bulk.claim.converter.BulkClaimCsvConverter;
 import uk.gov.justice.laa.bulk.claim.data.client.dto.BulkSubmissionRequest;
@@ -47,13 +47,13 @@ public class BulkClaimServiceTests {
     @Test
     @DisplayName("Returns a bulk claim submission")
     void returnsABulkClaimSubmission() {
-      File file = new File("filePath.csv");
+      MultipartFile file = new MockMultipartFile("filePath.csv", new byte[0]);
       FileSubmission csvSubmission = mock(CsvSubmission.class);
       BulkClaimSubmission expected = mock(BulkClaimSubmission.class);
       BulkClaimCsvConverter bulkClaimCsvConverter = mock(BulkClaimCsvConverter.class);
       when(bulkClaimConverterFactory.converterFor(FileExtension.CSV))
           .thenReturn(bulkClaimCsvConverter);
-      when(bulkClaimCsvConverter.convert(any(File.class)))
+      when(bulkClaimCsvConverter.convert(any(MockMultipartFile.class)))
           .thenReturn((CsvSubmission) csvSubmission);
       when(bulkClaimSubmissionMapper.toBulkClaimSubmission(csvSubmission)).thenReturn(expected);
       BulkClaimSubmission actual = bulkClaimService.getBulkClaimSubmission(file);
@@ -64,7 +64,7 @@ public class BulkClaimServiceTests {
     @Test
     @DisplayName("Throws an exception for unsupported file extensions")
     void throwsExceptionForInvalidFileExtensions() {
-      File file = new File("filePath.invalid");
+      MultipartFile file = new MockMultipartFile("filePath.invalid", new byte[0]);
       assertThrows(
           BulkClaimFileReadException.class,
           () -> bulkClaimService.getBulkClaimSubmission(file),

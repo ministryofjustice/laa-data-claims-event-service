@@ -1,11 +1,11 @@
 package uk.gov.justice.laa.bulk.claim.converter;
 
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import java.io.File;
 import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
 import uk.gov.justice.laa.bulk.claim.exception.BulkClaimFileReadException;
 import uk.gov.justice.laa.bulk.claim.model.FileExtension;
 import uk.gov.justice.laa.bulk.claim.model.xml.XmlSubmission;
@@ -29,11 +29,11 @@ public class BulkClaimXmlConverter implements BulkClaimConverter {
    * @return the {@link XmlSubmission} object.
    */
   @Override
-  public XmlSubmission convert(File file) {
+  public XmlSubmission convert(MultipartFile file) {
     XmlSubmission submission;
 
     try {
-      submission = xmlMapper.readValue(file, XmlSubmission.class);
+      submission = xmlMapper.readValue(file.getInputStream(), XmlSubmission.class);
     } catch (IOException e) {
       throw new BulkClaimFileReadException("Failed to read xml bulk claim file", e);
     }
