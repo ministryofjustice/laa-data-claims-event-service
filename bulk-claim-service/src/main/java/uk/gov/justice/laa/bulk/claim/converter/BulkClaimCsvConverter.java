@@ -7,10 +7,8 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvParser;
 import io.micrometer.common.util.StringUtils;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -18,6 +16,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
 import uk.gov.justice.laa.bulk.claim.exception.BulkClaimFileReadException;
 import uk.gov.justice.laa.bulk.claim.model.FileExtension;
 import uk.gov.justice.laa.bulk.claim.model.csv.CsvBulkClaimRow;
@@ -49,13 +48,13 @@ public class BulkClaimCsvConverter implements BulkClaimConverter {
    * @return the {@link CsvSubmission} object.
    */
   @Override
-  public CsvSubmission convert(File file) {
+  public CsvSubmission convert(MultipartFile file) {
     CsvOffice csvOffice = null;
     CsvSchedule csvSchedule = null;
     List<CsvOutcome> csvOutcomes = new ArrayList<>();
     List<CsvMatterStarts> csvMatterStarts = new ArrayList<>();
 
-    try (FileReader fileReader = new FileReader(file, StandardCharsets.UTF_8)) {
+    try (InputStream fileReader = file.getInputStream()) {
       MappingIterator<List<String>> rowIterator =
           csvMapper
               .readerForListOf(String.class)

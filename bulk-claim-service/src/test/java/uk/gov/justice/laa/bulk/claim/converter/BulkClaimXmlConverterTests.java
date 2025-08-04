@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.util.ResourceUtils.getFile;
 import static uk.gov.justice.laa.bulk.claim.converter.ConverterTestUtils.getContent;
+import static uk.gov.justice.laa.bulk.claim.converter.ConverterTestUtils.getMultipartFile;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -17,6 +18,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.springframework.web.multipart.MultipartFile;
 import uk.gov.justice.laa.bulk.claim.exception.BulkClaimFileReadException;
 import uk.gov.justice.laa.bulk.claim.model.FileExtension;
 import uk.gov.justice.laa.bulk.claim.model.xml.XmlSubmission;
@@ -53,8 +55,8 @@ public class BulkClaimXmlConverterTests {
     @Test
     @DisplayName("Can convert a bulk claim file with outcomes to xml submission")
     void canConvertOutcomesToXmlSubmission() throws IOException {
-      File inputFile = getFile(OUTCOMES_INPUT_FILE);
-      XmlSubmission bulkClaimSubmission = bulkClaimXmlConverter.convert(inputFile);
+      MultipartFile file = getMultipartFile(OUTCOMES_INPUT_FILE);
+      XmlSubmission bulkClaimSubmission = bulkClaimXmlConverter.convert(file);
       String actual = objectMapper.writeValueAsString(bulkClaimSubmission);
 
       File convertedFile = getFile(OUTCOMES_CONVERTED_FILE);
@@ -66,20 +68,20 @@ public class BulkClaimXmlConverterTests {
     @Test
     @DisplayName("Throws exception when office is missing")
     void throwsExceptionWhenOfficeMissing() throws IOException {
-      File inputFile = getFile(MISSING_OFFICE_INPUT_FILE);
+      MultipartFile file = getMultipartFile(MISSING_OFFICE_INPUT_FILE);
       assertThrows(
           BulkClaimFileReadException.class,
-          () -> bulkClaimXmlConverter.convert(inputFile),
+          () -> bulkClaimXmlConverter.convert(file),
           "Expected exception to be thrown when office is missing");
     }
 
     @Test
     @DisplayName("Throws exception when schedule is missing")
     void throwsExceptionWhenScheduleMissing() throws IOException {
-      File inputFile = getFile(MISSING_SCHEDULE_INPUT_FILE);
+      MultipartFile file = getMultipartFile(MISSING_SCHEDULE_INPUT_FILE);
       assertThrows(
           BulkClaimFileReadException.class,
-          () -> bulkClaimXmlConverter.convert(inputFile),
+          () -> bulkClaimXmlConverter.convert(file),
           "Expected exception to be thrown when schedule is missing");
     }
   }
