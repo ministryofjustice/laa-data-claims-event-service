@@ -95,7 +95,7 @@
         "client2Surname" : null,
         "client2DateOfBirth" : null,
         "client2Ucn" : null,
-        "client2Postcode" : null,
+        "client2PostCode" : null,
         "client2Gender" : null,
         "client2Ethnicity" : null,
         "client2Disability" : null,
@@ -107,7 +107,9 @@
         "eligibleClient" : null,
         "courtLocation" : null,
         "localAuthorityNumber" : null,
-        "paNumber" : null
+        "paNumber" : null,
+        "excessTravelCosts" : null,
+        "medConcludedDate" : null
       } ]
     }
   }

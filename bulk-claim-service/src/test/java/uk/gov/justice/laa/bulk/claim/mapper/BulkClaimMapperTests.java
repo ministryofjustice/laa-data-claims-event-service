@@ -126,7 +126,7 @@ public class BulkClaimMapperTests {
                     "client2Surname",
                     "07/01/2000",
                     "client2Ucn",
-                    "client2Postcode",
+                    "client2PostCode",
                     "client2Gender",
                     "client2Ethnicity",
                     "client2Disability",
@@ -138,7 +138,9 @@ public class BulkClaimMapperTests {
                     "eligibleClient",
                     "courtLocation",
                     "localAuthorityNumber",
-                    "paNumber")),
+                    "paNumber",
+                    "0.10",
+                    "08/01/2000")),
             List.of(
                 new CsvMatterStarts(
                     "scheduleRef",
@@ -258,7 +260,7 @@ public class BulkClaimMapperTests {
                             "client2Surname",
                             "07/01/2000",
                             "client2Ucn",
-                            "client2Postcode",
+                            "client2PostCode",
                             "client2Gender",
                             "client2Ethnicity",
                             "client2Disability",
@@ -270,7 +272,9 @@ public class BulkClaimMapperTests {
                             "eligibleClient",
                             "courtLocation",
                             "localAuthorityNumber",
-                            "paNumber")))));
+                            "paNumber",
+                            "0.10",
+                            "08/01/2000")))));
 
     BulkClaimSubmission expected = getExpectedBulkClaimSubmission(false);
 
@@ -386,7 +390,7 @@ public class BulkClaimMapperTests {
                 "client2Surname",
                 LocalDate.of(2000, 1, 7),
                 "client2Ucn",
-                "client2Postcode",
+                "client2PostCode",
                 "client2Gender",
                 "client2Ethnicity",
                 "client2Disability",
@@ -398,7 +402,9 @@ public class BulkClaimMapperTests {
                 "eligibleClient",
                 "courtLocation",
                 "localAuthorityNumber",
-                "paNumber")),
+                "paNumber",
+                new BigDecimal("0.10"),
+                LocalDate.of(2000, 1, 8))),
         matterStarts);
   }
 }
