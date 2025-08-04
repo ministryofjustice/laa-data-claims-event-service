@@ -96,7 +96,7 @@
     "CLIENT2_SURNAME" : null,
     "CLIENT2_DATE_OF_BIRTH" : null,
     "CLIENT2_UCN" : null,
-    "CLIENT2_POSTCODE" : null,
+    "CLIENT2_POST_CODE" : null,
     "CLIENT2_GENDER" : null,
     "CLIENT2_ETHNICITY" : null,
     "CLIENT2_DISABILITY" : null,
@@ -108,7 +108,9 @@
     "ELIGIBLE_CLIENT" : null,
     "COURT_LOCATION" : null,
     "LOCAL_AUTHORITY_NUMBER" : null,
-    "PA_NUMBER" : null
+    "PA_NUMBER" : null,
+    "EXCESS_TRAVEL_COSTS" : null,
+    "MED_CONCLUDED_DATE" : null
   } ],
   "matterStarts" : [ ]
 }

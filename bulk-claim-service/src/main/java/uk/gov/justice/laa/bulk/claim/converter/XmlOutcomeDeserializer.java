@@ -111,7 +111,7 @@ public class XmlOutcomeDeserializer extends JsonDeserializer<XmlOutcome> {
     String client2Surname = null;
     String client2DateOfBirth = null;
     String client2Ucn = null;
-    String client2Postcode = null;
+    String client2PostCode = null;
     String client2Gender = null;
     String client2Ethnicity = null;
     String client2Disability = null;
@@ -124,6 +124,8 @@ public class XmlOutcomeDeserializer extends JsonDeserializer<XmlOutcome> {
     String courtLocation = null;
     String localAuthorityNumber = null;
     String paNumber = null;
+    String excessTravelCosts = null;
+    String medConcludedDate = null;
 
     XmlMapper mapper = (XmlMapper) p.getCodec();
 
@@ -194,7 +196,7 @@ public class XmlOutcomeDeserializer extends JsonDeserializer<XmlOutcome> {
         case "DETENTION_TRAVEL_WAITING_COSTS" -> detentionTravelWaitingCosts = value;
         case "DELIVERY_LOCATION" -> deliveryLocation = value;
         case "PRIOR_AUTHORITY_REF" -> priorAuthorityRef = value;
-        case "JR_FORM_FILING" -> jrFormFilling = value;
+        case "JR_FORM_FILLING" -> jrFormFilling = value;
         case "ADDITIONAL_TRAVEL_PAYMENT" -> additionalTravelPayment = value;
         case "MEETINGS_ATTENDED" -> meetingsAttended = value;
         case "MEDICAL_REPORTS_CLAIMED" -> medicalReportsClaimed = value;
@@ -231,7 +233,7 @@ public class XmlOutcomeDeserializer extends JsonDeserializer<XmlOutcome> {
         case "CLIENT2_SURNAME" -> client2Surname = value;
         case "CLIENT2_DATE_OF_BIRTH" -> client2DateOfBirth = value;
         case "CLIENT2_UCN" -> client2Ucn = value;
-        case "CLIENT2_POSTCODE" -> client2Postcode = value;
+        case "CLIENT2_POST_CODE" -> client2PostCode = value;
         case "CLIENT2_GENDER" -> client2Gender = value;
         case "CLIENT2_ETHNICITY" -> client2Ethnicity = value;
         case "CLIENT2_DISABILITY" -> client2Disability = value;
@@ -244,6 +246,8 @@ public class XmlOutcomeDeserializer extends JsonDeserializer<XmlOutcome> {
         case "COURT_LOCATION" -> courtLocation = value;
         case "LOCAL_AUTHORITY_NUMBER" -> localAuthorityNumber = value;
         case "PA_NUMBER" -> paNumber = value;
+        case "EXCESS_TRAVEL_COSTS" -> excessTravelCosts = value;
+        case "MED_CONCLUDED_DATE" -> medConcludedDate = value;
         default -> throw new IllegalStateException("Unsupported name for outcome item: " + name);
       }
     }
@@ -337,7 +341,7 @@ public class XmlOutcomeDeserializer extends JsonDeserializer<XmlOutcome> {
         client2Surname,
         client2DateOfBirth,
         client2Ucn,
-        client2Postcode,
+        client2PostCode,
         client2Gender,
         client2Ethnicity,
         client2Disability,
@@ -349,6 +353,8 @@ public class XmlOutcomeDeserializer extends JsonDeserializer<XmlOutcome> {
         eligibleClient,
         courtLocation,
         localAuthorityNumber,
-        paNumber);
+        paNumber,
+        excessTravelCosts,
+        medConcludedDate);
   }
 }

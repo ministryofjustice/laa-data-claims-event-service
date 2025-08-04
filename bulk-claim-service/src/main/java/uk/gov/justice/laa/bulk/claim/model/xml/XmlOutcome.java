@@ -121,7 +121,7 @@ public record XmlOutcome(
     String client2Surname,
     String client2DateOfBirth,
     String client2Ucn,
-    String client2Postcode,
+    String client2PostCode,
     String client2Gender,
     String client2Ethnicity,
     String client2Disability,
@@ -133,4 +133,6 @@ public record XmlOutcome(
     String eligibleClient,
     String courtLocation,
     String localAuthorityNumber,
-    String paNumber) {}
+    String paNumber,
+    String excessTravelCosts,
+    String medConcludedDate) {}

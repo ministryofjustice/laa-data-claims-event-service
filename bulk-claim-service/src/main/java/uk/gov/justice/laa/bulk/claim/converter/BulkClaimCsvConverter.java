@@ -1,9 +1,7 @@
 package uk.gov.justice.laa.bulk.claim.converter;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvParser;
 import io.micrometer.common.util.StringUtils;
@@ -105,13 +103,6 @@ public class BulkClaimCsvConverter implements BulkClaimConverter {
 
     CsvSubmission bulkClaimSubmission =
         new CsvSubmission(csvOffice, csvSchedule, csvOutcomes, csvMatterStarts);
-
-    try {
-      objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
-      log.info(objectMapper.writeValueAsString(bulkClaimSubmission));
-    } catch (JsonProcessingException e) {
-      throw new RuntimeException("Failed to print bulk claim", e);
-    }
 
     return bulkClaimSubmission;
   }

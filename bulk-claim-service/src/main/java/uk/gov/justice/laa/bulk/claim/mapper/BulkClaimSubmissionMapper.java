@@ -131,6 +131,10 @@ public interface BulkClaimSubmissionMapper {
       source = "client2DateOfBirth",
       qualifiedByName = "outcomeFieldToLocalDate")
   @Mapping(
+      target = "medConcludedDate",
+      source = "medConcludedDate",
+      qualifiedByName = "outcomeFieldToLocalDate")
+  @Mapping(
       target = "vatIndicator",
       source = "vatIndicator",
       qualifiedByName = "outcomeFieldToBoolean")
@@ -190,6 +194,10 @@ public interface BulkClaimSubmissionMapper {
   @Mapping(
       target = "client2DateOfBirth",
       source = "client2DateOfBirth",
+      qualifiedByName = "outcomeFieldToLocalDate")
+  @Mapping(
+      target = "medConcludedDate",
+      source = "medConcludedDate",
       qualifiedByName = "outcomeFieldToLocalDate")
   @Mapping(
       target = "vatIndicator",

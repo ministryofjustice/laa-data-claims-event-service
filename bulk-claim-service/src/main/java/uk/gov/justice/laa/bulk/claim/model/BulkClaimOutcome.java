@@ -94,7 +94,7 @@ public record BulkClaimOutcome(
     String client2Surname,
     @JsonFormat(shape = JsonFormat.Shape.STRING) LocalDate client2DateOfBirth,
     String client2Ucn,
-    String client2Postcode,
+    String client2PostCode,
     String client2Gender,
     String client2Ethnicity,
     String client2Disability,
@@ -106,4 +106,6 @@ public record BulkClaimOutcome(
     String eligibleClient,
     String courtLocation,
     String localAuthorityNumber,
-    String paNumber) {}
+    String paNumber,
+    BigDecimal excessTravelCosts,
+    @JsonFormat(shape = JsonFormat.Shape.STRING) LocalDate medConcludedDate) {}
