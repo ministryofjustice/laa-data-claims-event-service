@@ -1,7 +1,6 @@
 package uk.gov.justice.laa.bulk.claim.service;
 
 import java.net.URI;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import java.util.function.Function;
 import org.springframework.http.HttpMethod;

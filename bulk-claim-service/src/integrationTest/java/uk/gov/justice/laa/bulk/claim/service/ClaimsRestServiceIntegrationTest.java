@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -72,7 +71,7 @@ public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerInte
 
   @BeforeEach
   void setUp() {
-    bulkClaimsSubmissionApiClient = new ClaimsApiClient(createWebClient());
+    claimsService = new ClaimsRestService(createWebClient());
   }
 
   @Nested
@@ -221,7 +220,6 @@ public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerInte
           .respond(response().withStatusCode(400).withBody(errorMessage));
 
       BulkSubmissionRequest request = getBulkSubmissionRequest();
-
 
       // Assert
       ClaimsApiClientErrorException clientException =
