@@ -1,12 +1,18 @@
 package uk.gov.justice.laa.bulk.claim.data.client.http;
 
 import java.net.URI;
-import org.springframework.http.HttpStatus;
+import java.util.function.Function;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
+import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 import uk.gov.justice.laa.bulk.claim.data.client.dto.BulkSubmissionRequest;
 import uk.gov.justice.laa.bulk.claim.data.client.dto.BulkSubmissionResponse;
-import uk.gov.justice.laa.bulk.claim.data.client.exceptions.ClaimsApiBadRequestException;
+import uk.gov.justice.laa.bulk.claim.data.client.dto.UpdateClaimRequest;
+import uk.gov.justice.laa.bulk.claim.data.client.exceptions.ClaimsApiClientErrorException;
 import uk.gov.justice.laa.bulk.claim.data.client.exceptions.ClaimsApiClientException;
 import uk.gov.justice.laa.bulk.claim.data.client.exceptions.ClaimsApiServerErrorException;
 import uk.gov.justice.laa.bulk.claim.data.client.util.ValidationUtil;
@@ -15,6 +21,8 @@ import uk.gov.justice.laa.bulk.claim.data.client.util.ValidationUtil;
 public class ClaimsApiClient implements BulkClaimsSubmissionApiClient {
 
   private final WebClient webClient;
+
+  private static final String SUBMISSIONS_ENDPOINT = "/api/bulk-submissions";
 
   /**
    * Client constructor.
@@ -33,41 +41,67 @@ public class ClaimsApiClient implements BulkClaimsSubmissionApiClient {
    */
   @Override
   public BulkSubmissionResponse submitBulkClaim(BulkSubmissionRequest request) {
-    try {
-      ValidationUtil.validate(request);
+    ValidationUtil.validate(request);
 
-      URI location =
-          webClient
-              .post()
-              .uri("/api/bulk-submissions")
-              .bodyValue(request)
-              .retrieve()
-              .onStatus(
-                  HttpStatus.BAD_REQUEST::equals,
-                  response ->
-                      response.bodyToMono(String.class).map(ClaimsApiBadRequestException::new))
-              .onStatus(
-                  HttpStatus.INTERNAL_SERVER_ERROR::equals,
-                  response ->
-                      response.bodyToMono(String.class).map(ClaimsApiServerErrorException::new))
-              .toBodilessEntity()
-              .map(response -> response.getHeaders().getLocation())
-              .block();
+    URI location =
+        webClient
+            .post()
+            .uri(SUBMISSIONS_ENDPOINT)
+            .bodyValue(request)
+            .retrieve()
+            .onStatus(
+                HttpStatusCode::isError,
+                handleErrorResponse(HttpMethod.POST.name(), SUBMISSIONS_ENDPOINT))
+            .toBodilessEntity()
+            .map(response -> response.getHeaders().getLocation())
+            .block();
 
-      if (location == null || !StringUtils.hasText(location.getPath())) {
-        throw new ClaimsApiClientException("Location header missing or malformed");
-      }
-
-      String[] pathParts = location.getPath().split("/");
-      String submissionId = pathParts[pathParts.length - 1];
-      if (!StringUtils.hasText(submissionId)) {
-        throw new ClaimsApiClientException("Submission ID missing from location header");
-      }
-
-      return new BulkSubmissionResponse(submissionId);
-
-    } catch (Exception e) {
-      throw new ClaimsApiClientException("Submission failed", e);
+    if (location == null || !StringUtils.hasText(location.getPath())) {
+      throw new ClaimsApiClientException("Location header missing or malformed");
     }
+
+    String[] pathParts = location.getPath().split("/");
+    String submissionId = pathParts[pathParts.length - 1];
+    if (!StringUtils.hasText(submissionId)) {
+      throw new ClaimsApiClientException("Submission ID missing from location header");
+    }
+
+    return new BulkSubmissionResponse(submissionId);
+  }
+
+  @Override
+  public Mono<ResponseEntity<Void>> updateClaimStatus(UpdateClaimRequest request) {
+    ValidationUtil.validate(request);
+    return webClient
+        .patch()
+        .uri(SUBMISSIONS_ENDPOINT)
+        .bodyValue(request)
+        .retrieve()
+        .onStatus(
+            HttpStatusCode::isError,
+            handleErrorResponse(HttpMethod.PATCH.name(), SUBMISSIONS_ENDPOINT))
+        .toBodilessEntity();
+  }
+
+  private Function<ClientResponse, Mono<? extends Throwable>> handleErrorResponse(
+      String method, String endpoint) {
+    return response ->
+        response
+            .bodyToMono(String.class)
+            .defaultIfEmpty("Unknown error")
+            .map(
+                r -> {
+                  if (response.statusCode().is4xxClientError()) {
+                    return new ClaimsApiClientErrorException(
+                        r, method, endpoint, response.statusCode());
+                  } else if (response.statusCode().is5xxServerError()) {
+                    return new ClaimsApiServerErrorException(
+                        r, method, endpoint, response.statusCode());
+                  } else {
+                    return new ClaimsApiClientException(
+                        "Unknown error response from %s %s: %s".formatted(method, endpoint, r),
+                        response.statusCode());
+                  }
+                });
   }
 }

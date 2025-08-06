@@ -1,18 +1,30 @@
 package uk.gov.justice.laa.bulk.claim.service.claim;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
+import jakarta.validation.ConstraintViolationException;
+import java.util.ArrayList;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockserver.model.Header;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
+import reactor.core.publisher.Mono;
 import uk.gov.justice.laa.bulk.claim.data.client.dto.BulkSubmissionRequest;
 import uk.gov.justice.laa.bulk.claim.data.client.dto.BulkSubmissionResponse;
-import uk.gov.justice.laa.bulk.claim.data.client.exceptions.ClaimsApiBadRequestException;
+import uk.gov.justice.laa.bulk.claim.data.client.dto.ClaimStatus;
+import uk.gov.justice.laa.bulk.claim.data.client.dto.UpdateClaimRequest;
+import uk.gov.justice.laa.bulk.claim.data.client.exceptions.ClaimsApiClientErrorException;
 import uk.gov.justice.laa.bulk.claim.data.client.exceptions.ClaimsApiClientException;
 import uk.gov.justice.laa.bulk.claim.data.client.exceptions.ClaimsApiServerErrorException;
 import uk.gov.justice.laa.bulk.claim.data.client.http.BulkClaimsSubmissionApiClient;
@@ -22,11 +34,11 @@ import uk.gov.justice.laa.bulk.claim.model.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerIntegrationTest {
-  protected BulkClaimsSubmissionApiClient bulkClaimsSubmissionApiClient;
+  private BulkClaimsSubmissionApiClient bulkClaimsSubmissionApiClient;
 
   private static @NotNull BulkSubmissionRequest getBulkSubmissionRequest() {
-    List<BulkClaimOutcome> bulkClaimOutcomes = new java.util.ArrayList<>();
-    List<BulkClaimMatterStarts> bulkClaimMatterStarts = new java.util.ArrayList<>();
+    List<BulkClaimOutcome> bulkClaimOutcomes = new ArrayList<>();
+    List<BulkClaimMatterStarts> bulkClaimMatterStarts = new ArrayList<>();
 
     return new BulkSubmissionRequest(
         "123",
@@ -44,86 +56,166 @@ public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerInte
     bulkClaimsSubmissionApiClient = new ClaimsApiClient(createWebClient());
   }
 
-  @Test
-  @DisplayName("Should return 201 status and return bulk claims upload response ID.")
-  void testSubmitBulkClaimReturns() {
-    // setup
-    String submissionId = "abc123";
-    String locationHeader = "/api/bulk-submissions/" + submissionId;
+  @Nested
+  @DisplayName("POST: /api/bulk-submissions")
+  class PostBulkSubmissions {
 
-    mockServerClient
-        .when(request().withMethod("POST").withPath("/api/bulk-submissions"))
-        .respond(response().withStatusCode(201).withHeader(new Header("Location", locationHeader)));
+    @Test
+    @DisplayName("Should return 201 status and return bulk claims upload response ID.")
+    void submitBulkClaimReturns() {
+      // setup
+      String submissionId = "abc123";
+      String locationHeader = "/api/bulk-submissions/" + submissionId;
 
-    BulkSubmissionRequest request = getBulkSubmissionRequest();
-    // execute
-    BulkSubmissionResponse response = bulkClaimsSubmissionApiClient.submitBulkClaim(request);
+      mockServerClient
+          .when(request().withMethod("POST").withPath("/api/bulk-submissions"))
+          .respond(
+              response().withStatusCode(201).withHeader(new Header("Location", locationHeader)));
 
-    // Assert
-    assertThat(response).isNotNull();
-    assertThat(response.submissionId()).isEqualTo(submissionId);
+      BulkSubmissionRequest request = getBulkSubmissionRequest();
+      // execute
+      BulkSubmissionResponse response = bulkClaimsSubmissionApiClient.submitBulkClaim(request);
+
+      // Assert
+      assertThat(response).isNotNull();
+      assertThat(response.submissionId()).isEqualTo(submissionId);
+    }
+
+    @Test
+    @DisplayName("Should return Client API exception with error message.")
+    void submitBulkClaimRequestValidationFails() throws ClaimsApiClientException {
+      // setup
+      BulkSubmissionRequest request = new BulkSubmissionRequest(null, null, null);
+
+      // Assert
+      ConstraintViolationException clientException =
+          assertThrows(
+              ConstraintViolationException.class,
+              () -> bulkClaimsSubmissionApiClient.submitBulkClaim(request));
+
+      assertThat(clientException.getMessage()).contains("userId: must not be null");
+      assertThat(clientException.getMessage()).contains("submissions: must not be empty");
+    }
+
+    @Test
+    @DisplayName("Should return Client API 400 exception with error message.")
+    void submitBulkClaimRequestFails() throws ClaimsApiClientErrorException {
+      // setup
+      String errorMessage = "failed with user error";
+
+      mockServerClient
+          .when(request().withMethod("POST").withPath("/api/bulk-submissions"))
+          .respond(response().withStatusCode(400).withBody(errorMessage));
+
+      BulkSubmissionRequest request = getBulkSubmissionRequest();
+
+      // Assert
+      ClaimsApiClientErrorException clientException =
+          assertThrows(
+              ClaimsApiClientErrorException.class,
+              () -> bulkClaimsSubmissionApiClient.submitBulkClaim(request));
+
+      assertThat(clientException).isNotNull();
+      assertThat(clientException.getMessage())
+          .isEqualTo("400 response from POST /api/bulk-submissions: failed with user error");
+    }
+
+    @Test
+    @DisplayName("Should return Client API 500 exception with error message.")
+    void submitBulkClaimRequestFailsWithSeverError() throws ClaimsApiClientErrorException {
+      // setup
+      String errorMessage = "failed with server error";
+
+      mockServerClient
+          .when(request().withMethod("POST").withPath("/api/bulk-submissions"))
+          .respond(response().withStatusCode(500).withBody(errorMessage));
+
+      BulkSubmissionRequest request = getBulkSubmissionRequest();
+
+      // Assert
+      ClaimsApiServerErrorException serverException =
+          assertThrows(
+              ClaimsApiServerErrorException.class,
+              () -> bulkClaimsSubmissionApiClient.submitBulkClaim(request));
+
+      assertThat(serverException).isNotNull();
+      assertThat(serverException.getMessage())
+          .isEqualTo("500 response from POST /api/bulk-submissions: failed with server error");
+    }
   }
 
-  @Test
-  @DisplayName("Should return Client API exception with error message.")
-  void testSubmitBulkClaimRequestValidationFails() throws ClaimsApiClientException {
-    // setup
-    BulkSubmissionRequest request = new BulkSubmissionRequest(null, null, null);
+  @Nested
+  @DisplayName("PATCH: /api/bulk-submissions")
+  class PatchBulkSubmissions {
 
-    // Assert
-    ClaimsApiClientException clientException =
-        assertThrows(
-            ClaimsApiClientException.class,
-            () -> bulkClaimsSubmissionApiClient.submitBulkClaim(request));
+    @ParameterizedTest
+    @ValueSource(ints = {200, 201, 202, 203, 204, 205})
+    @DisplayName("Should return status code for successful requests")
+    void returnsStatusCodeForSuccessfulRequests(int code) {
+      UpdateClaimRequest request = new UpdateClaimRequest(ClaimStatus.VALID, List.of());
 
-    assertThat(clientException.getMessage()).isEqualTo("Submission failed");
-    assertThat(clientException.getCause().getMessage()).contains("userId: must not be null");
-    assertThat(clientException.getCause().getMessage()).contains("submissions: must not be empty");
-  }
+      mockServerClient
+          .when(request().withMethod("PATCH").withPath("/api/bulk-submissions"))
+          .respond(response().withStatusCode(code));
 
-  @Test
-  @DisplayName("Should return Client API 400 exception with error message.")
-  void testSubmitBulkClaimRequestFails() throws ClaimsApiBadRequestException {
-    // setup
-    String errorMessage = "failed with user error";
+      ResponseEntity<Void> response =
+          bulkClaimsSubmissionApiClient.updateClaimStatus(request).block();
 
-    mockServerClient
-        .when(request().withMethod("POST").withPath("/api/bulk-submissions"))
-        .respond(response().withStatusCode(400).withBody(errorMessage));
+      assertNotNull(response);
+      assertEquals(code, response.getStatusCode().value());
+    }
 
-    BulkSubmissionRequest request = getBulkSubmissionRequest();
+    @ParameterizedTest
+    @ValueSource(ints = {400, 401, 402, 403, 404, 405})
+    @DisplayName("Should throw client error exception for 4XX responses")
+    void throwsClientErrorExceptionFor4XXResponses(int code) {
+      UpdateClaimRequest request = new UpdateClaimRequest(ClaimStatus.VALID, List.of());
 
-    // Assert
-    ClaimsApiClientException clientException =
-        assertThrows(
-            ClaimsApiClientException.class,
-            () -> bulkClaimsSubmissionApiClient.submitBulkClaim(request));
+      mockServerClient
+          .when(request().withMethod("PATCH").withPath("/api/bulk-submissions"))
+          .respond(response().withStatusCode(code).withBody("client error"));
 
-    assertThat(clientException.getMessage()).isEqualTo("Submission failed");
-    assertThat(clientException).hasCauseInstanceOf(ClaimsApiBadRequestException.class);
-    assertThat(clientException.getCause().getMessage()).contains(errorMessage);
-  }
+      Mono<ResponseEntity<Void>> response =
+          bulkClaimsSubmissionApiClient.updateClaimStatus(request);
 
-  @Test
-  @DisplayName("Should return Client API 500 exception with error message.")
-  void testSubmitBulkClaimRequestFailsWithSeverError() throws ClaimsApiBadRequestException {
-    // setup
-    String errorMessage = "failed with sever error";
+      assertThatThrownBy(response::block)
+          .isInstanceOf(ClaimsApiClientErrorException.class)
+          .isNotNull()
+          .hasMessageContaining(
+              "%s response from PATCH /api/bulk-submissions: client error".formatted(code))
+          .hasFieldOrPropertyWithValue("httpStatus", HttpStatusCode.valueOf(code));
+    }
 
-    mockServerClient
-        .when(request().withMethod("POST").withPath("/api/bulk-submissions"))
-        .respond(response().withStatusCode(500).withBody(errorMessage));
+    @ParameterizedTest
+    @ValueSource(ints = {500, 501, 502, 503, 504, 505})
+    @DisplayName("Should throw server error exception for 5XX responses")
+    void throwsServerErrorExceptionFor5XXResponses(int code) {
+      UpdateClaimRequest request = new UpdateClaimRequest(ClaimStatus.VALID, List.of());
 
-    BulkSubmissionRequest request = getBulkSubmissionRequest();
+      mockServerClient
+          .when(request().withMethod("PATCH").withPath("/api/bulk-submissions"))
+          .respond(response().withStatusCode(code).withBody("server error"));
 
-    // Assert
-    ClaimsApiClientException clientException =
-        assertThrows(
-            ClaimsApiClientException.class,
-            () -> bulkClaimsSubmissionApiClient.submitBulkClaim(request));
+      Mono<ResponseEntity<Void>> response =
+          bulkClaimsSubmissionApiClient.updateClaimStatus(request);
 
-    assertThat(clientException.getMessage()).isEqualTo("Submission failed");
-    assertThat(clientException).hasCauseInstanceOf(ClaimsApiServerErrorException.class);
-    assertThat(clientException.getCause().getMessage()).contains(errorMessage);
+      assertThatThrownBy(response::block)
+          .isInstanceOf(ClaimsApiServerErrorException.class)
+          .isNotNull()
+          .hasMessageContaining(
+              "%s response from PATCH /api/bulk-submissions: server error".formatted(code))
+          .hasFieldOrPropertyWithValue("httpStatus", HttpStatusCode.valueOf(code));
+    }
+
+    @Test
+    @DisplayName("Should throw validation exception for invalid requests")
+    void throwsValidationExceptionForInvalidRequests() {
+      UpdateClaimRequest request = new UpdateClaimRequest(null, List.of());
+
+      assertThatThrownBy(() -> bulkClaimsSubmissionApiClient.updateClaimStatus(request).block())
+          .isInstanceOf(ConstraintViolationException.class)
+          .isNotNull()
+          .hasMessageContaining("claimStatus: must not be null");
+    }
   }
 }
