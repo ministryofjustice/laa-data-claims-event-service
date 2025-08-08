@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.bulk.claim.data.client.dto;
+package uk.gov.justice.laa.bulk.claim.service.dto;
 
 /** Enum representing every available valid claim status. */
 public enum ClaimStatus {

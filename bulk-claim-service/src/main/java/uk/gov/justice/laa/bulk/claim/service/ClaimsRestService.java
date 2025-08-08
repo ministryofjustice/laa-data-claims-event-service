@@ -1,7 +1,6 @@
 package uk.gov.justice.laa.bulk.claim.service;
 
 import java.net.URI;
-import org.springframework.http.HttpStatus;
 import java.util.function.Function;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatusCode;
@@ -10,21 +9,14 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
-import uk.gov.justice.laa.bulk.claim.exception.ClaimsApiBadRequestException;
+import uk.gov.justice.laa.bulk.claim.exception.ClaimsApiClientErrorException;
 import uk.gov.justice.laa.bulk.claim.exception.ClaimsApiClientException;
 import uk.gov.justice.laa.bulk.claim.exception.ClaimsApiServerErrorException;
 import uk.gov.justice.laa.bulk.claim.service.dto.BulkSubmissionRequest;
 import uk.gov.justice.laa.bulk.claim.service.dto.BulkSubmissionResponse;
+import uk.gov.justice.laa.bulk.claim.service.dto.UpdateClaimRequest;
 import uk.gov.justice.laa.bulk.claim.util.ValidationUtil;
 import uk.gov.justice.laa.claims.model.ClaimDto;
-import reactor.core.publisher.Mono;
-import uk.gov.justice.laa.bulk.claim.data.client.dto.BulkSubmissionRequest;
-import uk.gov.justice.laa.bulk.claim.data.client.dto.BulkSubmissionResponse;
-import uk.gov.justice.laa.bulk.claim.data.client.dto.UpdateClaimRequest;
-import uk.gov.justice.laa.bulk.claim.data.client.exceptions.ClaimsApiClientErrorException;
-import uk.gov.justice.laa.bulk.claim.data.client.exceptions.ClaimsApiClientException;
-import uk.gov.justice.laa.bulk.claim.data.client.exceptions.ClaimsApiServerErrorException;
-import uk.gov.justice.laa.bulk.claim.data.client.util.ValidationUtil;
 
 /** laa-data-stewardship-claims-api Client. */
 public class ClaimsRestService implements ClaimsService {
@@ -130,23 +122,8 @@ public class ClaimsRestService implements ClaimsService {
         .uri("/api/claims/{claimId}", claimId)
         .retrieve()
         .onStatus(
-            http -> http.equals(HttpStatus.NOT_FOUND),
-            response -> Mono.empty() // This behavior is fine for 4xx
-            )
-        .onStatus(
-            http -> http.equals(HttpStatus.UNAUTHORIZED) || http.equals(HttpStatus.FORBIDDEN),
-            response ->
-                response
-                    .bodyToMono(String.class)
-                    .defaultIfEmpty(response.statusCode().toString())
-                    .flatMap(error -> Mono.error(new ClaimsApiServerErrorException(error))))
-        .onStatus(
-            HttpStatus.INTERNAL_SERVER_ERROR::equals,
-            response ->
-                response
-                    .bodyToMono(String.class)
-                    .defaultIfEmpty(response.statusCode().toString())
-                    .flatMap(error -> Mono.error(new ClaimsApiServerErrorException(error))))
+            HttpStatusCode::isError,
+            handleErrorResponse(HttpMethod.POST.name(), SUBMISSIONS_ENDPOINT))
         .bodyToMono(ClaimDto.class)
         // This ensures any error is directly propagated downstream in case of unexpected scenarios
         .onErrorResume(ClaimsApiServerErrorException.class, Mono::error);
