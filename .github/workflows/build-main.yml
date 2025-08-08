@@ -23,10 +23,10 @@ jobs:
       integration_test_task: "integrationTest"
       create_tag: 'false' # TODO: set to true
       github_bot_username: 'laa-ccms-caab-service'
-      junit_results_path: 'bulk-claim-service/build/test-results'
-      junit_report_path: 'bulk-claim-service/build/reports/tests'
-      checkstyle_report_path: 'bulk-claim-service/build/reports/checkstyle'
-      jacoco_coverage_report_path: 'bulk-claim-service/build/reports/jacoco'
+      junit_results_path: 'data-claims-event-service/build/test-results'
+      junit_report_path: 'data-claims-event-service/build/reports/tests'
+      checkstyle_report_path: 'data-claims-event-service/build/reports/checkstyle'
+      jacoco_coverage_report_path: 'data-claims-event-service/build/reports/jacoco'
     secrets:
       gh_token: ${{ secrets.GITHUB_TOKEN }}
       aws_region: 'eu-west-2'

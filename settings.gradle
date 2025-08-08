@@ -13,9 +13,9 @@ pluginManagement {
     }
 }
 
-rootProject.name = 'laa-submit-a-bulk-claim-api'
+rootProject.name = 'laa-data-claims-event-service'
 
 include 'provider-details-api-reference'
 include 'bulk-claim-api'
-include 'bulk-claim-service'
+include 'data-claims-event-service'
 
