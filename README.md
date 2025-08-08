@@ -1,12 +1,12 @@
 ## Data claims event service
 
-[![Build main](https://github.com/ministryofjustice/laa-submit-a-bulk-claim-api/actions/workflows/build-main.yml/badge.svg)](https://github.com/ministryofjustice/laa-submit-a-bulk-claim-api/actions/workflows/build-main.yml)
+[![Build main](https://github.com/ministryofjustice/laa-data-claims-event-service/actions/workflows/build-main.yml/badge.svg)](https://github.com/ministryofjustice/laa-data-claims-event-service/actions/workflows/build-main.yml)
 
 ## Project Structure
 Includes the following subprojects:
 
 - `bulk-claim-api` - OpenAPI specification used for generating API interfaces and documentation.
-- `bulk-claim-service` - REST API service with business logic for handling of bulk claim submission requests.
+- `data-claims-event-service` - Data claims event service which processes claims from an SQS queue.
 - `provider-details-api-reference` - OpenAPI specification for the Provider Details API used for generating model classes used by the Provider Details API client.
 
 ## Usage
