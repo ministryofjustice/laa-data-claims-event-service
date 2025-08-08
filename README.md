@@ -1,4 +1,4 @@
-## Submit a Bulk Claim API
+## Data claims event service
 
 [![Build main](https://github.com/ministryofjustice/laa-submit-a-bulk-claim-api/actions/workflows/build-main.yml/badge.svg)](https://github.com/ministryofjustice/laa-submit-a-bulk-claim-api/actions/workflows/build-main.yml)
 
