@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.bulk.claim.service;
+package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -24,19 +24,19 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.Mono;
-import uk.gov.justice.laa.bulk.claim.exception.ClaimsApiClientException;
-import uk.gov.justice.laa.bulk.claim.exception.ClaimsApiServerErrorException;
-import uk.gov.justice.laa.bulk.claim.helper.MockServerIntegrationTest;
-import uk.gov.justice.laa.bulk.claim.model.BulkClaimMatterStarts;
-import uk.gov.justice.laa.bulk.claim.model.BulkClaimOffice;
-import uk.gov.justice.laa.bulk.claim.model.BulkClaimOutcome;
-import uk.gov.justice.laa.bulk.claim.model.BulkClaimSchedule;
-import uk.gov.justice.laa.bulk.claim.model.BulkClaimSubmission;
-import uk.gov.justice.laa.bulk.claim.service.dto.BulkSubmissionRequest;
-import uk.gov.justice.laa.bulk.claim.service.dto.BulkSubmissionResponse;
-import uk.gov.justice.laa.bulk.claim.service.dto.ClaimStatus;
-import uk.gov.justice.laa.bulk.claim.service.dto.UpdateClaimRequest;
 import uk.gov.justice.laa.claims.model.ClaimDto;
+import uk.gov.justice.laa.dstew.payments.claimsevent.exception.ClaimsApiClientException;
+import uk.gov.justice.laa.dstew.payments.claimsevent.exception.ClaimsApiServerErrorException;
+import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MockServerIntegrationTest;
+import uk.gov.justice.laa.dstew.payments.claimsevent.model.BulkClaimMatterStarts;
+import uk.gov.justice.laa.dstew.payments.claimsevent.model.BulkClaimOffice;
+import uk.gov.justice.laa.dstew.payments.claimsevent.model.BulkClaimOutcome;
+import uk.gov.justice.laa.dstew.payments.claimsevent.model.BulkClaimSchedule;
+import uk.gov.justice.laa.dstew.payments.claimsevent.model.BulkClaimSubmission;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.dto.BulkSubmissionRequest;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.dto.BulkSubmissionResponse;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.dto.ClaimStatus;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.dto.UpdateClaimRequest;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class ClaimsRestServiceIntegrationTest extends MockServerIntegrationTest {

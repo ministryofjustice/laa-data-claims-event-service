@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:data-claims-event-service/src/main/java/uk/gov/justice/laa/dstew/payments/claimsevent/data/client/http/ClaimsApiClient.java
-package uk.gov.justice.laa.dstew.payments.claimsevent.data.client.http;
-========
-package uk.gov.justice.laa.bulk.claim.service;
->>>>>>>> upstream/main:data-claims-event-service/src/main/java/uk/gov/justice/laa/dstew/payments/claimsevent/service/ClaimsRestService.java
+package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
 import java.net.URI;
 import java.util.function.Function;
@@ -13,24 +9,14 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
-<<<<<<<< HEAD:data-claims-event-service/src/main/java/uk/gov/justice/laa/dstew/payments/claimsevent/data/client/http/ClaimsApiClient.java
-import uk.gov.justice.laa.dstew.payments.claimsevent.data.client.dto.BulkSubmissionRequest;
-import uk.gov.justice.laa.dstew.payments.claimsevent.data.client.dto.BulkSubmissionResponse;
-import uk.gov.justice.laa.dstew.payments.claimsevent.data.client.dto.UpdateClaimRequest;
-import uk.gov.justice.laa.dstew.payments.claimsevent.data.client.exceptions.ClaimsApiClientErrorException;
-import uk.gov.justice.laa.dstew.payments.claimsevent.data.client.exceptions.ClaimsApiClientException;
-import uk.gov.justice.laa.dstew.payments.claimsevent.data.client.exceptions.ClaimsApiServerErrorException;
-import uk.gov.justice.laa.dstew.payments.claimsevent.data.client.util.ValidationUtil;
-========
-import uk.gov.justice.laa.bulk.claim.exception.ClaimsApiClientErrorException;
-import uk.gov.justice.laa.bulk.claim.exception.ClaimsApiClientException;
-import uk.gov.justice.laa.bulk.claim.exception.ClaimsApiServerErrorException;
-import uk.gov.justice.laa.bulk.claim.service.dto.BulkSubmissionRequest;
-import uk.gov.justice.laa.bulk.claim.service.dto.BulkSubmissionResponse;
-import uk.gov.justice.laa.bulk.claim.service.dto.UpdateClaimRequest;
-import uk.gov.justice.laa.bulk.claim.util.ValidationUtil;
 import uk.gov.justice.laa.claims.model.ClaimDto;
->>>>>>>> upstream/main:data-claims-event-service/src/main/java/uk/gov/justice/laa/dstew/payments/claimsevent/service/ClaimsRestService.java
+import uk.gov.justice.laa.dstew.payments.claimsevent.exception.ClaimsApiClientErrorException;
+import uk.gov.justice.laa.dstew.payments.claimsevent.exception.ClaimsApiClientException;
+import uk.gov.justice.laa.dstew.payments.claimsevent.exception.ClaimsApiServerErrorException;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.dto.BulkSubmissionRequest;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.dto.BulkSubmissionResponse;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.dto.UpdateClaimRequest;
+import uk.gov.justice.laa.dstew.payments.claimsevent.util.ValidationUtil;
 
 /** laa-data-stewardship-claims-api Client. */
 public class ClaimsRestService implements ClaimsService {

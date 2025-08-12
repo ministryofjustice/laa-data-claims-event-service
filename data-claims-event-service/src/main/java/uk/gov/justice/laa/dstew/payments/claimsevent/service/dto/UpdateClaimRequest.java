@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:data-claims-event-service/src/main/java/uk/gov/justice/laa/dstew/payments/claimsevent/data/client/dto/UpdateClaimRequest.java
-package uk.gov.justice.laa.dstew.payments.claimsevent.data.client.dto;
-========
-package uk.gov.justice.laa.bulk.claim.service.dto;
->>>>>>>> upstream/main:data-claims-event-service/src/main/java/uk/gov/justice/laa/dstew/payments/claimsevent/service/dto/UpdateClaimRequest.java
+package uk.gov.justice.laa.dstew.payments.claimsevent.service.dto;
 
 import jakarta.validation.constraints.NotNull;
 import java.util.List;

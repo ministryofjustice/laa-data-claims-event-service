@@ -10,14 +10,13 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import uk.gov.justice.laa.bulk.claim.model.SubmissionResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.converter.BulkClaimConverterFactory;
-import uk.gov.justice.laa.dstew.payments.claimsevent.data.client.dto.BulkSubmissionRequest;
-import uk.gov.justice.laa.dstew.payments.claimsevent.data.client.dto.BulkSubmissionResponse;
-import uk.gov.justice.laa.dstew.payments.claimsevent.data.client.http.BulkClaimsSubmissionApiClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.BulkClaimFileReadException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.mapper.BulkClaimSubmissionMapper;
 import uk.gov.justice.laa.dstew.payments.claimsevent.model.BulkClaimSubmission;
 import uk.gov.justice.laa.dstew.payments.claimsevent.model.FileExtension;
 import uk.gov.justice.laa.dstew.payments.claimsevent.model.FileSubmission;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.dto.BulkSubmissionRequest;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.dto.BulkSubmissionResponse;
 
 /** Service responsible for handling the processing of bulk claim submission objects. */
 @Service

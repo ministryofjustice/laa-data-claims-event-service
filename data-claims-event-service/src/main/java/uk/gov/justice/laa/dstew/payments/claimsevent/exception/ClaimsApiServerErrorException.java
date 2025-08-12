@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:data-claims-event-service/src/main/java/uk/gov/justice/laa/dstew/payments/claimsevent/data/client/exceptions/ClaimsApiServerErrorException.java
-package uk.gov.justice.laa.dstew.payments.claimsevent.data.client.exceptions;
-========
-package uk.gov.justice.laa.bulk.claim.exception;
->>>>>>>> upstream/main:data-claims-event-service/src/main/java/uk/gov/justice/laa/dstew/payments/claimsevent/exception/ClaimsApiServerErrorException.java
+package uk.gov.justice.laa.dstew.payments.claimsevent.exception;
 
 import org.springframework.http.HttpStatusCode;
 
