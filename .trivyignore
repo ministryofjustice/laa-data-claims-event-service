@@ -1,3 +1,4 @@
 # TODO: remove once underlying buildpack image has been updated
 # libc6
 CVE-2025-5702
+CVE-2025-47907

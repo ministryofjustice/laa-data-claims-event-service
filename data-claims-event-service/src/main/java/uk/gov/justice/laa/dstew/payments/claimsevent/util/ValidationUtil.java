@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:data-claims-event-service/src/main/java/uk/gov/justice/laa/dstew/payments/claimsevent/data/client/util/ValidationUtil.java
-package uk.gov.justice.laa.dstew.payments.claimsevent.data.client.util;
-========
-package uk.gov.justice.laa.bulk.claim.util;
->>>>>>>> upstream/main:bulk-claim-service/src/main/java/uk/gov/justice/laa/bulk/claim/util/ValidationUtil.java
+package uk.gov.justice.laa.dstew.payments.claimsevent.util;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;

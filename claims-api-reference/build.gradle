@@ -15,7 +15,7 @@ dependencies {
     // Upgrade to fix Uncontrolled Recursion vulnerability in commons-lang3
     implementation 'org.apache.commons:commons-lang3:3.18.0'
     // Upgrade to fix vulnerabilities in tomcat-embed-core
-    implementation 'org.apache.tomcat.embed:tomcat-embed-core:11.0.10'
+    implementation 'org.apache.tomcat.embed:tomcat-embed-core:11.0.9'
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9'
@@ -28,11 +28,11 @@ checkstyleMain.exclude "*"
 
 openApiGenerate {
     generatorName = "spring"
-    inputSpec = "$rootDir/provider-details-api-reference/open-api-specification.json".toString()
-    outputDir = "$rootDir/provider-details-api-reference/generated".toString()
-    apiPackage = "uk.gov.justice.laa.provider.api"
-    invokerPackage = "uk.gov.justice.laa.provider.invoker"
-    modelPackage = "uk.gov.justice.laa.provider.model"
+    inputSpec = "$rootDir/claims-api-reference/open-api-specification.json".toString()
+    outputDir = "$rootDir/claims-api-reference/generated".toString()
+    apiPackage = "uk.gov.justice.laa.claims.api"
+    invokerPackage = "uk.gov.justice.laa.claims.invoker"
+    modelPackage = "uk.gov.justice.laa.claims.model"
     configOptions = [
             generateBuilders    : "true",
             interfaceOnly       : "true", // This will only generate interfaces, not implementations
@@ -47,7 +47,7 @@ openApiGenerate {
 compileJava.dependsOn 'openApiGenerate'
 
 clean {
-    delete "$rootDir/provider-details-api-reference/generated"
+    delete "$rootDir/claims-api-reference/generated"
 }
 
 // disable for overall project when running a build

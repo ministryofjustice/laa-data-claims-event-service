@@ -27,7 +27,7 @@ public class BulkClaimService {
 
   private final BulkClaimConverterFactory bulkClaimConverterFactory;
   private final BulkClaimSubmissionMapper submissionMapper;
-  private final BulkClaimsSubmissionApiClient bulkClaimsSubmissionApiClient;
+  private final ClaimsRestService bulkClaimsSubmissionApiClient;
 
   /**
    * Converts the provided file to a Java object based on the filename extension, then maps it to

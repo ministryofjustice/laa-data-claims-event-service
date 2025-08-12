@@ -1,6 +1,6 @@
 plugins {
     id 'org.openapi.generator' version '7.14.0'
-    id 'uk.gov.laa.ccms.springboot.laa-ccms-spring-boot-gradle-plugin' version '0.0.39'
+    id 'uk.gov.laa.ccms.springboot.laa-ccms-spring-boot-gradle-plugin' version '0.0.42'
 }
 
 repositories {
@@ -14,7 +14,7 @@ dependencies {
     // Upgrade to fix Uncontrolled Recursion vulnerability in commons-lang3
     implementation 'org.apache.commons:commons-lang3:3.18.0'
     // Upgrade to fix vulnerabilities in tomcat-embed-core
-    implementation 'org.apache.tomcat.embed:tomcat-embed-core:11.0.9'
+    implementation 'org.apache.tomcat.embed:tomcat-embed-core:11.0.10'
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9'
