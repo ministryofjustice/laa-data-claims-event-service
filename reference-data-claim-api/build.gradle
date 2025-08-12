@@ -1,6 +1,6 @@
 plugins {
     id 'org.openapi.generator' version '7.14.0'
-    id 'uk.gov.laa.ccms.springboot.laa-ccms-spring-boot-gradle-plugin' version '0.0.39'
+    id 'uk.gov.laa.springboot.laa-spring-boot-gradle-plugin'
 }
 
 repositories {
@@ -27,11 +27,11 @@ checkstyleMain.exclude "*"
 
 openApiGenerate {
     generatorName = "spring"
-    inputSpec = "$rootDir/bulk-claim-api/open-api-specification.yml".toString()
-    outputDir = "$rootDir/bulk-claim-api/generated".toString()
-    apiPackage = "uk.gov.justice.laa.bulk.claim.api"
-    invokerPackage = "uk.gov.justice.laa.bulk.claim.invoker"
-    modelPackage = "uk.gov.justice.laa.bulk.claim.model"
+    inputSpec = "$rootDir/reference-data-claim-api/open-api-specification.yml".toString()
+    outputDir = "$rootDir/reference-data-claim-api/generated".toString()
+    apiPackage = "uk.gov.justice.laa.dstew.payments.claimsdata.api"
+    invokerPackage = "uk.gov.justice.laa.dstew.payments.claimsdata.invoker"
+    modelPackage = "uk.gov.justice.laa.dstew.payments.claimsdata.model"
     configOptions = [
             generateBuilders    : "true",
             interfaceOnly       : "true", // This will only generate interfaces, not implementations
@@ -46,7 +46,7 @@ openApiGenerate {
 compileJava.dependsOn 'openApiGenerate'
 
 clean {
-    delete "$rootDir/bulk-claim-api/generated"
+    delete "$rootDir/reference-data-claim-api/generated"
 }
 
 // disable for overall project when running a build

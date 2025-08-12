@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.dstew.payments.claimsevent.service;
+package uk.gov.justice.laa.dstew.payments.claimsevent.client;
 
 import java.time.LocalDate;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -11,13 +11,13 @@ import reactor.core.publisher.Mono;
 import uk.gov.justice.laa.provider.model.ProviderFirmOfficeContractAndScheduleDto;
 
 /**
- * REST service interface for fetching provider office details and schedules. This interface
+ * REST client interface for fetching provider office details and schedules. This interface
  * communicates with the Provider Details API.
  *
  * @author Jamie Briggs
  */
 @HttpExchange(value = "/provider-offices", accept = MediaType.APPLICATION_JSON_VALUE)
-public interface ProviderDetailsRestService {
+public interface ProviderDetailsRestClient {
 
   /**
    * Get all provider office schedule details based on the provider office code. Can return the

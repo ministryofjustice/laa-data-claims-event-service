@@ -14,18 +14,19 @@ import org.mockserver.model.HttpResponse;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
+import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MockServerIntegrationTest;
 import uk.gov.justice.laa.provider.model.ProviderFirmOfficeContractAndScheduleDto;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class ProviderDetailsRestServiceIntegrationTest extends MockServerIntegrationTest {
 
-  private ProviderDetailsRestService providerDetailsRestService;
+  private ProviderDetailsRestClient providerDetailsRestService;
 
   @BeforeEach
   void setUp() {
     // Configure WebClient and integrate it with ProviderDetailsRestService
-    providerDetailsRestService = createClient(ProviderDetailsRestService.class);
+    providerDetailsRestService = createClient(ProviderDetailsRestClient.class);
   }
 
   @Nested

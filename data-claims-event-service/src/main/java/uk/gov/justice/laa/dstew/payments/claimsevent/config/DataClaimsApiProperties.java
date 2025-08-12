@@ -8,9 +8,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author Jamie Briggs
  */
 @ConfigurationProperties(prefix = "laa.claims-api")
-public class ClaimsApiProperties extends ApiProperties {
+public class DataClaimsApiProperties extends ApiProperties {
 
-  public ClaimsApiProperties(String url, String host, int port, String accessToken) {
+  public DataClaimsApiProperties(String url, String host, int port, String accessToken) {
     super(url, host, port, accessToken);
   }
 }

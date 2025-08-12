@@ -1,6 +1,6 @@
 plugins {
     id 'org.openapi.generator' version '7.14.0'
-    id 'uk.gov.laa.ccms.springboot.laa-ccms-spring-boot-gradle-plugin' version '0.0.39'
+    id 'uk.gov.laa.springboot.laa-spring-boot-gradle-plugin'
 }
 
 repositories {
@@ -28,8 +28,8 @@ checkstyleMain.exclude "*"
 
 openApiGenerate {
     generatorName = "spring"
-    inputSpec = "$rootDir/provider-details-api-reference/open-api-specification.json".toString()
-    outputDir = "$rootDir/provider-details-api-reference/generated".toString()
+    inputSpec = "$rootDir/reference-provider-details-api/open-api-specification.json".toString()
+    outputDir = "$rootDir/reference-provider-details-api/generated".toString()
     apiPackage = "uk.gov.justice.laa.provider.api"
     invokerPackage = "uk.gov.justice.laa.provider.invoker"
     modelPackage = "uk.gov.justice.laa.provider.model"
@@ -47,7 +47,7 @@ openApiGenerate {
 compileJava.dependsOn 'openApiGenerate'
 
 clean {
-    delete "$rootDir/provider-details-api-reference/generated"
+    delete "$rootDir/reference-provider-details-api/generated"
 }
 
 // disable for overall project when running a build

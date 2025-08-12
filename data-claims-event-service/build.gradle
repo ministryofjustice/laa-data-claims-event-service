@@ -2,7 +2,7 @@ plugins {
     id 'io.freefair.lombok' version '8.14'
     id 'net.researchgate.release' version '3.1.0'
     id("com.diffplug.spotless") version "7.2.1"
-    id 'uk.gov.laa.ccms.springboot.laa-ccms-spring-boot-gradle-plugin' version '0.0.41'
+    id 'uk.gov.laa.springboot.laa-spring-boot-gradle-plugin'
 }
 
 test {
@@ -37,8 +37,8 @@ dependencies {
     implementation 'org.apache.tomcat.embed:tomcat-embed-core:11.0.9'
 
 
-    implementation project(':bulk-claim-api')
-    implementation project(':provider-details-api-reference')
+    implementation project(':reference-data-claim-api')
+    implementation project(':reference-provider-details-api')
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
