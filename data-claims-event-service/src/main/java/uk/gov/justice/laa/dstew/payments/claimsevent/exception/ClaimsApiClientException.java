@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.dstew.payments.claimsevent.data.client.exceptions;
+package uk.gov.justice.laa.dstew.payments.claimsevent.exception;
 
 import org.springframework.http.HttpStatusCode;
 

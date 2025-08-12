@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.dstew.payments.claimsevent.data.client.util;
+package uk.gov.justice.laa.dstew.payments.claimsevent.util;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;

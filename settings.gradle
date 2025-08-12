@@ -15,6 +15,7 @@ pluginManagement {
 
 rootProject.name = 'laa-data-claims-event-service'
 
+include 'claims-api-reference'
 include 'provider-details-api-reference'
 include 'bulk-claim-api'
 include 'data-claims-event-service'
