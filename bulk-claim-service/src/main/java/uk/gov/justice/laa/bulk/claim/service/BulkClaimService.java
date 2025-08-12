@@ -9,15 +9,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import uk.gov.justice.laa.bulk.claim.converter.BulkClaimConverterFactory;
-import uk.gov.justice.laa.bulk.claim.data.client.dto.BulkSubmissionRequest;
-import uk.gov.justice.laa.bulk.claim.data.client.dto.BulkSubmissionResponse;
-import uk.gov.justice.laa.bulk.claim.data.client.http.BulkClaimsSubmissionApiClient;
 import uk.gov.justice.laa.bulk.claim.exception.BulkClaimFileReadException;
 import uk.gov.justice.laa.bulk.claim.mapper.BulkClaimSubmissionMapper;
 import uk.gov.justice.laa.bulk.claim.model.BulkClaimSubmission;
 import uk.gov.justice.laa.bulk.claim.model.FileExtension;
 import uk.gov.justice.laa.bulk.claim.model.FileSubmission;
 import uk.gov.justice.laa.bulk.claim.model.SubmissionResponse;
+import uk.gov.justice.laa.bulk.claim.service.dto.BulkSubmissionRequest;
+import uk.gov.justice.laa.bulk.claim.service.dto.BulkSubmissionResponse;
 
 /** Service responsible for handling the processing of bulk claim submission objects. */
 @Service
@@ -27,7 +26,7 @@ public class BulkClaimService {
 
   private final BulkClaimConverterFactory bulkClaimConverterFactory;
   private final BulkClaimSubmissionMapper submissionMapper;
-  private final BulkClaimsSubmissionApiClient bulkClaimsSubmissionApiClient;
+  private final ClaimsRestService bulkClaimsSubmissionApiClient;
 
   /**
    * Converts the provided file to a Java object based on the filename extension, then maps it to

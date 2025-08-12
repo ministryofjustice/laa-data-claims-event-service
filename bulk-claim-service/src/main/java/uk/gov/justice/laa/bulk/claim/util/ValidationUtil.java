@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.bulk.claim.data.client.util;
+package uk.gov.justice.laa.bulk.claim.util;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;

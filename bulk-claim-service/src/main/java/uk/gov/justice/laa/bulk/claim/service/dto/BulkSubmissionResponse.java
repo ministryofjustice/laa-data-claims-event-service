@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.bulk.claim.data.client.dto;
+package uk.gov.justice.laa.bulk.claim.service.dto;
 
 /**
  * Bulk submissions Response.
