@@ -30,7 +30,7 @@ class ProviderDetailsRestServiceIntegrationTest extends MockServerIntegrationTes
   }
 
   @Nested
-  @DisplayName("Get office schedules without effective date")
+  @DisplayName("GET: /provider-offices/{officeCode}/schedules tests")
   class GetOfficeSchedulesWithoutEffectiveDate {
 
     @Test
