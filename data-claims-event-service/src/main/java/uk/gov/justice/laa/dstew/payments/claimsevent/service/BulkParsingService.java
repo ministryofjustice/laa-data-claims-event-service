@@ -28,6 +28,14 @@ public class BulkParsingService {
   private final DataClaimsRestClient dataClaimsRestClient;
   private final BulkSubmissionMapper bulkSubmissionMapper;
 
+  //todo: remove this method when the service is fully implemented
+  public void parseData(BulkSubmissionResponse bulkSubmission, UUID submissionId) {
+    SubmissionPost submissionPost =
+        bulkSubmissionMapper.mapToSubmissionPost(bulkSubmission, submissionId);
+
+    createSubmission(submissionPost);
+  }
+
   public void ParseData(UUID bulkSubmissionId, UUID submissionId) {
     // Step 1: Get the bulk submission data
     BulkSubmissionResponse bulkSubmission = getBulkSubmission(bulkSubmissionId);
@@ -40,7 +48,7 @@ public class BulkParsingService {
     createSubmission(submissionPost);
 
     //todo null check
-    List<BulkSubmissionOutcome> outcomes = bulkSubmission.details().outcomes();
+    List<BulkSubmissionOutcome> outcomes = bulkSubmission.data().outcomes();
 
     // Step 4: Map each outcome to a claim object
     List<ClaimPost> claims = bulkSubmissionMapper.mapToClaimPosts(outcomes);
@@ -49,7 +57,7 @@ public class BulkParsingService {
 //    return createClaims(submissionId.toString(), claims);
 
     //todo null check
-    List<BulkSubmissionMatterStarts> matterStarts = bulkSubmission.details().matterStarts();
+    List<BulkSubmissionMatterStarts> matterStarts = bulkSubmission.data().matterStarts();
 
     // Step 6: Map each matter-start to a matter-start object
 
