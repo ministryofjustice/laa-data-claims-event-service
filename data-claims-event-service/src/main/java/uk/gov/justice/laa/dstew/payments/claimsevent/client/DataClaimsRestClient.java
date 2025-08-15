@@ -9,20 +9,15 @@ import org.springframework.web.service.annotation.GetExchange;
 import org.springframework.web.service.annotation.HttpExchange;
 import org.springframework.web.service.annotation.PatchExchange;
 import org.springframework.web.service.annotation.PostExchange;
-
-import java.util.Map;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimFields;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPost;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.CreateBulkSubmission201Response;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.CreateClaim201Response;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.CreateMatterStart201Response;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.CreateMatterStartRequest;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetBulkSubmission200Response;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetSubmission200Response;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionFields;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPost;
-import uk.gov.justice.laa.dstew.payments.claimsevent.model.BulkSubmissionResponse;
 
 /**
  * REST client interface for fetching claims data. This interface communicates with the Data Claims
@@ -31,8 +26,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.model.BulkSubmissionRespons
 @HttpExchange(
     value = "/api/v0",
     accept = MediaType.APPLICATION_JSON_VALUE,
-    contentType = MediaType.APPLICATION_JSON_VALUE
-)
+    contentType = MediaType.APPLICATION_JSON_VALUE)
 public interface DataClaimsRestClient {
 
   /**
@@ -41,16 +35,16 @@ public interface DataClaimsRestClient {
    * @param id UUID of the bulk submission
    * @return the stored JSON document as a map
    */
-  //todo need to be change from BulkSubmissionResponse to api response
+  // todo need to be change from BulkSubmissionResponse to api response
   @GetExchange("/bulk-submissions/{id}")
-  ResponseEntity<BulkSubmissionResponse> getBulkSubmission(@PathVariable("id") UUID id);
+  ResponseEntity<GetBulkSubmission200Response> getBulkSubmission(@PathVariable("id") UUID id);
 
   /**
    * Create a new submission.
    *
    * @param submission payload shaped like {@code SubmissionPost}
-   * @return 201 Created with JSON body containing the created submission {@code id};
-   *         {@code Location} header points to the created resource
+   * @return 201 Created with JSON body containing the created submission {@code id}; {@code
+   *     Location} header points to the created resource
    */
   @PostExchange("/submissions")
   ResponseEntity<Void> createSubmission(@RequestBody SubmissionPost submission);
@@ -58,14 +52,13 @@ public interface DataClaimsRestClient {
   /**
    * Update (patch) an existing submission's fields (typically status).
    *
-   * @param id           submission UUID
+   * @param id submission UUID
    * @param submissionPatch payload shaped like {@code SubmissionPatch}
    * @return 204 No Content on success
    */
   @PatchExchange("/submissions/{id}")
   ResponseEntity<Void> updateSubmission(
-      @PathVariable("id") String id,
-      @RequestBody SubmissionPatch submissionPatch);
+      @PathVariable("id") String id, @RequestBody SubmissionPatch submissionPatch);
 
   /**
    * Get a submission summary by ID, including claim IDs/statuses and matter start IDs.
@@ -74,40 +67,37 @@ public interface DataClaimsRestClient {
    * @return submission details map: {@code submission}, {@code claims[]}, {@code matter_starts[]}
    */
   @GetExchange("/submissions/{id}")
-  ResponseEntity<GetSubmission200Response> getSubmission(
-      @PathVariable("id") String id);
+  ResponseEntity<GetSubmission200Response> getSubmission(@PathVariable("id") String id);
 
   /**
    * Add a claim to a submission.
    *
    * @param submissionId parent submission UUID
-   * @param claim        payload shaped like {@code ClaimPost}
-   * @return 201 Created with JSON body containing the created claim {@code id};
-   *         {@code Location} header points to the created resource
+   * @param claim payload shaped like {@code ClaimPost}
+   * @return 201 Created with JSON body containing the created claim {@code id}; {@code Location}
+   *     header points to the created resource
    */
   @PostExchange("/submissions/{id}/claims")
   ResponseEntity<Void> createClaim(
-      @PathVariable("id") String submissionId,
-      @RequestBody ClaimPost claim);
+      @PathVariable("id") String submissionId, @RequestBody ClaimPost claim);
 
   /**
    * Get a specific claim for a submission.
    *
    * @param submissionId submission UUID
-   * @param claimId      claim UUID
+   * @param claimId claim UUID
    * @return full claim details map (fields per {@code ClaimFields})
    */
   @GetExchange("/submissions/{submission-id}/claims/{claim-id}")
   ResponseEntity<ClaimFields> getClaim(
-      @PathVariable("submission-id") String submissionId,
-      @PathVariable("claim-id") String claimId);
+      @PathVariable("submission-id") String submissionId, @PathVariable("claim-id") String claimId);
 
   /**
    * Partially update fields of a specific claim.
    *
    * @param submissionId submission UUID
-   * @param claimId      claim UUID
-   * @param claimPatch   payload shaped like {@code ClaimPatch}
+   * @param claimId claim UUID
+   * @param claimPatch payload shaped like {@code ClaimPatch}
    * @return 204 No Content on success
    */
   @PatchExchange("/submissions/{submission-id}/claims/{claim-id}")
@@ -119,15 +109,14 @@ public interface DataClaimsRestClient {
   /**
    * Create a Matter Start for a Submission.
    *
-   * <p>OpenAPI: {@code POST /submissions/{id}/matter-starts}</p>
+   * <p>OpenAPI: {@code POST /submissions/{id}/matter-starts}
    *
    * @param submissionId submission UUID
-   * @param matterStart  payload containing matter start details
-   * @return 201 Created with JSON body containing the created matter start {@code id};
-   *         {@code Location} header points to the created resource
+   * @param matterStart payload containing matter start details
+   * @return 201 Created with JSON body containing the created matter start {@code id}; {@code
+   *     Location} header points to the created resource
    */
   @PostExchange("/submissions/{id}/matter-starts")
   ResponseEntity<CreateMatterStart201Response> createMatterStart(
-      @PathVariable("id") String submissionId,
-      @RequestBody CreateMatterStartRequest matterStart);
+      @PathVariable("id") String submissionId, @RequestBody CreateMatterStartRequest matterStart);
 }

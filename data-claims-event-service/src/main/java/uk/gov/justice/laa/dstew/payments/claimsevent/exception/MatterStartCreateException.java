@@ -1,13 +1,13 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.exception;
 
-/** Exception thrown when a claim cannot be created in the Claims Data API. */
-public class ClaimCreateException extends RuntimeException {
+/** Exception thrown when a matter start cannot be created for a submission. */
+public class MatterStartCreateException extends RuntimeException {
   /**
    * Creates a new exception with the specified message.
    *
    * @param message description of the failure
    */
-  public ClaimCreateException(String message) {
+  public MatterStartCreateException(String message) {
     super(message);
   }
 
@@ -17,7 +17,7 @@ public class ClaimCreateException extends RuntimeException {
    * @param message description of the failure
    * @param cause underlying cause of the exception
    */
-  public ClaimCreateException(String message, Throwable cause) {
+  public MatterStartCreateException(String message, Throwable cause) {
     super(message, cause);
   }
 }

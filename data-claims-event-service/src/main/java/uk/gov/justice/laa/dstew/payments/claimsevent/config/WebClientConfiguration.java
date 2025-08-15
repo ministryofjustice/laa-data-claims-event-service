@@ -13,6 +13,8 @@ import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
 
+ import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
+
 /**
  * Configuration class for creating and configuring WebClient instances.
  *
@@ -25,23 +27,26 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestC
 @EnableConfigurationProperties({ProviderDetailsApiProperties.class, DataClaimsApiProperties.class})
 public class WebClientConfiguration {
 
-  /**
-   * Creates a {@link ProviderDetailsRestClient} bean to communicate with the Provider Details API
-   * using a WebClient instance.
-   *
-   * @param properties The configuration properties required to initialise the WebClient, including
-   *     the base URL and access token for the Provider Details API.
-   * @return An instance of {@link ProviderDetailsRestClient} for interacting with the Provider
-   *     Details API.
-   */
-  @Bean
-  public ProviderDetailsRestClient providerDetailsService(
-      final ProviderDetailsApiProperties properties) {
-    final WebClient webClient = createWebClient(properties);
-    final WebClientAdapter webClientAdapter = WebClientAdapter.create(webClient);
-    HttpServiceProxyFactory factory = HttpServiceProxyFactory.builderFor(webClientAdapter).build();
-    return factory.createClient(ProviderDetailsRestClient.class);
-  }
+    /**
+     * Creates a {@link uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient} bean to communicate with the Provider Details
+   API
+     * using a WebClient instance.
+     *
+     * @param properties The configuration properties required to initialise the WebClient,
+   including
+     *     the base URL and access token for the Provider Details API.
+     * @return An instance of {@link uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient} for interacting with the Provider
+     *     Details API.
+     */
+    @Bean
+    public ProviderDetailsRestClient providerDetailsService(
+        final ProviderDetailsApiProperties properties) {
+      final WebClient webClient = createWebClient(properties);
+      final WebClientAdapter webClientAdapter = WebClientAdapter.create(webClient);
+      HttpServiceProxyFactory factory =
+   HttpServiceProxyFactory.builderFor(webClientAdapter).build();
+      return factory.createClient(ProviderDetailsRestClient.class);
+    }
 
   /**
    * Creates a {@link DataClaimsRestClient} bean to communicate with the Claims API using a
