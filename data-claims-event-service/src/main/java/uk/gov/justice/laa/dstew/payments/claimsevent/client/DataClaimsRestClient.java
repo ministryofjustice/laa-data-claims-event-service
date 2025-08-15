@@ -22,6 +22,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetSubmission200Respon
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionFields;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPost;
+import uk.gov.justice.laa.dstew.payments.claimsevent.model.BulkSubmissionResponse;
 
 /**
  * REST client interface for fetching claims data. This interface communicates with the Data Claims
@@ -40,9 +41,9 @@ public interface DataClaimsRestClient {
    * @param id UUID of the bulk submission
    * @return the stored JSON document as a map
    */
-  //todo need to be change from Map<String, Object> to BulkSubmission
+  //todo need to be change from BulkSubmissionResponse to api response
   @GetExchange("/bulk-submissions/{id}")
-  ResponseEntity<Map<String, Object>> getBulkSubmission(@PathVariable("id") UUID id);
+  ResponseEntity<BulkSubmissionResponse> getBulkSubmission(@PathVariable("id") UUID id);
 
   /**
    * Create a new submission.
