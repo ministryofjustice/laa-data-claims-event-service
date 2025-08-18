@@ -4,6 +4,10 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatusCode;
@@ -32,6 +36,8 @@ public class BulkParsingService {
 
   private final DataClaimsRestClient dataClaimsRestClient;
   private final BulkSubmissionMapper bulkSubmissionMapper;
+
+  private static final int MAX_CONCURRENCY = Math.max(2, Runtime.getRuntime().availableProcessors());
 
   // todo: remove this method when the service is fully implemented
   /**
@@ -148,6 +154,8 @@ public class BulkParsingService {
     return createdId;
   }
 
+
+
   /**
    * Post multiple claims and return their created IDs in order.
    *
@@ -159,30 +167,75 @@ public class BulkParsingService {
     if (claims == null || claims.isEmpty()) {
       return List.of();
     }
-    List<String> createdIds = new ArrayList<>(claims.size());
-    int index = 0;
-    for (ClaimPost claim : claims) {
-      try {
-        if (claim != null && claim.getLineNumber() == null) {
-          claim.setLineNumber(index + 1);
-        }
-        createdIds.add(createClaim(submissionId, claim));
-      } catch (RuntimeException ex) {
-        throw new ClaimCreateException(
-            "Failed to create claim at index "
-                + index
-                + " (lineNumber="
-                + (claim != null ? claim.getLineNumber() : "null")
-                + "): "
-                + ex.getMessage(),
-            ex);
-      } finally {
-        index++;
+
+    // 1) Assign line numbers up-front
+    for (int i = 0; i < claims.size(); i++) {
+      ClaimPost claim = claims.get(i);
+      if (claim != null && claim.getLineNumber() == null) {
+        claim.setLineNumber(i + 1);
       }
     }
-    log.info("Created {} claims for submission [{}]", createdIds.size(), submissionId);
-    return createdIds;
+
+    // 2) Post concurrently (preserve order in results)
+    ExecutorService pool = Executors.newFixedThreadPool(Math.min(claims.size(), MAX_CONCURRENCY));
+    try {
+      List<CompletableFuture<Result>> futures = new ArrayList<>(claims.size());
+
+      for (int i = 0; i < claims.size(); i++) {
+        final int index = i;
+        final ClaimPost claim = claims.get(i);
+
+        CompletableFuture<Result> fut =
+            CompletableFuture.supplyAsync(() -> {
+              try {
+                String id = createClaim(submissionId, claim); // your existing method
+                return new Result(index, id);
+              } catch (RuntimeException ex) {
+                // Match your original error message style
+                String ln = (claim != null ? String.valueOf(claim.getLineNumber()) : "null");
+                throw new ClaimCreateException(
+                    "Failed to create claim at index " + index + " (lineNumber=" + ln + "): " + ex.getMessage(), ex);
+              }
+            }, pool);
+
+        futures.add(fut);
+      }
+
+      // Wait for all to complete, fail fast if any failed
+      CompletableFuture<Void> all = CompletableFuture
+          .allOf(futures.toArray(new CompletableFuture[0]));
+
+      // Block here; if any failed, rethrow the first error
+      all.join();
+
+      // Collect IDs in index order
+      String[] ids = new String[claims.size()];
+      for (CompletableFuture<Result> f : futures) {
+        Result r = f.join(); // safe: all completed above
+        ids[r.index] = r.id;
+      }
+
+      log.info("Created {} claims for submission [{}]", ids.length, submissionId);
+      return List.of(ids);
+
+    } catch (CompletionException ce) {
+      // Unwrap and rethrow your domain exception if present
+      Throwable cause = ce.getCause();
+      if (cause instanceof ClaimCreateException cce) {
+        throw cce;
+      }
+      throw new ClaimCreateException("Failed to create claims: " + cause.getMessage(), cause);
+    } finally {
+      pool.shutdown();
+    }
   }
+
+  private static final class Result {
+    final int index;
+    final String id;
+    Result(int index, String id) { this.index = index; this.id = id; }
+  }
+
 
   /**
    * Post a claim to a submission and return the created claim ID.

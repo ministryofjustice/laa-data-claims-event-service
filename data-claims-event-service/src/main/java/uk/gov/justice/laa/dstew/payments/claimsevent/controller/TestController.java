@@ -38,7 +38,7 @@ public class TestController {
             .registerModule(new JavaTimeModule())
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-    String json = Files.readString(Path.of("src/test/resources/bulk-submission-response.json"));
+    String json = Files.readString(Path.of("src/test/resources/bulk-submission-response-2.json"));
 
     GetBulkSubmission200Response bulkSubmission =
         objectMapper.readValue(json, GetBulkSubmission200Response.class);
