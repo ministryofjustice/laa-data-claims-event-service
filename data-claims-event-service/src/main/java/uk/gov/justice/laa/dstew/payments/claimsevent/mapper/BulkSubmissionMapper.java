@@ -120,7 +120,7 @@ public interface BulkSubmissionMapper {
   @Mapping(target = "ethnicityCode", source = "ethnicity")
   @Mapping(target = "disabilityCode", source = "disability")
   @Mapping(target = "clientTypeCode", source = "clientType")
-  @Mapping(target = "homeOfficeClientNumber", source = "hoUcn" )
+  @Mapping(target = "homeOfficeClientNumber", source = "hoUcn")
   @Mapping(target = "claReferenceNumber", source = "claRefNumber")
   @Mapping(target = "claExemptionCode", source = "claExemption")
   @Mapping(target = "isLegallyAided", source = "clientLegallyAided")

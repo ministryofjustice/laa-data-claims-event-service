@@ -37,7 +37,8 @@ public class BulkParsingService {
   private final DataClaimsRestClient dataClaimsRestClient;
   private final BulkSubmissionMapper bulkSubmissionMapper;
 
-  private static final int MAX_CONCURRENCY = Math.max(2, Runtime.getRuntime().availableProcessors());
+  private static final int MAX_CONCURRENCY =
+      Math.max(2, Runtime.getRuntime().availableProcessors());
 
   // todo: remove this method when the service is fully implemented
   /**
@@ -154,8 +155,6 @@ public class BulkParsingService {
     return createdId;
   }
 
-
-
   /**
    * Post multiple claims and return their created IDs in order.
    *
@@ -186,32 +185,38 @@ public class BulkParsingService {
         final ClaimPost claim = claims.get(i);
 
         CompletableFuture<Result> fut =
-            CompletableFuture.supplyAsync(() -> {
-              try {
-                String id = createClaim(submissionId, claim); // your existing method
-                return new Result(index, id);
-              } catch (RuntimeException ex) {
-                // Match your original error message style
-                String ln = (claim != null ? String.valueOf(claim.getLineNumber()) : "null");
-                throw new ClaimCreateException(
-                    "Failed to create claim at index " + index + " (lineNumber=" + ln + "): " + ex.getMessage(), ex);
-              }
-            }, pool);
+            CompletableFuture.supplyAsync(
+                () -> {
+                  try {
+                    String id = createClaim(submissionId, claim); // your existing method
+                    return new Result(index, id);
+                  } catch (RuntimeException ex) {
+                    String ln = (claim != null ? String.valueOf(claim.getLineNumber()) : "null");
+                    throw new ClaimCreateException(
+                        "Failed to create claim at index "
+                            + index
+                            + " (lineNumber="
+                            + ln
+                            + "): "
+                            + ex.getMessage(),
+                        ex);
+                  }
+                },
+                pool);
 
         futures.add(fut);
       }
 
       // Wait for all to complete, fail fast if any failed
-      CompletableFuture<Void> all = CompletableFuture
-          .allOf(futures.toArray(new CompletableFuture[0]));
+      CompletableFuture<Void> all =
+          CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
 
-      // Block here; if any failed, rethrow the first error
       all.join();
 
       // Collect IDs in index order
       String[] ids = new String[claims.size()];
       for (CompletableFuture<Result> f : futures) {
-        Result r = f.join(); // safe: all completed above
+        Result r = f.join();
         ids[r.index] = r.id;
       }
 
@@ -233,9 +238,12 @@ public class BulkParsingService {
   private static final class Result {
     final int index;
     final String id;
-    Result(int index, String id) { this.index = index; this.id = id; }
-  }
 
+    Result(int index, String id) {
+      this.index = index;
+      this.id = id;
+    }
+  }
 
   /**
    * Post a claim to a submission and return the created claim ID.
