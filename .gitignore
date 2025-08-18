@@ -23,6 +23,7 @@ out/
 bulk-claim-api/generated
 provider-details-api-reference/generated
 claims-api-reference/generated
+fee-scheme-platform-api-reference/generated
 
 # Ignore local application config
 application-local.yaml

@@ -11,6 +11,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.support.WebClientAdapter;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.ClaimsRestService;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.FeeSchemePlatformRestService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.ProviderDetailsRestService;
 
 /**
@@ -20,7 +21,11 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.service.ProviderDetailsRest
  */
 @Slf4j
 @Configuration
-@EnableConfigurationProperties({ProviderDetailsApiProperties.class, ClaimsApiProperties.class})
+@EnableConfigurationProperties({
+  ProviderDetailsApiProperties.class,
+  ClaimsApiProperties.class,
+  FeeSchemePlatformApiProperties.class
+})
 public class WebClientConfiguration {
 
   /**
@@ -54,6 +59,25 @@ public class WebClientConfiguration {
   public ClaimsRestService claimsApiClient(final ClaimsApiProperties properties) {
     final WebClient webClient = createWebClient(properties);
     return new ClaimsRestService(webClient);
+  }
+
+  /**
+   * Creates a {@link FeeSchemePlatformRestService} bean to communicate with the Fee Scheme Platform
+   * API using a WebClient instance.
+   *
+   * @param properties The configuration properties required to initialize the WebClient, including
+   *     the base URL and access token for the Fee Scheme Platform API.
+   * @return An instance of {@link FeeSchemePlatformRestService} for interacting with the Fee Scheme
+   * Platform API.
+   */
+  @Bean
+  public FeeSchemePlatformRestService feeSchemePlatformRestService(
+      final FeeSchemePlatformApiProperties properties) {
+    final WebClient webClient = createWebClient(properties);
+    final WebClientAdapter webClientAdapter = WebClientAdapter.create(webClient);
+    HttpServiceProxyFactory factory = HttpServiceProxyFactory.builderFor(webClientAdapter).build();
+
+    return factory.createClient(FeeSchemePlatformRestService.class);
   }
 
   /**

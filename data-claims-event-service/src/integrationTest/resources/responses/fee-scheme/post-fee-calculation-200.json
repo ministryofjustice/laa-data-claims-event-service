@@ -1,0 +1,7 @@
+{
+  "feeCode": "string",
+  "feeCalculation": {
+    "totalAmount": 0.1,
+    "subTotal": 0.1
+  }
+}
