@@ -40,35 +40,6 @@ public class BulkParsingService {
   private static final int MAX_CONCURRENCY =
       Math.max(2, Runtime.getRuntime().availableProcessors());
 
-  // todo: remove this method when the service is fully implemented
-  /**
-   * Processes a provided bulk submission payload without retrieving it from the remote service.
-   *
-   * @param bulkSubmission the bulk submission to process
-   * @param submissionId identifier to use when creating the submission
-   */
-  public void parseData(GetBulkSubmission200Response bulkSubmission, UUID submissionId) {
-    SubmissionPost submissionPost =
-        bulkSubmissionMapper.mapToSubmissionPost(bulkSubmission, submissionId);
-
-    String createdSubmissionId = createSubmission(submissionPost);
-
-    List<BulkSubmissionOutcome> outcomes =
-        bulkSubmission.getDetails() != null ? bulkSubmission.getDetails().getOutcomes() : List.of();
-    List<ClaimPost> claims = bulkSubmissionMapper.mapToClaimPosts(outcomes);
-    List<String> claimIds = createClaims(createdSubmissionId, claims);
-
-    List<BulkSubmissionMatterStart> matterStarts =
-        bulkSubmission.getDetails() != null
-            ? bulkSubmission.getDetails().getMatterStarts()
-            : List.of();
-    List<CreateMatterStartRequest> matterStartRequests =
-        bulkSubmissionMapper.mapToMatterStartRequests(matterStarts);
-    createMatterStarts(createdSubmissionId, matterStartRequests);
-
-    updateSubmissionStatus(createdSubmissionId, claimIds.size());
-  }
-
   /**
    * Retrieves a bulk submission by its identifier and processes it.
    *
@@ -188,7 +159,7 @@ public class BulkParsingService {
             CompletableFuture.supplyAsync(
                 () -> {
                   try {
-                    String id = createClaim(submissionId, claim); // your existing method
+                    String id = createClaim(submissionId, claim);
                     return new Result(index, id);
                   } catch (RuntimeException ex) {
                     String ln = (claim != null ? String.valueOf(claim.getLineNumber()) : "null");
@@ -224,7 +195,6 @@ public class BulkParsingService {
       return List.of(ids);
 
     } catch (CompletionException ce) {
-      // Unwrap and rethrow your domain exception if present
       Throwable cause = ce.getCause();
       if (cause instanceof ClaimCreateException cce) {
         throw cce;

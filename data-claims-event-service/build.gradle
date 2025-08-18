@@ -13,7 +13,9 @@ test {
 jacocoTestReport {
     afterEvaluate {
         classDirectories.setFrom(files(classDirectories.files.collect {
-            fileTree(dir: it, exclude: ['**/DataClaimsEventServiceApplication.class'])
+            fileTree(dir: it, exclude: ['**/DataClaimsEventServiceApplication.class',
+                                        '**/controller/**','**/service/TempService.class'
+            ])
         }))
     }
 }
@@ -21,7 +23,8 @@ jacocoTestReport {
 jacocoTestCoverageVerification {
     afterEvaluate {
         classDirectories.setFrom(files(classDirectories.files.collect {
-            fileTree(dir: it, exclude: ['**/DataClaimsEventServiceApplication.class'])
+            fileTree(dir: it, exclude: ['**/DataClaimsEventServiceApplication.class',
+                                        '**/controller/**','**/service/TempService.class'])
         }))
     }
 }

@@ -14,15 +14,15 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetBulkSubmission200Response;
-import uk.gov.justice.laa.dstew.payments.claimsevent.service.BulkParsingService;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.TempService;
 
 /** Temporary controller used to manually trigger parsing of a bulk submission payload. */
 @RestController
 @AllArgsConstructor
 @RequestMapping("/api/v1")
-public class TestController {
+public class TempController {
 
-  private final BulkParsingService bulkParsingService;
+  private final TempService bulkParsingService;
 
   /**
    * Reads a sample bulk submission JSON file and delegates to the parsing service.
@@ -44,7 +44,7 @@ public class TestController {
         objectMapper.readValue(json, GetBulkSubmission200Response.class);
 
     UUID submissionId = UUID.randomUUID();
-    
+
     bulkParsingService.parseData(bulkSubmission, submissionId);
 
     // Return response entity
