@@ -38,14 +38,13 @@ public class TestController {
             .registerModule(new JavaTimeModule())
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-    String json = Files.readString(Path.of("src/test/resources/bulk-submission-response-2.json"));
+    String json = Files.readString(Path.of("src/test/resources/bulk-submission-response-3.json"));
 
     GetBulkSubmission200Response bulkSubmission =
         objectMapper.readValue(json, GetBulkSubmission200Response.class);
 
     UUID submissionId = UUID.randomUUID();
-
-    // Get the bean from Spring context instead of using @Autowired
+    
     bulkParsingService.parseData(bulkSubmission, submissionId);
 
     // Return response entity
