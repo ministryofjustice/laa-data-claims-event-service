@@ -39,7 +39,8 @@ class ProviderDetailsRestServiceIntegrationTest extends MockServerIntegrationTes
       String officeCode = "1234";
       String areaOfLaw = "CRIMINAL";
 
-      String expectedBody = readJsonFromFile("provide-detail-firm-schedules-openapi-200.json");
+      String expectedBody =
+          readJsonFromFile("provider-details/get-firm-schedules-openapi-200.json");
 
       mockServerClient
           .when(
@@ -73,7 +74,8 @@ class ProviderDetailsRestServiceIntegrationTest extends MockServerIntegrationTes
       String officeCode = "1234";
       String areaOfLaw = "";
 
-      String expectedBody = readJsonFromFile("provide-detail-firm-schedules-openapi-200.json");
+      String expectedBody =
+          readJsonFromFile("provider-details/get-firm-schedules-openapi-200.json");
 
       mockServerClient
           .when(
@@ -203,7 +205,8 @@ class ProviderDetailsRestServiceIntegrationTest extends MockServerIntegrationTes
       String areaOfLaw = "CRIMINAL";
       LocalDate effectiveDate = LocalDate.of(2021, 1, 1);
 
-      String expectedBody = readJsonFromFile("provide-detail-firm-schedules-openapi-200.json");
+      String expectedBody =
+          readJsonFromFile("provider-details/get-firm-schedules-openapi-200.json");
 
       mockServerClient
           .when(
@@ -238,7 +241,8 @@ class ProviderDetailsRestServiceIntegrationTest extends MockServerIntegrationTes
       String areaOfLaw = "";
       LocalDate effectiveDate = LocalDate.of(2021, 1, 1);
 
-      String expectedBody = readJsonFromFile("provide-detail-firm-schedules-openapi-200.json");
+      String expectedBody =
+          readJsonFromFile("provider-details/get-firm-schedules-openapi-200.json");
 
       mockServerClient
           .when(

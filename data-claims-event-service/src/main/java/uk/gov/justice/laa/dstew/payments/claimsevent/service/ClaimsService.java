@@ -7,7 +7,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.service.dto.BulkSubmissionR
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.dto.BulkSubmissionResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.dto.UpdateClaimRequest;
 
-/** BulkSubmissionClient interface. */
+/** ClaimsService interface. */
 public interface ClaimsService {
 
   BulkSubmissionResponse submitBulkClaim(BulkSubmissionRequest request);

@@ -93,8 +93,7 @@ public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerInte
       // Assert
       ConstraintViolationException clientException =
           assertThrows(
-              ConstraintViolationException.class,
-              () -> claimsRestService.submitBulkClaim(request));
+              ConstraintViolationException.class, () -> claimsRestService.submitBulkClaim(request));
 
       assertThat(clientException.getMessage()).contains("userId: must not be null");
       assertThat(clientException.getMessage()).contains("submissions: must not be empty");
@@ -161,8 +160,7 @@ public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerInte
           .when(request().withMethod("PATCH").withPath("/api/bulk-submissions"))
           .respond(response().withStatusCode(code));
 
-      ResponseEntity<Void> response =
-          claimsRestService.updateClaimStatus(request).block();
+      ResponseEntity<Void> response = claimsRestService.updateClaimStatus(request).block();
 
       assertNotNull(response);
       assertEquals(code, response.getStatusCode().value());
@@ -178,8 +176,7 @@ public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerInte
           .when(request().withMethod("PATCH").withPath("/api/bulk-submissions"))
           .respond(response().withStatusCode(code).withBody("client error"));
 
-      Mono<ResponseEntity<Void>> response =
-          claimsRestService.updateClaimStatus(request);
+      Mono<ResponseEntity<Void>> response = claimsRestService.updateClaimStatus(request);
 
       assertThatThrownBy(response::block)
           .isInstanceOf(ClaimsApiClientErrorException.class)
@@ -199,8 +196,7 @@ public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerInte
           .when(request().withMethod("PATCH").withPath("/api/bulk-submissions"))
           .respond(response().withStatusCode(code).withBody("server error"));
 
-      Mono<ResponseEntity<Void>> response =
-          claimsRestService.updateClaimStatus(request);
+      Mono<ResponseEntity<Void>> response = claimsRestService.updateClaimStatus(request);
 
       assertThatThrownBy(response::block)
           .isInstanceOf(ClaimsApiServerErrorException.class)
