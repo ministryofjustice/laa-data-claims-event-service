@@ -25,6 +25,12 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.Mono;
 import uk.gov.justice.laa.claims.model.ClaimDto;
+import uk.gov.justice.laa.dstew.payments.claimsevent.client.ClaimsClient;
+import uk.gov.justice.laa.dstew.payments.claimsevent.client.ClaimsRestClient;
+import uk.gov.justice.laa.dstew.payments.claimsevent.client.dto.BulkSubmissionRequest;
+import uk.gov.justice.laa.dstew.payments.claimsevent.client.dto.BulkSubmissionResponse;
+import uk.gov.justice.laa.dstew.payments.claimsevent.client.dto.ClaimStatus;
+import uk.gov.justice.laa.dstew.payments.claimsevent.client.dto.UpdateClaimRequest;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.ClaimsApiClientException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.ClaimsApiServerErrorException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MockServerIntegrationTest;
@@ -33,19 +39,15 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.model.BulkClaimOffice;
 import uk.gov.justice.laa.dstew.payments.claimsevent.model.BulkClaimOutcome;
 import uk.gov.justice.laa.dstew.payments.claimsevent.model.BulkClaimSchedule;
 import uk.gov.justice.laa.dstew.payments.claimsevent.model.BulkClaimSubmission;
-import uk.gov.justice.laa.dstew.payments.claimsevent.service.dto.BulkSubmissionRequest;
-import uk.gov.justice.laa.dstew.payments.claimsevent.service.dto.BulkSubmissionResponse;
-import uk.gov.justice.laa.dstew.payments.claimsevent.service.dto.ClaimStatus;
-import uk.gov.justice.laa.dstew.payments.claimsevent.service.dto.UpdateClaimRequest;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class ClaimsRestServiceIntegrationTest extends MockServerIntegrationTest {
 
-  protected ClaimsService claimsService;
+  protected ClaimsClient claimsService;
 
   public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerIntegrationTest {
 
-    private ClaimsService claimsService;
+    private ClaimsClient claimsService;
 
     private static @NotNull BulkSubmissionRequest getBulkSubmissionRequest() {
       List<BulkClaimOutcome> bulkClaimOutcomes = new ArrayList<>();
@@ -64,7 +66,7 @@ public class ClaimsRestServiceIntegrationTest extends MockServerIntegrationTest 
 
     @BeforeEach
     void setUp() {
-      claimsService = new ClaimsRestService(createWebClient());
+      claimsService = new ClaimsRestClient(createWebClient());
     }
 
     @Nested

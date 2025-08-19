@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.dstew.payments.claimsevent.service;
+package uk.gov.justice.laa.dstew.payments.claimsevent.client;
 
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,7 +16,7 @@ import uk.gov.justice.laa.feescheme.model.FeeCalculationResponse;
  * totals. This interface communicates with the Fee Scheme Platform API.
  */
 @HttpExchange(accept = MediaType.APPLICATION_JSON_VALUE)
-public interface FeeSchemePlatformRestService {
+public interface FeeSchemePlatformRestClient {
 
   /**
    * Get the category of law corresponding to the provided fee code. Can return the following HTTP

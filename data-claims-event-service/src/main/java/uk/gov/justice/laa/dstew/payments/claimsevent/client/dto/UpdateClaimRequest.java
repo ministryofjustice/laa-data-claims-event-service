@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.dstew.payments.claimsevent.service.dto;
+package uk.gov.justice.laa.dstew.payments.claimsevent.client.dto;
 
 import jakarta.validation.constraints.NotNull;
 import java.util.List;

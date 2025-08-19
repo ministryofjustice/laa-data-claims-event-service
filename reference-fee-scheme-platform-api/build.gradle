@@ -28,11 +28,11 @@ checkstyleMain.exclude "*"
 
 openApiGenerate {
     generatorName = "spring"
-    inputSpec = "$rootDir/fee-scheme-platform-api-reference/open-api-specification.json".toString()
-    outputDir = "$rootDir/fee-scheme-platform-api-reference/generated".toString()
-    apiPackage = "uk.gov.justice.laa.feescheme.api"
-    invokerPackage = "uk.gov.justice.laa.feescheme.invoker"
-    modelPackage = "uk.gov.justice.laa.feescheme.model"
+    inputSpec = "$rootDir/reference-fee-scheme-platform-api/open-api-specification.json".toString()
+    outputDir = "$rootDir/reference-fee-scheme-platform-api/generated".toString()
+    apiPackage = "uk.gov.justice.laa.fee.scheme.api"
+    invokerPackage = "uk.gov.justice.laa.fee.scheme.invoker"
+    modelPackage = "uk.gov.justice.laa.fee.scheme.model"
     configOptions = [
             generateBuilders    : "true",
             interfaceOnly       : "true", // This will only generate interfaces, not implementations

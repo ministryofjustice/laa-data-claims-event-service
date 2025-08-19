@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.dstew.payments.claimsevent.service;
+package uk.gov.justice.laa.dstew.payments.claimsevent.client;
 
 import java.time.LocalDate;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -17,7 +17,7 @@ import uk.gov.justice.laa.provider.model.ProviderFirmOfficeContractAndScheduleDt
  * @author Jamie Briggs
  */
 @HttpExchange(value = "/provider-offices", accept = MediaType.APPLICATION_JSON_VALUE)
-public interface ProviderDetailsRestService {
+public interface ProviderDetailsRestClient {
 
   /**
    * Get all provider office schedule details based on the provider office code. Can return the

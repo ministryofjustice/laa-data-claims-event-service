@@ -16,20 +16,21 @@ import org.mockserver.model.HttpStatusCode;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
+import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MockServerIntegrationTest;
 import uk.gov.justice.laa.feescheme.model.CategoryOfLawResponse;
 import uk.gov.justice.laa.feescheme.model.FeeCalculationRequest;
 import uk.gov.justice.laa.feescheme.model.FeeCalculationResponse;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class FeeSchemePlatformRestServiceIntegrationTest extends MockServerIntegrationTest {
+class FeeSchemePlatformRestClientIntegrationTest extends MockServerIntegrationTest {
 
-  private FeeSchemePlatformRestService feeSchemePlatformRestService;
+  private FeeSchemePlatformRestClient feeSchemePlatformRestClient;
 
   @BeforeEach
   void setUp() {
-    // Configure WebClient and integrate it with FeeSchemePlatformRestService
-    feeSchemePlatformRestService = createClient(FeeSchemePlatformRestService.class);
+    // Configure WebClient and integrate it with FeeSchemePlatformRestClient
+    feeSchemePlatformRestClient = createClient(FeeSchemePlatformRestClient.class);
   }
 
   @Nested
@@ -53,7 +54,7 @@ class FeeSchemePlatformRestServiceIntegrationTest extends MockServerIntegrationT
                   .withBody(expectedBody));
 
       // When
-      Mono<CategoryOfLawResponse> result = feeSchemePlatformRestService.getCategoryOfLaw(feeCode);
+      Mono<CategoryOfLawResponse> result = feeSchemePlatformRestClient.getCategoryOfLaw(feeCode);
 
       // Then
       Optional<CategoryOfLawResponse> categoryOfLawResponse = result.blockOptional();
@@ -81,7 +82,7 @@ class FeeSchemePlatformRestServiceIntegrationTest extends MockServerIntegrationT
                   .withBody(expectedBody));
 
       // When
-      Mono<CategoryOfLawResponse> result = feeSchemePlatformRestService.getCategoryOfLaw(feeCode);
+      Mono<CategoryOfLawResponse> result = feeSchemePlatformRestClient.getCategoryOfLaw(feeCode);
 
       HttpStatusCode httpStatusCode = HttpStatusCode.code(statusCode);
 
@@ -119,7 +120,7 @@ class FeeSchemePlatformRestServiceIntegrationTest extends MockServerIntegrationT
 
       // When
       Mono<FeeCalculationResponse> result =
-          feeSchemePlatformRestService.calculateFee(feeCalculationRequest);
+          feeSchemePlatformRestClient.calculateFee(feeCalculationRequest);
 
       // Then
       Optional<FeeCalculationResponse> feeCalculationResponse = result.blockOptional();
@@ -147,7 +148,7 @@ class FeeSchemePlatformRestServiceIntegrationTest extends MockServerIntegrationT
 
       // When
       Mono<FeeCalculationResponse> result =
-          feeSchemePlatformRestService.calculateFee(feeCalculationRequest);
+          feeSchemePlatformRestClient.calculateFee(feeCalculationRequest);
 
       HttpStatusCode httpStatusCode = HttpStatusCode.code(statusCode);
 

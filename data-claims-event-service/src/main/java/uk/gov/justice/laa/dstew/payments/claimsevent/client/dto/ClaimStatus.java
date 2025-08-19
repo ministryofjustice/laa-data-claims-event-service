@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.dstew.payments.claimsevent.service.dto;
+package uk.gov.justice.laa.dstew.payments.claimsevent.client.dto;
 
 /** Enum representing every available valid claim status. */
 public enum ClaimStatus {

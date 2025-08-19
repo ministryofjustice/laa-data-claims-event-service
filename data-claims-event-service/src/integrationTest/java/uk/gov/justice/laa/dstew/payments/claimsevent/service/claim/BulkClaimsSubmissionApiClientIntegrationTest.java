@@ -20,6 +20,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.Mono;
+import uk.gov.justice.laa.dstew.payments.claimsevent.client.ClaimsRestClient;
+import uk.gov.justice.laa.dstew.payments.claimsevent.client.dto.BulkSubmissionRequest;
+import uk.gov.justice.laa.dstew.payments.claimsevent.client.dto.BulkSubmissionResponse;
+import uk.gov.justice.laa.dstew.payments.claimsevent.client.dto.ClaimStatus;
+import uk.gov.justice.laa.dstew.payments.claimsevent.client.dto.UpdateClaimRequest;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.ClaimsApiClientErrorException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.ClaimsApiClientException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.ClaimsApiServerErrorException;
@@ -29,15 +34,10 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.model.BulkClaimOffice;
 import uk.gov.justice.laa.dstew.payments.claimsevent.model.BulkClaimOutcome;
 import uk.gov.justice.laa.dstew.payments.claimsevent.model.BulkClaimSchedule;
 import uk.gov.justice.laa.dstew.payments.claimsevent.model.BulkClaimSubmission;
-import uk.gov.justice.laa.dstew.payments.claimsevent.service.ClaimsRestService;
-import uk.gov.justice.laa.dstew.payments.claimsevent.service.dto.BulkSubmissionRequest;
-import uk.gov.justice.laa.dstew.payments.claimsevent.service.dto.BulkSubmissionResponse;
-import uk.gov.justice.laa.dstew.payments.claimsevent.service.dto.ClaimStatus;
-import uk.gov.justice.laa.dstew.payments.claimsevent.service.dto.UpdateClaimRequest;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerIntegrationTest {
-  private ClaimsRestService claimsRestService;
+  private ClaimsRestClient claimsRestClient;
 
   private static @NotNull BulkSubmissionRequest getBulkSubmissionRequest() {
     List<BulkClaimOutcome> bulkClaimOutcomes = new ArrayList<>();
@@ -56,7 +56,7 @@ public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerInte
 
   @BeforeEach
   void setUp() {
-    claimsRestService = new ClaimsRestService(createWebClient());
+    claimsRestClient = new ClaimsRestClient(createWebClient());
   }
 
   @Nested
@@ -77,7 +77,7 @@ public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerInte
 
       BulkSubmissionRequest request = getBulkSubmissionRequest();
       // execute
-      BulkSubmissionResponse response = claimsRestService.submitBulkClaim(request);
+      BulkSubmissionResponse response = claimsRestClient.submitBulkClaim(request);
 
       // Assert
       assertThat(response).isNotNull();
@@ -93,7 +93,7 @@ public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerInte
       // Assert
       ConstraintViolationException clientException =
           assertThrows(
-              ConstraintViolationException.class, () -> claimsRestService.submitBulkClaim(request));
+              ConstraintViolationException.class, () -> claimsRestClient.submitBulkClaim(request));
 
       assertThat(clientException.getMessage()).contains("userId: must not be null");
       assertThat(clientException.getMessage()).contains("submissions: must not be empty");
@@ -114,8 +114,7 @@ public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerInte
       // Assert
       ClaimsApiClientErrorException clientException =
           assertThrows(
-              ClaimsApiClientErrorException.class,
-              () -> claimsRestService.submitBulkClaim(request));
+              ClaimsApiClientErrorException.class, () -> claimsRestClient.submitBulkClaim(request));
 
       assertThat(clientException).isNotNull();
       assertThat(clientException.getMessage())
@@ -137,8 +136,7 @@ public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerInte
       // Assert
       ClaimsApiServerErrorException serverException =
           assertThrows(
-              ClaimsApiServerErrorException.class,
-              () -> claimsRestService.submitBulkClaim(request));
+              ClaimsApiServerErrorException.class, () -> claimsRestClient.submitBulkClaim(request));
 
       assertThat(serverException).isNotNull();
       assertThat(serverException.getMessage())
@@ -160,7 +158,7 @@ public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerInte
           .when(request().withMethod("PATCH").withPath("/api/bulk-submissions"))
           .respond(response().withStatusCode(code));
 
-      ResponseEntity<Void> response = claimsRestService.updateClaimStatus(request).block();
+      ResponseEntity<Void> response = claimsRestClient.updateClaimStatus(request).block();
 
       assertNotNull(response);
       assertEquals(code, response.getStatusCode().value());
@@ -176,7 +174,7 @@ public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerInte
           .when(request().withMethod("PATCH").withPath("/api/bulk-submissions"))
           .respond(response().withStatusCode(code).withBody("client error"));
 
-      Mono<ResponseEntity<Void>> response = claimsRestService.updateClaimStatus(request);
+      Mono<ResponseEntity<Void>> response = claimsRestClient.updateClaimStatus(request);
 
       assertThatThrownBy(response::block)
           .isInstanceOf(ClaimsApiClientErrorException.class)
@@ -196,7 +194,7 @@ public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerInte
           .when(request().withMethod("PATCH").withPath("/api/bulk-submissions"))
           .respond(response().withStatusCode(code).withBody("server error"));
 
-      Mono<ResponseEntity<Void>> response = claimsRestService.updateClaimStatus(request);
+      Mono<ResponseEntity<Void>> response = claimsRestClient.updateClaimStatus(request);
 
       assertThatThrownBy(response::block)
           .isInstanceOf(ClaimsApiServerErrorException.class)
@@ -211,7 +209,7 @@ public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerInte
     void throwsValidationExceptionForInvalidRequests() {
       UpdateClaimRequest request = new UpdateClaimRequest(null, List.of());
 
-      assertThatThrownBy(() -> claimsRestService.updateClaimStatus(request).block())
+      assertThatThrownBy(() -> claimsRestClient.updateClaimStatus(request).block())
           .isInstanceOf(ConstraintViolationException.class)
           .isNotNull()
           .hasMessageContaining("claimStatus: must not be null");

@@ -41,7 +41,7 @@ dependencies {
     implementation project(':bulk-claim-api')
     implementation project(':claims-api-reference')
     implementation project(':provider-details-api-reference')
-    implementation project(':fee-scheme-platform-api-reference')
+    implementation project(':reference-fee-scheme-platform-api')
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
