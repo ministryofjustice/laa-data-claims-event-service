@@ -10,8 +10,8 @@ import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.support.WebClientAdapter;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
-import uk.gov.justice.laa.dstew.payments.claimsevent.service.ClaimsRestService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.ClaimsRestService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.ProviderDetailsRestService;
 
 /**
