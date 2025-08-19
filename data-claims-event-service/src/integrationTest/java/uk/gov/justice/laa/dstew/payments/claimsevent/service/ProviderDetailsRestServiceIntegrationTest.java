@@ -14,19 +14,18 @@ import org.mockserver.model.HttpResponse;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
-import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MockServerIntegrationTest;
 import uk.gov.justice.laa.provider.model.ProviderFirmOfficeContractAndScheduleDto;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest {
+class ProviderDetailsRestServiceIntegrationTest extends MockServerIntegrationTest {
 
-  private ProviderDetailsRestClient providerDetailsRestClient;
+  private ProviderDetailsRestService providerDetailsRestService;
 
   @BeforeEach
   void setUp() {
-    // Configure WebClient and integrate it with ProviderDetailsRestClient
-    providerDetailsRestClient = createClient(ProviderDetailsRestClient.class);
+    // Configure WebClient and integrate it with ProviderDetailsRestService
+    providerDetailsRestService = createClient(ProviderDetailsRestService.class);
   }
 
   @Nested
@@ -57,7 +56,7 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
 
       // When
       Mono<ProviderFirmOfficeContractAndScheduleDto> result =
-          providerDetailsRestClient.getProviderFirmSchedules(officeCode, areaOfLaw);
+          providerDetailsRestService.getProviderFirmSchedules(officeCode, areaOfLaw);
 
       // Then
       Optional<ProviderFirmOfficeContractAndScheduleDto> providerFirmSummary =
@@ -92,7 +91,7 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
 
       // When
       Mono<ProviderFirmOfficeContractAndScheduleDto> result =
-          providerDetailsRestClient.getProviderFirmSchedules(officeCode, areaOfLaw);
+          providerDetailsRestService.getProviderFirmSchedules(officeCode, areaOfLaw);
 
       // Then
       Optional<ProviderFirmOfficeContractAndScheduleDto> providerFirmSummary =
@@ -124,7 +123,7 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
 
       // When
       Mono<ProviderFirmOfficeContractAndScheduleDto> result =
-          providerDetailsRestClient
+          providerDetailsRestService
               .getProviderFirmSchedules(officeCode, areaOfLaw)
               .onErrorResume(throwable -> Mono.empty());
 
@@ -155,7 +154,7 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
 
       // When
       Mono<ProviderFirmOfficeContractAndScheduleDto> result =
-          providerDetailsRestClient.getProviderFirmSchedules(officeCode, areaOfLaw);
+          providerDetailsRestService.getProviderFirmSchedules(officeCode, areaOfLaw);
 
       // Then
       assertThatThrownBy(result::block)
@@ -183,7 +182,7 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
 
       // When
       Mono<ProviderFirmOfficeContractAndScheduleDto> result =
-          providerDetailsRestClient.getProviderFirmSchedules(officeCode, areaOfLaw);
+          providerDetailsRestService.getProviderFirmSchedules(officeCode, areaOfLaw);
 
       // Then
       assertThatThrownBy(result::block)
@@ -223,7 +222,7 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
 
       // When
       Mono<ProviderFirmOfficeContractAndScheduleDto> result =
-          providerDetailsRestClient.getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate);
+          providerDetailsRestService.getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate);
 
       // Then
       Optional<ProviderFirmOfficeContractAndScheduleDto> providerFirmSummary =
@@ -259,7 +258,7 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
 
       // When
       Mono<ProviderFirmOfficeContractAndScheduleDto> result =
-          providerDetailsRestClient.getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate);
+          providerDetailsRestService.getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate);
 
       // Then
       Optional<ProviderFirmOfficeContractAndScheduleDto> providerFirmSummary =
@@ -292,7 +291,7 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
 
       // When
       Mono<ProviderFirmOfficeContractAndScheduleDto> result =
-          providerDetailsRestClient
+          providerDetailsRestService
               .getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate)
               .onErrorResume(throwable -> Mono.empty());
 
@@ -324,7 +323,7 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
 
       // When
       Mono<ProviderFirmOfficeContractAndScheduleDto> result =
-          providerDetailsRestClient.getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate);
+          providerDetailsRestService.getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate);
 
       // Then
       assertThatThrownBy(result::block)
@@ -353,7 +352,7 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
 
       // When
       Mono<ProviderFirmOfficeContractAndScheduleDto> result =
-          providerDetailsRestClient.getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate);
+          providerDetailsRestService.getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate);
 
       // Then
       assertThatThrownBy(result::block)

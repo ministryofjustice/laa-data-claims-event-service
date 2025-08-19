@@ -25,12 +25,10 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.Mono;
 import uk.gov.justice.laa.claims.model.ClaimDto;
-import uk.gov.justice.laa.dstew.payments.claimsevent.client.ClaimsClient;
-import uk.gov.justice.laa.dstew.payments.claimsevent.client.ClaimsRestClient;
-import uk.gov.justice.laa.dstew.payments.claimsevent.client.dto.BulkSubmissionRequest;
-import uk.gov.justice.laa.dstew.payments.claimsevent.client.dto.BulkSubmissionResponse;
-import uk.gov.justice.laa.dstew.payments.claimsevent.client.dto.ClaimStatus;
-import uk.gov.justice.laa.dstew.payments.claimsevent.client.dto.UpdateClaimRequest;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.dto.BulkSubmissionRequest;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.dto.BulkSubmissionResponse;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.dto.ClaimStatus;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.dto.UpdateClaimRequest;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.ClaimsApiClientException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.ClaimsApiServerErrorException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MockServerIntegrationTest;
@@ -43,11 +41,11 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.model.BulkClaimSubmission;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class ClaimsRestServiceIntegrationTest extends MockServerIntegrationTest {
 
-  protected ClaimsClient claimsService;
+  protected ClaimsService claimsService;
 
   public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerIntegrationTest {
 
-    private ClaimsClient claimsService;
+    private ClaimsService claimsService;
 
     private static @NotNull BulkSubmissionRequest getBulkSubmissionRequest() {
       List<BulkClaimOutcome> bulkClaimOutcomes = new ArrayList<>();
@@ -66,7 +64,7 @@ public class ClaimsRestServiceIntegrationTest extends MockServerIntegrationTest 
 
     @BeforeEach
     void setUp() {
-      claimsService = new ClaimsRestClient(createWebClient());
+      claimsService = new ClaimsRestService(createWebClient());
     }
 
     @Nested

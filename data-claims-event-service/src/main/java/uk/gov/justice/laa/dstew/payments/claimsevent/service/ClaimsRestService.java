@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.dstew.payments.claimsevent.client;
+package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
 import java.net.URI;
 import java.util.function.Function;
@@ -10,16 +10,16 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import uk.gov.justice.laa.claims.model.ClaimDto;
-import uk.gov.justice.laa.dstew.payments.claimsevent.client.dto.BulkSubmissionRequest;
-import uk.gov.justice.laa.dstew.payments.claimsevent.client.dto.BulkSubmissionResponse;
-import uk.gov.justice.laa.dstew.payments.claimsevent.client.dto.UpdateClaimRequest;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.dto.BulkSubmissionRequest;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.dto.BulkSubmissionResponse;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.dto.UpdateClaimRequest;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.ClaimsApiClientErrorException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.ClaimsApiClientException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.ClaimsApiServerErrorException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.util.ValidationUtil;
 
 /** laa-data-stewardship-claims-api Client. */
-public class ClaimsRestClient implements ClaimsClient {
+public class ClaimsRestService implements ClaimsService {
 
   private final WebClient webClient;
 
@@ -30,7 +30,7 @@ public class ClaimsRestClient implements ClaimsClient {
    *
    * @param webClient the webClient to use for requests to the claims api
    */
-  public ClaimsRestClient(WebClient webClient) {
+  public ClaimsRestService(WebClient webClient) {
     this.webClient = webClient;
   }
 

@@ -17,9 +17,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 import uk.gov.justice.laa.bulk.claim.model.SubmissionResponse;
-import uk.gov.justice.laa.dstew.payments.claimsevent.client.ClaimsRestClient;
-import uk.gov.justice.laa.dstew.payments.claimsevent.client.dto.BulkSubmissionRequest;
-import uk.gov.justice.laa.dstew.payments.claimsevent.client.dto.BulkSubmissionResponse;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.dto.BulkSubmissionRequest;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.dto.BulkSubmissionResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.converter.BulkClaimConverterFactory;
 import uk.gov.justice.laa.dstew.payments.claimsevent.converter.BulkClaimCsvConverter;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.BulkClaimFileReadException;
@@ -36,7 +35,8 @@ public class BulkClaimServiceTests {
 
   @Mock BulkClaimConverterFactory bulkClaimConverterFactory;
 
-  @Mock ClaimsRestClient bulkClaimsSubmissionApiClient;
+  @Mock
+  ClaimsRestService bulkClaimsSubmissionApiClient;
 
   @InjectMocks BulkClaimService bulkClaimService;
 

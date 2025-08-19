@@ -20,11 +20,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.Mono;
-import uk.gov.justice.laa.dstew.payments.claimsevent.client.ClaimsRestClient;
-import uk.gov.justice.laa.dstew.payments.claimsevent.client.dto.BulkSubmissionRequest;
-import uk.gov.justice.laa.dstew.payments.claimsevent.client.dto.BulkSubmissionResponse;
-import uk.gov.justice.laa.dstew.payments.claimsevent.client.dto.ClaimStatus;
-import uk.gov.justice.laa.dstew.payments.claimsevent.client.dto.UpdateClaimRequest;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.ClaimsRestService;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.dto.BulkSubmissionRequest;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.dto.BulkSubmissionResponse;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.dto.ClaimStatus;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.dto.UpdateClaimRequest;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.ClaimsApiClientErrorException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.ClaimsApiClientException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.ClaimsApiServerErrorException;
@@ -37,7 +37,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.model.BulkClaimSubmission;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerIntegrationTest {
-  private ClaimsRestClient claimsRestClient;
+  private ClaimsRestService claimsRestClient;
 
   private static @NotNull BulkSubmissionRequest getBulkSubmissionRequest() {
     List<BulkClaimOutcome> bulkClaimOutcomes = new ArrayList<>();
@@ -56,7 +56,7 @@ public class BulkClaimsSubmissionApiClientIntegrationTest extends MockServerInte
 
   @BeforeEach
   void setUp() {
-    claimsRestClient = new ClaimsRestClient(createWebClient());
+    claimsRestClient = new ClaimsRestService(createWebClient());
   }
 
   @Nested

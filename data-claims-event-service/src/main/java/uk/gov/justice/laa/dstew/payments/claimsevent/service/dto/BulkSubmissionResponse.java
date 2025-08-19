@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.dstew.payments.claimsevent.client.dto;
+package uk.gov.justice.laa.dstew.payments.claimsevent.service.dto;
 
 /**
  * Bulk submissions Response.
