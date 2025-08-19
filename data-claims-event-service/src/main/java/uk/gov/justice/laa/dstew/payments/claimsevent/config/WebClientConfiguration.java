@@ -71,7 +71,7 @@ public class WebClientConfiguration {
    *     Platform API.
    */
   @Bean
-  public FeeSchemePlatformRestClient feeSchemePlatformRestService(
+  public FeeSchemePlatformRestClient feeSchemePlatformRestClient(
       final FeeSchemePlatformApiProperties properties) {
     final WebClient webClient = createWebClient(properties);
     final WebClientAdapter webClientAdapter = WebClientAdapter.create(webClient);
