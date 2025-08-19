@@ -18,9 +18,9 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import reactor.core.publisher.Mono;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MockServerIntegrationTest;
-import uk.gov.justice.laa.feescheme.model.CategoryOfLawResponse;
-import uk.gov.justice.laa.feescheme.model.FeeCalculationRequest;
-import uk.gov.justice.laa.feescheme.model.FeeCalculationResponse;
+import uk.gov.justice.laa.fee.scheme.model.CategoryOfLawResponse;
+import uk.gov.justice.laa.fee.scheme.model.FeeCalculationRequest;
+import uk.gov.justice.laa.fee.scheme.model.FeeCalculationResponse;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class FeeSchemePlatformRestClientIntegrationTest extends MockServerIntegrationTest {
