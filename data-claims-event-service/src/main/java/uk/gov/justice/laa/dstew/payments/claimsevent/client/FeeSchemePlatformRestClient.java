@@ -7,9 +7,9 @@ import org.springframework.web.service.annotation.GetExchange;
 import org.springframework.web.service.annotation.HttpExchange;
 import org.springframework.web.service.annotation.PostExchange;
 import reactor.core.publisher.Mono;
-import uk.gov.justice.laa.feescheme.model.CategoryOfLawResponse;
-import uk.gov.justice.laa.feescheme.model.FeeCalculationRequest;
-import uk.gov.justice.laa.feescheme.model.FeeCalculationResponse;
+import uk.gov.justice.laa.fee.scheme.model.CategoryOfLawResponse;
+import uk.gov.justice.laa.fee.scheme.model.FeeCalculationRequest;
+import uk.gov.justice.laa.fee.scheme.model.FeeCalculationResponse;
 
 /**
  * REST service interface for verifying category of law against a fee code and calculating fee

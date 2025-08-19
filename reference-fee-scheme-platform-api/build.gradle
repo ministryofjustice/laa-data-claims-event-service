@@ -47,7 +47,7 @@ openApiGenerate {
 compileJava.dependsOn 'openApiGenerate'
 
 clean {
-    delete "$rootDir/fee-scheme-platform-api-reference/generated"
+    delete "$rootDir/reference-fee-scheme-platform-api/generated"
 }
 
 // disable for overall project when running a build
