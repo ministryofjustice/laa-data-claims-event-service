@@ -2,7 +2,7 @@ pluginManagement {
     repositories {
         maven {
             name = "gitHubPackages"
-            url = 'https://maven.pkg.github.com/ministryofjustice/laa-ccms-spring-boot-common'
+            url = 'https://maven.pkg.github.com/ministryofjustice/laa-spring-boot-common'
             credentials {
                 username = System.getenv("GITHUB_ACTOR")?.trim() ?: settings.ext.find('project.ext.gitPackageUser')
                 password = System.getenv("GITHUB_TOKEN")?.trim() ?: settings.ext.find('project.ext.gitPackageKey')
@@ -15,9 +15,8 @@ pluginManagement {
 
 rootProject.name = 'laa-data-claims-event-service'
 
-include 'claims-api-reference'
-include 'provider-details-api-reference'
-include 'bulk-claim-api'
+include 'reference-provider-details-api'
+include 'reference-data-claim-api'
 include 'data-claims-event-service'
 include 'reference-fee-scheme-platform-api'
 

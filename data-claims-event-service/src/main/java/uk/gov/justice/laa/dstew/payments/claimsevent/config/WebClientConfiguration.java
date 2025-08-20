@@ -10,12 +10,14 @@ import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.support.WebClientAdapter;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
+import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
-import uk.gov.justice.laa.dstew.payments.claimsevent.service.ClaimsRestService;
-import uk.gov.justice.laa.dstew.payments.claimsevent.service.ProviderDetailsRestService;
+import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
 
 /**
  * Configuration class for creating and configuring WebClient instances.
+ *
+ * <p>Uses {@link HttpServiceProxyFactory} to build strongly-typed HTTP clients.
  *
  * @author Jamie Briggs
  */
@@ -23,42 +25,45 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.service.ProviderDetailsRest
 @Configuration
 @EnableConfigurationProperties({
   ProviderDetailsApiProperties.class,
-  ClaimsApiProperties.class,
+  DataClaimsApiProperties.class,
   FeeSchemePlatformApiProperties.class
 })
 public class WebClientConfiguration {
 
   /**
-   * Creates a {@link ProviderDetailsRestService} bean to communicate with the Provider Details API
-   * using a WebClient instance.
+   * Creates a {@link
+   * uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient} bean to
+   * communicate with the Provider Details API using a WebClient instance.
    *
-   * @param properties The configuration properties required to initialize the WebClient, including
+   * @param properties The configuration properties required to initialise the WebClient, including
    *     the base URL and access token for the Provider Details API.
-   * @return An instance of {@link ProviderDetailsRestService} for interacting with the Provider
-   *     Details API.
+   * @return An instance of {@link
+   *     uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient} for
+   *     interacting with the Provider Details API.
    */
   @Bean
-  public ProviderDetailsRestService providerDetailsService(
+  public ProviderDetailsRestClient providerDetailsService(
       final ProviderDetailsApiProperties properties) {
     final WebClient webClient = createWebClient(properties);
     final WebClientAdapter webClientAdapter = WebClientAdapter.create(webClient);
     HttpServiceProxyFactory factory = HttpServiceProxyFactory.builderFor(webClientAdapter).build();
-
-    return factory.createClient(ProviderDetailsRestService.class);
+    return factory.createClient(ProviderDetailsRestClient.class);
   }
 
   /**
-   * Creates a {@link ClaimsRestService} bean to communicate with the Claims API using a WebClient
-   * instance.
+   * Creates a {@link DataClaimsRestClient} bean to communicate with the Claims API using a
+   * WebClient instance.
    *
-   * @param properties The configuration properties required to initialize the WebClient, including
-   *     the base URL and access token for the Provider Details API.
-   * @return An instance of {@link ClaimsRestService} for interacting with the Claims API.
+   * @param properties The configuration properties required to initialise the WebClient, including
+   *     the base URL and access token for the Data Claims API.
+   * @return An instance of {@link DataClaimsRestClient} for interacting with the Claims API.
    */
   @Bean
-  public ClaimsRestService claimsApiClient(final ClaimsApiProperties properties) {
+  public DataClaimsRestClient claimsApiClient(final DataClaimsApiProperties properties) {
     final WebClient webClient = createWebClient(properties);
-    return new ClaimsRestService(webClient);
+    final WebClientAdapter webClientAdapter = WebClientAdapter.create(webClient);
+    HttpServiceProxyFactory factory = HttpServiceProxyFactory.builderFor(webClientAdapter).build();
+    return factory.createClient(DataClaimsRestClient.class);
   }
 
   /**

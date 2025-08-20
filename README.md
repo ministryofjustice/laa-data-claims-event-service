@@ -5,15 +5,15 @@
 ## Project Structure
 Includes the following subprojects:
 
-- `bulk-claim-api` - OpenAPI specification used for generating API interfaces and documentation.
 - `data-claims-event-service` - Data claims event service which processes claims from an SQS queue.
-- `provider-details-api-reference` - OpenAPI specification for the Provider Details API used for generating model classes used by the Provider Details API client.
+- `reference-data-claim-api` - OpenAPI specification for the Data Claims API used for generating model classes.
+- `reference-provider-details-api` - OpenAPI specification for the Provider Details API used for generating model classes.
 
 ## Usage
 
 ### First time setup
 
-The project uses the `laa-ccms-spring-boot-gradle-plugin`. Please follow the steps in the [laa-ccms-spring-boot-common](https://github.com/ministryofjustice/laa-ccms-spring-boot-common?tab=readme-ov-file#provide-your-repository-credentials) repository to set up your Github Packages credentials locally before building the application.
+The project uses the `laa-spring-boot-gradle-plugin`. Please follow the steps in the [laa-spring-boot-common](https://github.com/ministryofjustice/laa-spring-boot-common?tab=readme-ov-file#provide-your-repository-credentials) repository to set up your Github Packages credentials locally before building the application.
 
 ### Build application
 `./gradlew clean build`
@@ -28,18 +28,3 @@ Includes checkstyle, spotless checks and unit tests.
 
 ### Run application via Docker
 `docker compose up`
-
-## Application Endpoints
-
-### API Documentation
-
-#### Swagger UI
-- http://localhost:8080/swagger-ui/index.html
-
-#### API docs (JSON)
-- http://localhost:8080/v3/api-docs
-
-### Actuator Endpoints
-The following actuator endpoints have been configured:
-- http://localhost:8080/actuator
-- http://localhost:8080/actuator/health

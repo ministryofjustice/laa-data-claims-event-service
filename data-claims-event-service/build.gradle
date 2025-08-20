@@ -2,7 +2,7 @@ plugins {
     id 'io.freefair.lombok' version '8.14'
     id 'net.researchgate.release' version '3.1.0'
     id("com.diffplug.spotless") version "7.2.1"
-    id 'uk.gov.laa.ccms.springboot.laa-ccms-spring-boot-gradle-plugin' version '0.0.42'
+    id 'uk.gov.laa.springboot.laa-spring-boot-gradle-plugin' version '1.0.2'
 }
 
 test {
@@ -13,7 +13,9 @@ test {
 jacocoTestReport {
     afterEvaluate {
         classDirectories.setFrom(files(classDirectories.files.collect {
-            fileTree(dir: it, exclude: ['**/DataClaimsEventServiceApplication.class'])
+            fileTree(dir: it, exclude: ['**/DataClaimsEventServiceApplication.class',
+                                        '**/controller/**','**/service/TempService.class'
+            ])
         }))
     }
 }
@@ -21,7 +23,8 @@ jacocoTestReport {
 jacocoTestCoverageVerification {
     afterEvaluate {
         classDirectories.setFrom(files(classDirectories.files.collect {
-            fileTree(dir: it, exclude: ['**/DataClaimsEventServiceApplication.class'])
+            fileTree(dir: it, exclude: ['**/DataClaimsEventServiceApplication.class',
+                                        '**/controller/**','**/service/TempService.class'])
         }))
     }
 }
@@ -37,10 +40,11 @@ dependencies {
     implementation 'org.apache.tomcat.embed:tomcat-embed-core:11.0.10'
     // Upgrade to fix vulnerabilities in netty
     implementation 'io.netty:netty-codec-http2:4.2.4.Final'
+    // Upgrade to fix vulnerabilities in spring-webmvc
+    implementation 'org.springframework:spring-webmvc:6.2.10'
 
-    implementation project(':bulk-claim-api')
-    implementation project(':claims-api-reference')
-    implementation project(':provider-details-api-reference')
+    implementation project(':reference-data-claim-api')
+    implementation project(':reference-provider-details-api')
     implementation project(':reference-fee-scheme-platform-api')
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'

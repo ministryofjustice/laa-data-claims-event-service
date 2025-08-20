@@ -20,9 +20,8 @@ out/
 ### VS Code ###
 .vscode/
 
-bulk-claim-api/generated
-provider-details-api-reference/generated
-claims-api-reference/generated
+reference-data-claim-api/generated
+reference-provider-details-api/generated
 reference-fee-scheme-platform-api/generated
 
 # Ignore local application config

@@ -15,7 +15,7 @@ dependencies {
     // Upgrade to fix Uncontrolled Recursion vulnerability in commons-lang3
     implementation 'org.apache.commons:commons-lang3:3.18.0'
     // Upgrade to fix vulnerabilities in tomcat-embed-core
-    implementation 'org.apache.tomcat.embed:tomcat-embed-core:11.0.10'
+    implementation 'org.apache.tomcat.embed:tomcat-embed-core:11.0.9'
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9'
@@ -28,11 +28,11 @@ checkstyleMain.exclude "*"
 
 openApiGenerate {
     generatorName = "spring"
-    inputSpec = "$rootDir/reference-fee-scheme-platform-api/open-api-specification.json".toString()
-    outputDir = "$rootDir/reference-fee-scheme-platform-api/generated".toString()
-    apiPackage = "uk.gov.justice.laa.fee.scheme.api"
-    invokerPackage = "uk.gov.justice.laa.fee.scheme.invoker"
-    modelPackage = "uk.gov.justice.laa.fee.scheme.model"
+    inputSpec = "$rootDir/reference-provider-details-api/open-api-specification.json".toString()
+    outputDir = "$rootDir/reference-provider-details-api/generated".toString()
+    apiPackage = "uk.gov.justice.laa.provider.api"
+    invokerPackage = "uk.gov.justice.laa.provider.invoker"
+    modelPackage = "uk.gov.justice.laa.provider.model"
     configOptions = [
             generateBuilders    : "true",
             interfaceOnly       : "true", // This will only generate interfaces, not implementations
@@ -41,14 +41,13 @@ openApiGenerate {
             useJakartaEe        : "true",
             useSpringBoot3      : "true",
             useTags             : "true",
-            openApiNullable     : "false"
     ]
 }
 
 compileJava.dependsOn 'openApiGenerate'
 
 clean {
-    delete "$rootDir/reference-fee-scheme-platform-api/generated"
+    delete "$rootDir/reference-provider-details-api/generated"
 }
 
 // disable for overall project when running a build
@@ -59,7 +58,6 @@ tasks.named('bootJar') {
 tasks.named('bootRun') {
     enabled = false
 }
-
 tasks.withType(Test).configureEach {
     useJUnitPlatform()
 }
