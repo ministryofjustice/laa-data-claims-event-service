@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.dstew.payments.claimsevent.service;
+package uk.gov.justice.laa.dstew.payments.claimsevent.client;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -39,7 +39,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.service.dto.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.dto.UpdateClaimRequest;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class ClaimsRestServiceIntegrationTest extends MockServerIntegrationTest {
+public class DataClaimsRestClientIntegrationTest extends MockServerIntegrationTest {
 
   protected ClaimsService claimsService;
 

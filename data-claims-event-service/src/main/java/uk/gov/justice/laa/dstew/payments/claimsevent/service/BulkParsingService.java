@@ -22,7 +22,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
-import uk.gov.justice.laa.dstew.payments.claimsevent.exception.BulkSubmissionNotFoundException;
+import uk.gov.justice.laa.dstew.payments.claimsevent.exception.BulkSubmissionRetrievalException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.ClaimCreateException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.MatterStartCreateException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.SubmissionCreateException;
@@ -75,7 +75,9 @@ public class BulkParsingService {
    *
    * @param bulkSubmissionId UUID of the bulk submission
    * @return the bulk submission payload from the Data Claims service
-   * @throws BulkSubmissionNotFoundException when the bulk submission cannot be retrieved
+   * @throws
+   *     uk.gov.justice.laa.dstew.payments.claimsevent.exception.BulkSubmissionRetrievalException
+   *     when the bulk submission cannot be retrieved
    */
   protected GetBulkSubmission200Response getBulkSubmission(UUID bulkSubmissionId) {
     log.info("Fetching bulk submission [{}] from Data Claims service", bulkSubmissionId);
@@ -90,7 +92,7 @@ public class BulkParsingService {
           "Bulk submission [{}] could not be retrieved. Status: {}",
           bulkSubmissionId,
           response != null ? response.getStatusCode() : "null response");
-      throw new BulkSubmissionNotFoundException(bulkSubmissionId);
+      throw new BulkSubmissionRetrievalException(bulkSubmissionId);
     }
 
     log.debug("Bulk submission [{}] retrieved successfully", bulkSubmissionId);

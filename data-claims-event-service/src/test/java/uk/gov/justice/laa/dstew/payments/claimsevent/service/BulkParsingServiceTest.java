@@ -32,7 +32,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
-import uk.gov.justice.laa.dstew.payments.claimsevent.exception.BulkSubmissionNotFoundException;
+import uk.gov.justice.laa.dstew.payments.claimsevent.exception.BulkSubmissionRetrievalException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.ClaimCreateException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.MatterStartCreateException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.SubmissionCreateException;
@@ -341,7 +341,7 @@ class BulkParsingServiceTest {
     when(dataClaimsRestClient.getBulkSubmission(id)).thenReturn(ResponseEntity.notFound().build());
 
     assertThatThrownBy(() -> service.getBulkSubmission(id))
-        .isInstanceOf(BulkSubmissionNotFoundException.class);
+        .isInstanceOf(BulkSubmissionRetrievalException.class);
   }
 
   @Test
@@ -350,7 +350,7 @@ class BulkParsingServiceTest {
     when(dataClaimsRestClient.getBulkSubmission(id)).thenReturn(null);
 
     assertThatThrownBy(() -> service.getBulkSubmission(id))
-        .isInstanceOf(BulkSubmissionNotFoundException.class);
+        .isInstanceOf(BulkSubmissionRetrievalException.class);
   }
 
   @Test
@@ -362,7 +362,7 @@ class BulkParsingServiceTest {
     when(dataClaimsRestClient.getBulkSubmission(id)).thenReturn(response);
 
     assertThatThrownBy(() -> service.getBulkSubmission(id))
-        .isInstanceOf(BulkSubmissionNotFoundException.class);
+        .isInstanceOf(BulkSubmissionRetrievalException.class);
   }
 
   @Test
@@ -376,6 +376,6 @@ class BulkParsingServiceTest {
     when(dataClaimsRestClient.getBulkSubmission(id)).thenReturn(response);
 
     assertThatThrownBy(() -> service.getBulkSubmission(id))
-        .isInstanceOf(BulkSubmissionNotFoundException.class);
+        .isInstanceOf(BulkSubmissionRetrievalException.class);
   }
 }

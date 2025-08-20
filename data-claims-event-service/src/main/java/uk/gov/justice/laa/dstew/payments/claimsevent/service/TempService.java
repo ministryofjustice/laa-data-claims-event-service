@@ -13,6 +13,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPost;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.mapper.BulkSubmissionMapper;
 
+/** Temporary service used to manually trigger parsing of a bulk submission. */
 @Service
 @Slf4j
 public class TempService extends BulkParsingService {
