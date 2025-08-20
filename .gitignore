@@ -22,6 +22,7 @@ out/
 
 reference-data-claim-api/generated
 reference-provider-details-api/generated
+reference-fee-scheme-platform-api/generated
 
 # Ignore local application config
 application-local.yaml

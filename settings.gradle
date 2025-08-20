@@ -11,10 +11,6 @@ pluginManagement {
         maven { url = "https://plugins.gradle.org/m2/" }
         gradlePluginPortal()
     }
-
-    plugins {
-        id 'uk.gov.laa.springboot.laa-spring-boot-gradle-plugin' version '1.0.2'
-    }
 }
 
 rootProject.name = 'laa-data-claims-event-service'
@@ -22,4 +18,5 @@ rootProject.name = 'laa-data-claims-event-service'
 include 'reference-provider-details-api'
 include 'reference-data-claim-api'
 include 'data-claims-event-service'
+include 'reference-fee-scheme-platform-api'
 

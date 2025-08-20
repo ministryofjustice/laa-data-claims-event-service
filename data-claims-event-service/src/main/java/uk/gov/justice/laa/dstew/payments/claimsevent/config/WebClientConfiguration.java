@@ -11,6 +11,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.support.WebClientAdapter;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
+import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
 
 /**
@@ -22,7 +23,11 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestC
  */
 @Slf4j
 @Configuration
-@EnableConfigurationProperties({ProviderDetailsApiProperties.class, DataClaimsApiProperties.class})
+@EnableConfigurationProperties({
+  ProviderDetailsApiProperties.class,
+  DataClaimsApiProperties.class,
+  FeeSchemePlatformApiProperties.class
+})
 public class WebClientConfiguration {
 
   /**
@@ -59,6 +64,25 @@ public class WebClientConfiguration {
     final WebClientAdapter webClientAdapter = WebClientAdapter.create(webClient);
     HttpServiceProxyFactory factory = HttpServiceProxyFactory.builderFor(webClientAdapter).build();
     return factory.createClient(DataClaimsRestClient.class);
+  }
+
+  /**
+   * Creates a {@link FeeSchemePlatformRestClient} bean to communicate with the Fee Scheme Platform
+   * API using a WebClient instance.
+   *
+   * @param properties The configuration properties required to initialize the WebClient, including
+   *     the base URL and access token for the Fee Scheme Platform API.
+   * @return An instance of {@link FeeSchemePlatformRestClient} for interacting with the Fee Scheme
+   *     Platform API.
+   */
+  @Bean
+  public FeeSchemePlatformRestClient feeSchemePlatformRestClient(
+      final FeeSchemePlatformApiProperties properties) {
+    final WebClient webClient = createWebClient(properties);
+    final WebClientAdapter webClientAdapter = WebClientAdapter.create(webClient);
+    HttpServiceProxyFactory factory = HttpServiceProxyFactory.builderFor(webClientAdapter).build();
+
+    return factory.createClient(FeeSchemePlatformRestClient.class);
   }
 
   /**

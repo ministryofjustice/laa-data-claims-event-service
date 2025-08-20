@@ -1,0 +1,171 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "OpenAPI definition",
+    "version": "v0"
+  },
+  "components": {
+    "schemas": {
+      "FeeCalculation": {
+        "type": "object",
+        "properties": {
+          "totalAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "subTotal": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "FeeCalculationResponse": {
+        "type": "object",
+        "properties": {
+          "feeCode": {
+            "type": "string"
+          },
+          "feeCalculation": {
+            "$ref": "#/components/schemas/FeeCalculation"
+          }
+        }
+      },
+      "BoltOnType": {
+        "type": "object",
+        "properties": {
+          "boltOnAdjournedHearing": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "boltOnDetentionTravelWaitingCosts": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "boltOnJrFormFilling": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "boltOnCmrhOral": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "boltOnCrmhTelephone": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "boltOnAdditionalTravel": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "FeeCalculationRequest": {
+        "type": "object",
+        "properties": {
+          "feeCode": {
+            "type": "string"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Civil: case start date. Crime: Representation order date."
+          },
+          "netProfitCosts": {
+            "type": "number",
+            "format": "double"
+          },
+          "netDisbursementAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "netCostOfCounsel": {
+            "type": "number",
+            "format": "double"
+          },
+          "disbursementVatAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "vatIndicator": {
+            "type": "boolean"
+          },
+          "disbursementPriorAuthority": {
+            "type": "string"
+          },
+          "boltOns": {
+            "$ref": "#/components/schemas/BoltOnType"
+          },
+          "netTravelCosts": {
+            "type": "number",
+            "format": "double"
+          },
+          "netWaitingCosts": {
+            "type": "number",
+            "format": "double"
+          },
+          "caseConcludedDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "policeCourtOrPrisonId": {
+            "type": "string"
+          },
+          "dutySolicitor": {
+            "type": "string"
+          },
+          "schemeId": {
+            "type": "string"
+          },
+          "ufn": {
+            "type": "string"
+          },
+          "numberOfMediationSessions": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "feeCode"
+        ]
+      },
+      "CategoryOfLawResponse": {
+        "type": "object",
+        "properties": {
+          "categoryOfLawCode": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "categoryOfLawCode"
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "description": "Standard error response returned for failed requests",
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Time when the error occurred"
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "description": "HTTP status code associated with the error",
+            "example": 404
+          },
+          "error": {
+            "type": "string",
+            "description": "Description of the HTTP error",
+            "example": "Not Found"
+          },
+          "message": {
+            "type": "string",
+            "description": "Description/explanation of the error",
+            "example": "Category code not found for fee code: X123"
+          }
+        }
+      }
+    }
+  }
+}

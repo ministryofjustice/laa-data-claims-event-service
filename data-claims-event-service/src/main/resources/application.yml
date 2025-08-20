@@ -48,10 +48,10 @@ laa:
     url: ${laa.provider-details-api.hostname}
     accessToken: ${PROVIDER_DETAILS_API_ACCESS_TOKEN}
   claims-api:
-    hostname: http://localhost:8080/
+    hostname: ${CLAIMS_API_HOSTNAME}
     url: ${laa.claims-api.hostname}
-    accessToken: f67f968e-b479-4e61-b66e-f57984931e56
-#  claims-api:
-#    hostname: ${CLAIMS_API_URL}
-#    url: ${laa.claims-api.hostname}
-#    accessToken: ${CLAIMS_API_ACCESS_TOKEN}
+    accessToken: ${CLAIMS_API_ACCESS_TOKEN}
+  fee-scheme-platform-api:
+    hostname: ${FEE_SCHEME_PLATFORM_API_URL}
+    url: ${laa.claims-api.hostname}
+    accessToken: ${FEE_SCHEME_PLATFORM_API_ACCESS_TOKEN}
