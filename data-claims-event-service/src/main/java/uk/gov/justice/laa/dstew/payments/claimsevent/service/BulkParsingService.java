@@ -2,6 +2,7 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -13,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionMatterStart;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionOutcome;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPost;
@@ -55,7 +57,9 @@ public class BulkParsingService {
     String createdSubmissionId = createSubmission(submissionPost);
 
     List<BulkSubmissionOutcome> outcomes =
-        bulkSubmission.getDetails() != null ? bulkSubmission.getDetails().getOutcomes() : List.of();
+        bulkSubmission.getDetails() != null
+            ? bulkSubmission.getDetails().getOutcomes()
+            : Collections.emptyList();
     List<ClaimPost> claims = bulkSubmissionMapper.mapToClaimPosts(outcomes);
     List<String> claimIds = createClaims(createdSubmissionId, claims);
 
@@ -113,13 +117,20 @@ public class BulkParsingService {
     ResponseEntity<Void> response = dataClaimsRestClient.createSubmission(submission);
 
     if (response == null || response.getStatusCode().value() != 201) {
+      log.error(
+          "Failed to create submission for bulkSubmissionId [{}]. HTTP status: {}",
+          submission.getBulkSubmissionId(),
+          response == null ? "null response" : response.getStatusCode());
       throw new SubmissionCreateException(
           "Failed to create submission. HTTP status: "
               + (response == null ? "null response" : response.getStatusCode()));
     }
 
     String createdId = extractIdFromLocation(response);
-    if (createdId == null || createdId.isBlank()) {
+    if (!StringUtils.hasText(createdId)) {
+      log.error(
+          "Submission created for bulkSubmissionId [{}] but Location header missing or invalid",
+          submission.getBulkSubmissionId());
       throw new SubmissionCreateException(
           "Submission created but Location header was missing or invalid");
     }
@@ -137,7 +148,7 @@ public class BulkParsingService {
    */
   protected List<String> createClaims(String submissionId, List<ClaimPost> claims) {
     if (claims == null || claims.isEmpty()) {
-      return List.of();
+      return Collections.emptyList();
     }
 
     // 1) Assign line numbers up-front
@@ -225,7 +236,7 @@ public class BulkParsingService {
    * @return created claim UUID (from Location header)
    */
   protected String createClaim(String submissionId, ClaimPost claim) {
-    if (submissionId == null || submissionId.isBlank()) {
+    if (!StringUtils.hasText(submissionId)) {
       throw new ClaimCreateException("submissionId is required to create a claim");
     }
     if (claim == null) {
@@ -249,7 +260,7 @@ public class BulkParsingService {
     }
 
     String createdId = extractIdFromLocation(response);
-    if (createdId == null || createdId.isBlank()) {
+    if (!StringUtils.hasText(createdId)) {
       throw new ClaimCreateException("Claim created but Location header was missing or invalid");
     }
 
@@ -260,7 +271,7 @@ public class BulkParsingService {
   protected List<String> createMatterStarts(
       String submissionId, List<CreateMatterStartRequest> matterStarts) {
     if (matterStarts == null || matterStarts.isEmpty()) {
-      return List.of();
+      return Collections.emptyList();
     }
     List<String> createdIds = new ArrayList<>(matterStarts.size());
     int index = 0;
@@ -279,7 +290,7 @@ public class BulkParsingService {
   }
 
   protected String createMatterStart(String submissionId, CreateMatterStartRequest matterStart) {
-    if (submissionId == null || submissionId.isBlank()) {
+    if (!StringUtils.hasText(submissionId)) {
       throw new MatterStartCreateException("submissionId is required to create a matter start");
     }
     if (matterStart == null) {
@@ -302,7 +313,7 @@ public class BulkParsingService {
     }
 
     String createdId = extractIdFromLocation(response);
-    if (createdId == null || createdId.isBlank()) {
+    if (!StringUtils.hasText(createdId)) {
       throw new MatterStartCreateException(
           "Matter start created but Location header was missing or invalid");
     }

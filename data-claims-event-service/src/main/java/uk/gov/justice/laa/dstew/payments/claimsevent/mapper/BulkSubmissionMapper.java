@@ -7,6 +7,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
+import org.springframework.util.StringUtils;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionMatterStart;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionOutcome;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPost;
@@ -152,7 +153,7 @@ public interface BulkSubmissionMapper {
   @Named("stringToInteger")
   default Integer stringToInteger(String value) {
     try {
-      return value == null ? null : Integer.parseInt(value);
+      return StringUtils.hasText(value) ? null : Integer.parseInt(value);
     } catch (NumberFormatException ex) {
       return null;
     }

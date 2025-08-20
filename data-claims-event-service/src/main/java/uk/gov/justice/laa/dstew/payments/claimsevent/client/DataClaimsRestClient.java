@@ -35,7 +35,6 @@ public interface DataClaimsRestClient {
    * @param id UUID of the bulk submission
    * @return the stored JSON document as a map
    */
-  // todo need to be change from BulkSubmissionResponse to api response
   @GetExchange("/bulk-submissions/{id}")
   ResponseEntity<GetBulkSubmission200Response> getBulkSubmission(@PathVariable("id") UUID id);
 
