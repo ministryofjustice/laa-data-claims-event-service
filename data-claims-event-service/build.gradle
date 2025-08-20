@@ -40,6 +40,8 @@ dependencies {
     implementation 'org.apache.tomcat.embed:tomcat-embed-core:11.0.10'
     // Upgrade to fix vulnerabilities in netty
     implementation 'io.netty:netty-codec-http2:4.2.4.Final'
+    // Upgrade to fix vulnerabilities in spring-webmvc
+    implementation 'org.springframework:spring-webmvc:6.2.10'
 
     implementation project(':reference-data-claim-api')
     implementation project(':reference-provider-details-api')

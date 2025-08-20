@@ -153,7 +153,7 @@ public interface BulkSubmissionMapper {
   @Named("stringToInteger")
   default Integer stringToInteger(String value) {
     try {
-      return StringUtils.hasText(value) ? null : Integer.parseInt(value);
+      return !StringUtils.hasText(value) ? null : Integer.parseInt(value);
     } catch (NumberFormatException ex) {
       return null;
     }
