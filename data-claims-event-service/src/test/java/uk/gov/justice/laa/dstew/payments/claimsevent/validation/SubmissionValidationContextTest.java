@@ -149,6 +149,8 @@ class SubmissionValidationContextTest {
       // When
       Optional<ClaimValidationReport> actual =
           submissionValidationContext.getClaimReport("claimId1");
+
+      // Then
       assertThat(actual.isPresent()).isTrue();
       assertThat(actual.get()).isEqualTo(claimValidationReport1);
     }

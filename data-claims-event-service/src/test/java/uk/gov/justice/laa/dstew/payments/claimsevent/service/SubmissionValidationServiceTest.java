@@ -183,8 +183,7 @@ public class SubmissionValidationServiceTest {
     }
 
     @Test
-    @DisplayName(
-        "Throws exception if submission not marked as nil submission contains no " + "claims")
+    @DisplayName("Throws exception if submission not marked as nil submission contains no claims")
     void throwsExceptionIfSubmissionNotMarkedAsNilSubmissionContainsNoClaims() {
       // Given
       UUID submissionId = new UUID(0, 0);
