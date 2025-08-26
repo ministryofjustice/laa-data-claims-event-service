@@ -13,9 +13,9 @@ import static org.mockito.Mockito.when;
 import java.net.URI;
 import java.util.List;
 import java.util.UUID;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpHeaders;
@@ -44,12 +44,7 @@ class BulkParsingServiceTest {
   @Mock private DataClaimsRestClient dataClaimsRestClient;
   @Mock private BulkSubmissionMapper mapper;
 
-  private BulkParsingService service;
-
-  @BeforeEach
-  void setUp() {
-    service = new BulkParsingService(dataClaimsRestClient, mapper);
-  }
+  @InjectMocks private BulkParsingService service;
 
   @Test
   void parseDataProcessesSubmissionClaimsAndMatterStarts() {

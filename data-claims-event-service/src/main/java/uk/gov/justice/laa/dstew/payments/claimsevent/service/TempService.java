@@ -20,6 +20,12 @@ public class TempService extends BulkParsingService {
 
   private final BulkSubmissionMapper bulkSubmissionMapper;
 
+  /**
+   * Construct temporary service.
+   *
+   * @param dataClaimsRestClient the data claims rest client
+   * @param bulkSubmissionMapper the bulk submission mapper
+   */
   public TempService(
       final DataClaimsRestClient dataClaimsRestClient,
       final BulkSubmissionMapper bulkSubmissionMapper) {

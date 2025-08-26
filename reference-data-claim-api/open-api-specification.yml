@@ -77,6 +77,8 @@ paths:
           description: 'Unauthorized'
         '403':
           description: 'Forbidden'
+        '415':
+          description: 'Unsupported Media Type'
         '500':
           description: 'Internal server error'
 
@@ -277,9 +279,6 @@ paths:
                   type: string
                 delivery_location:
                   type: string
-                number_of_matter_starts:
-                  type: integer
-                  example: 3
       responses:
         '201':
           description: Matter Start created successfully
@@ -543,6 +542,9 @@ components:
         number_of_claims:
           type: integer
           description: Number of claims in this submission.
+        submitted:
+          type: date
+          description: Date the submission was submitted
 
     ClaimPost:
       allOf:
@@ -572,6 +574,8 @@ components:
       type: object
       description: Claim details
       properties:
+        id:
+          type: string
         status:
           $ref: "#/components/schemas/ClaimStatus"
         schedule_reference:
@@ -634,6 +638,8 @@ components:
           type: string
         referral_source:
           type: string
+        total_value:
+          type: number
         client_forename:
           type: string
         client_surname:
@@ -788,13 +794,13 @@ components:
       type: object
       description: matter start details for a bulk submission
       properties:
-        accessPoint:
-          type: string
-        mat:
-          type: string
-        immas:
+        scheduleRef:
           type: string
         categoryCode:
+          type: string
+        procurementArea:
+          type: string
+        accessPoint:
           type: string
         deliveryLocation:
           type: string
@@ -854,22 +860,22 @@ components:
           type: integer
         profitCost:
           type: number
-          format: double
+          format: bigDecimal
         valueOfCosts:
           type: number
-          format: double
+          format: bigDecimal
         disbursementsAmount:
           type: number
-          format: double
+          format: bigDecimal
         counselCost:
           type: number
-          format: double
+          format: bigDecimal
         disbursementsVat:
           type: number
-          format: double
+          format: bigDecimal
         travelWaitingCosts:
           type: number
-          format: double
+          format: bigDecimal
         vatIndicator:
           type: boolean
         londonNonlondonRate:
@@ -880,7 +886,7 @@ components:
           type: boolean
         travelCosts:
           type: number
-          format: double
+          format: bigDecimal
         outcomeCode:
           type: string
         legacyCase:
@@ -889,7 +895,7 @@ components:
           type: string
         adjournedHearingFee:
           type: number
-          format: double
+          format: bigDecimal
         typeOfAdvice:
           type: string
         postalApplAccp:
@@ -913,7 +919,7 @@ components:
           format: date
         detentionTravelWaitingCosts:
           type: number
-          format: double
+          format: bigDecimal
         deliveryLocation:
           type: string
         priorAuthorityRef:
@@ -1023,7 +1029,7 @@ components:
           type: string
         excessTravelCosts:
           type: number
-          format: double
+          format: bigDecimal
         medConcludedDate:
           type: string
           format: date
