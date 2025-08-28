@@ -1,0 +1,41 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/api/v1/fee-calculation"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "feeCode": "string",
+      "schemeId": "string",
+      "claimId": "string",
+      "warning": {
+        "warningDescription": "string"
+      },
+      "escapeCaseFlag": true,
+      "feeCalculation": {
+        "totalAmount": 0,
+        "vatIndicator": true,
+        "VatRateApplied": 0,
+        "calculatedVatAmount": 0,
+        "disbursementAmount": 0,
+        "disbursementVatAmount": 0,
+        "hourlyTotalAmount": 0,
+        "hourlyVatAmount": 0,
+        "fixedFeeAmount": 0,
+        "netProfitCostsAmount": 0,
+        "netCostOfCounselAmount": 0,
+        "netTravelCostsAmount": 0,
+        "netWaitingCosts": 0,
+        "detentionAndWaitingCostsAmount": 0,
+        "jrFormFillingAmount": 0,
+        "travelAndWaitingCostAmount": 0,
+        "boltOnFeeAmount": 0
+      }
+    }
+  }
+}
+
