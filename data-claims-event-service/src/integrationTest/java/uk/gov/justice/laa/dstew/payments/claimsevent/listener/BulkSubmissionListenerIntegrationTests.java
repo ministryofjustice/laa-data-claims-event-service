@@ -11,19 +11,24 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.LocalstackBaseIntegrationTest;
+import uk.gov.justice.laa.dstew.payments.claimsevent.model.BulkSubmissionMessage;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.BulkParsingService;
 
 @ActiveProfiles("test")
@@ -35,30 +40,11 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.service.BulkParsingService;
 @DisplayName("Bulk submissions listener integration test")
 public class BulkSubmissionListenerIntegrationTests extends LocalstackBaseIntegrationTest {
 
-  public static List<UUID> processedBulkSubmissions = new ArrayList<>();
-
-  // Not actually asserting during test, rather it's dependencies are being stubbed and checked
-  //  for invocation.
-  @Autowired
+  @InjectMocks
   BulkSubmissionListener listener;
 
-  // Define a nested static class for test-specific bean configuration
-  @TestConfiguration
-  static class StubBulkParsingServiceConfiguration {
-    @Bean(name = "bulkParsingService")
-    public BulkParsingService bulkParsingService() {
-      return new BulkParsingService(null, null) {
-
-        // Override parse data method, and add UUIDs to list of "processed" submissions instead of
-        // calling default data as this test is not testing BulkParsingService.
-        @Override
-        public void parseData(UUID bulkSubmissionId, UUID submissionId) {
-          processedBulkSubmissions.add(submissionId);
-        }
-      };
-    }
-  }
-
+  @MockitoBean
+  BulkParsingService bulkParsingService;
 
   @Test
   @DisplayName("Should process multiple submissions")
@@ -80,12 +66,14 @@ public class BulkSubmissionListenerIntegrationTests extends LocalstackBaseIntegr
                 .queueUrl(this.queueUrl)
                 .messageBody(messageBody));
 
-    // Wait until the bulk submission starts being processed
-    await().pollInterval(Duration.ofMillis(100))
+    // Use await to assert once the listener has received the message from the queue, and passed
+    // the submission to the bulkParsingService
+    await().pollInterval(Duration.ofMillis(500))
         .atMost(Duration.ofSeconds(10))
-        .until(() -> processedBulkSubmissions.size() == 2);
+        .untilAsserted(() -> {
+          verify(bulkParsingService, times(1)).parseData(bulkSubmissionId, submissionIdOne);
+          verify(bulkParsingService, times(1)).parseData(bulkSubmissionId, submissionIdTwo);
+        });
 
-    assertThat(processedBulkSubmissions.contains(submissionIdOne)).isTrue();
-    assertThat(processedBulkSubmissions.contains(submissionIdTwo)).isTrue();
   }
 }
