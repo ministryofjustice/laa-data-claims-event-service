@@ -1,0 +1,20 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/api/v0/submissions/[a-f0-9\\-]+/matter-starts/[a-f0-9\\-]+"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "schedule_reference": "Schedule Ref",
+      "category_code": "Category Code",
+      "procurement_area_code": "Procurement Area Code",
+      "access_point_code": "Access Point Code",
+      "delivery_location": "Delivery Location"
+    }
+  }
+}
+
