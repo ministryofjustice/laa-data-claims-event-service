@@ -5,16 +5,17 @@ services:
   #  ports:
   #    - "8080:8080"
   localstack:
+    container_name: event-service-localstack
     image: localstack/localstack:latest
     ports:
       - "4566:4566"
     environment:
       - SERVICES=sqs
       - DEBUG=1
-      - AWS_DEFAULT_REGION=eu-west-2
+      - AWS_DEFAULT_REGION=us-east-1
 
     volumes:
-      - "./init-localstack.sh:/etc/localstack/init/ready.d/init-localstack.sh"
+      - "./docker-scripts/init-localstack.sh:/etc/localstack/init/ready.d/init-localstack.sh"
       - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
   data-claim-api-wiremock:

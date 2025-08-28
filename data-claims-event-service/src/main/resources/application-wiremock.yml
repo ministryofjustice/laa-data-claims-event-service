@@ -1,0 +1,26 @@
+laa:
+  provider-details-api:
+    hostname: http://localhost:9192
+    url: ${laa.provider-details-api.hostname}
+    accessToken: 123
+  claims-api:
+    hostname: http://localhost:9190
+    url: ${laa.claims-api.hostname}
+    accessToken: 123
+  fee-scheme-platform-api:
+    hostname: http://localhost:9191
+    url: ${laa.claims-api.hostname}
+    accessToken: 123
+  bulk-claim-queue:
+    name: bulk-claims-queue
+
+spring:
+  cloud:
+    aws:
+      credentials:
+        access-key: "dummy-access-key"
+        secret-key: "dummy-secret-key"
+      region:
+        static: "us-east-1"
+      sqs:
+        endpoint: "http://localhost:4566"
