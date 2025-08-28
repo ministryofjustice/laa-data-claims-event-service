@@ -19,7 +19,7 @@ public class BulkSubmissionListener {
   }
 
   @SqsListener("${laa.bulk-claim-queue.name}")
-  public void receiveStringMessage(BulkSubmissionMessage submissionMessage) {
+  public void receiveBulkSubmission(BulkSubmissionMessage submissionMessage) {
     log.info(
         "Received bulk submission {}, with {} submissions", submissionMessage.bulkSubmissionId(),
         submissionMessage.submissionIds().size());
