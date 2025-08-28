@@ -55,3 +55,5 @@ laa:
     hostname: ${FEE_SCHEME_PLATFORM_API_URL}
     url: ${laa.claims-api.hostname}
     accessToken: ${FEE_SCHEME_PLATFORM_API_ACCESS_TOKEN}
+  bulk-claim-queue:
+    name: ${BULK_CLAIM_QUEUE_NAME}

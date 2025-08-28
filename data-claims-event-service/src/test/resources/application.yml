@@ -1,0 +1,11 @@
+laa:
+  bulk-claim-queue:
+    name: test-queue-name
+
+aws:
+  sqs:
+    endpoint: http://localhost:4566
+    region: us-east-1
+    credentials:
+      access-key: dummy-access-key
+      secret-key: dummy-secret-key

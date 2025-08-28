@@ -1,6 +1,17 @@
 services:
-  app:
-    build:
-      context: .
+  #app:
+  #  build:
+  #    context: .
+  #  ports:
+  #    - "8080:8080"
+  localstack:
+    image: localstack/localstack:latest
     ports:
-      - "8080:8080"
+      - "4566:4566"
+    environment:
+      - SERVICES=sqs
+      - DEBUG=1
+    volumes:
+      - "./init-localstack.sh:/etc/localstack/init/ready.d/init-localstack.sh"
+      - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
