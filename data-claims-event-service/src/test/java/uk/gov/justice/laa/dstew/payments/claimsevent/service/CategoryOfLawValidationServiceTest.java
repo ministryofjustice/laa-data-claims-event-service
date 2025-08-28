@@ -17,8 +17,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
-import reactor.core.publisher.Mono;
+import org.springframework.http.ResponseEntity;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimFields;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
@@ -105,14 +104,13 @@ class CategoryOfLawValidationServiceTest {
           new CategoryOfLawResponse().categoryOfLawCode("categoryOfLaw2");
 
       when(feeSchemePlatformRestClient.getCategoryOfLaw("feeCode1"))
-          .thenReturn(Mono.just(categoryOfLawResponse1));
+          .thenReturn(ResponseEntity.ok(categoryOfLawResponse1));
 
       when(feeSchemePlatformRestClient.getCategoryOfLaw("feeCode2"))
-          .thenReturn(Mono.just(categoryOfLawResponse2));
+          .thenReturn(ResponseEntity.ok(categoryOfLawResponse2));
 
       when(feeSchemePlatformRestClient.getCategoryOfLaw("feeCode3"))
-          .thenReturn(
-              Mono.error(WebClientResponseException.create(404, "Not Found", null, null, null)));
+          .thenReturn(ResponseEntity.notFound().build());
 
       Map<String, String> actual =
           categoryOfLawValidationService.getCategoryOfLawLookup(List.of(claim1, claim2, claim3));

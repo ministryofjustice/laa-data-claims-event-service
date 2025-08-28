@@ -1,6 +1,6 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -9,10 +9,15 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
+import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -25,6 +30,8 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetSubmission200Respon
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetSubmission200ResponseClaimsInner;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetSubmission200ResponseClaimsInner.StatusEnum;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionFields;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.SubmissionValidationException;
@@ -61,10 +68,12 @@ public class SubmissionValidationServiceTest {
       String categoryOfLaw = "categoryOfLaw";
       String officeAccountNumber = "officeAccountNumber";
 
-      SubmissionFields submissionFields = new SubmissionFields();
-      submissionFields.setSubmissionId(submissionId);
-      submissionFields.setAreaOfLaw(areaOfLaw);
-      submissionFields.setOfficeAccountNumber(officeAccountNumber);
+      SubmissionFields submissionFields =
+          new SubmissionFields()
+              .submissionId(submissionId)
+              .areaOfLaw(areaOfLaw)
+              .officeAccountNumber(officeAccountNumber)
+              .status(SubmissionStatus.READY_FOR_VALIDATION);
 
       GetSubmission200ResponseClaimsInner claim = new GetSubmission200ResponseClaimsInner();
       claim.setClaimId(claimId);
@@ -96,17 +105,27 @@ public class SubmissionValidationServiceTest {
       when(providerDetailsRestClient.getProviderFirmSchedules(officeAccountNumber, areaOfLaw))
           .thenReturn(Mono.just(providerFirmResponse));
 
+      SubmissionPatch submissionPatch =
+          new SubmissionPatch()
+              .submissionId(submissionId)
+              .status(SubmissionStatus.VALIDATION_IN_PROGRESS);
+
+      when(dataClaimsRestClient.updateSubmission(submissionId.toString(), submissionPatch))
+          .thenReturn(ResponseEntity.ok().build());
+
       ClaimPatch claimPatch = new ClaimPatch().id(claimId.toString()).status(ClaimStatus.VALID);
 
       when(submissionValidationContext.hasErrors(claimId.toString())).thenReturn(false);
 
       when(dataClaimsRestClient.updateClaim(submissionId, claimId, claimPatch))
-          .thenReturn(Mono.empty());
+          .thenReturn(ResponseEntity.ok().build());
 
       // When
       submissionValidationService.validateSubmission(submission);
 
       // Then
+      verify(dataClaimsRestClient, times(1))
+          .updateSubmission(submissionId.toString(), submissionPatch);
       verify(dataClaimsRestClient, times(1)).getClaim(submissionId, claimId);
       verify(providerDetailsRestClient, times(1))
           .getProviderFirmSchedules(officeAccountNumber, areaOfLaw);
@@ -125,11 +144,13 @@ public class SubmissionValidationServiceTest {
       String categoryOfLaw = "categoryOfLaw";
       String officeAccountNumber = "officeAccountNumber";
 
-      SubmissionFields submissionFields = new SubmissionFields();
-      submissionFields.setSubmissionId(submissionId);
-      submissionFields.setAreaOfLaw(areaOfLaw);
-      submissionFields.setOfficeAccountNumber(officeAccountNumber);
-      submissionFields.setIsNilSubmission(true);
+      SubmissionFields submissionFields =
+          new SubmissionFields()
+              .submissionId(submissionId)
+              .areaOfLaw(areaOfLaw)
+              .officeAccountNumber(officeAccountNumber)
+              .status(SubmissionStatus.READY_FOR_VALIDATION)
+              .isNilSubmission(true);
 
       GetSubmission200ResponseClaimsInner claim = new GetSubmission200ResponseClaimsInner();
       claim.setClaimId(claimId);
@@ -161,10 +182,18 @@ public class SubmissionValidationServiceTest {
       when(providerDetailsRestClient.getProviderFirmSchedules(officeAccountNumber, areaOfLaw))
           .thenReturn(Mono.just(providerFirmResponse));
 
+      SubmissionPatch submissionPatch =
+          new SubmissionPatch()
+              .submissionId(submissionId)
+              .status(SubmissionStatus.VALIDATION_IN_PROGRESS);
+
+      when(dataClaimsRestClient.updateSubmission(submissionId.toString(), submissionPatch))
+          .thenReturn(ResponseEntity.ok().build());
+
       ClaimPatch claimPatch = new ClaimPatch().id(claimId.toString()).status(ClaimStatus.INVALID);
 
       when(dataClaimsRestClient.updateClaim(submissionId, claimId, claimPatch))
-          .thenReturn(Mono.empty());
+          .thenReturn(ResponseEntity.ok().build());
 
       when(submissionValidationContext.hasErrors(claimId.toString())).thenReturn(true);
 
@@ -172,6 +201,8 @@ public class SubmissionValidationServiceTest {
       submissionValidationService.validateSubmission(submission);
 
       // Then
+      verify(dataClaimsRestClient, times(1))
+          .updateSubmission(submissionId.toString(), submissionPatch);
       verify(submissionValidationContext, times(1))
           .addToAllClaimReports(ClaimValidationError.INVALID_NIL_SUBMISSION_CONTAINS_CLAIMS);
       verify(dataClaimsRestClient, times(1)).getClaim(submissionId, claimId);
@@ -190,20 +221,26 @@ public class SubmissionValidationServiceTest {
       String areaOfLaw = "areaOfLaw";
       String officeAccountNumber = "officeAccountNumber";
 
-      SubmissionFields submissionFields = new SubmissionFields();
-      submissionFields.setSubmissionId(submissionId);
-      submissionFields.setAreaOfLaw(areaOfLaw);
-      submissionFields.setOfficeAccountNumber(officeAccountNumber);
-      submissionFields.setIsNilSubmission(false);
+      SubmissionFields submissionFields =
+          new SubmissionFields()
+              .submissionId(submissionId)
+              .areaOfLaw(areaOfLaw)
+              .officeAccountNumber(officeAccountNumber)
+              .status(SubmissionStatus.READY_FOR_VALIDATION)
+              .isNilSubmission(false);
 
       GetSubmission200Response submission =
           GetSubmission200Response.builder().submission(submissionFields).claims(null).build();
 
       // When
-      assertThrows(
-          SubmissionValidationException.class,
-          () -> submissionValidationService.validateSubmission(submission),
-          "Expected SubmissionValidationException to be thrown");
+      ThrowingCallable throwingCallable =
+          () -> submissionValidationService.validateSubmission(submission);
+
+      // Then
+      assertThatThrownBy(throwingCallable)
+          .isInstanceOf(SubmissionValidationException.class)
+          .hasMessageContaining(
+              "Submission is not marked as nil submission, " + "but does not contain any claims");
     }
 
     @Test
@@ -215,10 +252,12 @@ public class SubmissionValidationServiceTest {
       String areaOfLaw = "areaOfLaw";
       String officeAccountNumber = "officeAccountNumber";
 
-      SubmissionFields submissionFields = new SubmissionFields();
-      submissionFields.setSubmissionId(submissionId);
-      submissionFields.setAreaOfLaw(areaOfLaw);
-      submissionFields.setOfficeAccountNumber(officeAccountNumber);
+      SubmissionFields submissionFields =
+          new SubmissionFields()
+              .submissionId(submissionId)
+              .areaOfLaw(areaOfLaw)
+              .officeAccountNumber(officeAccountNumber)
+              .status(SubmissionStatus.READY_FOR_VALIDATION);
 
       GetSubmission200ResponseClaimsInner claim = new GetSubmission200ResponseClaimsInner();
       claim.setClaimId(claimId);
@@ -240,12 +279,20 @@ public class SubmissionValidationServiceTest {
       when(providerDetailsRestClient.getProviderFirmSchedules(officeAccountNumber, areaOfLaw))
           .thenReturn(Mono.empty());
 
+      SubmissionPatch submissionPatch =
+          new SubmissionPatch()
+              .submissionId(submissionId)
+              .status(SubmissionStatus.VALIDATION_IN_PROGRESS);
+
+      when(dataClaimsRestClient.updateSubmission(submissionId.toString(), submissionPatch))
+          .thenReturn(ResponseEntity.ok().build());
+
       ClaimPatch claimPatch = new ClaimPatch().id(claimId.toString()).status(ClaimStatus.INVALID);
 
       when(submissionValidationContext.hasErrors(claimId.toString())).thenReturn(false);
 
       when(dataClaimsRestClient.updateClaim(submissionId, claimId, claimPatch))
-          .thenReturn(Mono.empty());
+          .thenReturn(ResponseEntity.ok().build());
 
       when(submissionValidationContext.hasErrors(claimId.toString())).thenReturn(true);
 
@@ -253,6 +300,8 @@ public class SubmissionValidationServiceTest {
       submissionValidationService.validateSubmission(submission);
 
       // Then
+      verify(dataClaimsRestClient, times(1))
+          .updateSubmission(submissionId.toString(), submissionPatch);
       verify(submissionValidationContext, times(1))
           .addToAllClaimReports(ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER);
       verify(dataClaimsRestClient, times(1)).getClaim(submissionId, claimId);
@@ -261,6 +310,73 @@ public class SubmissionValidationServiceTest {
       verify(claimValidationService, times(1))
           .validateClaims(List.of(claimFields), Collections.emptyList());
       verify(dataClaimsRestClient, times(1)).updateClaim(submissionId, claimId, claimPatch);
+    }
+
+    @ParameterizedTest
+    @MethodSource("invalidSubmissionStatusArguments")
+    @DisplayName("Throws exception is submission has invalid status")
+    void throwsExceptionIfSubmissionHasInvalidStatus(SubmissionStatus submissionStatus) {
+      // Given
+      UUID submissionId = new UUID(0, 0);
+      String areaOfLaw = "areaOfLaw";
+      String officeAccountNumber = "officeAccountNumber";
+
+      SubmissionFields submissionFields =
+          new SubmissionFields()
+              .submissionId(submissionId)
+              .areaOfLaw(areaOfLaw)
+              .officeAccountNumber(officeAccountNumber)
+              .status(submissionStatus)
+              .isNilSubmission(false);
+
+      GetSubmission200Response submission =
+          GetSubmission200Response.builder().submission(submissionFields).claims(null).build();
+
+      // When
+      ThrowingCallable throwingCallable =
+          () -> submissionValidationService.validateSubmission(submission);
+
+      // Then
+      assertThatThrownBy(throwingCallable)
+          .isInstanceOf(SubmissionValidationException.class)
+          .hasMessageContaining("Submission cannot be validated in state " + submissionStatus);
+    }
+
+    static Stream<Arguments> invalidSubmissionStatusArguments() {
+      return Stream.of(
+          Arguments.of(SubmissionStatus.CREATED),
+          Arguments.of(SubmissionStatus.REPLACED),
+          Arguments.of(SubmissionStatus.VALIDATION_SUCCEEDED),
+          Arguments.of(SubmissionStatus.VALIDATION_FAILED));
+    }
+
+    @Test
+    @DisplayName("Throws exception is submission status is null")
+    void throwsExceptionIfSubmissionStatusIsNull() {
+      // Given
+      UUID submissionId = new UUID(0, 0);
+      String areaOfLaw = "areaOfLaw";
+      String officeAccountNumber = "officeAccountNumber";
+
+      SubmissionFields submissionFields =
+          new SubmissionFields()
+              .submissionId(submissionId)
+              .areaOfLaw(areaOfLaw)
+              .officeAccountNumber(officeAccountNumber)
+              .status(null)
+              .isNilSubmission(false);
+
+      GetSubmission200Response submission =
+          GetSubmission200Response.builder().submission(submissionFields).claims(null).build();
+
+      // When
+      ThrowingCallable throwingCallable =
+          () -> submissionValidationService.validateSubmission(submission);
+
+      // Then
+      assertThatThrownBy(throwingCallable)
+          .isInstanceOf(SubmissionValidationException.class)
+          .hasMessageContaining("Submission state is null");
     }
   }
 }

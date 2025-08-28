@@ -1,17 +1,17 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
-import java.util.AbstractMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimFields;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
+import uk.gov.justice.laa.dstew.payments.claimsevent.exception.SubmissionValidationException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.fee.scheme.model.CategoryOfLawResponse;
@@ -62,17 +62,23 @@ public class CategoryOfLawValidationService {
     Set<String> uniqueFeeCodes =
         claims.stream().map(ClaimFields::getFeeCode).collect(Collectors.toSet());
 
-    return Flux.fromIterable(uniqueFeeCodes)
-        .flatMap(
-            feeCode ->
-                feeSchemePlatformRestClient
-                    .getCategoryOfLaw(feeCode)
-                    .map(CategoryOfLawResponse::getCategoryOfLawCode)
-                    .map(categoryOfLawResponse -> Map.entry(feeCode, categoryOfLawResponse))
-                    .onErrorResume(
-                        WebClientResponseException.NotFound.class,
-                        ex -> Mono.just(new AbstractMap.SimpleEntry<>(feeCode, null))))
-        .collectMap(Map.Entry::getKey, Map.Entry::getValue)
-        .block();
+    Map<String, String> categoryOfLawLookup = new HashMap<>();
+
+    uniqueFeeCodes.forEach(
+        feeCode -> {
+          ResponseEntity<CategoryOfLawResponse> categoryOfLawResponse =
+              feeSchemePlatformRestClient.getCategoryOfLaw(feeCode);
+          if (categoryOfLawResponse.getStatusCode().is2xxSuccessful()) {
+            categoryOfLawLookup.put(
+                feeCode, categoryOfLawResponse.getBody().getCategoryOfLawCode());
+          } else if (categoryOfLawResponse.getStatusCode().isSameCodeAs(HttpStatus.NOT_FOUND)) {
+            categoryOfLawLookup.put(feeCode, null);
+          } else {
+            throw new SubmissionValidationException(
+                "Error fetching category of law for fee code: " + feeCode);
+          }
+        });
+
+    return categoryOfLawLookup;
   }
 }
