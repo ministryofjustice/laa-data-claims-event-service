@@ -1,0 +1,107 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/provider-offices/[a-f0-9\\-]+/schedules"
+  },
+  "scenarioName": "get schedules",
+  "requiredScenarioState": "Started",
+  "newScenarioState": "empty",
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "firm": {
+        "firmNumber": "string",
+        "firmId": 1073741824,
+        "ccmsFirmId": 1073741824,
+        "parentFirmId": 1073741824,
+        "firmName": "string",
+        "firmType": "string",
+        "constitutionalStatus": "string",
+        "solicitorAdvocateYN": "string",
+        "advocateLevel": "string",
+        "barCouncilRoll": "string",
+        "companyHouseNumber": "string"
+      },
+      "office": {
+        "firmOfficeId": 1073741824,
+        "ccmsFirmOfficeId": 1073741824,
+        "firmOfficeCode": "string",
+        "officeName": "string",
+        "officeCodeAlt": "string",
+        "type": "string"
+      },
+      "pds": true,
+      "schedules": [
+        {
+          "contractType": "string",
+          "contractDescription": "string",
+          "contractNumber": "string",
+          "contractReference": "string",
+          "contractStatus": "string",
+          "contractAuthorizationStatus": "string",
+          "contractStartDate": "2025-08-28",
+          "contractEndDate": "2025-08-28",
+          "areaOfLaw": "string",
+          "scheduleType": "string",
+          "scheduleNumber": "string",
+          "scheduleContractNumber": "string",
+          "scheduleContractReference": "string",
+          "scheduleAuthorizationStatus": "string",
+          "scheduleStatus": "string",
+          "scheduleStartDate": "2025-08-28",
+          "scheduleEndDate": "2025-08-28",
+          "scheduleLines": [
+            {
+              "areaOfLaw": "string",
+              "categoryOfLaw": "string",
+              "description": "string",
+              "devolvedPowersStatus": "string",
+              "dpTypeOfChange": "string",
+              "dpReasonForChange": "string",
+              "dpDateOfChange": "string",
+              "remainderWorkFlag": "string",
+              "minimumCasesAllowedCount": "string",
+              "maximumCasesAllowedCount": "string",
+              "minimumToleranceCount": "string",
+              "maximumToleranceCount": "string",
+              "minimumLicenseCount": "string",
+              "maximumLicenseCount": "string",
+              "workInProgressCount": "string",
+              "outreach": "string",
+              "cancelFlag": "string",
+              "cancelReason": "string",
+              "cancelDate": "2025-08-28",
+              "closedDate": "2025-08-28",
+              "closedReason": "string"
+            }
+          ],
+          "nmsAuths": [
+            {
+              "description": "string",
+              "minMatterStarts": 1073741824,
+              "maxMatterStarts": 1073741824,
+              "authorisedLitigator": "string",
+              "supervision": "string",
+              "serviceCombinations": "string",
+              "typeOfPresence": "string",
+              "lawSocietyChildrenFlag": "string",
+              "advLawSocFamVioFlag": "string",
+              "advLawSocFamNoVioFlag": "string",
+              "resAccrSpecDomAbuseFlag": "string",
+              "resAccrSpecOtherFlag": "string",
+              "consortiaId": "string",
+              "authorisationStatus": "string",
+              "withdrawalType": "string",
+              "withdrawalReason": "string",
+              "attributeCategory": "string"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
+

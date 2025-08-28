@@ -3,7 +3,6 @@
     "method": "PATCH",
     "urlPathPattern": "/api/v0/submissions/[a-f0-9\\-]+/claims/[a-f0-9\\-]+"
   },
-  "scenarioName": "path claim",
   "response": {
     "status": 204
   }
