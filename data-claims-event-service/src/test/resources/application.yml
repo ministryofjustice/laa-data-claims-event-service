@@ -1,0 +1,13 @@
+laa:
+  bulk-claim-queue:
+    name: test-queue-name
+
+spring:
+  cloud:
+    aws:
+      endpoint: http://localhost:4566
+      credentials:
+        access-key: dummy-access-key
+        secret-key: dummy-secret-key
+      region:
+        static: us-east-1

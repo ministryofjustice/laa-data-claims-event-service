@@ -1,0 +1,3 @@
+laa:
+  bulk-claim-queue:
+    name: test-queue-name
