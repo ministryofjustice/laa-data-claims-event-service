@@ -21,7 +21,11 @@ import uk.gov.justice.laa.fee.scheme.model.CategoryOfLawResponse;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationRequest;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationResponse;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+    properties = {
+        "spring.cloud.aws.sqs.enabled=false", // Disable AWS SQS functionality
+        "laa.bulk-claim-queue.name=not-used", // Dummy queue name to avoid initialization issues
+    })
 class FeeSchemePlatformRestClientIntegrationTest extends MockServerIntegrationTest {
 
   private FeeSchemePlatformRestClient feeSchemePlatformRestClient;
