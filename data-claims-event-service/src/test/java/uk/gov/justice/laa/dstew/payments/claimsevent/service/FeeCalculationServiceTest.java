@@ -1,6 +1,5 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -17,7 +16,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimFields;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
-import uk.gov.justice.laa.dstew.payments.claimsevent.exception.SubmissionValidationException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.mapper.FeeSchemeMapper;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
@@ -83,8 +81,8 @@ class FeeCalculationServiceTest {
     }
 
     @Test
-    @DisplayName("404 Not found response results in submission validation exception")
-    void notFoundResponseResultsInSubmissionValidationException() {
+    @DisplayName("404 Not found response results in claim being flagged for retry")
+    void notFoundResponseResultsInClaimBeingFlaggedForRetry() {
 
       ClaimFields claim = new ClaimFields().id("claimId").feeCode("feeCode");
 
@@ -96,16 +94,16 @@ class FeeCalculationServiceTest {
 
       ThrowingCallable result = () -> feeCalculationService.validateFeeCalculation(claim);
 
-      assertThatThrownBy(result)
-          .isInstanceOf(SubmissionValidationException.class)
-          .hasMessageContaining("Fee calculation returned unsuccessful response with status: 404");
+      feeCalculationService.validateFeeCalculation(claim);
 
       verify(feeSchemePlatformRestClient, times(1)).calculateFee(feeCalculationRequest);
+
+      verify(validationContext, times(1)).flagForRetry(claim.getId());
     }
 
     @Test
-    @DisplayName("500 Server error response results in submission validation exception")
-    void serverErrorResponseResultsInSubmissionValidationException() {
+    @DisplayName("500 Server error response results in claim being flagged for retry")
+    void serverErrorResponseResultsInClaimBeingFlaggedForRetry() {
 
       ClaimFields claim = new ClaimFields().id("claimId").feeCode("feeCode");
 
@@ -115,13 +113,11 @@ class FeeCalculationServiceTest {
       when(feeSchemePlatformRestClient.calculateFee(feeCalculationRequest))
           .thenReturn(ResponseEntity.internalServerError().build());
 
-      ThrowingCallable result = () -> feeCalculationService.validateFeeCalculation(claim);
-
-      assertThatThrownBy(result)
-          .isInstanceOf(SubmissionValidationException.class)
-          .hasMessageContaining("Fee calculation returned unsuccessful response with status: 500");
+      feeCalculationService.validateFeeCalculation(claim);
 
       verify(feeSchemePlatformRestClient, times(1)).calculateFee(feeCalculationRequest);
+
+      verify(validationContext, times(1)).flagForRetry(claim.getId());
     }
   }
 }

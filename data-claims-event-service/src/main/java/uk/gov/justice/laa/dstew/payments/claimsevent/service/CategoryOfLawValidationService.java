@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 import uk.gov.justice.laa.fee.scheme.model.CategoryOfLawResponse;
 
 /** A service responsible for validating data items related to category of law. */
+@Slf4j
 @Service
 @AllArgsConstructor
 public class CategoryOfLawValidationService {
@@ -37,6 +39,8 @@ public class CategoryOfLawValidationService {
       Map<String, String> categoryOfLawLookup,
       List<String> providerCategoriesOfLaw) {
 
+    log.debug("Validating category of law for claim {}", claim.getId());
+
     String categoryOfLaw = categoryOfLawLookup.get(claim.getFeeCode());
 
     if (categoryOfLaw == null) {
@@ -46,6 +50,7 @@ public class CategoryOfLawValidationService {
       submissionValidationContext.addClaimError(
           claim.getId(), ClaimValidationError.INVALID_CATEGORY_OF_LAW_NOT_AUTHORISED_FOR_PROVIDER);
     }
+    log.debug("Category of law validation completed for claim {}", claim.getId());
   }
 
   /**

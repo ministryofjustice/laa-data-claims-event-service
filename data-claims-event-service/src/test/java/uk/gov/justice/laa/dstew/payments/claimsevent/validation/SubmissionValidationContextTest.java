@@ -157,6 +157,37 @@ class SubmissionValidationContextTest {
   }
 
   @Nested
+  @DisplayName("isFlaggedForRetry")
+  class isFlaggedForRetryTests {
+
+    @Test
+    @DisplayName("Returns the correct result")
+    void returnsCorrectResult() {
+      // Given
+      submissionValidationContext = new SubmissionValidationContext();
+
+      ClaimValidationReport claimValidationReport1 =
+          new ClaimValidationReport(
+              "claimId1", List.of(ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER));
+      claimValidationReport1.flagForRetry();
+
+      ClaimValidationReport claimValidationReport2 =
+          new ClaimValidationReport(
+              "claimId2", List.of(ClaimValidationError.INVALID_CATEGORY_OF_LAW_AND_FEE_CODE));
+      submissionValidationContext.addClaimReports(
+          List.of(claimValidationReport1, claimValidationReport2));
+
+      // When
+      boolean claim1FlaggedForRetry = submissionValidationContext.isFlaggedForRetry("claimId1");
+      boolean claim2FlaggedForRetry = submissionValidationContext.isFlaggedForRetry("claimId2");
+
+      // Then
+      assertThat(claim1FlaggedForRetry).isTrue();
+      assertThat(claim2FlaggedForRetry).isFalse();
+    }
+  }
+
+  @Nested
   @DisplayName("hasErrors")
   class HasErrorsTests {
 

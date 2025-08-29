@@ -3,6 +3,7 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -53,6 +54,8 @@ public class SubmissionValidationService {
 
     UUID submissionId = submissionFields.getSubmissionId();
 
+    log.debug("Validating submission {}", submissionId);
+
     verifySubmissionStatus(submissionId, submissionFields.getStatus());
 
     List<ClaimFields> claims = getReadyToProcessClaims(submission);
@@ -64,7 +67,7 @@ public class SubmissionValidationService {
     String officeCode = submissionFields.getOfficeAccountNumber();
     String areaOfLaw = submissionFields.getAreaOfLaw();
     List<String> providerCategoriesOfLaw = getProviderCategoriesOfLaw(officeCode, areaOfLaw);
-    validateProviderContract(providerCategoriesOfLaw);
+    validateProviderContract(submissionId.toString(), providerCategoriesOfLaw);
 
     claimValidationService.validateClaims(claims, providerCategoriesOfLaw);
 
@@ -74,6 +77,7 @@ public class SubmissionValidationService {
     // TODO: Verify all claims have been validated, and update submission status to
     //  VALIDATION_SUCCEEDED or VALIDATION_FAILED
     //  If unvalidated claims remain, re-queue message.
+    log.debug("Validation completed for submission {}", submissionId);
   }
 
   private void verifySubmissionStatus(UUID submissionId, SubmissionStatus currentStatus) {
@@ -110,6 +114,9 @@ public class SubmissionValidationService {
   }
 
   private void validateNilSubmission(GetSubmission200Response submission) {
+    log.debug(
+        "Validating nil submission for submission {}",
+        submission.getSubmission().getSubmissionId());
     if (Boolean.TRUE.equals(submission.getSubmission().getIsNilSubmission())) {
       if (submission.getClaims() != null && !submission.getClaims().isEmpty()) {
         submissionValidationContext.addToAllClaimReports(
@@ -121,6 +128,8 @@ public class SubmissionValidationService {
             "Submission is not marked as nil submission, but does not contain any claims");
       }
     }
+    log.debug(
+        "Nil submission completed for submission {}", submission.getSubmission().getSubmissionId());
   }
 
   private List<String> getProviderCategoriesOfLaw(String officeCode, String areaOfLaw) {
@@ -136,21 +145,44 @@ public class SubmissionValidationService {
         .toList();
   }
 
-  private void validateProviderContract(List<String> providerCategoriesOfLaw) {
+  private void validateProviderContract(String submissionId, List<String> providerCategoriesOfLaw) {
+    log.debug("Validating provider contract for submission {}", submissionId);
     if (providerCategoriesOfLaw.isEmpty()) {
       submissionValidationContext.addToAllClaimReports(
           ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER);
     }
+    log.debug("Provider contract validation completed for submission {}", submissionId);
   }
 
   private void updateClaims(UUID submissionId, List<ClaimFields> claims) {
-    claims.forEach(
-        claim -> {
-          ClaimPatch claimPatch =
-              ClaimPatch.builder().id(claim.getId()).status(getClaimStatus(claim.getId())).build();
-          dataClaimsRestClient.updateClaim(
-              submissionId, UUID.fromString(claim.getId()), claimPatch);
-        });
+    log.debug("Updating claims for submission {}", submissionId.toString());
+    AtomicInteger claimsUpdated = new AtomicInteger();
+    AtomicInteger claimsFlaggedForRetry = new AtomicInteger();
+    claims.stream()
+        .peek(
+            claim -> {
+              if (submissionValidationContext.isFlaggedForRetry(claim.getId())) {
+                log.debug("Claim {} is flagged for retry. Skipping update.", claim.getId());
+                claimsFlaggedForRetry.incrementAndGet();
+              }
+            })
+        .filter(claim -> !submissionValidationContext.isFlaggedForRetry(claim.getId()))
+        .forEach(
+            claim -> {
+              ClaimStatus claimStatus = getClaimStatus(claim.getId());
+              ClaimPatch claimPatch =
+                  ClaimPatch.builder().id(claim.getId()).status(claimStatus).build();
+              dataClaimsRestClient.updateClaim(
+                  submissionId, UUID.fromString(claim.getId()), claimPatch);
+              log.debug("Claim {} status updated to {}", claim.getId(), claimStatus);
+              claimsUpdated.getAndIncrement();
+            });
+    log.debug(
+        "Claim updates completed for submission {}. Claims updated: {}. "
+            + "Claim updates skipped: {}",
+        submissionId,
+        claimsUpdated.get(),
+        claimsFlaggedForRetry.get());
   }
 
   private ClaimStatus getClaimStatus(String claimId) {
