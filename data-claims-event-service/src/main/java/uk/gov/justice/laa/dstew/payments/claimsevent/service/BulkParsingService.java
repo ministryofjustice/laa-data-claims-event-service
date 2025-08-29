@@ -18,8 +18,8 @@ import org.springframework.util.StringUtils;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionMatterStart;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionOutcome;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPost;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.CreateMatterStartRequest;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetBulkSubmission200Response;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.MatterStartPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
@@ -67,7 +67,7 @@ public class BulkParsingService {
         bulkSubmission.getDetails() != null
             ? bulkSubmission.getDetails().getMatterStarts()
             : List.of();
-    List<CreateMatterStartRequest> matterStartRequests =
+    List<MatterStartPost> matterStartRequests =
         bulkSubmissionMapper.mapToMatterStartRequests(matterStarts);
     createMatterStarts(createdSubmissionId, matterStartRequests);
 
@@ -269,13 +269,13 @@ public class BulkParsingService {
   }
 
   protected List<String> createMatterStarts(
-      String submissionId, List<CreateMatterStartRequest> matterStarts) {
+      String submissionId, List<MatterStartPost> matterStarts) {
     if (matterStarts == null || matterStarts.isEmpty()) {
       return Collections.emptyList();
     }
     List<String> createdIds = new ArrayList<>(matterStarts.size());
     int index = 0;
-    for (CreateMatterStartRequest ms : matterStarts) {
+    for (MatterStartPost ms : matterStarts) {
       try {
         createdIds.add(createMatterStart(submissionId, ms));
       } catch (RuntimeException ex) {
@@ -289,7 +289,7 @@ public class BulkParsingService {
     return createdIds;
   }
 
-  protected String createMatterStart(String submissionId, CreateMatterStartRequest matterStart) {
+  protected String createMatterStart(String submissionId, MatterStartPost matterStart) {
     if (!StringUtils.hasText(submissionId)) {
       throw new MatterStartCreateException("submissionId is required to create a matter start");
     }

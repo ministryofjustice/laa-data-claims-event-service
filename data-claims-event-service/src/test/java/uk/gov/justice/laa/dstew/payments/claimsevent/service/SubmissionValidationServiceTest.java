@@ -29,13 +29,13 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetSubmission200Response;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetSubmission200ResponseClaimsInner;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetSubmission200ResponseClaimsInner.StatusEnum;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionFields;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.SubmissionValidationException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.provider.model.FirmOfficeContractAndScheduleDetails;
 import uk.gov.justice.laa.provider.model.FirmOfficeContractAndScheduleLine;
@@ -68,20 +68,16 @@ public class SubmissionValidationServiceTest {
       String categoryOfLaw = "categoryOfLaw";
       String officeAccountNumber = "officeAccountNumber";
 
-      SubmissionFields submissionFields =
-          new SubmissionFields()
-              .submissionId(submissionId)
-              .areaOfLaw(areaOfLaw)
-              .officeAccountNumber(officeAccountNumber)
-              .status(SubmissionStatus.READY_FOR_VALIDATION);
-
       GetSubmission200ResponseClaimsInner claim = new GetSubmission200ResponseClaimsInner();
       claim.setClaimId(claimId);
       claim.setStatus(StatusEnum.READY_TO_PROCESS);
 
       GetSubmission200Response submission =
           GetSubmission200Response.builder()
-              .submission(submissionFields)
+              .submissionId(submissionId)
+              .areaOfLaw(areaOfLaw)
+              .officeAccountNumber(officeAccountNumber)
+              .status(SubmissionStatus.READY_FOR_VALIDATION)
               .claims(List.of(claim))
               .build();
 
@@ -144,21 +140,17 @@ public class SubmissionValidationServiceTest {
       String categoryOfLaw = "categoryOfLaw";
       String officeAccountNumber = "officeAccountNumber";
 
-      SubmissionFields submissionFields =
-          new SubmissionFields()
-              .submissionId(submissionId)
-              .areaOfLaw(areaOfLaw)
-              .officeAccountNumber(officeAccountNumber)
-              .status(SubmissionStatus.READY_FOR_VALIDATION)
-              .isNilSubmission(true);
-
       GetSubmission200ResponseClaimsInner claim = new GetSubmission200ResponseClaimsInner();
       claim.setClaimId(claimId);
       claim.setStatus(StatusEnum.READY_TO_PROCESS);
 
       GetSubmission200Response submission =
           GetSubmission200Response.builder()
-              .submission(submissionFields)
+              .submissionId(submissionId)
+              .areaOfLaw(areaOfLaw)
+              .officeAccountNumber(officeAccountNumber)
+              .status(SubmissionStatus.READY_FOR_VALIDATION)
+              .isNilSubmission(true)
               .claims(List.of(claim))
               .build();
 
@@ -221,16 +213,15 @@ public class SubmissionValidationServiceTest {
       String areaOfLaw = "areaOfLaw";
       String officeAccountNumber = "officeAccountNumber";
 
-      SubmissionFields submissionFields =
-          new SubmissionFields()
+      GetSubmission200Response submission =
+          GetSubmission200Response.builder()
               .submissionId(submissionId)
               .areaOfLaw(areaOfLaw)
               .officeAccountNumber(officeAccountNumber)
               .status(SubmissionStatus.READY_FOR_VALIDATION)
-              .isNilSubmission(false);
-
-      GetSubmission200Response submission =
-          GetSubmission200Response.builder().submission(submissionFields).claims(null).build();
+              .isNilSubmission(false)
+              .claims(null)
+              .build();
 
       // When
       ThrowingCallable throwingCallable =
@@ -252,20 +243,16 @@ public class SubmissionValidationServiceTest {
       String areaOfLaw = "areaOfLaw";
       String officeAccountNumber = "officeAccountNumber";
 
-      SubmissionFields submissionFields =
-          new SubmissionFields()
-              .submissionId(submissionId)
-              .areaOfLaw(areaOfLaw)
-              .officeAccountNumber(officeAccountNumber)
-              .status(SubmissionStatus.READY_FOR_VALIDATION);
-
       GetSubmission200ResponseClaimsInner claim = new GetSubmission200ResponseClaimsInner();
       claim.setClaimId(claimId);
       claim.setStatus(StatusEnum.READY_TO_PROCESS);
 
       GetSubmission200Response submission =
           GetSubmission200Response.builder()
-              .submission(submissionFields)
+              .submissionId(submissionId)
+              .areaOfLaw(areaOfLaw)
+              .officeAccountNumber(officeAccountNumber)
+              .status(SubmissionStatus.READY_FOR_VALIDATION)
               .claims(List.of(claim))
               .build();
 
@@ -287,10 +274,20 @@ public class SubmissionValidationServiceTest {
       when(dataClaimsRestClient.updateSubmission(submissionId.toString(), submissionPatch))
           .thenReturn(ResponseEntity.ok().build());
 
-      ClaimPatch claimPatch = new ClaimPatch().id(claimId.toString()).status(ClaimStatus.INVALID);
-
       when(submissionValidationContext.hasErrors(claimId.toString())).thenReturn(false);
 
+      ClaimValidationReport claimValidationReport =
+          new ClaimValidationReport(
+              claimId.toString(), List.of(ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER));
+      when(submissionValidationContext.getClaimReport(claimId.toString()))
+          .thenReturn(Optional.of(claimValidationReport));
+
+      ClaimPatch claimPatch =
+          new ClaimPatch()
+              .id(claimId.toString())
+              .status(ClaimStatus.INVALID)
+              .validationErrors(
+                  List.of(ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER.getDescription()));
       when(dataClaimsRestClient.updateClaim(submissionId, claimId, claimPatch))
           .thenReturn(ResponseEntity.ok().build());
 
@@ -321,16 +318,15 @@ public class SubmissionValidationServiceTest {
       String areaOfLaw = "areaOfLaw";
       String officeAccountNumber = "officeAccountNumber";
 
-      SubmissionFields submissionFields =
-          new SubmissionFields()
+      GetSubmission200Response submission =
+          GetSubmission200Response.builder()
               .submissionId(submissionId)
               .areaOfLaw(areaOfLaw)
               .officeAccountNumber(officeAccountNumber)
               .status(submissionStatus)
-              .isNilSubmission(false);
-
-      GetSubmission200Response submission =
-          GetSubmission200Response.builder().submission(submissionFields).claims(null).build();
+              .isNilSubmission(false)
+              .claims(null)
+              .build();
 
       // When
       ThrowingCallable throwingCallable =
@@ -358,16 +354,15 @@ public class SubmissionValidationServiceTest {
       String areaOfLaw = "areaOfLaw";
       String officeAccountNumber = "officeAccountNumber";
 
-      SubmissionFields submissionFields =
-          new SubmissionFields()
+      GetSubmission200Response submission =
+          GetSubmission200Response.builder()
               .submissionId(submissionId)
               .areaOfLaw(areaOfLaw)
               .officeAccountNumber(officeAccountNumber)
               .status(null)
-              .isNilSubmission(false);
-
-      GetSubmission200Response submission =
-          GetSubmission200Response.builder().submission(submissionFields).claims(null).build();
+              .isNilSubmission(false)
+              .claims(null)
+              .build();
 
       // When
       ThrowingCallable throwingCallable =

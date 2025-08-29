@@ -196,6 +196,51 @@ paths:
         '500':
           description: 'Internal server error'
 
+    get:
+      operationId: getSubmissions
+      x-spring-paginated: true
+      tags:
+        - Submissions
+      summary: get claim submissions
+      description: Return claim submissions by office account numbers (mandatory), submissionId, submittedDateFrom, submittedDateTo
+      parameters:
+        - name: offices
+          in: query
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+            description: Filter by list of office account numbers
+        - name: submissionId
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by submission ID
+        - name: submittedDateFrom
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+          description: Filter submissions submitted from this date (inclusive)
+        - name: submittedDateTo
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+          description: Filter submissions submitted up to this date (inclusive)
+
+      responses:
+        '200':
+          description: returns a list of paginated claim submissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmissionsResultSet'
+
   /api/v0/submissions/{id}/claims:
     post:
       operationId: createClaim
@@ -266,19 +311,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              description: Matter Start details
-              properties:
-                schedule_reference:
-                  type: string
-                category_code:
-                  type: string
-                procurement_area_code:
-                  type: string
-                access_point_code:
-                  type: string
-                delivery_location:
-                  type: string
+              $ref: '#/components/schemas/MatterStartPost'
       responses:
         '201':
           description: Matter Start created successfully
@@ -296,6 +329,44 @@ paths:
                     type: string
                     format: uuid
                     description: UUID of the created Matter Start
+        '400':
+          description: 'Bad request'
+        '401':
+          description: 'Unauthorized'
+        '403':
+          description: 'Forbidden'
+        '500':
+          description: 'Internal server error'
+  /api/v0/submissions/{id}/matter-starts/{matter-start-id}:
+    get:
+      operationId: getMatterStart
+      tags:
+        - Matter Starts
+      summary: Returns a Matter Start for a Submission
+      description: |
+        Returns a Matter Start record belonging to the submission with the specified ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: UUID of the submission
+          schema:
+            type: string
+            format: uuid
+        - name: matter-start-id
+          in: path
+          required: true
+          description: UUID of the matter start
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Returns a Matter Start for a Submission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatterStartGet'
         '400':
           description: 'Bad request'
         '401':
@@ -363,9 +434,9 @@ paths:
               schema:
                 type: object
                 description: submission details
+                allOf:
+                  - $ref: '#/components/schemas/SubmissionFields'
                 properties:
-                  submission:
-                    $ref: '#/components/schemas/SubmissionFields'
                   claims:
                     type: array
                     description: List of claims (ID + status) for this submission
@@ -497,6 +568,12 @@ components:
     SubmissionPatch:
       allOf:
         - $ref: '#/components/schemas/SubmissionFields'
+      type: object
+      properties:
+        validation_errors:
+          type: array
+          items:
+            type: string
     SubmissionStatus:
       type: string
       enum:
@@ -545,6 +622,15 @@ components:
         submitted:
           type: date
           description: Date the submission was submitted
+    SubmissionsResultSet:
+      allOf:
+        - $ref: "#/components/schemas/page"
+      type: 'object'
+      properties:
+        content:
+          type: 'array'
+          items:
+            $ref: '#/components/schemas/SubmissionFields'
 
     ClaimPost:
       allOf:
@@ -562,6 +648,12 @@ components:
     ClaimPatch:
       allOf:
         - $ref: '#/components/schemas/ClaimFields'
+      type: object
+      properties:
+        validation_errors:
+          type: array
+          items:
+            type: string
 
     ClaimStatus:
       type: string
@@ -1033,3 +1125,34 @@ components:
         medConcludedDate:
           type: string
           format: date
+    MatterStartPost:
+      allOf:
+        - $ref: '#/components/schemas/MatterStartFields'
+    MatterStartGet:
+      allOf:
+        - $ref: '#/components/schemas/MatterStartFields'
+    MatterStartFields:
+      type: object
+      description: Matter start for a submission
+      properties:
+        schedule_reference:
+          type: string
+        category_code:
+          type: string
+        procurement_area_code:
+          type: string
+        access_point_code:
+          type: string
+        delivery_location:
+          type: string
+    page:
+      type: 'object'
+      properties:
+        total_pages:
+          type: 'integer'
+        total_elements:
+          type: 'integer'
+        number:
+          type: 'integer'
+        size:
+          type: 'integer'

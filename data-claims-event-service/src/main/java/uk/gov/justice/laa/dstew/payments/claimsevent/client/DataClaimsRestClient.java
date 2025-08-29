@@ -13,9 +13,9 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimFields;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.CreateMatterStart201Response;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.CreateMatterStartRequest;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetBulkSubmission200Response;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetSubmission200Response;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.MatterStartPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPost;
 
@@ -117,5 +117,5 @@ public interface DataClaimsRestClient {
    */
   @PostExchange("/submissions/{id}/matter-starts")
   ResponseEntity<CreateMatterStart201Response> createMatterStart(
-      @PathVariable("id") String submissionId, @RequestBody CreateMatterStartRequest matterStart);
+      @PathVariable("id") String submissionId, @RequestBody MatterStartPost matterStart);
 }
