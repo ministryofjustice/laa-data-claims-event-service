@@ -1,14 +1,14 @@
 laa:
   provider-details-api:
-    hostname: http://localhost:9192
+    hostname: http://localhost:8192
     url: ${laa.provider-details-api.hostname}
     accessToken: 123
   claims-api:
-    hostname: http://localhost:9190
+    hostname: http://localhost:8190
     url: ${laa.claims-api.hostname}
     accessToken: 123
   fee-scheme-platform-api:
-    hostname: http://localhost:9191
+    hostname: http://localhost:8191
     url: ${laa.claims-api.hostname}
     accessToken: 123
   bulk-claim-queue:

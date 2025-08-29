@@ -5,6 +5,9 @@
   },
   "response": {
     "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
     "jsonBody": {
       "bulkSubmissionId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
       "status": "READY_FOR_PARSING",
@@ -60,8 +63,8 @@
             "typeOfAdvice": "string",
             "postalApplAccp": true,
             "scheduleRef": "string",
-            "cmrhOral": "string",
-            "cmrhTelephone": "string",
+            "cmrhOral": "123",
+            "cmrhTelephone": "01912223333",
             "aitHearingCentre": "string",
             "substantiveHearing": true,
             "hoInterview": "string",
@@ -70,7 +73,7 @@
             "detentionTravelWaitingCosts": 0,
             "deliveryLocation": "string",
             "priorAuthorityRef": "string",
-            "jrFormFilling": "string",
+            "jrFormFilling": "123",
             "additionalTravelPayment": true,
             "meetingsAttended": "string",
             "medicalReportsClaimed": 0,
@@ -115,7 +118,7 @@
             "uniqueCaseId": "string",
             "standardFeeCat": "string",
             "client2PostalApplAccp": "string",
-            "costsDamagesRecovered": "string",
+            "costsDamagesRecovered": "123",
             "eligibleClient": "string",
             "courtLocation": "string",
             "localAuthorityNumber": "string",
