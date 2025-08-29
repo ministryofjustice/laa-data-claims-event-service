@@ -10,7 +10,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.DockerClientFactory;
@@ -21,14 +21,13 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest;
-import uk.gov.justice.laa.dstew.payments.claimsevent.config.BulkClaimQueueProperties;
 
 @Slf4j
 @TestInstance(Lifecycle.PER_CLASS)
 public class LocalstackBaseIntegrationTest {
 
-  @Autowired
-  private BulkClaimQueueProperties queueConfiguration;
+  @Value("${laa.bulk-claim-queue.name}")
+  protected String queueName;
 
   protected static final DockerImageName SQS_IMAGE =
       DockerImageName.parse("localstack/localstack:3.4");
@@ -39,8 +38,7 @@ public class LocalstackBaseIntegrationTest {
 
   protected LocalStackContainer localStackContainer;
 
-  protected ObjectMapper objectMapper =
-      new ObjectMapper();
+  protected ObjectMapper objectMapper = new ObjectMapper();
 
   protected String queueUrl;
 
@@ -69,14 +67,11 @@ public class LocalstackBaseIntegrationTest {
   @BeforeEach
   void beforeEach() {
     // create the queue if it doesn't exist
-    sqsClient.createQueue(builder -> builder.queueName(queueConfiguration.getName()));
+    sqsClient.createQueue(builder -> builder.queueName(queueName));
 
     // Get the queue URL
     this.queueUrl =
-        sqsClient
-            .getQueueUrl(
-                GetQueueUrlRequest.builder().queueName(queueConfiguration.getName()).build())
-            .queueUrl();
+        sqsClient.getQueueUrl(GetQueueUrlRequest.builder().queueName(queueName).build()).queueUrl();
   }
 
   private static LocalStackContainer createContainer() {
@@ -95,7 +90,8 @@ public class LocalstackBaseIntegrationTest {
         .region(Region.of(localStackContainer.getRegion()))
         .credentialsProvider(
             StaticCredentialsProvider.create(
-                AwsBasicCredentials.create(localStackContainer.getAccessKey(), localStackContainer.getSecretKey())))
+                AwsBasicCredentials.create(
+                    localStackContainer.getAccessKey(), localStackContainer.getSecretKey())))
         .build();
   }
 }
