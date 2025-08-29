@@ -32,11 +32,9 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.service.BulkParsingService;
 @DisplayName("Bulk submissions listener integration test")
 public class BulkSubmissionListenerIntegrationTests extends LocalstackBaseIntegrationTest {
 
-  @InjectMocks
-  BulkSubmissionListener listener;
+  @InjectMocks BulkSubmissionListener listener;
 
-  @MockitoBean
-  BulkParsingService bulkParsingService;
+  @MockitoBean BulkParsingService bulkParsingService;
 
   @Test
   @DisplayName("Should process multiple submissions")
@@ -45,27 +43,26 @@ public class BulkSubmissionListenerIntegrationTests extends LocalstackBaseIntegr
     UUID submissionIdOne = new UUID(1, 1);
     UUID submissionIdTwo = new UUID(2, 2);
 
-    String messageBody = objectMapper.writeValueAsString(
-        Map.of(
-            "bulk_submission_id", bulkSubmissionId,
-            "submission_ids", List.of(submissionIdOne, submissionIdTwo)
-        ));
+    String messageBody =
+        objectMapper.writeValueAsString(
+            Map.of(
+                "bulk_submission_id",
+                bulkSubmissionId,
+                "submission_ids",
+                List.of(submissionIdOne, submissionIdTwo)));
 
     // Send message to queue
-    sqsClient.sendMessage(
-        builder ->
-            builder
-                .queueUrl(this.queueUrl)
-                .messageBody(messageBody));
+    sqsClient.sendMessage(builder -> builder.queueUrl(this.queueUrl).messageBody(messageBody));
 
     // Use await to assert once the listener has received the message from the queue, and passed
     // the submission to the bulkParsingService
-    await().pollInterval(Duration.ofMillis(500))
+    await()
+        .pollInterval(Duration.ofMillis(500))
         .atMost(Duration.ofSeconds(10))
-        .untilAsserted(() -> {
-          verify(bulkParsingService, times(1)).parseData(bulkSubmissionId, submissionIdOne);
-          verify(bulkParsingService, times(1)).parseData(bulkSubmissionId, submissionIdTwo);
-        });
-
+        .untilAsserted(
+            () -> {
+              verify(bulkParsingService, times(1)).parseData(bulkSubmissionId, submissionIdOne);
+              verify(bulkParsingService, times(1)).parseData(bulkSubmissionId, submissionIdTwo);
+            });
   }
 }
