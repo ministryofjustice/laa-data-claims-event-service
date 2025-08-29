@@ -16,6 +16,10 @@ spring:
     hibernate:
       ddl-auto: none
 
+  threads:
+    virtual:
+      enabled: true
+
 # used by actuator info endpoint
 info:
   app:

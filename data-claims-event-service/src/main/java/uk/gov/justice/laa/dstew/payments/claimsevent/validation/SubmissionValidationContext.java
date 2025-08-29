@@ -74,6 +74,29 @@ public class SubmissionValidationContext {
   }
 
   /**
+   * Flag a claim for retry in the case where it cannot be fully validated, e.g. error from third
+   * party service.
+   *
+   * @param claimId the claim id to flag for retry
+   */
+  public void flagForRetry(String claimId) {
+    claimReports.stream()
+        .filter(claimReport -> claimReport.getClaimId().equals(claimId))
+        .findFirst()
+        .ifPresent(ClaimValidationReport::flagForRetry);
+  }
+
+  /**
+   * Verify whether a claim is flagged for retry.
+   *
+   * @param claimId the ID of the claim
+   * @return true if the claim is flagged for retry, false otherwise
+   */
+  public boolean isFlaggedForRetry(String claimId) {
+    return getClaimReport(claimId).map(ClaimValidationReport::isFlaggedForRetry).orElse(false);
+  }
+
+  /**
    * Determine whether the validation context contains any claim errors for the given claim ID.
    *
    * @param claimId the ID of the claim

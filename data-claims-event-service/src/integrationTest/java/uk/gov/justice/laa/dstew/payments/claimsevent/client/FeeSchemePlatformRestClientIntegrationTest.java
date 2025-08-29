@@ -3,7 +3,7 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.client;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-import java.util.Optional;
+import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -14,8 +14,8 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpStatusCode;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
-import reactor.core.publisher.Mono;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MockServerIntegrationTest;
 import uk.gov.justice.laa.fee.scheme.model.CategoryOfLawResponse;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationRequest;
@@ -53,13 +53,14 @@ class FeeSchemePlatformRestClientIntegrationTest extends MockServerIntegrationTe
                   .withBody(expectedBody));
 
       // When
-      Mono<CategoryOfLawResponse> result = feeSchemePlatformRestClient.getCategoryOfLaw(feeCode);
+      ResponseEntity<CategoryOfLawResponse> result =
+          feeSchemePlatformRestClient.getCategoryOfLaw(feeCode);
 
       // Then
-      Optional<CategoryOfLawResponse> categoryOfLawResponse = result.blockOptional();
-      assertThat(categoryOfLawResponse).isPresent();
+      CategoryOfLawResponse categoryOfLawResponse = result.getBody();
+      assertThat(categoryOfLawResponse).isNotNull();
       // Check all fields mapped correctly by serializing the result and comparing to expected JSON
-      String resultJson = objectMapper.writeValueAsString(categoryOfLawResponse.get());
+      String resultJson = objectMapper.writeValueAsString(categoryOfLawResponse);
       assertThatJsonMatches(expectedBody, resultJson);
     }
 
@@ -81,12 +82,11 @@ class FeeSchemePlatformRestClientIntegrationTest extends MockServerIntegrationTe
                   .withBody(expectedBody));
 
       // When
-      Mono<CategoryOfLawResponse> result = feeSchemePlatformRestClient.getCategoryOfLaw(feeCode);
-
-      HttpStatusCode httpStatusCode = HttpStatusCode.code(statusCode);
+      ThrowingCallable result = () -> feeSchemePlatformRestClient.getCategoryOfLaw(feeCode);
 
       // Then
-      assertThatThrownBy(result::block)
+      HttpStatusCode httpStatusCode = HttpStatusCode.code(statusCode);
+      assertThatThrownBy(result)
           .isInstanceOf(WebClientResponseException.class)
           .hasMessageContaining(
               "%s %s from GET %s/category-of-law/%s"
@@ -118,14 +118,14 @@ class FeeSchemePlatformRestClientIntegrationTest extends MockServerIntegrationTe
                   .withBody(expectedBody));
 
       // When
-      Mono<FeeCalculationResponse> result =
+      ResponseEntity<FeeCalculationResponse> result =
           feeSchemePlatformRestClient.calculateFee(feeCalculationRequest);
 
       // Then
-      Optional<FeeCalculationResponse> feeCalculationResponse = result.blockOptional();
-      assertThat(feeCalculationResponse).isPresent();
+      FeeCalculationResponse feeCalculationResponse = result.getBody();
+      assertThat(feeCalculationResponse).isNotNull();
       // Check all fields mapped correctly by serializing the result and comparing to expected JSON
-      String resultJson = objectMapper.writeValueAsString(feeCalculationResponse.get());
+      String resultJson = objectMapper.writeValueAsString(feeCalculationResponse);
       assertThatJsonMatches(expectedBody, resultJson);
     }
 
@@ -146,13 +146,12 @@ class FeeSchemePlatformRestClientIntegrationTest extends MockServerIntegrationTe
                   .withBody(expectedBody));
 
       // When
-      Mono<FeeCalculationResponse> result =
-          feeSchemePlatformRestClient.calculateFee(feeCalculationRequest);
-
-      HttpStatusCode httpStatusCode = HttpStatusCode.code(statusCode);
+      ThrowingCallable result =
+          () -> feeSchemePlatformRestClient.calculateFee(feeCalculationRequest);
 
       // Then
-      assertThatThrownBy(result::block)
+      HttpStatusCode httpStatusCode = HttpStatusCode.code(statusCode);
+      assertThatThrownBy(result)
           .isInstanceOf(WebClientResponseException.class)
           .hasMessageContaining(
               "%s %s from POST %s/fee-calculation"

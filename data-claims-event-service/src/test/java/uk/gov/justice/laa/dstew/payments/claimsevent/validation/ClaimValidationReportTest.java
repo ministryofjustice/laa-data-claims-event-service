@@ -92,4 +92,23 @@ class ClaimValidationReportTest {
       assertThat(claimValidationReport.hasErrors()).isFalse();
     }
   }
+
+  @Nested
+  @DisplayName("flagForRetry")
+  class FlagForRetryTests {
+
+    @Test
+    @DisplayName("Sets flagged for retry to true")
+    void setsFlaggedForRetryToTrue() {
+      // Given
+      claimValidationReport = new ClaimValidationReport("claimId");
+      assertThat(claimValidationReport.isFlaggedForRetry()).isFalse();
+
+      // When
+      claimValidationReport.flagForRetry();
+
+      // Then
+      assertThat(claimValidationReport.isFlaggedForRetry()).isTrue();
+    }
+  }
 }

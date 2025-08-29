@@ -9,7 +9,6 @@ import org.springframework.web.service.annotation.GetExchange;
 import org.springframework.web.service.annotation.HttpExchange;
 import org.springframework.web.service.annotation.PatchExchange;
 import org.springframework.web.service.annotation.PostExchange;
-import reactor.core.publisher.Mono;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimFields;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPost;
@@ -101,7 +100,7 @@ public interface DataClaimsRestClient {
    * @return 204 No Content on success
    */
   @PatchExchange("/submissions/{submission-id}/claims/{claim-id}")
-  Mono<Void> updateClaim(
+  ResponseEntity<Void> updateClaim(
       @PathVariable("submission-id") UUID submissionId,
       @PathVariable("claim-id") UUID claimId,
       @RequestBody ClaimPatch claimPatch);
