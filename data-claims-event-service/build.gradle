@@ -29,7 +29,6 @@ jacocoTestCoverageVerification {
     }
 }
 
-
 dependencies {
 
     /**
@@ -81,7 +80,6 @@ dependencies {
     testImplementation 'org.testcontainers:localstack'
     testImplementation 'org.awaitility:awaitility'
     testImplementation 'org.mock-server:mockserver-client-java:5.15.0'
-
 
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 

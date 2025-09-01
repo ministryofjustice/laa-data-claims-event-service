@@ -17,10 +17,11 @@ import reactor.core.publisher.Mono;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MockServerIntegrationTest;
 import uk.gov.justice.laa.provider.model.ProviderFirmOfficeContractAndScheduleDto;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+@SpringBootTest(
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = {
-        "spring.cloud.aws.sqs.enabled=false", // Disable AWS SQS functionality
-        "laa.bulk-claim-queue.name=not-used", // Dummy queue name to avoid initialization issues
+      "spring.cloud.aws.sqs.enabled=false", // Disable AWS SQS functionality
+      "laa.bulk-claim-queue.name=not-used", // Dummy queue name to avoid initialization issues
     })
 class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest {
 

@@ -1,9 +1,4 @@
 services:
-  #app:
-  #  build:
-  #    context: .
-  #  ports:
-  #    - "8080:8080"
   localstack:
     container_name: event-service-localstack
     image: localstack/localstack:latest

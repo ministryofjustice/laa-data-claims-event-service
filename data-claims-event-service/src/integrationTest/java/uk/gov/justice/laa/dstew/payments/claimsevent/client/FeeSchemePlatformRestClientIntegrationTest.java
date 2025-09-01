@@ -21,10 +21,11 @@ import uk.gov.justice.laa.fee.scheme.model.CategoryOfLawResponse;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationRequest;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationResponse;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+@SpringBootTest(
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = {
-        "spring.cloud.aws.sqs.enabled=false", // Disable AWS SQS functionality
-        "laa.bulk-claim-queue.name=not-used", // Dummy queue name to avoid initialization issues
+      "spring.cloud.aws.sqs.enabled=false", // Disable AWS SQS functionality
+      "laa.bulk-claim-queue.name=not-used", // Dummy queue name to avoid initialization issues
     })
 class FeeSchemePlatformRestClientIntegrationTest extends MockServerIntegrationTest {
 
@@ -49,7 +50,10 @@ class FeeSchemePlatformRestClientIntegrationTest extends MockServerIntegrationTe
       String expectedBody = readJsonFromFile("fee-scheme/get-category-of-law-200.json");
 
       mockServerClient
-          .when(HttpRequest.request().withMethod("GET").withPath("/category-of-law/" + feeCode))
+          .when(
+              HttpRequest.request()
+                  .withMethod("GET")
+                  .withPath("/api/v0/category-of-law/" + feeCode))
           .respond(
               HttpResponse.response()
                   .withStatusCode(200)
@@ -77,7 +81,10 @@ class FeeSchemePlatformRestClientIntegrationTest extends MockServerIntegrationTe
       String expectedBody = readJsonFromFile("fee-scheme/get-category-of-law-200.json");
 
       mockServerClient
-          .when(HttpRequest.request().withMethod("GET").withPath("/category-of-law/" + feeCode))
+          .when(
+              HttpRequest.request()
+                  .withMethod("GET")
+                  .withPath("/api/v0/category-of-law/" + feeCode))
           .respond(
               HttpResponse.response()
                   .withStatusCode(statusCode)
@@ -93,7 +100,7 @@ class FeeSchemePlatformRestClientIntegrationTest extends MockServerIntegrationTe
       assertThatThrownBy(result::block)
           .isInstanceOf(WebClientResponseException.class)
           .hasMessageContaining(
-              "%s %s from GET %s/category-of-law/%s"
+              "%s %s from GET %s/api/v0/category-of-law/%s"
                   .formatted(
                       httpStatusCode.code(),
                       httpStatusCode.reasonPhrase(),
@@ -114,7 +121,7 @@ class FeeSchemePlatformRestClientIntegrationTest extends MockServerIntegrationTe
       String expectedBody = readJsonFromFile("fee-scheme/post-fee-calculation-200.json");
 
       mockServerClient
-          .when(HttpRequest.request().withMethod("POST").withPath("/fee-calculation"))
+          .when(HttpRequest.request().withMethod("POST").withPath("/api/v0/fee-calculation"))
           .respond(
               HttpResponse.response()
                   .withStatusCode(200)
@@ -142,7 +149,7 @@ class FeeSchemePlatformRestClientIntegrationTest extends MockServerIntegrationTe
       String expectedBody = readJsonFromFile("fee-scheme/post-fee-calculation-200.json");
 
       mockServerClient
-          .when(HttpRequest.request().withMethod("POST").withPath("/fee-calculation"))
+          .when(HttpRequest.request().withMethod("POST").withPath("/api/v0/fee-calculation"))
           .respond(
               HttpResponse.response()
                   .withStatusCode(statusCode)
@@ -159,7 +166,7 @@ class FeeSchemePlatformRestClientIntegrationTest extends MockServerIntegrationTe
       assertThatThrownBy(result::block)
           .isInstanceOf(WebClientResponseException.class)
           .hasMessageContaining(
-              "%s %s from POST %s/fee-calculation"
+              "%s %s from POST %s/api/v0/fee-calculation"
                   .formatted(
                       httpStatusCode.code(),
                       httpStatusCode.reasonPhrase(),
