@@ -13,7 +13,6 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetSubmission200Response;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetSubmission200ResponseClaimsInner;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetSubmission200ResponseClaimsInner.StatusEnum;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionFields;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
@@ -47,16 +46,11 @@ public class SubmissionValidationService {
    * @param submission the claim submission to validate
    */
   public void validateSubmission(GetSubmission200Response submission) {
-    SubmissionFields submissionFields = submission.getSubmission();
-    if (submissionFields == null) {
-      throw new SubmissionValidationException("Submission is null");
-    }
-
-    UUID submissionId = submissionFields.getSubmissionId();
+    UUID submissionId = submission.getSubmissionId();
 
     log.debug("Validating submission {}", submissionId);
 
-    verifySubmissionStatus(submissionId, submissionFields.getStatus());
+    verifySubmissionStatus(submissionId, submission.getStatus());
 
     List<ClaimFields> claims = getReadyToProcessClaims(submission);
 
@@ -64,8 +58,8 @@ public class SubmissionValidationService {
 
     validateNilSubmission(submission);
 
-    String officeCode = submissionFields.getOfficeAccountNumber();
-    String areaOfLaw = submissionFields.getAreaOfLaw();
+    String officeCode = submission.getOfficeAccountNumber();
+    String areaOfLaw = submission.getAreaOfLaw();
     List<String> providerCategoriesOfLaw = getProviderCategoriesOfLaw(officeCode, areaOfLaw);
     validateProviderContract(submissionId.toString(), providerCategoriesOfLaw);
 
@@ -114,22 +108,19 @@ public class SubmissionValidationService {
   }
 
   private void validateNilSubmission(GetSubmission200Response submission) {
-    log.debug(
-        "Validating nil submission for submission {}",
-        submission.getSubmission().getSubmissionId());
-    if (Boolean.TRUE.equals(submission.getSubmission().getIsNilSubmission())) {
+    log.debug("Validating nil submission for submission {}", submission.getSubmissionId());
+    if (Boolean.TRUE.equals(submission.getIsNilSubmission())) {
       if (submission.getClaims() != null && !submission.getClaims().isEmpty()) {
         submissionValidationContext.addToAllClaimReports(
             ClaimValidationError.INVALID_NIL_SUBMISSION_CONTAINS_CLAIMS);
       }
-    } else if (Boolean.FALSE.equals(submission.getSubmission().getIsNilSubmission())) {
+    } else if (Boolean.FALSE.equals(submission.getIsNilSubmission())) {
       if (submission.getClaims() == null || submission.getClaims().isEmpty()) {
         throw new SubmissionValidationException(
             "Submission is not marked as nil submission, but does not contain any claims");
       }
     }
-    log.debug(
-        "Nil submission completed for submission {}", submission.getSubmission().getSubmissionId());
+    log.debug("Nil submission completed for submission {}", submission.getSubmissionId());
   }
 
   private List<String> getProviderCategoriesOfLaw(String officeCode, String areaOfLaw) {
@@ -151,9 +142,23 @@ public class SubmissionValidationService {
       submissionValidationContext.addToAllClaimReports(
           ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER);
     }
-    log.debug("Provider contract validation completed for submission {}", submissionId);
   }
 
+  /**
+   * Update all claims in a submission via the Data Claims API, depending on the result of their
+   * validation.
+   *
+   * <ul>
+   *   <li>If validation errors have been recorded, update the claim status to INVALID and send
+   *       through the errors.
+   *   <li>If no errors have been recorded, update the claim status to VALID
+   *   <li>If the claim has been flagged for retry due to an unexpected error during validation,
+   *       skip the update for this claim.
+   * </ul>
+   *
+   * @param submissionId the ID of the submission
+   * @param claims the claims in the submission
+   */
   private void updateClaims(UUID submissionId, List<ClaimFields> claims) {
     log.debug("Updating claims for submission {}", submissionId.toString());
     AtomicInteger claimsUpdated = new AtomicInteger();
@@ -170,8 +175,13 @@ public class SubmissionValidationService {
         .forEach(
             claim -> {
               ClaimStatus claimStatus = getClaimStatus(claim.getId());
+              List<String> claimErrors = getClaimErrors(claim.getId());
               ClaimPatch claimPatch =
-                  ClaimPatch.builder().id(claim.getId()).status(claimStatus).build();
+                  ClaimPatch.builder()
+                      .id(claim.getId())
+                      .status(claimStatus)
+                      .validationErrors(claimErrors)
+                      .build();
               dataClaimsRestClient.updateClaim(
                   submissionId, UUID.fromString(claim.getId()), claimPatch);
               log.debug("Claim {} status updated to {}", claim.getId(), claimStatus);
@@ -191,6 +201,14 @@ public class SubmissionValidationService {
     } else {
       return ClaimStatus.VALID;
     }
+  }
+
+  private List<String> getClaimErrors(String claimId) {
+    return submissionValidationContext.getClaimReport(claimId).stream()
+        .map(ClaimValidationReport::getErrors)
+        .flatMap(List::stream)
+        .map(ClaimValidationError::getDescription)
+        .toList();
   }
 
   private void initialiseValidationContext(List<ClaimFields> claims) {
@@ -214,9 +232,7 @@ public class SubmissionValidationService {
         .map(GetSubmission200ResponseClaimsInner::getClaimId)
         .map(
             claimId ->
-                dataClaimsRestClient
-                    .getClaim(submission.getSubmission().getSubmissionId(), claimId)
-                    .getBody())
+                dataClaimsRestClient.getClaim(submission.getSubmissionId(), claimId).getBody())
         .toList();
   }
 }

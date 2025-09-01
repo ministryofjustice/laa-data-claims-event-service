@@ -25,9 +25,9 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionMatterSt
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionOutcome;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.CreateMatterStart201Response;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.CreateMatterStartRequest;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetBulkSubmission200Response;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetBulkSubmission200ResponseDetails;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.MatterStartPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
@@ -70,9 +70,9 @@ class BulkParsingServiceTest {
     claimPost.setLineNumber(1);
     final List<ClaimPost> claimPosts = List.of(claimPost);
 
-    final CreateMatterStartRequest matterStartRequest = new CreateMatterStartRequest();
+    final MatterStartPost matterStartRequest = new MatterStartPost();
     matterStartRequest.setScheduleReference("M1");
-    final List<CreateMatterStartRequest> matterStartRequests = List.of(matterStartRequest);
+    final List<MatterStartPost> matterStartRequests = List.of(matterStartRequest);
 
     when(dataClaimsRestClient.getBulkSubmission(bulkSubmissionId))
         .thenReturn(ResponseEntity.ok(bulkSubmission));
@@ -218,7 +218,7 @@ class BulkParsingServiceTest {
 
   @Test
   void createMatterStartReturnsId() {
-    CreateMatterStartRequest request = new CreateMatterStartRequest();
+    MatterStartPost request = new MatterStartPost();
     request.setScheduleReference("SCH");
     when(dataClaimsRestClient.createMatterStart(eq("sub1"), eq(request)))
         .thenReturn(ResponseEntity.created(URI.create("/matter-starts/789")).build());
@@ -230,7 +230,7 @@ class BulkParsingServiceTest {
 
   @Test
   void createMatterStartThrowsOnFailure() {
-    CreateMatterStartRequest request = new CreateMatterStartRequest();
+    MatterStartPost request = new MatterStartPost();
     request.setScheduleReference("SCH");
     when(dataClaimsRestClient.createMatterStart(eq("sub1"), eq(request)))
         .thenReturn(ResponseEntity.badRequest().build());
@@ -241,7 +241,7 @@ class BulkParsingServiceTest {
 
   @Test
   void createMatterStartThrowsWhenLocationMissing() {
-    final CreateMatterStartRequest request = new CreateMatterStartRequest();
+    final MatterStartPost request = new MatterStartPost();
     request.setScheduleReference("SCH");
 
     final HttpHeaders headers = new HttpHeaders();
@@ -306,7 +306,7 @@ class BulkParsingServiceTest {
   @Test
   void createMatterStartsThrowsWithIndexInfo() {
     final BulkParsingService spyService = spy(service);
-    final CreateMatterStartRequest request = new CreateMatterStartRequest();
+    final MatterStartPost request = new MatterStartPost();
 
     doThrow(new MatterStartCreateException("fail"))
         .when(spyService)

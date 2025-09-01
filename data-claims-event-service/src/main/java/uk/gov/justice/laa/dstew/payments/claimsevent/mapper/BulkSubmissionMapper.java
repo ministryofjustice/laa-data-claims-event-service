@@ -12,9 +12,9 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionMatterSt
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionOutcome;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.CreateMatterStartRequest;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetBulkSubmission200Response;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetBulkSubmission200ResponseDetails;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.MatterStartPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
 
@@ -139,10 +139,9 @@ public interface BulkSubmissionMapper {
   @Mapping(target = "categoryCode", source = "categoryCode")
   @Mapping(target = "accessPointCode", source = "accessPoint")
   @Mapping(target = "deliveryLocation", source = "deliveryLocation")
-  CreateMatterStartRequest mapToMatterStart(BulkSubmissionMatterStart matterStart);
+  MatterStartPost mapToMatterStart(BulkSubmissionMatterStart matterStart);
 
-  List<CreateMatterStartRequest> mapToMatterStartRequests(
-      List<BulkSubmissionMatterStart> matterStarts);
+  List<MatterStartPost> mapToMatterStartRequests(List<BulkSubmissionMatterStart> matterStarts);
 
   /**
    * Converts a string to an {@link Integer}, returning {@code null} for invalid values.
