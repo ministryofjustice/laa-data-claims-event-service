@@ -90,7 +90,8 @@ public class CategoryOfLawValidationService {
           } else {
             log.debug(
                 "Get category of law resulted in error for fee code {} with status: {}",
-                feeCode, categoryOfLawResponse.getStatusCode());
+                feeCode,
+                categoryOfLawResponse.getStatusCode());
             categoryOfLawLookup.put(feeCode, CategoryOfLawResult.error());
           }
         });
