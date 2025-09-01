@@ -38,7 +38,7 @@ class ClaimValidationServiceTest {
       ClaimFields claim2 = new ClaimFields().id("claim2").feeCode("feeCode2");
       List<ClaimFields> claims = List.of(claim1, claim2);
       List<String> providerCategoriesOfLaw = List.of("categoryOfLaw1");
-      Map<String, String> categoryOfLawLookup = Collections.emptyMap();
+      Map<String, CategoryOfLawResult> categoryOfLawLookup = Collections.emptyMap();
 
       when(categoryOfLawValidationService.getCategoryOfLawLookup(claims))
           .thenReturn(categoryOfLawLookup);

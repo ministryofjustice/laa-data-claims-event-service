@@ -1,12 +1,12 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.client;
 
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.service.annotation.GetExchange;
 import org.springframework.web.service.annotation.HttpExchange;
 import org.springframework.web.service.annotation.PostExchange;
-import reactor.core.publisher.Mono;
 import uk.gov.justice.laa.fee.scheme.model.CategoryOfLawResponse;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationRequest;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationResponse;
@@ -35,7 +35,7 @@ public interface FeeSchemePlatformRestClient {
    * @return The corresponding category of law
    */
   @GetExchange("/category-of-law/{feeCode}")
-  Mono<CategoryOfLawResponse> getCategoryOfLaw(final @PathVariable String feeCode);
+  ResponseEntity<CategoryOfLawResponse> getCategoryOfLaw(final @PathVariable String feeCode);
 
   /**
    * Get the category of law corresponding to the provided fee code. Can return the following HTTP
@@ -54,6 +54,6 @@ public interface FeeSchemePlatformRestClient {
    * @return The result of the fee calculation
    */
   @PostExchange("/fee-calculation")
-  Mono<FeeCalculationResponse> calculateFee(
+  ResponseEntity<FeeCalculationResponse> calculateFee(
       final @RequestBody FeeCalculationRequest feeCalculationRequest);
 }
