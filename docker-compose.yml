@@ -1,6 +1,60 @@
 services:
-  app:
-    build:
-      context: .
+  localstack:
+    container_name: event-service-localstack
+    image: localstack/localstack:latest
     ports:
-      - "8080:8080"
+      - "4566:4566"
+    environment:
+      - SERVICES=sqs
+      - DEBUG=1
+      - AWS_DEFAULT_REGION=us-east-1
+
+    volumes:
+      - "./docker-scripts/init-localstack.sh:/etc/localstack/init/ready.d/init-localstack.sh"
+      - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+  data-claim-api-wiremock:
+    image: wiremock/wiremock:latest
+    container_name: data-claim-api-wiremock
+    entrypoint:
+      [
+        "/docker-entrypoint.sh",
+        "--global-response-templating",
+        "--disable-gzip",
+        "--verbose",
+      ]
+    volumes:
+      - ./wiremock/mappings/data-claims-api:/home/wiremock/mappings
+    restart: always
+    ports:
+      - "8190:8080"
+  fee-scheme-platform-api-wiremock:
+    image: wiremock/wiremock:latest
+    container_name: fee-scheme-platform-api-wiremock
+    entrypoint:
+      [
+        "/docker-entrypoint.sh",
+        "--global-response-templating",
+        "--disable-gzip",
+        "--verbose",
+      ]
+    volumes:
+      - ./wiremock/mappings/data-claims-api:/home/wiremock/mappings
+    restart: always
+    ports:
+      - "8191:8080"
+  provider-details-api-wiremock:
+    image: wiremock/wiremock:latest
+    container_name: provider-details-api-wiremock
+    entrypoint:
+      [
+        "/docker-entrypoint.sh",
+        "--global-response-templating",
+        "--disable-gzip",
+        "--verbose",
+      ]
+    volumes:
+      - ./wiremock/mappings/provider-details-api:/home/wiremock/mappings
+    restart: always
+    ports:
+      - "8192:8080"

@@ -27,3 +27,5 @@ reference-fee-scheme-platform-api/generated
 # Ignore local application config
 application-local.yaml
 application-local.yml
+
+volume/

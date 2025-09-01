@@ -1,0 +1,16 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/category-of-law/[a-f0-9\\-]+/claims/[a-f0-9\\-]+"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "categoryOfLawCode": "CAT A"
+    }
+  }
+}
+
