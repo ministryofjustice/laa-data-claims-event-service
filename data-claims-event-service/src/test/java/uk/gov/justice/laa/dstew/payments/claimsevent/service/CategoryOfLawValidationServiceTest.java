@@ -41,7 +41,8 @@ class CategoryOfLawValidationServiceTest {
     @DisplayName("Validates category of law without errors")
     void validatesCategoryOfLawWithoutErrors() {
       ClaimFields claim = new ClaimFields().id("claimId").feeCode("feeCode");
-      Map<String, String> categoryOfLawLookup = Map.of("feeCode", "categoryOfLaw");
+      Map<String, CategoryOfLawResult> categoryOfLawLookup =
+          Map.of("feeCode", CategoryOfLawResult.withCategoryOfLaw("categoryOfLaw"));
       List<String> providerCategoriesOfLaw = List.of("categoryOfLaw");
 
       categoryOfLawValidationService.validateCategoryOfLaw(
@@ -56,8 +57,8 @@ class CategoryOfLawValidationServiceTest {
             + "fee code")
     void marksClaimAsInvalidWhenCategoryOfLawNotFoundForFeeCode() {
       ClaimFields claim = new ClaimFields().id("claimId").feeCode("feeCode");
-      Map<String, String> categoryOfLawLookup = new HashMap<>();
-      categoryOfLawLookup.put("feeCode", null);
+      Map<String, CategoryOfLawResult> categoryOfLawLookup = new HashMap<>();
+      categoryOfLawLookup.put("feeCode", CategoryOfLawResult.withCategoryOfLaw(null));
       List<String> providerCategoriesOfLaw = List.of("categoryOfLaw");
 
       categoryOfLawValidationService.validateCategoryOfLaw(
@@ -71,8 +72,8 @@ class CategoryOfLawValidationServiceTest {
     @DisplayName("Marks claim as invalid when category of law not found in provider contracts")
     void marksClaimAsInvalidWhenCategoryOfLawNotFoundForProvider() {
       ClaimFields claim = new ClaimFields().id("claimId").feeCode("feeCode");
-      Map<String, String> categoryOfLawLookup = new HashMap<>();
-      categoryOfLawLookup.put("feeCode", "categoryOfLaw");
+      Map<String, CategoryOfLawResult> categoryOfLawLookup = new HashMap<>();
+      categoryOfLawLookup.put("feeCode", CategoryOfLawResult.withCategoryOfLaw("categoryOfLaw"));
       List<String> providerCategoriesOfLaw = Collections.emptyList();
 
       categoryOfLawValidationService.validateCategoryOfLaw(
@@ -82,6 +83,20 @@ class CategoryOfLawValidationServiceTest {
           .addClaimError(
               "claimId", ClaimValidationError.INVALID_CATEGORY_OF_LAW_NOT_AUTHORISED_FOR_PROVIDER);
     }
+
+    @Test
+    @DisplayName("Flags claim for retry when category of law response resulted in error")
+    void flagsClaimForRetryWhenCategoryOfLawResponseResultInError() {
+      ClaimFields claim = new ClaimFields().id("claimId").feeCode("feeCode");
+      Map<String, CategoryOfLawResult> categoryOfLawLookup = new HashMap<>();
+      categoryOfLawLookup.put("feeCode", CategoryOfLawResult.error());
+      List<String> providerCategoriesOfLaw = List.of("categoryOfLaw");
+
+      categoryOfLawValidationService.validateCategoryOfLaw(
+          claim, categoryOfLawLookup, providerCategoriesOfLaw);
+
+      verify(submissionValidationContext, times(1)).flagForRetry("claimId");
+    }
   }
 
   @Nested
@@ -89,13 +104,15 @@ class CategoryOfLawValidationServiceTest {
   class GetCategoryOfLawLookupTests {
 
     @Test
-    @DisplayName("Returns map of fee code -> category of law")
+    @DisplayName("Returns map of fee code -> category of law container")
     void getCategoryOfLawLookup() {
       ClaimFields claim1 = new ClaimFields().id("claimId1").feeCode("feeCode1");
 
       ClaimFields claim2 = new ClaimFields().id("claimId2").feeCode("feeCode2");
 
       ClaimFields claim3 = new ClaimFields().id("claimId3").feeCode("feeCode3");
+
+      ClaimFields claim4 = new ClaimFields().id("claimId4").feeCode("feeCode4");
 
       CategoryOfLawResponse categoryOfLawResponse1 =
           new CategoryOfLawResponse().categoryOfLawCode("categoryOfLaw1");
@@ -112,13 +129,18 @@ class CategoryOfLawValidationServiceTest {
       when(feeSchemePlatformRestClient.getCategoryOfLaw("feeCode3"))
           .thenReturn(ResponseEntity.notFound().build());
 
-      Map<String, String> actual =
-          categoryOfLawValidationService.getCategoryOfLawLookup(List.of(claim1, claim2, claim3));
+      when(feeSchemePlatformRestClient.getCategoryOfLaw("feeCode4"))
+          .thenReturn(ResponseEntity.internalServerError().build());
 
-      Map<String, String> expected = new HashMap<>();
-      expected.put("feeCode1", "categoryOfLaw1");
-      expected.put("feeCode2", "categoryOfLaw2");
-      expected.put("feeCode3", null);
+      Map<String, CategoryOfLawResult> actual =
+          categoryOfLawValidationService.getCategoryOfLawLookup(
+              List.of(claim1, claim2, claim3, claim4));
+
+      Map<String, CategoryOfLawResult> expected = new HashMap<>();
+      expected.put("feeCode1", CategoryOfLawResult.withCategoryOfLaw("categoryOfLaw1"));
+      expected.put("feeCode2", CategoryOfLawResult.withCategoryOfLaw("categoryOfLaw2"));
+      expected.put("feeCode3", CategoryOfLawResult.withCategoryOfLaw(null));
+      expected.put("feeCode4", CategoryOfLawResult.error());
 
       assertThat(actual).isEqualTo(expected);
     }

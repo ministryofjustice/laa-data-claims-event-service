@@ -50,11 +50,11 @@ class FeeCalculationServiceTest {
       when(feeSchemeMapper.mapToFeeCalculationRequest(claim)).thenReturn(feeCalculationRequest);
       when(feeSchemePlatformRestClient.calculateFee(feeCalculationRequest))
           .thenReturn(ResponseEntity.ok(feeCalculationResponse));
+      when(validationContext.isFlaggedForRetry("claimId")).thenReturn(false);
 
       feeCalculationService.validateFeeCalculation(claim);
 
       verify(feeSchemePlatformRestClient, times(1)).calculateFee(feeCalculationRequest);
-      verifyNoInteractions(validationContext);
     }
 
     @Test
@@ -72,6 +72,7 @@ class FeeCalculationServiceTest {
       when(feeSchemeMapper.mapToFeeCalculationRequest(claim)).thenReturn(feeCalculationRequest);
       when(feeSchemePlatformRestClient.calculateFee(feeCalculationRequest))
           .thenReturn(ResponseEntity.ok(feeCalculationResponse));
+      when(validationContext.isFlaggedForRetry("claimId")).thenReturn(false);
 
       feeCalculationService.validateFeeCalculation(claim);
 
@@ -91,6 +92,7 @@ class FeeCalculationServiceTest {
       when(feeSchemeMapper.mapToFeeCalculationRequest(claim)).thenReturn(feeCalculationRequest);
       when(feeSchemePlatformRestClient.calculateFee(feeCalculationRequest))
           .thenReturn(ResponseEntity.notFound().build());
+      when(validationContext.isFlaggedForRetry("claimId")).thenReturn(false);
 
       ThrowingCallable result = () -> feeCalculationService.validateFeeCalculation(claim);
 
@@ -112,12 +114,27 @@ class FeeCalculationServiceTest {
       when(feeSchemeMapper.mapToFeeCalculationRequest(claim)).thenReturn(feeCalculationRequest);
       when(feeSchemePlatformRestClient.calculateFee(feeCalculationRequest))
           .thenReturn(ResponseEntity.internalServerError().build());
+      when(validationContext.isFlaggedForRetry("claimId")).thenReturn(false);
 
       feeCalculationService.validateFeeCalculation(claim);
 
       verify(feeSchemePlatformRestClient, times(1)).calculateFee(feeCalculationRequest);
 
       verify(validationContext, times(1)).flagForRetry(claim.getId());
+    }
+
+    @Test
+    @DisplayName("Skips validation if claim is flagged for retry")
+    void skipsValidationIfClaimIsFlaggedForRetry() {
+
+      ClaimFields claim = new ClaimFields().id("claimId").feeCode("feeCode");
+
+      when(validationContext.isFlaggedForRetry("claimId")).thenReturn(true);
+
+      feeCalculationService.validateFeeCalculation(claim);
+
+      verifyNoInteractions(feeSchemeMapper);
+      verifyNoInteractions(feeSchemePlatformRestClient);
     }
   }
 }

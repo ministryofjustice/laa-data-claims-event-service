@@ -25,7 +25,7 @@ public class ClaimValidationService {
    * @param claims the claims in a submission
    */
   public void validateClaims(List<ClaimFields> claims, List<String> providerCategoriesOfLaw) {
-    Map<String, String> categoryOfLawLookup =
+    Map<String, CategoryOfLawResult> categoryOfLawLookup =
         categoryOfLawValidationService.getCategoryOfLawLookup(claims);
     claims.forEach(claim -> validateClaim(claim, categoryOfLawLookup, providerCategoriesOfLaw));
   }
@@ -46,7 +46,7 @@ public class ClaimValidationService {
    */
   private void validateClaim(
       ClaimFields claim,
-      Map<String, String> categoryOfLawLookup,
+      Map<String, CategoryOfLawResult> categoryOfLawLookup,
       List<String> providerCategoriesOfLaw) {
     categoryOfLawValidationService.validateCategoryOfLaw(
         claim, categoryOfLawLookup, providerCategoriesOfLaw);
