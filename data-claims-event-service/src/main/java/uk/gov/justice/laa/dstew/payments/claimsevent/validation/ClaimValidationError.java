@@ -1,6 +1,9 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.validation;
 
+import lombok.Getter;
+
 /** Enum holding claim validation errors. */
+@Getter
 public enum ClaimValidationError {
   INVALID_AREA_OF_LAW_FOR_PROVIDER(
       "A contract schedule with the provided area of law could not be found for this provider"),
@@ -13,9 +16,9 @@ public enum ClaimValidationError {
   INVALID_FEE_CALCULATION_VALIDATION_FAILED(
       "A validation error occurred when attempting to calculate the fee for this claim");
 
-  final String message;
+  final String description;
 
-  ClaimValidationError(String message) {
-    this.message = message;
+  ClaimValidationError(String description) {
+    this.description = description;
   }
 }
