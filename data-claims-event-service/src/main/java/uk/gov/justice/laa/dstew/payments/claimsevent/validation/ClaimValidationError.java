@@ -18,8 +18,9 @@ public enum ClaimValidationError {
   NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS(
       "Submission is marked as nil submission, but contains claims"),
   INVALID_DATE_IN_UNIQUE_FILE_NUMBER(
-      "Unique file ID must be in the format DDMMYY/NNN with a date in the past")
-  ;
+      "Unique file ID must be in the format DDMMYY/NNN with a date in the past"),
+  INVALID_FEE_CALCULATION_VALIDATION_FAILED(
+      "A validation error occurred when attempting to calculate the fee for this claim");
 
-  final String message;
+  final String description;
 }

@@ -9,14 +9,13 @@ import org.springframework.web.service.annotation.GetExchange;
 import org.springframework.web.service.annotation.HttpExchange;
 import org.springframework.web.service.annotation.PatchExchange;
 import org.springframework.web.service.annotation.PostExchange;
-import reactor.core.publisher.Mono;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimFields;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.CreateMatterStart201Response;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.CreateMatterStartRequest;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetBulkSubmission200Response;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetSubmission200Response;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.MatterStartPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPost;
 
@@ -101,7 +100,7 @@ public interface DataClaimsRestClient {
    * @return 204 No Content on success
    */
   @PatchExchange("/submissions/{submission-id}/claims/{claim-id}")
-  Mono<Void> updateClaim(
+  ResponseEntity<Void> updateClaim(
       @PathVariable("submission-id") UUID submissionId,
       @PathVariable("claim-id") UUID claimId,
       @RequestBody ClaimPatch claimPatch);
@@ -118,5 +117,5 @@ public interface DataClaimsRestClient {
    */
   @PostExchange("/submissions/{id}/matter-starts")
   ResponseEntity<CreateMatterStart201Response> createMatterStart(
-      @PathVariable("id") String submissionId, @RequestBody CreateMatterStartRequest matterStart);
+      @PathVariable("id") String submissionId, @RequestBody MatterStartPost matterStart);
 }

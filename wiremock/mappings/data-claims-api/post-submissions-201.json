@@ -1,0 +1,16 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPath": "/api/v0/submissions"
+  },
+  "response": {
+    "status": 201,
+    "headers": {
+      "Content-Type": "application/json",
+      "Location": "http://localhost:8190/api/v0/submissions/3fa85f64-5717-4562-b3fc-2c963f66afa6"
+    },
+    "jsonBody": {
+      "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+    }
+  }
+}

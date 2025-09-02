@@ -16,6 +16,10 @@ spring:
     hibernate:
       ddl-auto: none
 
+  threads:
+    virtual:
+      enabled: true
+
 # used by actuator info endpoint
 info:
   app:
@@ -55,3 +59,5 @@ laa:
     hostname: ${FEE_SCHEME_PLATFORM_API_URL}
     url: ${laa.claims-api.hostname}
     accessToken: ${FEE_SCHEME_PLATFORM_API_ACCESS_TOKEN}
+  bulk-claim-queue:
+    name: ${BULK_CLAIM_QUEUE_NAME}

@@ -1,0 +1,12 @@
+{
+  "request": {
+    "method": "PATCH",
+    "urlPathPattern": "/api/v0/submissions/[a-f0-9\\-]+"
+  },
+  "response": {
+    "status": 204,
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

@@ -5,11 +5,13 @@ import java.util.Collection;
 import java.util.List;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Class responsible for holding information about a claim under validation, including the claim ID
  * and validation errors.
  */
+@Slf4j
 @Getter
 @EqualsAndHashCode
 public class ClaimValidationReport {
@@ -17,11 +19,24 @@ public class ClaimValidationReport {
   private final String claimId;
   private final List<String> errors;
 
+  private boolean flaggedForRetry;
+
+  /**
+   * Construct a new {@code ClaimValidationReport} with an empty list of errors.
+   *
+   * @param claimId the ID of the claim
+   */
   public ClaimValidationReport(String claimId) {
     this.claimId = claimId;
     this.errors = new ArrayList<>();
+    this.flaggedForRetry = false;
   }
 
+  /**
+   * Construct a new {@code ClaimValidationReport} with an initial list of errors.
+   *
+   * @param claimId the ID of the claim
+   */
   public ClaimValidationReport(String claimId, List<ClaimValidationError> errors) {
     this.claimId = claimId;
     this.errors = new ArrayList<>();
@@ -31,14 +46,20 @@ public class ClaimValidationReport {
   public ClaimValidationReport(String claimId, Collection<String> errors) {
     this.claimId = claimId;
     this.errors = new ArrayList<>(errors);
+    this.flaggedForRetry = false;
   }
 
+  /**
+   * Add an error to the claim validation report.
+   *
+   * @param error the error to add
+   */
   public void addError(ClaimValidationError error) {
-    errors.add(error.getMessage());
+    errors.add(error.getDescription());
   }
 
   public void addErrors(List<ClaimValidationError> errorList) {
-    errorList.forEach(e -> errors.add(e.getMessage()));
+    errorList.forEach(e -> errors.add(e.getDescription()));
   }
 
   public void addError(String error) {
@@ -49,7 +70,18 @@ public class ClaimValidationReport {
     errors.addAll(errorList);
   }
 
+  /**
+   * Verify whether the claim validation report contains any errors.
+   *
+   * @return true if the report contains at least one error, false otherwise.
+   */
   public boolean hasErrors() {
     return !errors.isEmpty();
+  }
+
+  /** Set the retry flag for this claim validation report to true. */
+  public void flagForRetry() {
+    log.debug("Flagging claim {} for retry", this.claimId);
+    this.flaggedForRetry = true;
   }
 }

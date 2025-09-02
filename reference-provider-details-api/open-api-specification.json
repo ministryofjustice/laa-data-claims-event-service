@@ -2,8 +2,1361 @@
   "openapi" : "3.1.0",
   "info" : {
     "title" : "Provider and User Data APIs",
-    "description" : "<table>\n    <tr>\n        <td colspan=\"100%\" padding-top=\"0px\" padding-bottom=\"0px\">\n            <b>This API enables seamless access to comprehensive details about provider firms, their offices, associated\n                users, and internal user. </b>\n        </td>\n    </tr>\n    <tr>\n        <td colspan=\"50%\" padding-right=\"50px\">\n            <b>Provider Firm Overview</b>\n            <ul>\n                <li>High-level information about the provider firm.</li>\n                <li>Details about all offices linked to the provider firm.</li>\n                <li>Information on users and fee earners associated with the provider firm.</li>\n            </ul>\n            <b>Provider Office Details</b>\n            <p>Key information about individual offices, including:</p>\n            <ul>\n                <li>Bank account details.</li>\n                <li>Contract and schedule details.</li>\n                <li>NMS authorizations.</li>\n                <li>Users associated with each office.</li>\n            </ul>\n            <b>Provider User Details</b>\n            <p>Granular information about individual users, including:</p>\n            <ul>\n                <li>User roles.</li>\n                <li>Associations with provider offices.</li>\n            </ul>\n            <b>Useful Links</b>\n            <ul>\n                <li>\n                    <a href=\"https://dsdmoj.atlassian.net/wiki/spaces/PDA/pages/4737466388/PDA+Runbook\" target=\"_blank\" rel=\"noopener noreferrer\">Runbook</a>\n                </li>\n                <li>\n                    <a href=\"https://mojdt.slack.com/archives/C06F768A3F1\" target=\"_blank\" rel=\"noopener noreferrer\">Slack Channel</a>\n                </li>\n                <li>\n                    <a href=\"https://grafana.live.cloud-platform.service.justice.gov.uk/dashboards?query=provider%20details%20api\" target=\"_blank\" rel=\"noopener noreferrer\">Grafana Dashboards</a>\n                </li>\n                <li>\n                    <a href=\"https://github.com/ministryofjustice/laa-cwa-data-api\" target=\"_blank\" rel=\"noopener noreferrer\">Github Source Code</a>\n                </li>\n            </ul>\n        </td>\n        <td colspan=\"50%\" padding-left=\"50px\"  horizontal-align=\"right\"><img src=\"/images/firmhierarchy.png\"/></td>\n    </tr>\n</table>\n\n<br>\n<b>This service is under active development and is deployed frequently.</b><br>\n    While we strive not to change endpoint contracts, we may deprecate existing endpoints and introduce new ones.\n    Please check the Swagger page regularly for up-to-date information.\n\n\n",
-    "version" : "0.6.41"
+    "description" : "<table>\n    <tr>\n        <td colspan=\"100%\" padding-top=\"0px\" padding-bottom=\"0px\">\n            <b>This API enables seamless access to comprehensive details about provider firms, their offices, associated\n                users, and internal user. </b>\n        </td>\n    </tr>\n    <tr>\n        <td colspan=\"50%\" padding-right=\"50px\">\n            <b>Provider Firm Overview</b>\n            <ul>\n                <li>High-level information about the provider firm.</li>\n                <li>Details about all offices linked to the provider firm.</li>\n                <li>Information on users and fee earners associated with the provider firm.</li>\n            </ul>\n            <b>Provider Office Details</b>\n            <p>Key information about individual offices, including:</p>\n            <ul>\n                <li>Bank account details.</li>\n                <li>Contract and schedule details.</li>\n                <li>NMS authorizations.</li>\n                <li>Users associated with each office.</li>\n            </ul>\n            <b>Provider User Details</b>\n            <p>Granular information about individual users, including:</p>\n            <ul>\n                <li>User roles.</li>\n                <li>Associations with provider offices.</li>\n            </ul>\n            <b>Useful Links</b>\n            <ul>\n                <li>\n                    <a href=\"https://dsdmoj.atlassian.net/wiki/spaces/PDA/pages/4737466388/PDA+Runbook\" target=\"_blank\" rel=\"noopener noreferrer\">Runbook</a>\n                </li>\n                <li>\n                    <a href=\"https://mojdt.slack.com/archives/C06F768A3F1\" target=\"_blank\" rel=\"noopener noreferrer\">Slack Channel</a>\n                </li>\n                <li>\n                    <a href=\"https://grafana.live.cloud-platform.service.justice.gov.uk/dashboards?query=provider%20details%20api\" target=\"_blank\" rel=\"noopener noreferrer\">Grafana Dashboards</a>\n                </li>\n                <li>\n                    <a href=\"https://github.com/ministryofjustice/laa-data-provider-data\" target=\"_blank\" rel=\"noopener noreferrer\">Github Source Code</a>\n                </li>\n            </ul>\n        </td>\n        <td colspan=\"50%\" padding-left=\"50px\"  horizontal-align=\"right\"><img src=\"/images/firmhierarchy.png\"/></td>\n    </tr>\n</table>\n\n<br>\n<b>This service is under active development and is deployed frequently.</b><br>\n    While we strive not to change endpoint contracts, we may deprecate existing endpoints and introduce new ones.\n    Please check the Swagger page regularly for up-to-date information.\n\n\n",
+    "version" : "0.12.1"
+  },
+  "servers" : [ {
+    "url" : "https://laa-provider-details-api-preprod.apps.live.cloud-platform.service.justice.gov.uk",
+    "description" : "Generated server url"
+  } ],
+  "security" : [ {
+    "ApiKeyAuth" : [ ]
+  } ],
+  "tags" : [ {
+    "name" : "Provider Users Endpoints",
+    "description" : "These are UTILITY ENDPOINTS for getting provider user information when only have a user-login but you don't have a provider firm id. This allows you to find firm with which provider user is associated and using that you can find more details related to provider firm."
+  }, {
+    "name" : "Provider Firm Offices",
+    "description" : "These are UTILITY ENDPOINTS for getting office information when only have office code but you don't have a provider firm id. This allows you to find firm with which office is associated and using that you can find more details related to provider firm."
+  }, {
+    "name" : "Admin Controller Endpoints",
+    "description" : "These are UTILITY ENDPOINTS ONLY FOR ADMINS."
+  } ],
+  "paths" : {
+    "/provider-offices" : {
+      "post" : {
+        "tags" : [ "Provider Firm Offices" ],
+        "summary" : "Get all provider(firm) offices(sites) details based on a list of office(site) codes. Max limit 1000.",
+        "description" : "    Business Rules: - Firm is not end dated.\n                    - Firm is of type Legal Services Provider / Advocate / Chambers.\n                    - Firms of type Individual / QM Provider are NOT considered.\n                    - Firm Office is not end dated.\n                    - This DOES NOT check if a provider office has an active contract.\n",
+        "operationId" : "getOffices",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OfficeCodesDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "List of valid provider (firm) offices (sites) details",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderFirmOfficeListDto"
+                }
+              }
+            }
+          },
+          "204" : {
+            "description" : "No Content - No valid provider (firm) offices (sites) exist based on search criteria"
+          },
+          "409" : {
+            "description" : "Conflict - Ex Cache being Loaded"
+          },
+          "500" : {
+            "description" : "Internal Server Error - Something went wrong"
+          }
+        }
+      }
+    },
+    "/admin/logging/enable-tracing" : {
+      "post" : {
+        "tags" : [ "Admin Controller Endpoints" ],
+        "summary" : "Change logging level dynamically to TRACE to aid in debugging.Make sure this is done on all pods.",
+        "operationId" : "enableQueryDebugging",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/logging/disable-tracing" : {
+      "post" : {
+        "tags" : [ "Admin Controller Endpoints" ],
+        "summary" : "Change logging level dynamically to INFO to disable debugging.Make sure this is done on all pods.",
+        "operationId" : "disableQueryDebugging",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/cache/force-reload" : {
+      "post" : {
+        "tags" : [ "Admin Controller Endpoints" ],
+        "summary" : "Force cache reload. Apply maintenance page before doing this otherwise it can cause side-effects / race conditions.",
+        "operationId" : "forceCacheReload",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/provider-users/{userLogin}" : {
+      "get" : {
+        "tags" : [ "Provider Users Endpoints" ],
+        "summary" : "Get a provider(firm) user details based on user login",
+        "description" : "    Business Rules: - Firm is not end dated.\n                    - Firm is of type Legal Services Provider / Advocate / Chambers.\n                    - Firms of type Individual / QM Provider are NOT considered.\n                    - User attribute_code is 'ICX_SUPPLIER_ORG_ID'\n                    - User attribute_code of these values ('ICX_HR_PERSON_ID', 'ICX_SUPPLIER_SITE_ID')\n                        are not considered as firm contacts.\n",
+        "operationId" : "getProviderUserDetailsByUserLogin",
+        "parameters" : [ {
+          "name" : "userLogin",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Details of provider (firm) user",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderFirmUserDto"
+                }
+              }
+            }
+          },
+          "204" : {
+            "description" : "No Content - No active user exists based on search criteria"
+          },
+          "409" : {
+            "description" : "Conflict - Ex Cache being Loaded"
+          },
+          "500" : {
+            "description" : "Internal Server Error - Something went wrong"
+          }
+        }
+      }
+    },
+    "/provider-users/{userLogin}/provider-offices" : {
+      "get" : {
+        "tags" : [ "Provider Users Endpoints" ],
+        "summary" : "Get list of office codes associated with provider(firm) user based on user login",
+        "description" : "    Business Rules: - Firm is not end dated.\n                    - Firm is of type Legal Services Provider / Advocate / Chambers.\n                    - Firms of type Individual / QM Provider are NOT considered.\n                    - Firm office is not end dated.\n                    - User attribute_code is 'ICX_SUPPLIER_ORG_ID'\n                    - User attribute_code of these values ('ICX_HR_PERSON_ID', 'ICX_SUPPLIER_SITE_ID')\n                        are not considered as firm contacts.\n                    - Firm Office is not end dated.\n                    - For the Provider User Office links only create one per Office where the Provider User\n                        has no restrictions (All option), or one for each Office that the User is restricted to.\n",
+        "operationId" : "getProviderUsersOffices",
+        "parameters" : [ {
+          "name" : "userLogin",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Details of provider (firm) user offices",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderFirmUserOfficeListDto"
+                }
+              }
+            }
+          },
+          "204" : {
+            "description" : "No Content - No active office codes exist for the user"
+          },
+          "409" : {
+            "description" : "Conflict - Ex Cache being Loaded"
+          },
+          "500" : {
+            "description" : "Internal Server Error - Something went wrong"
+          }
+        }
+      }
+    },
+    "/provider-users/exists" : {
+      "get" : {
+        "tags" : [ "Provider Users Endpoints" ],
+        "summary" : "Get a provider(firm) user details based on user email, This is case insensitive search",
+        "description" : "    Business Rules: - Firm is not end dated.\n                    - Firm is of type Legal Services Provider / Advocate / Chambers.\n                    - Firms of type Individual / QM Provider are NOT considered.\n                    - User attribute_code is 'ICX_SUPPLIER_ORG_ID'\n                    - User attribute_code of these values ('ICX_HR_PERSON_ID', 'ICX_SUPPLIER_SITE_ID')\n                        are not considered as firm contacts.\n",
+        "operationId" : "getProviderUsersByUserEmail",
+        "parameters" : [ {
+          "name" : "userEmail",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Details of provider (firm) users",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderFirmUserListDto"
+                }
+              }
+            }
+          },
+          "204" : {
+            "description" : "No Content - No active user exists based on search criteria"
+          },
+          "409" : {
+            "description" : "Conflict - Ex Cache being Loaded"
+          },
+          "500" : {
+            "description" : "Internal Server Error - Something went wrong"
+          }
+        }
+      }
+    },
+    "/provider-offices/{officeCode}" : {
+      "get" : {
+        "tags" : [ "Provider Firm Offices" ],
+        "summary" : "Get provider(firm) office(site) details based on a provider(firm) office(site) code.",
+        "description" : "    Business Rules: - Firm is not end dated.\n                    - Firm is of type Legal Services Provider / Advocate / Chambers.\n                    - Firms of type Individual / QM Provider are NOT considered.\n                    - Firm Office is not end dated.\n                    - This DOES NOT check if a provider office has an active contract.\n",
+        "operationId" : "getFirmOffice",
+        "parameters" : [ {
+          "name" : "officeCode",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Valid provider (firm) office (site) details",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderFirmOfficeDto"
+                }
+              }
+            }
+          },
+          "204" : {
+            "description" : "No Content - No valid provider (firm) office (site) exists based on search criteria"
+          },
+          "409" : {
+            "description" : "Conflict - Ex Cache being Loaded"
+          },
+          "500" : {
+            "description" : "Internal Server Error - Something went wrong"
+          }
+        }
+      }
+    },
+    "/provider-offices/{officeCode}/schedules" : {
+      "get" : {
+        "tags" : [ "Provider Firm Offices" ],
+        "summary" : "Get all provider(firm) office(site) schedule details based on a provider(firm) office(site) code",
+        "description" : "    Business Rules: - Firm is not end dated.\n                    - Firm is of type Legal Services Provider / Advocate / Chambers.\n                    - Firms of type Individual / QM Provider are NOT considered.\n                    - Firm Office is not end dated.\n                    - Firm Office contract is active today or active on passed effective date.\n                    - Firm office schedule is active today or active on passed effective date.\n                    - Firm Office contract authorization status is APPROVED and contract status is Open.\n                    - Firm office schedule authorization status is APPROVED and contract status is Open.\n                    - Firm office schedule (for category of law) is not cancelled.\n",
+        "operationId" : "getProviderOfficeScheduleDetails",
+        "parameters" : [ {
+          "name" : "officeCode",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "effectiveDate",
+          "in" : "query",
+          "description" : "<code>Must be null for production , can specify a contract effective date for testing on lower environments</code>",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "areaOfLaw",
+          "in" : "query",
+          "description" : "<code>Optional , Area of law</code>",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "List of provider (firm) office contract and schedule details",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderFirmOfficeContractAndScheduleDto"
+                }
+              }
+            }
+          },
+          "204" : {
+            "description" : "No Content - No active contracts or schedules exist for the provider (firm) office"
+          },
+          "409" : {
+            "description" : "Conflict - Ex Cache being Loaded"
+          },
+          "500" : {
+            "description" : "Internal Server Error - Something went wrong"
+          }
+        }
+      }
+    },
+    "/provider-offices/{officeCode}/provider-users" : {
+      "get" : {
+        "tags" : [ "Provider Firm Offices" ],
+        "summary" : "Get all provider(firm) user offices(sites) based on provider(firm) id and user login",
+        "description" : "    Business Rules: - Firm is not end dated.\n                    - Firm is of type Legal Services Provider / Advocate / Chambers.\n                    - Firms of type Individual / QM Provider are NOT considered.\n                    - Firm Office is not end dated.\n                    - For the Provider User Office links only create one per Office where the Provider\n                        User has no restrictions (All option), or one for each Office that the User is\n                        restricted to.\n",
+        "operationId" : "getFirmOfficeAssociatedUsers",
+        "parameters" : [ {
+          "name" : "officeCode",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Valid provider (firm) users associated with provider office (site)",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderFirmOfficeUserListDto"
+                }
+              }
+            }
+          },
+          "204" : {
+            "description" : "No Content - No valid provider (firm) users associated with provider office (site) based on search criteria"
+          },
+          "409" : {
+            "description" : "Conflict - Ex Cache being Loaded"
+          },
+          "500" : {
+            "description" : "Internal Server Error - Something went wrong"
+          }
+        }
+      }
+    },
+    "/provider-offices/{officeCode}/office-contract-details" : {
+      "get" : {
+        "tags" : [ "Provider Firm Offices" ],
+        "summary" : "Get all provider(firm) office(site) schedule details based on a provider(firm) office(site) code",
+        "description" : "    Business Rules: - Firm is not end dated.\n                    - Firm is of type Legal Services Provider / Advocate / Chambers.\n                    - Firms of type Individual / QM Provider are NOT considered.\n                    - Firm Office is not end dated.\n                    - Firm Office contract is active today or active on passed effective date.\n",
+        "operationId" : "getProviderOfficeContractDetails",
+        "parameters" : [ {
+          "name" : "officeCode",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "effectiveDate",
+          "in" : "query",
+          "description" : "<code>Must be null for production , can specify a contract effective date for testing on lower environments</code>",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Provider (firm) office contract details",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderFirmOfficeContractDto"
+                }
+              }
+            }
+          },
+          "204" : {
+            "description" : "No Content - No active contracts exist for the provider (firm) office"
+          },
+          "409" : {
+            "description" : "Conflict - Ex Cache being Loaded"
+          },
+          "500" : {
+            "description" : "Internal Server Error - Something went wrong"
+          }
+        }
+      }
+    },
+    "/provider-firms" : {
+      "get" : {
+        "tags" : [ "Provider Firms Endpoints" ],
+        "summary" : "Get all providers(firms) [This data is refreshed and cached at midnight]",
+        "description" : "    Business Rules: - Firm is not end dated.\n                    - Firm is of type Legal Services Provider / Advocate / Chambers.\n                    - Firms of type Individual / QM Provider are NOT returned.\n",
+        "operationId" : "getAllFirms",
+        "responses" : {
+          "200" : {
+            "description" : "List of firms",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderFirmListDto"
+                }
+              }
+            }
+          },
+          "204" : {
+            "description" : "No Content - No firms exist"
+          },
+          "409" : {
+            "description" : "Conflict - Ex Cache being Loaded"
+          },
+          "500" : {
+            "description" : "Internal Server Error - Something went wrong"
+          }
+        }
+      }
+    },
+    "/provider-firms/{firmId}" : {
+      "get" : {
+        "tags" : [ "Provider Firms Endpoints" ],
+        "summary" : "Get provider(firm) details based on provider(firm) id [This data is refreshed and cached at midnight]",
+        "description" : "    Business Rules: - Firm is not end dated.\n                    - Firm is of type Legal Services Provider / Advocate / Chambers.\n                    - Firms of type Individual / QM Provider are NOT returned.\n",
+        "operationId" : "getProvider",
+        "parameters" : [ {
+          "name" : "firmId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "exclusiveMinimum" : 0
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Details of provider (firm)",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderFirmDto"
+                }
+              }
+            }
+          },
+          "204" : {
+            "description" : "No Content - No valid provider (firm) exists based on the search criteria"
+          },
+          "409" : {
+            "description" : "Conflict - Ex Cache being Loaded"
+          },
+          "500" : {
+            "description" : "Internal Server Error - Something went wrong"
+          }
+        }
+      }
+    },
+    "/provider-firms/{firmId}/provider-users" : {
+      "get" : {
+        "tags" : [ "Provider Firms Endpoints" ],
+        "summary" : "Get all provider(firm) users details associated with a provider(firm)",
+        "description" : "    Business Rules: - Firm is not end dated.\n                    - Firm is of type Legal Services Provider / Advocate / Chambers.\n                    - Firms of type Individual / QM Provider are NOT considered.\n                    - User attribute_code is 'ICX_SUPPLIER_ORG_ID'\n                    - User attribute_code of these values ('ICX_HR_PERSON_ID', 'ICX_SUPPLIER_SITE_ID')\n                        are not considered as firm contacts.\n",
+        "operationId" : "getActiveProviderUsers",
+        "parameters" : [ {
+          "name" : "firmId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "exclusiveMinimum" : 0
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "List of active provider (firm) users details",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderFirmUserListDto"
+                }
+              }
+            }
+          },
+          "204" : {
+            "description" : "No Content - No active users exist for the provider (firm)"
+          },
+          "409" : {
+            "description" : "Conflict - Ex Cache being Loaded"
+          },
+          "500" : {
+            "description" : "Internal Server Error - Something went wrong"
+          }
+        }
+      }
+    },
+    "/provider-firms/{firmId}/provider-users/{userLogin}" : {
+      "get" : {
+        "tags" : [ "Provider Firms Endpoints" ],
+        "summary" : "Get a provider(firm) user details based on provider(firm) id and user login",
+        "description" : "    Business Rules: - Firm is not end dated.\n                    - Firm is of type Legal Services Provider / Advocate / Chambers.\n                    - Firms of type Individual / QM Provider are NOT considered.\n                    - User attribute_code is 'ICX_SUPPLIER_ORG_ID'\n                    - User attribute_code of these values ('ICX_HR_PERSON_ID', 'ICX_SUPPLIER_SITE_ID')\n                        are not considered as firm contacts.\n",
+        "operationId" : "getProviderUserDetails",
+        "parameters" : [ {
+          "name" : "firmId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "exclusiveMinimum" : 0
+          }
+        }, {
+          "name" : "userLogin",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Details of provider (firm) user",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderFirmUserDto"
+                }
+              }
+            }
+          },
+          "204" : {
+            "description" : "No Content - No active user exists based on the search criteria"
+          },
+          "409" : {
+            "description" : "Conflict - Ex Cache being Loaded"
+          },
+          "500" : {
+            "description" : "Internal Server Error - Something went wrong"
+          }
+        }
+      }
+    },
+    "/provider-firms/{firmId}/provider-users/{userLogin}/user-roles" : {
+      "get" : {
+        "tags" : [ "Provider Firms Endpoints" ],
+        "summary" : "Get all provider(firm) user roles based on a provider(firm) id and user login",
+        "description" : "    Business Rules: - Firm is not end dated.\n                    - Firm is of type Legal Services Provider / Advocate / Chambers.\n                    - Firms of type Individual / QM Provider are NOT considered.\n                    - User is not end dated.\n                    - User role assignment are not end dated.\n",
+        "operationId" : "getProviderUserRoles",
+        "parameters" : [ {
+          "name" : "firmId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "exclusiveMinimum" : 0
+          }
+        }, {
+          "name" : "userLogin",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "List of user roles for a provider (firm) user",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderFirmUserRoleListDto"
+                }
+              }
+            }
+          },
+          "204" : {
+            "description" : "No Content - No roles exist for the provider (firm) user"
+          },
+          "409" : {
+            "description" : "Conflict - Ex Cache being Loaded"
+          },
+          "500" : {
+            "description" : "Internal Server Error - Something went wrong"
+          }
+        }
+      }
+    },
+    "/provider-firms/{firmId}/provider-users/{userLogin}/provider-offices" : {
+      "get" : {
+        "tags" : [ "Provider Firms Endpoints" ],
+        "summary" : "Get list of office codes associated with provider(firm) user based on user login",
+        "description" : "    Business Rules: - Firm is not end dated.\n                    - Firm is of type Legal Services Provider / Advocate / Chambers.\n                    - Firms of type Individual / QM Provider are NOT considered.\n                    - User attribute_code is 'ICX_SUPPLIER_ORG_ID'\n                    - User attribute_code of these values ('ICX_HR_PERSON_ID', 'ICX_SUPPLIER_SITE_ID')\n                        are not considered as firm contacts.\n",
+        "operationId" : "getProviderUsersOffices_1",
+        "parameters" : [ {
+          "name" : "firmId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "exclusiveMinimum" : 0
+          }
+        }, {
+          "name" : "userLogin",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Details of provider (firm) user office codes",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderFirmUserOfficeListDto"
+                }
+              }
+            }
+          },
+          "204" : {
+            "description" : "No Content - No provider (firm) office codes found for the user"
+          },
+          "409" : {
+            "description" : "Conflict - Ex Cache being Loaded"
+          },
+          "500" : {
+            "description" : "Internal Server Error - Something went wrong"
+          }
+        }
+      }
+    },
+    "/provider-firms/{firmId}/provider-outreach-offices/nms-authorisation" : {
+      "get" : {
+        "tags" : [ "Provider Firms Endpoints" ],
+        "summary" : "Get all provider(firm) offices(sites) details based on a provider(firm) id.",
+        "description" : "    Business Rules: - Firm is not end dated.\n                    - Firm is of type Legal Services Provider / Advocate / Chambers.\n                    - Firms of type Individual / QM Provider are NOT considered.\n                    - Firm Office is not end dated.\n                    - This DOES NOT check if a provider office has an active contract.\n",
+        "operationId" : "getAllFirmNmsAuthorisationOutreachOffices",
+        "parameters" : [ {
+          "name" : "firmId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "exclusiveMinimum" : 0
+          }
+        }, {
+          "name" : "effectiveDate",
+          "in" : "query",
+          "description" : "<code>Optional , Must be null for production , can specify a contract effective date for testing on lower environments</code>",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "List of provider (firm) nms authorisation outreach offices (sites) details for a provider",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderFirmNmsAuthorisationOutreachOfficeListDto"
+                }
+              }
+            }
+          },
+          "204" : {
+            "description" : "No Content - No valid provider (firm) nms authorisation outreach offices (sites) exist for the provider (firm)"
+          },
+          "409" : {
+            "description" : "Conflict - Ex Cache being Loaded"
+          },
+          "500" : {
+            "description" : "Internal Server Error - Something went wrong"
+          }
+        }
+      }
+    },
+    "/provider-firms/{firmId}/provider-outreach-offices/mediation" : {
+      "get" : {
+        "tags" : [ "Provider Firms Endpoints" ],
+        "summary" : "Get all provider(firm) offices(sites) details based on a provider(firm) id.",
+        "description" : "    Business Rules: - Firm is not end dated.\n                    - Firm is of type Legal Services Provider / Advocate / Chambers.\n                    - Firms of type Individual / QM Provider are NOT considered.\n                    - Firm Office is not end dated.\n                    - This DOES NOT check if a provider office has an active contract.\n",
+        "operationId" : "getAllFirmMediationOutreachOffices",
+        "parameters" : [ {
+          "name" : "firmId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "exclusiveMinimum" : 0
+          }
+        }, {
+          "name" : "effectiveDate",
+          "in" : "query",
+          "description" : "<code>Optional , Must be null for production , can specify a contract effective date for testing on lower environments</code>",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "List of provider (firm) mediation outreach offices (sites) details for a provider",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderFirmMediationOutreachOfficeListDto"
+                }
+              }
+            }
+          },
+          "204" : {
+            "description" : "No Content - No valid provider (firm) mediation outreach offices (sites) exist for the provider (firm)"
+          },
+          "409" : {
+            "description" : "Conflict - Ex Cache being Loaded"
+          },
+          "500" : {
+            "description" : "Internal Server Error - Something went wrong"
+          }
+        }
+      }
+    },
+    "/provider-firms/{firmId}/provider-offices" : {
+      "get" : {
+        "tags" : [ "Provider Firms Endpoints" ],
+        "summary" : "Get all provider(firm) offices(sites) details based on a provider(firm) id.",
+        "description" : "    Business Rules: - Firm is not end dated.\n                    - Firm is of type Legal Services Provider / Advocate / Chambers.\n                    - Firms of type Individual / QM Provider are NOT considered.\n                    - Firm Office is not end dated.\n                    - This DOES NOT check if a provider office has an active contract.\n",
+        "operationId" : "getAllProviderOffices",
+        "parameters" : [ {
+          "name" : "firmId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "exclusiveMinimum" : 0
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "List of provider (firm) offices (sites) details for a provider",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderFirmOfficeListDto"
+                }
+              }
+            }
+          },
+          "204" : {
+            "description" : "No Content - No valid provider (firm) offices (sites) exist for the provider (firm)"
+          },
+          "409" : {
+            "description" : "Conflict - Ex Cache being Loaded"
+          },
+          "500" : {
+            "description" : "Internal Server Error - Something went wrong"
+          }
+        }
+      }
+    },
+    "/provider-firms/{firmId}/provider-offices/{officeCode}" : {
+      "get" : {
+        "tags" : [ "Provider Firms Endpoints" ],
+        "summary" : "Get provider(firm) office(site) details based on a a provider(firm) id and a provider(firm) office(site) code.",
+        "description" : "    Business Rules: - Firm is not end dated.\n                    - Firm is of type Legal Services Provider / Advocate / Chambers.\n                    - Firms of type Individual / QM Provider are NOT considered.\n                    - Firm Office is not end dated.\n                    - This DOES NOT check if a provider office has an active contract.\n",
+        "operationId" : "getProviderOfficeDetails",
+        "parameters" : [ {
+          "name" : "firmId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "exclusiveMinimum" : 0
+          }
+        }, {
+          "name" : "officeCode",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Details of provider (firm) office (site) for a provider (firm)",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderFirmOfficeDto"
+                }
+              }
+            }
+          },
+          "204" : {
+            "description" : "No Content - No valid provider (firm) office (site) exists based on the search criteria"
+          },
+          "409" : {
+            "description" : "Conflict - Ex Cache being Loaded"
+          },
+          "500" : {
+            "description" : "Internal Server Error - Something went wrong"
+          }
+        }
+      }
+    },
+    "/provider-firms/{firmId}/provider-offices/{officeCode}/schedules" : {
+      "get" : {
+        "tags" : [ "Provider Firms Endpoints" ],
+        "summary" : "Get all provider(firm) office(site) schedule details based on a provider(firm) id and office(site) code",
+        "description" : "    Business Rules: - Firm is not end dated.\n                    - Firm is of type Legal Services Provider / Advocate / Chambers.\n                    - Firms of type Individual / QM Provider are NOT considered.\n                    - Firm Office is not end dated.\n                    - Firm Office contract is active today or active on passed effective date.\n                    - Firm office schedule is active today or active on passed effective date.\n                    - Firm Office contract authorization status is APPROVED and contract status is Open.\n                    - Firm office schedule authorization status is APPROVED and contract status is Open.\n                    - Firm office schedule (for category of law) is not cancelled.\n",
+        "operationId" : "getProviderOfficeScheduleDetails_1",
+        "parameters" : [ {
+          "name" : "firmId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "exclusiveMinimum" : 0
+          }
+        }, {
+          "name" : "officeCode",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "effectiveDate",
+          "in" : "query",
+          "description" : "<code>Optional , Must be null for production , can specify a contract effective date for testing on lower environments</code>",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "areaOfLaw",
+          "in" : "query",
+          "description" : "<code>Optional , Area of law</code>",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "List of provider (firm) office contract/schedule details",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderFirmOfficeContractAndScheduleDto"
+                }
+              }
+            }
+          },
+          "204" : {
+            "description" : "No Content - No active contracts/schedules exist for the provider (firm) office"
+          },
+          "409" : {
+            "description" : "Conflict - Ex Cache being Loaded"
+          },
+          "500" : {
+            "description" : "Internal Server Error - Something went wrong"
+          }
+        }
+      }
+    },
+    "/provider-firms/{firmId}/provider-offices/{officeCode}/provider-users" : {
+      "get" : {
+        "tags" : [ "Provider Firms Endpoints" ],
+        "summary" : "Get all provider(firm) user offices(sites) based on provider(firm) id and user login",
+        "description" : "    Business Rules: - Firm is not end dated.\n                    - Firm is of type Legal Services Provider / Advocate / Chambers.\n                    - Firms of type Individual / QM Provider are NOT considered.\n                    - Firm Office is not end dated.\n                    - For the Provider User Office links only create one per Office where the Provider\n                        User has no restrictions (All option), or one for each Office that the User is\n                        restricted to.\n",
+        "operationId" : "getFirmOfficeAssociatedUsers_1",
+        "parameters" : [ {
+          "name" : "firmId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "exclusiveMinimum" : 0
+          }
+        }, {
+          "name" : "officeCode",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Valid provider (firm) users associated with provider office (site)",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderFirmOfficeUserListDto"
+                }
+              }
+            }
+          },
+          "204" : {
+            "description" : "No Content - No valid provider (firm) users associated with provider office (site) based on search criteria"
+          },
+          "409" : {
+            "description" : "Conflict - Ex Cache being Loaded"
+          },
+          "500" : {
+            "description" : "Internal Server Error - Something went wrong"
+          }
+        }
+      }
+    },
+    "/provider-firms/{firmId}/provider-offices/{officeCode}/office-contract-details" : {
+      "get" : {
+        "tags" : [ "Provider Firms Endpoints" ],
+        "summary" : "Get all provider(firm) office(site) schedule details based on a provider(firm) id and office(site) code",
+        "description" : "    Business Rules: - Firm is not end dated.\n                    - Firm is of type Legal Services Provider / Advocate / Chambers.\n                    - Firms of type Individual / QM Provider are NOT considered.\n                    - Firm Office is not end dated.\n                    - Firm Office contract is active today or active on passed effective date.\n",
+        "operationId" : "getProviderOfficeContractDetails_1",
+        "parameters" : [ {
+          "name" : "firmId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "exclusiveMinimum" : 0
+          }
+        }, {
+          "name" : "officeCode",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "effectiveDate",
+          "in" : "query",
+          "description" : "<code>Optional , Must be null for production , can specify a contract effective date for testing on lower environments</code>",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "paramsContainCcmsIds",
+          "in" : "query",
+          "description" : "<code>If true, provide ccmsFirmId as firmId and ccmsFirmOfficeId as officeCode</code>",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "List of provider (firm) office contract details",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderFirmOfficeContractDto"
+                }
+              }
+            }
+          },
+          "204" : {
+            "description" : "No Content - No active contracts exist for the provider (firm) office"
+          },
+          "409" : {
+            "description" : "Conflict - Ex Cache being Loaded"
+          },
+          "500" : {
+            "description" : "Internal Server Error - Something went wrong"
+          }
+        }
+      }
+    },
+    "/provider-firms/{firmId}/provider-offices/{officeCode}/bank-account-details" : {
+      "get" : {
+        "tags" : [ "Provider Firms Endpoints" ],
+        "summary" : "Get provider(firm) offices(sites) primary account details based on provider(firm) id and office(site) code",
+        "operationId" : "getFirmOfficeBankAccountDetails",
+        "parameters" : [ {
+          "name" : "firmId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "exclusiveMinimum" : 0
+          }
+        }, {
+          "name" : "officeCode",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Details of provider (firm) office (site) bank accounts",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderFirmOfficeBankAccountDto"
+                }
+              }
+            }
+          },
+          "204" : {
+            "description" : "No Content - No bank account details available for the provider (firm) office (site)"
+          },
+          "409" : {
+            "description" : "Conflict - Ex Cache being Loaded"
+          },
+          "500" : {
+            "description" : "Internal Server Error - Something went wrong"
+          }
+        }
+      }
+    },
+    "/provider-firms/{firmId}/fee-earners" : {
+      "get" : {
+        "tags" : [ "Provider Firms Endpoints" ],
+        "summary" : "Get all active fee earners contacts for a providers(firms)",
+        "description" : "    Summary      :    Certain contacts in CWA can be classified as Fee Earners.\n                      This is indicated by a flag set in ATTRIBUTE7 in the table HZ_PARTIES.\n                      Fee Earners in CWA are nothing more than contacts which have been created with\n                        Practitioner fields completed.\n                      These fields indicate the type of Practitioner (Barrister/Solicitor), the\n                        Practitioner Number and Practitioner Start/End dates.\n                      Contacts created with Practitioner Type field as NULL are not Fee Earners.\n    Business Rules: - Firm is not end dated.\n                    - Firm is of type Legal Services Provider / Advocate / Chambers.\n                    - Firms of type Individual / QM Provider are NOT returned.\n                    - Fee Earner is not end dated.\n",
+        "operationId" : "getFeeEarners",
+        "parameters" : [ {
+          "name" : "firmId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "exclusiveMinimum" : 0
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "List of fee earners for a firm",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderFirmFeeEarnerListDto"
+                }
+              }
+            }
+          },
+          "204" : {
+            "description" : "No Content - No active fee earner exists for the firm"
+          },
+          "409" : {
+            "description" : "Conflict - Ex Cache being Loaded"
+          },
+          "500" : {
+            "description" : "Internal Server Error - Something went wrong"
+          }
+        }
+      }
+    },
+    "/provider-firms/sole-practitioners" : {
+      "get" : {
+        "tags" : [ "Provider Firms Endpoints" ],
+        "summary" : "Get all Sole Practitioner providers(firms) [This data is refreshed and cached at midnight]",
+        "description" : "    Business Rules: - Firm is not end dated.\n                    - Firm's constitutional status is Sole Practitioner.\n",
+        "operationId" : "getAllSolePractitionerFirms",
+        "responses" : {
+          "200" : {
+            "description" : "List of firms",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderFirmListDto"
+                }
+              }
+            }
+          },
+          "204" : {
+            "description" : "No Content - No firms exist"
+          },
+          "409" : {
+            "description" : "Conflict - Ex Cache being Loaded"
+          },
+          "500" : {
+            "description" : "Internal Server Error - Something went wrong"
+          }
+        }
+      }
+    },
+    "/provider-firms/public-defenders" : {
+      "get" : {
+        "tags" : [ "Provider Firms Endpoints" ],
+        "summary" : "Get all Public Defender providers(firms) [This data is refreshed and cached at midnight]",
+        "description" : "    Business Rules: - Firm is not end dated.\n                    - Firm's constitutional status is Government Funded Organisation.\n",
+        "operationId" : "getAllGovernmentFundedFirms",
+        "responses" : {
+          "200" : {
+            "description" : "List of public defender firms",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderFirmListDto"
+                }
+              }
+            }
+          },
+          "204" : {
+            "description" : "No Content - No firms exist"
+          },
+          "409" : {
+            "description" : "Conflict - Ex Cache being Loaded"
+          },
+          "500" : {
+            "description" : "Internal Server Error - Something went wrong"
+          }
+        }
+      }
+    },
+    "/provider-firms/chambers" : {
+      "get" : {
+        "tags" : [ "Provider Firms Endpoints" ],
+        "summary" : "Get all providers(firms) of type Chambers [This data is refreshed and cached at midnight]",
+        "description" : "    Business Rules: - Firm is not end dated.\n                    - Firm is of type Chambers.\n",
+        "operationId" : "getAllChamberFirms",
+        "responses" : {
+          "200" : {
+            "description" : "List of firms of type Chambers",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderFirmListDto"
+                }
+              }
+            }
+          },
+          "204" : {
+            "description" : "No Content - No firms exist"
+          },
+          "409" : {
+            "description" : "Conflict - Ex Cache being Loaded"
+          },
+          "500" : {
+            "description" : "Internal Server Error - Something went wrong"
+          }
+        }
+      }
+    },
+    "/provider-firms/advocates" : {
+      "get" : {
+        "tags" : [ "Provider Firms Endpoints" ],
+        "summary" : "Get all providers(firms) of type Advocate [This data is refreshed and cached at midnight]",
+        "description" : "    Business Rules: - Firm is not end dated.\n                    - Firm is of type Advocate.\n",
+        "operationId" : "getAllAdvocateFirms",
+        "responses" : {
+          "200" : {
+            "description" : "List of firms of type advocate",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderFirmListDto"
+                }
+              }
+            }
+          },
+          "204" : {
+            "description" : "No Content - No firms exist"
+          },
+          "409" : {
+            "description" : "Conflict - Ex Cache being Loaded"
+          },
+          "500" : {
+            "description" : "Internal Server Error - Something went wrong"
+          }
+        }
+      }
+    },
+    "/internal-users" : {
+      "get" : {
+        "tags" : [ "Internal Users Endpoints" ],
+        "summary" : "Get all internal users details from CWA [This data is refreshed and cached at midnight]",
+        "description" : "    Business Rules: - Must be an Internal User\n                    - User is not end dated.\n                    - The LSC Area Office of 'Newcastle' should be replaced with 'South Tyneside'.\n",
+        "operationId" : "getAllInternalUsers",
+        "responses" : {
+          "200" : {
+            "description" : "List of internal user details",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InternalUser"
+                }
+              }
+            }
+          },
+          "204" : {
+            "description" : "No Content - No internal users exist"
+          },
+          "409" : {
+            "description" : "Conflict - Ex Cache being Loaded"
+          },
+          "500" : {
+            "description" : "Internal Server Error - Something went wrong"
+          }
+        }
+      }
+    },
+    "/internal-users/{username}" : {
+      "get" : {
+        "tags" : [ "Internal Users Endpoints" ],
+        "summary" : "Get an internal user's details from CWA [This data is refreshed and cached at midnight]",
+        "description" : "    Business Rules: - Must be an Internal User\n                    - User is not end dated.\n                    - The LSC Area Office of 'Newcastle' should be replaced with 'South Tyneside'.\n",
+        "operationId" : "getInternalUser",
+        "parameters" : [ {
+          "name" : "username",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Details of the internal user",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InternalUser"
+                }
+              }
+            }
+          },
+          "204" : {
+            "description" : "No Content - No internal user exists"
+          },
+          "409" : {
+            "description" : "Conflict - Ex Cache being Loaded"
+          },
+          "500" : {
+            "description" : "Internal Server Error - Something went wrong"
+          }
+        }
+      }
+    },
+    "/internal-users/{username}/roles" : {
+      "get" : {
+        "tags" : [ "Internal Users Endpoints" ],
+        "summary" : "Get all internal user role data from CWA",
+        "description" : "    Business Rules: - Must be an Internal User\n                    - User is not end dated.\n                    - The LSC Area Office of 'Newcastle' should be replaced with 'South Tyneside'.\n                    - Role assignment is not end dated.\n",
+        "operationId" : "getInternalUserRoles",
+        "parameters" : [ {
+          "name" : "username",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "List of internal user roles",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InternalUserRoleListDto"
+                }
+              }
+            }
+          },
+          "204" : {
+            "description" : "No Content - No internal user roles exist"
+          },
+          "409" : {
+            "description" : "Conflict - Ex Cache being Loaded"
+          },
+          "500" : {
+            "description" : "Internal Server Error - Something went wrong"
+          }
+        }
+      }
+    },
+    "/ccms-provider-users/{userUuid}" : {
+      "get" : {
+        "tags" : [ "Provider Users Endpoints" ],
+        "summary" : "Temporary endpoint for CIVIL APPLY ONLY: Get a CCMS provider user details based on user UUID",
+        "description" : "Temporary endpoint for CIVIL APPLY ONLY:\n- This endpoint will be removed as soon as it is no longer needed by Civil Apply.",
+        "operationId" : "getCcmsProviderUserByUserUuid",
+        "parameters" : [ {
+          "name" : "userUuid",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Details of CCMS provider user",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CcmsProviderUser"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found - No CCMS provider user exists with the given UUID"
+          },
+          "409" : {
+            "description" : "Conflict - Ex Cache being Loaded"
+          },
+          "500" : {
+            "description" : "Internal Server Error - Something went wrong"
+          }
+        },
+        "deprecated" : true
+      }
+    },
+    "/admin/cache/status" : {
+      "get" : {
+        "tags" : [ "Admin Controller Endpoints" ],
+        "summary" : "Get cache status.",
+        "operationId" : "getCacheStatus",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
   },
   "components" : {
     "schemas" : {
@@ -15,30 +1368,6 @@
             "items" : {
               "type" : "string"
             }
-          }
-        }
-      },
-      "GeoLocation" : {
-        "type" : "object",
-        "properties" : {
-          "longitude" : {
-            "type" : "number",
-            "format" : "double"
-          },
-          "latitude" : {
-            "type" : "number",
-            "format" : "double"
-          },
-          "easting" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "northing" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "statusMessage" : {
-            "type" : "string"
           }
         }
       },
@@ -137,9 +1466,6 @@
           },
           "dutySolicitorAreaName" : {
             "type" : "string"
-          },
-          "geoLocation" : {
-            "$ref" : "#/components/schemas/GeoLocation"
           }
         }
       },
@@ -198,51 +1524,6 @@
           }
         }
       },
-      "OfficeSearchForSchedulesDto" : {
-        "type" : "object",
-        "properties" : {
-          "categoriesOfLaw" : {
-            "type" : "array",
-            "description" : "The categories of law that are needed",
-            "enum" : [ "CRIME LOWER.APPEALS", "CRIME LOWER.INVEST", "CRIME LOWER.PRISON", "LEGAL HELP.AAP", "LEGAL HELP.COM", "LEGAL HELP.CON", "LEGAL HELP.DEB", "LEGAL HELP.DISC", "LEGAL HELP.EDU", "LEGAL HELP.ELA", "LEGAL HELP.EMP", "LEGAL HELP.HOU", "LEGAL HELP.IMMAS", "LEGAL HELP.IMMOT", "LEGAL HELP.MAT", "LEGAL HELP.MED", "LEGAL HELP.MHE", "LEGAL HELP.MSC", "LEGAL HELP.PI", "LEGAL HELP.PUB", "LEGAL HELP.WB", "MEDIATION.MEDI" ],
-            "example" : [ "CRIME LOWER.ALL", "CRIME LOWER.APPEALS", "CRIME LOWER.INVEST", "CRIME LOWER.PRISON", "LEGAL HELP.AAP", "LEGAL HELP.COM", "LEGAL HELP.CON", "LEGAL HELP.DEB", "LEGAL HELP.DISC", "LEGAL HELP.EDU", "LEGAL HELP.ELA", "LEGAL HELP.EMP", "LEGAL HELP.HOU", "LEGAL HELP.IMMAS", "LEGAL HELP.IMMOT", "LEGAL HELP.MAT", "LEGAL HELP.MED", "LEGAL HELP.MHE", "LEGAL HELP.MSC", "LEGAL HELP.PI", "LEGAL HELP.PUB", "LEGAL HELP.WB", "MEDIATION.MEDI" ],
-            "items" : {
-              "type" : "string"
-            },
-            "minItems" : 1
-          }
-        },
-        "required" : [ "categoriesOfLaw" ]
-      },
-      "LegalAdviseSearchDto" : {
-        "type" : "object",
-        "properties" : {
-          "postCode" : {
-            "type" : "string",
-            "description" : "The postcode to search for legal advice",
-            "example" : "SW1A 1AA",
-            "minLength" : 1
-          },
-          "miles" : {
-            "type" : "number",
-            "format" : "double",
-            "description" : "The radius in miles to search for legal advice",
-            "example" : 5,
-            "minimum" : 0
-          },
-          "categoriesOfLaw" : {
-            "type" : "array",
-            "description" : "The categories of law that are needed",
-            "enum" : [ "Crime Lower.All Classes", "Crime Lower.Appeals and Reviews", "Crime Lower.Criminal Investigations and Criminal Proceedings", "Crime Lower.Prison Law", "Legal Help (Civil).Claims Against Public Authorities", "Legal Help (Civil).Clinical Negligence", "Legal Help (Civil).Community Care", "Legal Help (Civil).Consumer General Contract", "Legal Help (Civil).Debt", "Legal Help (Civil).Discrimination", "Legal Help (Civil).Early Legal Advice", "Legal Help (Civil).Education", "Legal Help (Civil).Employment", "Legal Help (Civil).Family", "Legal Help (Civil).Housing", "Legal Help (Civil).Immigration", "Legal Help (Civil).Immigration - Asylum", "Legal Help (Civil).Mental Health", "Legal Help (Civil).Personal Injury", "Legal Help (Civil).Public Law", "Legal Help (Civil).Residual(Miscellaneous)", "Legal Help (Civil).Welfare Benefits", "Mediation.Mediation" ],
-            "example" : [ "Crime Lower.All Classes", "Crime Lower.Appeals and Reviews", "Crime Lower.Criminal Investigations and Criminal Proceedings", "Crime Lower.Prison Law", "Legal Help (Civil).Claims Against Public Authorities", "Legal Help (Civil).Clinical Negligence", "Legal Help (Civil).Community Care", "Legal Help (Civil).Consumer General Contract", "Legal Help (Civil).Debt", "Legal Help (Civil).Discrimination", "Legal Help (Civil).Early Legal Advice", "Legal Help (Civil).Education", "Legal Help (Civil).Employment", "Legal Help (Civil).Family", "Legal Help (Civil).Housing", "Legal Help (Civil).Immigration", "Legal Help (Civil).Immigration - Asylum", "Legal Help (Civil).Mental Health", "Legal Help (Civil).Personal Injury", "Legal Help (Civil).Public Law", "Legal Help (Civil).Residual(Miscellaneous)", "Legal Help (Civil).Welfare Benefits", "Mediation.Mediation" ],
-            "items" : {
-              "type" : "string"
-            },
-            "minItems" : 1
-          }
-        },
-        "required" : [ "categoriesOfLaw", "miles", "postCode" ]
-      },
       "ProviderFirmUser" : {
         "type" : "object",
         "properties" : {
@@ -261,9 +1542,6 @@
             "type" : "string"
           },
           "emailAddress" : {
-            "type" : "string"
-          },
-          "portalStatus" : {
             "type" : "string"
           },
           "jobTitle" : {
@@ -323,21 +1601,7 @@
           }
         }
       },
-      "ProviderFirmUserFirmOfficesDtoV1" : {
-        "type" : "object",
-        "properties" : {
-          "firm" : {
-            "$ref" : "#/components/schemas/ProviderFirmSummary"
-          },
-          "officeCodes" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/ProviderFirmOfficeSummary"
-            }
-          }
-        }
-      },
-      "ProviderFirmUserOfficeListDtoV1" : {
+      "ProviderFirmUserOfficeListDto" : {
         "type" : "object",
         "properties" : {
           "firm" : {
@@ -346,10 +1610,10 @@
           "user" : {
             "$ref" : "#/components/schemas/ProviderFirmUserSummary"
           },
-          "offices" : {
+          "officeCodes" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/ProviderFirmUserFirmOfficesDtoV1"
+              "$ref" : "#/components/schemas/ProviderFirmOfficeSummary"
             }
           }
         }
@@ -372,9 +1636,6 @@
             "type" : "string"
           },
           "emailAddress" : {
-            "type" : "string"
-          },
-          "portalStatus" : {
             "type" : "string"
           }
         }
@@ -807,23 +2068,6 @@
           }
         }
       },
-      "ProviderFirmUserOfficeListDto" : {
-        "type" : "object",
-        "properties" : {
-          "firm" : {
-            "$ref" : "#/components/schemas/ProviderFirmSummary"
-          },
-          "user" : {
-            "$ref" : "#/components/schemas/ProviderFirmUserSummary"
-          },
-          "officeCodes" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/ProviderFirmOfficeSummary"
-            }
-          }
-        }
-      },
       "NmsAuthorisationOutreachOffice" : {
         "type" : "object",
         "properties" : {
@@ -867,9 +2111,6 @@
           "authNewMatterStarts" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "geoLocation" : {
-            "$ref" : "#/components/schemas/GeoLocation"
           }
         }
       },
@@ -906,9 +2147,6 @@
           "parttimeLocId" : {
             "type" : "integer",
             "format" : "int64"
-          },
-          "geoLocation" : {
-            "$ref" : "#/components/schemas/GeoLocation"
           }
         }
       },
@@ -969,9 +2207,6 @@
           },
           "attributeCategory" : {
             "type" : "string"
-          },
-          "geoLocation" : {
-            "$ref" : "#/components/schemas/GeoLocation"
           }
         }
       },
@@ -1124,9 +2359,6 @@
           "emailAddress" : {
             "type" : "string"
           },
-          "portalStatus" : {
-            "type" : "string"
-          },
           "lscAreaOffice" : {
             "type" : "string"
           },
@@ -1147,6 +2379,21 @@
             "items" : {
               "$ref" : "#/components/schemas/AssignedApplicationRoles"
             }
+          }
+        }
+      },
+      "CcmsProviderUser" : {
+        "type" : "object",
+        "properties" : {
+          "userUuid" : {
+            "type" : "string"
+          },
+          "userLogin" : {
+            "type" : "string"
+          },
+          "ccmsContactId" : {
+            "type" : "integer",
+            "format" : "int32"
           }
         }
       }
