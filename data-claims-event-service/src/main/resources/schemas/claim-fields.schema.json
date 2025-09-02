@@ -1,0 +1,536 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ClaimFields",
+  "type": "object",
+  "properties": {
+    "status": {
+      "type": "string"
+    },
+    "schedule_reference": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9]+$",
+      "maxLength": 20
+    },
+    "line_number": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "case_reference_number": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9]+$",
+      "maxLength": 30
+    },
+    "unique_file_number": {
+      "type": "string",
+      "anyOf": [
+        { "const": "/" },
+        {
+          "type": "string",
+          "pattern": "^[0-9]{6}/[0-9]{3}$",
+          "minLength": 10,
+          "maxLength": 10
+        }
+      ]
+    },
+    "case_start_date": {
+      "type": "string"
+    },
+    "case_concluded_date": {
+      "type": "string"
+    },
+    "matter_type_code": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9]+$"
+    },
+    "crime_matter_type_code": {
+      "type": "string"
+    },
+    "fee_scheme_code": {
+      "type": "string"
+    },
+    "fee_code": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9]+$",
+      "maxLength": 10
+    },
+    "procurement_area_code": {
+      "type": "string"
+    },
+    "access_point_code": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9]+$"
+    },
+    "delivery_location": {
+      "type": "string"
+    },
+    "representation_order_date": {
+      "type": "string"
+    },
+    "suspects_defendants_count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 99
+    },
+    "police_station_court_attendances_count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 99
+    },
+    "police_station_court_prison_id": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9]+$"
+    },
+    "dscc_number": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9]+$"
+    },
+    "maat_id": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9]+$"
+    },
+    "prison_law_prior_approval_number": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9]+$"
+    },
+    "is_duty_solicitor": {
+      "type": "boolean"
+    },
+    "is_youth_court": {
+      "type": "boolean"
+    },
+    "scheme_id": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9]+$"
+    },
+    "mediation_sessions_count": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 99
+    },
+    "mediation_time_minutes": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 99
+    },
+    "outreach_location": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9]+$",
+      "minLength": 3,
+      "maxLength": 3
+    },
+    "referral_source": {
+      "type": "string",
+      "pattern": "^(0[2-9]|1[0-1])$"
+    },
+    "total_value": {
+      "type": "number"
+    },
+    "client_forename": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9]+$",
+      "maxLength": 30
+    },
+    "client_surname": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9]+$",
+      "maxLength": 30
+    },
+    "client_date_of_birth": {
+      "type": "string",
+      "format": "date"
+    },
+    "unique_client_number": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9]+$",
+      "maxLength": 15
+    },
+    "client_postcode": {
+      "type": "string"
+    },
+    "gender_code": {
+      "type": "string"
+    },
+    "ethnicity_code": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 2
+    },
+    "disability_code": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 3
+    },
+    "is_legally_aided": {
+      "type": "boolean"
+    },
+    "client_type_code": {
+      "type": "string"
+    },
+    "home_office_client_number": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9]+$",
+      "maxLength": 16
+    },
+    "cla_reference_number": {
+      "type": "string"
+    },
+    "cla_exemption_code": {
+      "type": "string",
+      "minLength": 4,
+      "maxLength": 4
+    },
+    "client_2_forename": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9]+$",
+      "maxLength": 30
+    },
+    "client_2_surname": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9]+$",
+      "maxLength": 30
+    },
+    "client_2_date_of_birth": {
+      "type": "string",
+      "format": "date"
+    },
+    "client_2_ucn": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9]+$",
+      "maxLength": 15
+    },
+    "client_2_postcode": {
+      "type": "string"
+    },
+    "client_2_gender_code": {
+      "type": "string"
+    },
+    "client_2_ethnicity_code": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 2
+    },
+    "client_2_disability_code": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 3
+    },
+    "client_2_is_legally_aided": {
+      "type": "boolean"
+    },
+    "case_id": {
+      "type": "string"
+    },
+    "unique_case_id": {
+      "type": "string"
+    },
+    "case_stage_code": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9]+$",
+      "minLength": 5,
+      "maxLength": 5
+    },
+    "stage_reached_code": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9]+$",
+      "minLength": 2,
+      "maxLength": 2
+    },
+    "standard_fee_category_code": {
+      "type": "string"
+    },
+    "outcome_code": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9]+$",
+      "minLength": 2,
+      "maxLength": 2
+    },
+    "designated_accredited_representative_code": {
+      "type": "string"
+    },
+    "is_postal_application_accepted": {
+      "type": "boolean"
+    },
+    "is_client_2_postal_application_accepted": {
+      "type": "boolean"
+    },
+    "mental_health_tribunal_reference": {
+      "type": "string"
+    },
+    "is_nrm_advice": {
+      "type": "boolean"
+    },
+    "follow_on_work": {
+      "type": "string"
+    },
+    "transfer_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "exemption_criteria_satisfied": {
+      "type": "string"
+    },
+    "exceptional_case_funding_reference": {
+      "type": "string"
+    },
+    "is_legacy_case": {
+      "type": "boolean"
+    },
+    "advice_time": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 99
+    },
+    "travel_time": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 99
+    },
+    "waiting_time": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 99
+    },
+    "net_profit_costs_amount": {
+      "type": "number",
+      "maximum": 999999999.99
+    },
+    "net_disbursement_amount": {
+      "type": "number",
+      "maximum": 999999999.99
+    },
+    "net_counsel_costs_amount": {
+      "type": "number",
+      "maximum": 99999.99
+    },
+    "disbursements_vat_amount": {
+      "type": "number",
+      "maximum": 99999.99
+    },
+    "travel_waiting_costs_amount": {
+      "type": "number",
+      "maximum": 9999.99
+    },
+    "net_waiting_costs_amount": {
+      "type": "number",
+      "maximum": 999999.99
+    },
+    "is_vat_applicable": {
+      "type": "boolean"
+    },
+    "is_tolerance_applicable": {
+      "type": "boolean"
+    },
+    "prior_authority_reference": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9]+$",
+      "minLength": 7,
+      "maxLength": 7
+    },
+    "is_london_rate": {
+      "type": "boolean"
+    },
+    "adjourned_hearing_fee_amount": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9
+    },
+    "is_additional_travel_payment": {
+      "type": "boolean"
+    },
+    "costs_damages_recovered_amount": {
+      "type": "number",
+      "maximum": 99999.99
+    },
+    "meetings_attended_code": {
+      "type": "string"
+    },
+    "detention_travel_waiting_costs_amount": {
+      "type": "number",
+      "maximum": 99999999.99
+    },
+    "jr_form_filling_amount": {
+      "type": "number",
+      "maximum": 9999.99
+    },
+    "is_eligible_client": {
+      "type": "boolean"
+    },
+    "court_location_code": {
+      "type": "string"
+    },
+    "advice_type_code": {
+      "type": "string"
+    },
+    "medical_reports_count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10
+    },
+    "is_irc_surgery": {
+      "type": "boolean"
+    },
+    "surgery_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "surgery_clients_count": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 20
+    },
+    "surgery_matters_count": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 20
+    },
+    "cmrh_oral_count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9
+    },
+    "cmrh_telephone_count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9
+    },
+    "ait_hearing_centre_code": {
+      "type": "string"
+    },
+    "is_substantive_hearing": {
+      "type": "boolean"
+    },
+    "ho_interview": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9
+    },
+    "local_authority_number": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9]+$"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "status",
+    "schedule_reference",
+    "line_number",
+    "case_reference_number",
+    "case_start_date",
+    "disbursements_vat_amount",
+    "fee_code"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "area_of_law": {
+            "const": "CIVIL"
+          }
+        },
+        "required": [
+          "area_of_law"
+        ]
+      },
+      "then": {
+        "required": [
+          "unique_file_number",
+          "fee_scheme_code",
+          "case_concluded_date",
+          "outcome_code",
+          "is_postal_application_accepted",
+          "travel_waiting_costs_amount",
+          "client_forename",
+          "client_surname",
+          "client_date_of_birth",
+          "unique_client_number",
+          "client_postcode",
+          "gender_code",
+          "ethnicity_code",
+          "disability_code",
+          "client_type_code",
+          "home_office_client_number",
+          "cla_reference_number",
+          "cla_exemption_code",
+          "advice_time",
+          "travel_time",
+          "waiting_time",
+          "net_counsel_costs_amount",
+          "travel_waiting_costs_amount",
+          "case_id",
+          "matter_type_code",
+          "net_profit_costs_amount"
+        ],
+        "properties": {
+          "matter_type_code": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9]{1,4}[-:][A-Za-z0-9]{1,4}$"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "area_of_law": {
+            "const": "CRIME"
+          }
+        },
+        "required": [
+          "area_of_law"
+        ]
+      },
+      "then": {
+        "required": [
+          "case_concluded_date",
+          "stage_reached_code",
+          "net_profit_costs_amount",
+          "disbursements_vat_amount"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "area_of_law": {
+            "const": "MEDIATION"
+          }
+        },
+        "required": [
+          "area_of_law"
+        ]
+      },
+      "then": {
+        "required": [
+          "outreach_location",
+          "referral_source",
+          "client_forename",
+          "client_surname",
+          "client_date_of_birth",
+          "unique_client_number",
+          "client_postcode",
+          "gender_code",
+          "ethnicity_code",
+          "disability_code",
+          "is_legally_aided",
+          "client_2_forename",
+          "client_2_surname",
+          "client_2_date_of_birth",
+          "client_2_ucn",
+          "client_2_postcode",
+          "client_2_gender_code",
+          "client_2_ethnicity_code",
+          "client_2_disability_code",
+          "client_2_is_legally_aided",
+          "case_id",
+          "matter_type_code",
+          "unique_case_id"
+        ],
+        "properties": {
+          "matter_type_code": {
+            "type": "string",
+            "pattern": "^[A-Z]{4}[-:][A-Z]{4}$"
+          }
+        }      }
+    }
+  ]
+}
