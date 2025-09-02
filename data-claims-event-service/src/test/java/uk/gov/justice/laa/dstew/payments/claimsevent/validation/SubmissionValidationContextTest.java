@@ -93,12 +93,12 @@ class SubmissionValidationContextTest {
   }
 
   @Nested
-  @DisplayName("addToAllClaimReports")
-  class AddToAllClaimReportsTests {
+  @DisplayName("addSubmissionValidationError")
+  class AddSubmissionLevelErrorsTests {
 
     @Test
-    @DisplayName("Correctly adds error to all existing claims")
-    void correctlyAddsErrorToAllClaims() {
+    @DisplayName("Correctly adds error to the submission")
+    void correctlyAddsSubmissionValidationError() {
       // Given
       submissionValidationContext = new SubmissionValidationContext();
 
@@ -112,18 +112,20 @@ class SubmissionValidationContextTest {
       assertThat(submissionValidationContext.getClaimReports()).hasSize(2);
 
       // When
-      submissionValidationContext.addToAllClaimReports(
-          ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER);
+      submissionValidationContext.addSubmissionValidationError(
+          ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER.getMessage());
 
       // Then
-      List<ClaimValidationReport> expected =
+      List<ClaimValidationReport> expectedClaimReports =
           List.of(
-              new ClaimValidationReport(
-                  "claimId1", List.of(ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER)),
-              new ClaimValidationReport(
-                  "claimId2", List.of(ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER)));
+              new ClaimValidationReport("claimId1"),
+              new ClaimValidationReport("claimId2"));
+      List<String> expectedSubmissionErrors = List.of("A contract schedule with the provided area of law could not be found for this provider");
+
       assertThat(submissionValidationContext.getClaimReports()).hasSize(2);
-      assertThat(submissionValidationContext.getClaimReports()).isEqualTo(expected);
+      assertThat(submissionValidationContext.getClaimReports()).isEqualTo(expectedClaimReports);
+      assertThat(submissionValidationContext.getSubmissionValidationErrors()).hasSize(1);
+      assertThat(submissionValidationContext.getSubmissionValidationErrors()).isEqualTo(expectedSubmissionErrors);
     }
   }
 
@@ -151,8 +153,7 @@ class SubmissionValidationContextTest {
           submissionValidationContext.getClaimReport("claimId1");
 
       // Then
-      assertThat(actual.isPresent()).isTrue();
-      assertThat(actual.get()).isEqualTo(claimValidationReport1);
+      assertThat(actual).isPresent().contains(claimValidationReport1);
     }
   }
 

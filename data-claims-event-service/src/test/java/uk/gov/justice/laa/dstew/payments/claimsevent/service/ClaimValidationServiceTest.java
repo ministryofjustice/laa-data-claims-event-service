@@ -15,6 +15,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimFields;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.JsonSchemaValidator;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
 @ExtendWith(MockitoExtension.class)
 class ClaimValidationServiceTest {
@@ -24,6 +26,10 @@ class ClaimValidationServiceTest {
   @Mock private DuplicateClaimValidationService duplicateClaimValidationService;
 
   @Mock private FeeCalculationService feeCalculationService;
+
+  @Mock private SubmissionValidationContext submissionValidationContext;
+
+  @Mock private JsonSchemaValidator jsonSchemaValidator;
 
   @InjectMocks private ClaimValidationService claimValidationService;
 
@@ -56,5 +62,28 @@ class ClaimValidationServiceTest {
       verify(feeCalculationService, times(1)).validateFeeCalculation(claim1);
       verify(feeCalculationService, times(1)).validateFeeCalculation(claim2);
     }
+
+    @Test
+    void validateCaseStartDate() {
+      ClaimFields claim1 = new ClaimFields().id("claim1").feeCode("feeCode1").caseStartDate("34/13/2003");
+      ClaimFields claim2 = new ClaimFields().id("claim2").feeCode("feeCode2").caseStartDate("03/01/1993");
+      List<ClaimFields> claims = List.of(claim1, claim2);
+
+      List<String> providerCategoriesOfLaw = List.of("categoryOfLaw1");
+      Map<String, String> categoryOfLawLookup = Collections.emptyMap();
+
+      when(categoryOfLawValidationService.getCategoryOfLawLookup(claims))
+          .thenReturn(categoryOfLawLookup);
+
+      claimValidationService.validateClaims(claims, providerCategoriesOfLaw);
+
+      // Then
+      verify(submissionValidationContext, times(1))
+          .addClaimError ("claim1", "Invalid date value provided for Case Start Date: 34/13/2003");
+      verify(submissionValidationContext, times(1))
+          .addClaimError ("claim2", "Invalid date value for Case Start Date (Must be between 01/01/1995 and today): 03/01/1993");
+
+    }
+
   }
 }

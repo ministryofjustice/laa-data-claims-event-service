@@ -1,10 +1,16 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimFields;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.JsonSchemaValidator;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
 /**
  * A service for validating submitted claims that are ready to process. Validation errors will
@@ -18,6 +24,8 @@ public class ClaimValidationService {
   private final CategoryOfLawValidationService categoryOfLawValidationService;
   private final DuplicateClaimValidationService duplicateClaimValidationService;
   private final FeeCalculationService feeCalculationService;
+  private final SubmissionValidationContext submissionValidationContext;
+  private final JsonSchemaValidator jsonSchemaValidator;
 
   /**
    * Validate a list of claims in a submission.
@@ -31,26 +39,84 @@ public class ClaimValidationService {
   }
 
   /**
-   * Validate a claim.
+   * Validates the provided claim by performing various checks such as:
+   *    - JSON schema validation ,
+   *    - field level business validations (e.g. date in the past)
+   *    - further validations that use external APIs such as
+   *        - category of law checks
+   *        - duplicate claim checks
+   *        - fee calculations.
+   * Any errors encountered during the validation process are added to the submission validation context.
    *
-   * <p>Validates that:
-   *
-   * <ul>
-   *   <li>The claim's fee code is associated with a valid category of law
-   *   <li>The claim is not a duplicate
-   *   <li>The claim passes fee calculation
-   * </ul>
-   *
-   * @param claim the submitted claim
-   * @param categoryOfLawLookup the lookup of fee code -> category of law for the submission
+   * @param claim the claim object to validate
+   * @param categoryOfLawLookup a map containing category of law codes and their corresponding descriptions
+   * @param providerCategoriesOfLaw a list of categories of law applicable to the provider
    */
   private void validateClaim(
       ClaimFields claim,
       Map<String, String> categoryOfLawLookup,
       List<String> providerCategoriesOfLaw) {
+    submissionValidationContext.addClaimErrors(claim.getId(), jsonSchemaValidator.validate("claim", claim));
+
+    validateUniqueFileNumber(claim);
+    checkDateInPast(claim, "Case Start Date", claim.getCaseStartDate());
+    checkDateInPast(claim, "Case Concluded Date", claim.getCaseConcludedDate());
     categoryOfLawValidationService.validateCategoryOfLaw(
         claim, categoryOfLawLookup, providerCategoriesOfLaw);
     duplicateClaimValidationService.validateDuplicateClaims(claim);
     feeCalculationService.validateFeeCalculation(claim);
   }
+
+  /**
+   * Validates the unique file number of the given claim to ensure it
+   * contains a valid and non-future date in the format DDMMYY. If the
+   * date is invalid or in the future, an error is added to the
+   * submission validation context.
+   *
+   * @param claim the claim object containing the unique file number to be validated
+   */
+  private void validateUniqueFileNumber(ClaimFields claim) {
+    String uniqueFileNumber = claim.getUniqueFileNumber();
+    if (uniqueFileNumber != null && uniqueFileNumber.length() > 1) {
+      String datePart = uniqueFileNumber.substring(0, 6); // DDMMYY
+      DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyy");
+      try {
+        LocalDate date = LocalDate.parse(datePart, formatter);
+        if (!date.isBefore(LocalDate.now())) {
+          submissionValidationContext.addClaimError(claim.getId(),
+              ClaimValidationError.INVALID_DATE_IN_UNIQUE_FILE_NUMBER);
+        }
+      } catch (DateTimeParseException e) {
+        submissionValidationContext.addClaimError(claim.getId(),
+            ClaimValidationError.INVALID_DATE_IN_UNIQUE_FILE_NUMBER);
+      }
+    }
+  }
+
+  /**
+   * Validates whether the provided date value is within the valid range (01/01/1995 to today's date).
+   * If the date is invalid or falls outside the range, an error is added to the submission validation context.
+   *
+   * @param claim The claim object associated with the date being checked.
+   * @param fieldName The name of the field associated with the date being validated.
+   * @param dateValueToCheck The date value to validate in the format "dd/MM/yyyy".
+   */
+  private void checkDateInPast(ClaimFields claim, String fieldName, String dateValueToCheck) {
+    if (dateValueToCheck != null) {
+      DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+      LocalDate minDate = LocalDate.of(1995, 1, 1);
+      try {
+        LocalDate date = LocalDate.parse(dateValueToCheck, formatter);
+        if (date.isBefore(minDate) || date.isAfter(LocalDate.now())) {
+          submissionValidationContext.addClaimError(claim.getId(),
+              String.format("Invalid date value for %s (Must be between 01/01/1995 and today): %s",
+                  fieldName, dateValueToCheck));
+        }
+      } catch (DateTimeParseException e) {
+        submissionValidationContext.addClaimError(claim.getId(),
+            String.format("Invalid date value provided for %s: %s", fieldName, dateValueToCheck));
+      }
+    }
+  }
+
 }

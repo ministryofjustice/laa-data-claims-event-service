@@ -1,6 +1,11 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.validation;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
 /** Enum holding claim validation errors. */
+@RequiredArgsConstructor
+@Getter
 public enum ClaimValidationError {
   INVALID_AREA_OF_LAW_FOR_PROVIDER(
       "A contract schedule with the provided area of law could not be found for this provider"),
@@ -9,11 +14,12 @@ public enum ClaimValidationError {
   INVALID_CATEGORY_OF_LAW_NOT_AUTHORISED_FOR_PROVIDER(
       "The provider is not contracted for the category of law associated with the fee code"),
   INVALID_NIL_SUBMISSION_CONTAINS_CLAIMS(
-      "Submission is marked as nil submission, but contains claims");
+      "Submission is marked as nil submission, but contains claims"),
+  NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS(
+      "Submission is marked as nil submission, but contains claims"),
+  INVALID_DATE_IN_UNIQUE_FILE_NUMBER(
+      "Unique file ID must be in the format DDMMYY/NNN with a date in the past")
+  ;
 
   final String message;
-
-  ClaimValidationError(String message) {
-    this.message = message;
-  }
 }

@@ -1,6 +1,5 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -27,9 +26,9 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetSubmission200Respon
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionFields;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
-import uk.gov.justice.laa.dstew.payments.claimsevent.exception.SubmissionValidationException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.JsonSchemaValidator;
 import uk.gov.justice.laa.provider.model.FirmOfficeContractAndScheduleDetails;
 import uk.gov.justice.laa.provider.model.FirmOfficeContractAndScheduleLine;
 import uk.gov.justice.laa.provider.model.ProviderFirmOfficeContractAndScheduleDto;
@@ -44,6 +43,8 @@ public class SubmissionValidationServiceTest {
   @Mock private ProviderDetailsRestClient providerDetailsRestClient;
 
   @Mock private SubmissionValidationContext submissionValidationContext;
+
+  @Mock private JsonSchemaValidator jsonSchemaValidator;
 
   @InjectMocks private SubmissionValidationService submissionValidationService;
 
@@ -173,7 +174,7 @@ public class SubmissionValidationServiceTest {
 
       // Then
       verify(submissionValidationContext, times(1))
-          .addToAllClaimReports(ClaimValidationError.INVALID_NIL_SUBMISSION_CONTAINS_CLAIMS);
+          .addSubmissionValidationError(ClaimValidationError.INVALID_NIL_SUBMISSION_CONTAINS_CLAIMS.getMessage());
       verify(dataClaimsRestClient, times(1)).getClaim(submissionId, claimId);
       verify(providerDetailsRestClient, times(1))
           .getProviderFirmSchedules(officeAccountNumber, areaOfLaw);
@@ -183,11 +184,12 @@ public class SubmissionValidationServiceTest {
     }
 
     @Test
-    @DisplayName("Throws exception if submission not marked as nil submission contains no claims")
+    @DisplayName("Adds submission validation error if submission not marked as nil submission contains no claims")
     void throwsExceptionIfSubmissionNotMarkedAsNilSubmissionContainsNoClaims() {
       // Given
       UUID submissionId = new UUID(0, 0);
       String areaOfLaw = "areaOfLaw";
+      String categoryOfLaw = "categoryOfLaw";
       String officeAccountNumber = "officeAccountNumber";
 
       SubmissionFields submissionFields = new SubmissionFields();
@@ -199,11 +201,25 @@ public class SubmissionValidationServiceTest {
       GetSubmission200Response submission =
           GetSubmission200Response.builder().submission(submissionFields).claims(null).build();
 
+      FirmOfficeContractAndScheduleLine scheduleLine = new FirmOfficeContractAndScheduleLine();
+      scheduleLine.setCategoryOfLaw(categoryOfLaw);
+
+      FirmOfficeContractAndScheduleDetails schedule = new FirmOfficeContractAndScheduleDetails();
+      schedule.scheduleLines(List.of(scheduleLine));
+
+      ProviderFirmOfficeContractAndScheduleDto providerFirmResponse =
+          new ProviderFirmOfficeContractAndScheduleDto();
+      providerFirmResponse.addSchedulesItem(schedule);
+
+      when(providerDetailsRestClient.getProviderFirmSchedules(officeAccountNumber, areaOfLaw))
+          .thenReturn(Mono.just(providerFirmResponse));
+
       // When
-      assertThrows(
-          SubmissionValidationException.class,
-          () -> submissionValidationService.validateSubmission(submission),
-          "Expected SubmissionValidationException to be thrown");
+      submissionValidationService.validateSubmission(submission);
+
+      // Then
+      verify(submissionValidationContext, times(1))
+          .addSubmissionValidationError(ClaimValidationError.NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS.getMessage());
     }
 
     @Test
@@ -254,7 +270,7 @@ public class SubmissionValidationServiceTest {
 
       // Then
       verify(submissionValidationContext, times(1))
-          .addToAllClaimReports(ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER);
+          .addSubmissionValidationError(ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER.getMessage());
       verify(dataClaimsRestClient, times(1)).getClaim(submissionId, claimId);
       verify(providerDetailsRestClient, times(1))
           .getProviderFirmSchedules(officeAccountNumber, areaOfLaw);

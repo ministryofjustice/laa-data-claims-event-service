@@ -28,11 +28,11 @@ class ClaimValidationReportTest {
       claimValidationReport.addError(ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER);
 
       // Then
-      assertThat(claimValidationReport.getErrors().size()).isEqualTo(2);
+      assertThat(claimValidationReport.getErrors()).hasSize(2);
       assertThat(claimValidationReport.getErrors())
           .contains(
-              ClaimValidationError.INVALID_CATEGORY_OF_LAW_NOT_AUTHORISED_FOR_PROVIDER,
-              ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER);
+              ClaimValidationError.INVALID_CATEGORY_OF_LAW_NOT_AUTHORISED_FOR_PROVIDER.getMessage(),
+              ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER.getMessage());
     }
   }
 
@@ -56,12 +56,12 @@ class ClaimValidationReportTest {
               ClaimValidationError.INVALID_CATEGORY_OF_LAW_AND_FEE_CODE));
 
       // Then
-      assertThat(claimValidationReport.getErrors().size()).isEqualTo(3);
+      assertThat(claimValidationReport.getErrors()).hasSize(3);
       assertThat(claimValidationReport.getErrors())
           .contains(
-              ClaimValidationError.INVALID_CATEGORY_OF_LAW_NOT_AUTHORISED_FOR_PROVIDER,
-              ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER,
-              ClaimValidationError.INVALID_CATEGORY_OF_LAW_AND_FEE_CODE);
+              ClaimValidationError.INVALID_CATEGORY_OF_LAW_NOT_AUTHORISED_FOR_PROVIDER.getMessage(),
+              ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER.getMessage(),
+              ClaimValidationError.INVALID_CATEGORY_OF_LAW_AND_FEE_CODE.getMessage());
     }
   }
 
