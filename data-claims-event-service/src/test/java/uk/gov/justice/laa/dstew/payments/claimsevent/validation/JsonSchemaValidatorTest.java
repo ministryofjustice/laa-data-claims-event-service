@@ -2,28 +2,51 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.validation;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.networknt.schema.JsonSchema;
+import com.networknt.schema.JsonSchemaFactory;
+import com.networknt.schema.SpecVersion;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.testcontainers.junit.jupiter.Testcontainers;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimFields;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionFields;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
-import uk.gov.justice.laa.dstew.payments.claimsevent.helper.LocalstackBaseIntegrationTest;
 
-@SpringBootTest
-@ActiveProfiles("test")
-@Testcontainers
-class JsonSchemaValidatorIntegrationTest extends LocalstackBaseIntegrationTest {
+class JsonSchemaValidatorTest {
 
   public static final String CLAIM_SCHEMA = "claim";
-  @Autowired private JsonSchemaValidator jsonSchemaValidator;
+
+  private JsonSchemaValidator jsonSchemaValidator;
+
+  @BeforeEach
+  void setUp() throws Exception {
+    ObjectMapper mapper = new ObjectMapper();
+    mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+
+    // Manually load schemas for testing
+    Map<String, JsonSchema> schemas =
+        Map.of(
+            "submission", loadSchema("schemas/submission-fields.schema.json", mapper),
+            "claim", loadSchema("schemas/claim-fields.schema.json", mapper));
+    jsonSchemaValidator = new JsonSchemaValidator(mapper, schemas);
+  }
+
+  private JsonSchema loadSchema(String path, ObjectMapper mapper) throws Exception {
+    try (InputStream in = getClass().getClassLoader().getResourceAsStream(path)) {
+      if (in == null) throw new IllegalArgumentException("Schema not found: " + path);
+      JsonNode schemaNode = mapper.readTree(in);
+      return JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012).getSchema(schemaNode);
+    }
+  }
 
   @Test
   void validateReturnsErrorsForInvalidSubmission() {
