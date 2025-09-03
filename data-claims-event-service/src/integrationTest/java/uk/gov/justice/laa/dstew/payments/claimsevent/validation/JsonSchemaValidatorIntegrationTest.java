@@ -20,7 +20,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.helper.LocalstackBaseIntegr
 @SpringBootTest
 @ActiveProfiles("test")
 @Testcontainers
-class JsonSchemaValidatorIntegrationTest  extends LocalstackBaseIntegrationTest {
+class JsonSchemaValidatorIntegrationTest extends LocalstackBaseIntegrationTest {
 
   public static final String CLAIM_SCHEMA = "claim";
   @Autowired private JsonSchemaValidator jsonSchemaValidator;
