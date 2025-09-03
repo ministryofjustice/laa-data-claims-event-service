@@ -9,13 +9,18 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.testcontainers.junit.jupiter.Testcontainers;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimFields;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionFields;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
+import uk.gov.justice.laa.dstew.payments.claimsevent.helper.LocalstackBaseIntegrationTest;
 
 @SpringBootTest
-class JsonSchemaValidatorIntegrationTest {
+@ActiveProfiles("test")
+@Testcontainers
+class JsonSchemaValidatorIntegrationTest  extends LocalstackBaseIntegrationTest {
 
   public static final String CLAIM_SCHEMA = "claim";
   @Autowired private JsonSchemaValidator jsonSchemaValidator;
