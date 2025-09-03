@@ -117,15 +117,16 @@ class SubmissionValidationContextTest {
 
       // Then
       List<ClaimValidationReport> expectedClaimReports =
+          List.of(new ClaimValidationReport("claimId1"), new ClaimValidationReport("claimId2"));
+      List<String> expectedSubmissionErrors =
           List.of(
-              new ClaimValidationReport("claimId1"),
-              new ClaimValidationReport("claimId2"));
-      List<String> expectedSubmissionErrors = List.of("A contract schedule with the provided area of law could not be found for this provider");
+              "A contract schedule with the provided area of law could not be found for this provider");
 
       assertThat(submissionValidationContext.getClaimReports()).hasSize(2);
       assertThat(submissionValidationContext.getClaimReports()).isEqualTo(expectedClaimReports);
       assertThat(submissionValidationContext.getSubmissionValidationErrors()).hasSize(1);
-      assertThat(submissionValidationContext.getSubmissionValidationErrors()).isEqualTo(expectedSubmissionErrors);
+      assertThat(submissionValidationContext.getSubmissionValidationErrors())
+          .isEqualTo(expectedSubmissionErrors);
     }
   }
 

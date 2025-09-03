@@ -33,8 +33,8 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
-import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.JsonSchemaValidator;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.provider.model.FirmOfficeContractAndScheduleDetails;
 import uk.gov.justice.laa.provider.model.FirmOfficeContractAndScheduleLine;
 import uk.gov.justice.laa.provider.model.ProviderFirmOfficeContractAndScheduleDto;
@@ -65,11 +65,11 @@ public class SubmissionValidationServiceTest {
         ClaimStatus claimStatus,
         boolean hasErrors,
         boolean expectsValidationError,
-        String displayName
-    ) {
+        String displayName) {
       // Given
       UUID submissionId = new UUID(0, 0);
-      UUID claimId = claimStatus != null ? new UUID(1, 1) : null; // only create claimId if there is a claim
+      UUID claimId =
+          claimStatus != null ? new UUID(1, 1) : null; // only create claimId if there is a claim
       String categoryOfLaw = "categoryOfLaw";
       String officeAccountNumber = "officeAccountNumber";
       String areaOfLaw = "areaOfLaw";
@@ -92,7 +92,15 @@ public class SubmissionValidationServiceTest {
         submissionValidationService.validateSubmission(submission);
 
         // Then
-        verifyCommonInteractions(submissionId, claimId, officeAccountNumber, areaOfLaw, claimFields, categoryOfLaw, submissionPatch, claimPatch);
+        verifyCommonInteractions(
+            submissionId,
+            claimId,
+            officeAccountNumber,
+            areaOfLaw,
+            claimFields,
+            categoryOfLaw,
+            submissionPatch,
+            claimPatch);
       } else {
         // When
         submissionValidationService.validateSubmission(submission);
@@ -102,16 +110,20 @@ public class SubmissionValidationServiceTest {
         // Determine which error to verify
         String errorDescription;
         if (isNilSubmission) {
-          errorDescription = ClaimValidationError.INVALID_NIL_SUBMISSION_CONTAINS_CLAIMS.getDescription();
+          errorDescription =
+              ClaimValidationError.INVALID_NIL_SUBMISSION_CONTAINS_CLAIMS.getDescription();
         } else {
-          errorDescription = ClaimValidationError.NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS.getDescription();
+          errorDescription =
+              ClaimValidationError.NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS.getDescription();
         }
-        verify(submissionValidationContext, times(1)).addSubmissionValidationError(errorDescription);
+        verify(submissionValidationContext, times(1))
+            .addSubmissionValidationError(errorDescription);
       }
     }
 
     @Test
-    @DisplayName("Adds submission validation error if submission not marked as nil submission contains no claims")
+    @DisplayName(
+        "Adds submission validation error if submission not marked as nil submission contains no claims")
     void throwsExceptionIfSubmissionNotMarkedAsNilSubmissionContainsNoClaims() {
       // Given
       UUID submissionId = new UUID(0, 0);
@@ -119,17 +131,24 @@ public class SubmissionValidationServiceTest {
       String categoryOfLaw = "categoryOfLaw";
       String officeAccountNumber = "officeAccountNumber";
 
-      GetSubmission200Response submission = getSubmission(
-          SubmissionStatus.READY_FOR_VALIDATION, submissionId, areaOfLaw, officeAccountNumber, false, null);
+      GetSubmission200Response submission =
+          getSubmission(
+              SubmissionStatus.READY_FOR_VALIDATION,
+              submissionId,
+              areaOfLaw,
+              officeAccountNumber,
+              false,
+              null);
 
-      mockProviderSchedules( officeAccountNumber, areaOfLaw, categoryOfLaw);
+      mockProviderSchedules(officeAccountNumber, areaOfLaw, categoryOfLaw);
 
       // When
       submissionValidationService.validateSubmission(submission);
 
       // Then
       verify(submissionValidationContext, times(1))
-          .addSubmissionValidationError(ClaimValidationError.NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS.getDescription());
+          .addSubmissionValidationError(
+              ClaimValidationError.NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS.getDescription());
     }
 
     @Test
@@ -181,14 +200,17 @@ public class SubmissionValidationServiceTest {
       submissionValidationService.validateSubmission(submission);
 
       // Then
-      verify(dataClaimsRestClient, times(1)).updateSubmission(submissionId.toString(), submissionPatch);
-      verify(submissionValidationContext, times(1)).addSubmissionValidationError(ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER.getDescription());
+      verify(dataClaimsRestClient, times(1))
+          .updateSubmission(submissionId.toString(), submissionPatch);
+      verify(submissionValidationContext, times(1))
+          .addSubmissionValidationError(
+              ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER.getDescription());
       verify(dataClaimsRestClient, times(1)).getClaim(submissionId, claimId);
-      verify(providerDetailsRestClient, times(1)).getProviderFirmSchedules(officeAccountNumber, areaOfLaw);
-      verify(claimValidationService, times(1)).validateClaims(List.of(claimFields), Collections.emptyList());
+      verify(providerDetailsRestClient, times(1))
+          .getProviderFirmSchedules(officeAccountNumber, areaOfLaw);
+      verify(claimValidationService, times(1))
+          .validateClaims(List.of(claimFields), Collections.emptyList());
       verify(dataClaimsRestClient, times(1)).updateClaim(submissionId, claimId, claimPatch);
-
-
     }
 
     @ParameterizedTest
@@ -200,8 +222,9 @@ public class SubmissionValidationServiceTest {
       String areaOfLaw = "areaOfLaw";
       String officeAccountNumber = "officeAccountNumber";
 
-      GetSubmission200Response submission = getSubmission(
-          submissionStatus, submissionId, areaOfLaw, officeAccountNumber, false, null);
+      GetSubmission200Response submission =
+          getSubmission(
+              submissionStatus, submissionId, areaOfLaw, officeAccountNumber, false, null);
 
       mockProviderSchedules(officeAccountNumber, areaOfLaw, "categoryOfLaw");
 
@@ -210,7 +233,8 @@ public class SubmissionValidationServiceTest {
 
       // Then
       verify(submissionValidationContext, times(1))
-          .addSubmissionValidationError(ClaimValidationError.NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS.getDescription());
+          .addSubmissionValidationError(
+              ClaimValidationError.NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS.getDescription());
     }
 
     static Stream<Arguments> invalidSubmissionStatusArguments() {
@@ -229,8 +253,8 @@ public class SubmissionValidationServiceTest {
       String areaOfLaw = "areaOfLaw";
       String officeAccountNumber = "officeAccountNumber";
 
-      GetSubmission200Response submission = getSubmission(
-          null, submissionId, areaOfLaw, officeAccountNumber, false, null);
+      GetSubmission200Response submission =
+          getSubmission(null, submissionId, areaOfLaw, officeAccountNumber, false, null);
 
       mockProviderSchedules(officeAccountNumber, areaOfLaw, "categoryOfLaw");
 
@@ -240,24 +264,38 @@ public class SubmissionValidationServiceTest {
       // Then
       verify(submissionValidationContext, times(1))
           .addSubmissionValidationError("Submission state is null");
-
     }
 
     private static Stream<Arguments> submissionValidationArguments() {
       return Stream.of(
           // isNilSubmission, claimStatus, hasErrors, expectsValidationError
-          Arguments.of(false, ClaimStatus.VALID, false, false, "Marks claims as valid if no validation errors found"),
-          Arguments.of(true, ClaimStatus.INVALID, true, true, "Marks claims as invalid if nil submission contains claims")
-      );
+          Arguments.of(
+              false,
+              ClaimStatus.VALID,
+              false,
+              false,
+              "Marks claims as valid if no validation errors found"),
+          Arguments.of(
+              true,
+              ClaimStatus.INVALID,
+              true,
+              true,
+              "Marks claims as invalid if nil submission contains claims"));
     }
 
-    private GetSubmission200Response buildSubmission(UUID submissionId, UUID claimId, boolean isNilSubmission) {
+    private GetSubmission200Response buildSubmission(
+        UUID submissionId, UUID claimId, boolean isNilSubmission) {
       GetSubmission200ResponseClaimsInner claim = new GetSubmission200ResponseClaimsInner();
       claim.setClaimId(claimId);
       claim.setStatus(StatusEnum.READY_TO_PROCESS);
 
       return getSubmission(
-          SubmissionStatus.READY_FOR_VALIDATION, submissionId, "areaOfLaw", "officeAccountNumber", isNilSubmission, List.of(claim));
+          SubmissionStatus.READY_FOR_VALIDATION,
+          submissionId,
+          "areaOfLaw",
+          "officeAccountNumber",
+          isNilSubmission,
+          List.of(claim));
     }
 
     private ClaimFields buildClaimFields(UUID claimId) {
@@ -272,14 +310,16 @@ public class SubmissionValidationServiceTest {
           .thenReturn(ResponseEntity.of(Optional.of(claimFields)));
     }
 
-    private void mockProviderSchedules(String officeAccountNumber, String areaOfLaw, String categoryOfLaw) {
+    private void mockProviderSchedules(
+        String officeAccountNumber, String areaOfLaw, String categoryOfLaw) {
       FirmOfficeContractAndScheduleLine scheduleLine = new FirmOfficeContractAndScheduleLine();
       scheduleLine.setCategoryOfLaw(categoryOfLaw);
 
       FirmOfficeContractAndScheduleDetails schedule = new FirmOfficeContractAndScheduleDetails();
       schedule.scheduleLines(List.of(scheduleLine));
 
-      ProviderFirmOfficeContractAndScheduleDto providerFirmResponse = new ProviderFirmOfficeContractAndScheduleDto();
+      ProviderFirmOfficeContractAndScheduleDto providerFirmResponse =
+          new ProviderFirmOfficeContractAndScheduleDto();
       providerFirmResponse.addSchedulesItem(schedule);
 
       when(providerDetailsRestClient.getProviderFirmSchedules(officeAccountNumber, areaOfLaw))
@@ -310,26 +350,32 @@ public class SubmissionValidationServiceTest {
         ClaimFields claimFields,
         String categoryOfLaw,
         SubmissionPatch submissionPatch,
-        ClaimPatch claimPatch
-    ) {
-      verify(dataClaimsRestClient, times(1)).updateSubmission(submissionId.toString(), submissionPatch);
+        ClaimPatch claimPatch) {
+      verify(dataClaimsRestClient, times(1))
+          .updateSubmission(submissionId.toString(), submissionPatch);
       verify(dataClaimsRestClient, times(1)).getClaim(submissionId, claimId);
-      verify(providerDetailsRestClient, times(1)).getProviderFirmSchedules(officeAccountNumber, areaOfLaw);
-      verify(claimValidationService, times(1)).validateClaims(List.of(claimFields), List.of(categoryOfLaw));
+      verify(providerDetailsRestClient, times(1))
+          .getProviderFirmSchedules(officeAccountNumber, areaOfLaw);
+      verify(claimValidationService, times(1))
+          .validateClaims(List.of(claimFields), List.of(categoryOfLaw));
       verify(dataClaimsRestClient, times(1)).updateClaim(submissionId, claimId, claimPatch);
     }
   }
 
   private static GetSubmission200Response getSubmission(
-      SubmissionStatus submissionStatus, UUID submissionId, String areaOfLaw,
-      String officeAccountNumber, boolean isNilSubmission, List<GetSubmission200ResponseClaimsInner> claims) {
+      SubmissionStatus submissionStatus,
+      UUID submissionId,
+      String areaOfLaw,
+      String officeAccountNumber,
+      boolean isNilSubmission,
+      List<GetSubmission200ResponseClaimsInner> claims) {
     return GetSubmission200Response.builder()
-            .submissionId(submissionId)
-            .areaOfLaw(areaOfLaw)
-            .officeAccountNumber(officeAccountNumber)
-            .status(submissionStatus)
-            .isNilSubmission(isNilSubmission)
-            .claims(claims)
-            .build();
+        .submissionId(submissionId)
+        .areaOfLaw(areaOfLaw)
+        .officeAccountNumber(officeAccountNumber)
+        .status(submissionStatus)
+        .isNilSubmission(isNilSubmission)
+        .claims(claims)
+        .build();
   }
 }

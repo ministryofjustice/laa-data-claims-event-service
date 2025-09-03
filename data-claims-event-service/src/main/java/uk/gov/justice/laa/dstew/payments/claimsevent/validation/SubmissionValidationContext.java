@@ -20,7 +20,7 @@ import org.springframework.web.context.annotation.RequestScope;
 @NoArgsConstructor
 public class SubmissionValidationContext {
 
-  private List<ClaimValidationReport> claimReports  = new ArrayList<>();
+  private List<ClaimValidationReport> claimReports = new ArrayList<>();
   private List<String> submissionValidationErrors = new ArrayList<>();
 
   /**
@@ -42,7 +42,8 @@ public class SubmissionValidationContext {
   }
 
   /**
-   * Add an error to the report (Extracts the error message and passes it on to the overloaded method).
+   * Add an error to the report (Extracts the error message and passes it on to the overloaded
+   * method).
    *
    * @param claimId the ID of the claim for which to report an error
    * @param error the claim validation error
@@ -69,9 +70,9 @@ public class SubmissionValidationContext {
   }
 
   /**
-   * Add a list of claim errors to the validation context. If a report has not yet been created for the
-   * claim, creates a new claim report and adds the errors. Otherwise, the errors are added to the
-   * existing claim report.
+   * Add a list of claim errors to the validation context. If a report has not yet been created for
+   * the claim, creates a new claim report and adds the errors. Otherwise, the errors are added to
+   * the existing claim report.
    *
    * @param claimId the ID of the claim for which to report an error
    * @param errors the list of claim validation errors
@@ -152,6 +153,7 @@ public class SubmissionValidationContext {
    * @return true if any claim has a validation error, false otherwise.
    */
   public boolean hasErrors() {
-    return !submissionValidationErrors.isEmpty() || claimReports.stream().anyMatch(ClaimValidationReport::hasErrors);
+    return !submissionValidationErrors.isEmpty()
+        || claimReports.stream().anyMatch(ClaimValidationReport::hasErrors);
   }
 }

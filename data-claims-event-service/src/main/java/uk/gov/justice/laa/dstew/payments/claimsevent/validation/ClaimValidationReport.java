@@ -44,8 +44,8 @@ public class ClaimValidationReport {
   }
 
   /**
-   * Constructs a new instance of {@code ClaimValidationReport} with the specified claim ID
-   * and a collection of validation error messages.
+   * Constructs a new instance of {@code ClaimValidationReport} with the specified claim ID and a
+   * collection of validation error messages.
    *
    * @param claimId the unique identifier for the claim
    * @param errors a collection of validation error messages associated with the claim

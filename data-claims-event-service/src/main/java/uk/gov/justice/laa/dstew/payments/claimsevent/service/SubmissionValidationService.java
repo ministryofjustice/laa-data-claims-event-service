@@ -53,7 +53,8 @@ public class SubmissionValidationService {
 
     verifySubmissionStatus(submissionId, submission.getStatus());
 
-    submissionValidationContext.addSubmissionValidationErrors(jsonSchemaValidator.validate("submission", submission));
+    submissionValidationContext.addSubmissionValidationErrors(
+        jsonSchemaValidator.validate("submission", submission));
 
     List<ClaimFields> claims = getReadyToProcessClaims(submission);
 
@@ -98,7 +99,8 @@ public class SubmissionValidationService {
             "Submission {} cannot be validated in its current state: {}",
             submissionId,
             currentStatus);
-        submissionValidationContext.addSubmissionValidationError("Submission cannot be validated in state " + currentStatus);
+        submissionValidationContext.addSubmissionValidationError(
+            "Submission cannot be validated in state " + currentStatus);
       }
     }
   }

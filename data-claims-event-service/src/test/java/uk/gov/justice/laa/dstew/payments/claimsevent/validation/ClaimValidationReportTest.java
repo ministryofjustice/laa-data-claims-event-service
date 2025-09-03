@@ -31,7 +31,8 @@ class ClaimValidationReportTest {
       assertThat(claimValidationReport.getErrors()).hasSize(2);
       assertThat(claimValidationReport.getErrors())
           .contains(
-              ClaimValidationError.INVALID_CATEGORY_OF_LAW_NOT_AUTHORISED_FOR_PROVIDER.getDescription(),
+              ClaimValidationError.INVALID_CATEGORY_OF_LAW_NOT_AUTHORISED_FOR_PROVIDER
+                  .getDescription(),
               ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER.getDescription());
     }
   }
@@ -59,7 +60,8 @@ class ClaimValidationReportTest {
       assertThat(claimValidationReport.getErrors()).hasSize(3);
       assertThat(claimValidationReport.getErrors())
           .contains(
-              ClaimValidationError.INVALID_CATEGORY_OF_LAW_NOT_AUTHORISED_FOR_PROVIDER.getDescription(),
+              ClaimValidationError.INVALID_CATEGORY_OF_LAW_NOT_AUTHORISED_FOR_PROVIDER
+                  .getDescription(),
               ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER.getDescription(),
               ClaimValidationError.INVALID_CATEGORY_OF_LAW_AND_FEE_CODE.getDescription());
     }

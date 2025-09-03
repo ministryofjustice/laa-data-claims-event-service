@@ -65,8 +65,10 @@ class ClaimValidationServiceTest {
 
     @Test
     void validateCaseStartDate() {
-      ClaimFields claim1 = new ClaimFields().id("claim1").feeCode("feeCode1").caseStartDate("34/13/2003");
-      ClaimFields claim2 = new ClaimFields().id("claim2").feeCode("feeCode2").caseStartDate("03/01/1993");
+      ClaimFields claim1 =
+          new ClaimFields().id("claim1").feeCode("feeCode1").caseStartDate("34/13/2003");
+      ClaimFields claim2 =
+          new ClaimFields().id("claim2").feeCode("feeCode2").caseStartDate("03/01/1993");
       List<ClaimFields> claims = List.of(claim1, claim2);
 
       List<String> providerCategoriesOfLaw = List.of("categoryOfLaw1");
@@ -79,11 +81,11 @@ class ClaimValidationServiceTest {
 
       // Then
       verify(submissionValidationContext, times(1))
-          .addClaimError ("claim1", "Invalid date value provided for Case Start Date: 34/13/2003");
+          .addClaimError("claim1", "Invalid date value provided for Case Start Date: 34/13/2003");
       verify(submissionValidationContext, times(1))
-          .addClaimError ("claim2", "Invalid date value for Case Start Date (Must be between 01/01/1995 and today): 03/01/1993");
-
+          .addClaimError(
+              "claim2",
+              "Invalid date value for Case Start Date (Must be between 01/01/1995 and today): 03/01/1993");
     }
-
   }
 }

@@ -39,24 +39,23 @@ public class ClaimValidationService {
   }
 
   /**
-   * Validates the provided claim by performing various checks such as:
-   *    - JSON schema validation ,
-   *    - field level business validations (e.g. date in the past)
-   *    - further validations that use external APIs such as
-   *        - category of law checks
-   *        - duplicate claim checks
-   *        - fee calculations.
-   * Any errors encountered during the validation process are added to the submission validation context.
+   * Validates the provided claim by performing various checks such as: - JSON schema validation , -
+   * field level business validations (e.g. date in the past) - further validations that use
+   * external APIs such as - category of law checks - duplicate claim checks - fee calculations. Any
+   * errors encountered during the validation process are added to the submission validation
+   * context.
    *
    * @param claim the claim object to validate
-   * @param categoryOfLawLookup a map containing category of law codes and their corresponding descriptions
+   * @param categoryOfLawLookup a map containing category of law codes and their corresponding
+   *     descriptions
    * @param providerCategoriesOfLaw a list of categories of law applicable to the provider
    */
   private void validateClaim(
       ClaimFields claim,
       Map<String, CategoryOfLawResult> categoryOfLawLookup,
       List<String> providerCategoriesOfLaw) {
-    submissionValidationContext.addClaimErrors(claim.getId(), jsonSchemaValidator.validate("claim", claim));
+    submissionValidationContext.addClaimErrors(
+        claim.getId(), jsonSchemaValidator.validate("claim", claim));
 
     validateUniqueFileNumber(claim);
     checkDateInPast(claim, "Case Start Date", claim.getCaseStartDate());
@@ -68,10 +67,9 @@ public class ClaimValidationService {
   }
 
   /**
-   * Validates the unique file number of the given claim to ensure it
-   * contains a valid and non-future date in the format DDMMYY. If the
-   * date is invalid or in the future, an error is added to the
-   * submission validation context.
+   * Validates the unique file number of the given claim to ensure it contains a valid and
+   * non-future date in the format DDMMYY. If the date is invalid or in the future, an error is
+   * added to the submission validation context.
    *
    * @param claim the claim object containing the unique file number to be validated
    */
@@ -83,19 +81,20 @@ public class ClaimValidationService {
       try {
         LocalDate date = LocalDate.parse(datePart, formatter);
         if (!date.isBefore(LocalDate.now())) {
-          submissionValidationContext.addClaimError(claim.getId(),
-              ClaimValidationError.INVALID_DATE_IN_UNIQUE_FILE_NUMBER);
+          submissionValidationContext.addClaimError(
+              claim.getId(), ClaimValidationError.INVALID_DATE_IN_UNIQUE_FILE_NUMBER);
         }
       } catch (DateTimeParseException e) {
-        submissionValidationContext.addClaimError(claim.getId(),
-            ClaimValidationError.INVALID_DATE_IN_UNIQUE_FILE_NUMBER);
+        submissionValidationContext.addClaimError(
+            claim.getId(), ClaimValidationError.INVALID_DATE_IN_UNIQUE_FILE_NUMBER);
       }
     }
   }
 
   /**
-   * Validates whether the provided date value is within the valid range (01/01/1995 to today's date).
-   * If the date is invalid or falls outside the range, an error is added to the submission validation context.
+   * Validates whether the provided date value is within the valid range (01/01/1995 to today's
+   * date). If the date is invalid or falls outside the range, an error is added to the submission
+   * validation context.
    *
    * @param claim The claim object associated with the date being checked.
    * @param fieldName The name of the field associated with the date being validated.
@@ -108,15 +107,17 @@ public class ClaimValidationService {
       try {
         LocalDate date = LocalDate.parse(dateValueToCheck, formatter);
         if (date.isBefore(minDate) || date.isAfter(LocalDate.now())) {
-          submissionValidationContext.addClaimError(claim.getId(),
-              String.format("Invalid date value for %s (Must be between 01/01/1995 and today): %s",
+          submissionValidationContext.addClaimError(
+              claim.getId(),
+              String.format(
+                  "Invalid date value for %s (Must be between 01/01/1995 and today): %s",
                   fieldName, dateValueToCheck));
         }
       } catch (DateTimeParseException e) {
-        submissionValidationContext.addClaimError(claim.getId(),
+        submissionValidationContext.addClaimError(
+            claim.getId(),
             String.format("Invalid date value provided for %s: %s", fieldName, dateValueToCheck));
       }
     }
   }
-
 }

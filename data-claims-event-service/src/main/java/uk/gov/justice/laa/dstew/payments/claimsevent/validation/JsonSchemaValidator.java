@@ -9,9 +9,7 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-/**
- * Class responsible for validating objects against predefined JSON schemas.
- */
+/** Class responsible for validating objects against predefined JSON schemas. */
 @Component
 @RequiredArgsConstructor
 public class JsonSchemaValidator {
@@ -34,10 +32,7 @@ public class JsonSchemaValidator {
       throw new IllegalArgumentException("No schema registered for name: " + schemaName);
     }
     JsonNode data = mapper.valueToTree(object);
-    return schema.validate(data)
-        .stream()
-        .map(vm -> enrichValidationMessage(data, vm))
-        .toList();
+    return schema.validate(data).stream().map(vm -> enrichValidationMessage(data, vm)).toList();
   }
 
   private String enrichValidationMessage(JsonNode data, ValidationMessage vm) {
@@ -46,9 +41,8 @@ public class JsonSchemaValidator {
     JsonNode valueNode = data.get(field);
     String value = valueNode == null || valueNode.isNull() ? "null" : valueNode.asText();
 
-    return String.format("%s: %s (provided value: %s)",
-        field,
-        message.substring(message.indexOf(":") + 1).trim(),
-        value);
+    return String.format(
+        "%s: %s (provided value: %s)",
+        field, message.substring(message.indexOf(':') + 1).trim(), value);
   }
 }

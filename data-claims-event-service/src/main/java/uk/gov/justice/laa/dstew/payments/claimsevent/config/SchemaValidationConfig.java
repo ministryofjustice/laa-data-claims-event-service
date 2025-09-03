@@ -13,11 +13,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Configuration class for setting up and managing JSON Schema validation.
- * This class loads JSON Schemas, manages their lifecycle, and provides them as beans for use
- * across the application.
- * The configuration relies on the Jackson ObjectMapper for deserialization of schema JSON files,
- * with null values excluded during serialization by default.
+ * Configuration class for setting up and managing JSON Schema validation. This class loads JSON
+ * Schemas, manages their lifecycle, and provides them as beans for use across the application. The
+ * configuration relies on the Jackson ObjectMapper for deserialization of schema JSON files, with
+ * null values excluded during serialization by default.
  */
 @Configuration
 public class SchemaValidationConfig {
@@ -41,11 +40,11 @@ public class SchemaValidationConfig {
   }
 
   /**
-   * Provides a map of JSON Schemas to be used for validation purposes.
-   * Schemas are loaded as beans and can be accessed by their identifiers.
+   * Provides a map of JSON Schemas to be used for validation purposes. Schemas are loaded as beans
+   * and can be accessed by their identifiers.
    *
-   * @return A map where the keys are schema identifiers (e.g., "submission", "claim")
-   *         and the values are instances of {@link JsonSchema} representing the loaded schemas.
+   * @return A map where the keys are schema identifiers (e.g., "submission", "claim") and the
+   *     values are instances of {@link JsonSchema} representing the loaded schemas.
    * @throws IOException if an error occurs while loading the JSON Schemas.
    */
   @Bean
@@ -55,7 +54,7 @@ public class SchemaValidationConfig {
         "claim", claimSchema()
 
         // Add more schemas here if needed
-    );
+        );
   }
 
   public JsonSchema submissionSchema() throws IOException {
@@ -65,5 +64,4 @@ public class SchemaValidationConfig {
   public JsonSchema claimSchema() throws IOException {
     return loadSchema("/schemas/claim-fields.schema.json");
   }
-
 }
