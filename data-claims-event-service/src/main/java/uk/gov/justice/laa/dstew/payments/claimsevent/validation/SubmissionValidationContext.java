@@ -48,7 +48,7 @@ public class SubmissionValidationContext {
    * @param error the claim validation error
    */
   public void addClaimError(String claimId, ClaimValidationError error) {
-    addClaimError(claimId, error.getMessage());
+    addClaimError(claimId, error.getDescription());
   }
 
   /**

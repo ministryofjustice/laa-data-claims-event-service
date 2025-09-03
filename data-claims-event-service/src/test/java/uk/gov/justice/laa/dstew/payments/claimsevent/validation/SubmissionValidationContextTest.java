@@ -113,7 +113,7 @@ class SubmissionValidationContextTest {
 
       // When
       submissionValidationContext.addSubmissionValidationError(
-          ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER.getMessage());
+          ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER.getDescription());
 
       // Then
       List<ClaimValidationReport> expectedClaimReports =

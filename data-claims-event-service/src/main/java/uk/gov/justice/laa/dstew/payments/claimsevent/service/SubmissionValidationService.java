@@ -17,7 +17,6 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
-import uk.gov.justice.laa.dstew.payments.claimsevent.exception.SubmissionValidationException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
@@ -45,7 +44,7 @@ public class SubmissionValidationService {
   /**
    * Validates a claim submission inside the provided submissionResponse.
    *
-   * @param submissionResponse the claim submissionResponse containing the submission to validate
+   * @param submission the submission to validate
    */
   public void validateSubmission(GetSubmission200Response submission) {
     UUID submissionId = submission.getSubmissionId();
@@ -54,13 +53,13 @@ public class SubmissionValidationService {
 
     verifySubmissionStatus(submissionId, submission.getStatus());
 
-    submissionValidationContext.addSubmissionValidationErrors(jsonSchemaValidator.validate("submission", submissionResponse.getSubmission()));
+    submissionValidationContext.addSubmissionValidationErrors(jsonSchemaValidator.validate("submission", submission));
 
-    List<ClaimFields> claims = getReadyToProcessClaims(submissionResponse);
+    List<ClaimFields> claims = getReadyToProcessClaims(submission);
 
     initialiseValidationContext(claims);
 
-    validateNilSubmission(submissionResponse);
+    validateNilSubmission(submission);
 
     String officeCode = submission.getOfficeAccountNumber();
     String areaOfLaw = submission.getAreaOfLaw();
@@ -92,15 +91,14 @@ public class SubmissionValidationService {
       }
       case null -> {
         log.debug("Submission {} state is null", submissionId);
-        throw new SubmissionValidationException("Submission state is null");
+        submissionValidationContext.addSubmissionValidationError("Submission state is null");
       }
       default -> {
         log.debug(
             "Submission {} cannot be validated in its current state: {}",
             submissionId,
             currentStatus);
-        throw new SubmissionValidationException(
-            "Submission cannot be validated in state " + currentStatus);
+        submissionValidationContext.addSubmissionValidationError("Submission cannot be validated in state " + currentStatus);
       }
     }
   }
@@ -115,14 +113,13 @@ public class SubmissionValidationService {
     log.debug("Validating nil submission for submission {}", submission.getSubmissionId());
     if (Boolean.TRUE.equals(submission.getIsNilSubmission())) {
       if (submission.getClaims() != null && !submission.getClaims().isEmpty()) {
-        submissionValidationContext.addToAllClaimReports(
-            ClaimValidationError.INVALID_NIL_SUBMISSION_CONTAINS_CLAIMS);
+        submissionValidationContext.addSubmissionValidationError(
+            ClaimValidationError.INVALID_NIL_SUBMISSION_CONTAINS_CLAIMS.getDescription());
       }
     } else if (Boolean.FALSE.equals(submission.getIsNilSubmission())&&
-        (submissionResponse.getClaims() == null || submissionResponse.getClaims().isEmpty())) {
+        (submission.getClaims() == null || submission.getClaims().isEmpty())) {
       submissionValidationContext.addSubmissionValidationError(
-          ClaimValidationError.NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS.getMessage());
-    }
+          ClaimValidationError.NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS.getDescription());
     }
     log.debug("Nil submission completed for submission {}", submission.getSubmissionId());
   }
@@ -144,7 +141,7 @@ public class SubmissionValidationService {
     log.debug("Validating provider contract for submission {}", submissionId);
     if (providerCategoriesOfLaw.isEmpty()) {
       submissionValidationContext.addSubmissionValidationError(
-          ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER.getMessage());
+          ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER.getDescription());
     }
   }
 
@@ -211,7 +208,6 @@ public class SubmissionValidationService {
     return submissionValidationContext.getClaimReport(claimId).stream()
         .map(ClaimValidationReport::getErrors)
         .flatMap(List::stream)
-        .map(ClaimValidationError::getDescription)
         .toList();
   }
 

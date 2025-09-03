@@ -40,7 +40,7 @@ public class ClaimValidationReport {
   public ClaimValidationReport(String claimId, List<ClaimValidationError> errors) {
     this.claimId = claimId;
     this.errors = new ArrayList<>();
-    errors.forEach(e -> this.errors.add(e.getMessage()));
+    errors.forEach(e -> this.errors.add(e.getDescription()));
   }
 
   public ClaimValidationReport(String claimId, Collection<String> errors) {
