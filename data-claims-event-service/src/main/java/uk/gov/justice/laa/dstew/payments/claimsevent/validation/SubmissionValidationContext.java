@@ -42,7 +42,7 @@ public class SubmissionValidationContext {
   }
 
   /**
-   * Add an error to the report (Extracts the error message and passes it on to the overloaded method)
+   * Add an error to the report (Extracts the error message and passes it on to the overloaded method).
    *
    * @param claimId the ID of the claim for which to report an error
    * @param error the claim validation error
@@ -81,7 +81,7 @@ public class SubmissionValidationContext {
         .filter(claimReport -> claimReport.getClaimId().equals(claimId))
         .findFirst()
         .ifPresentOrElse(
-            claimReport -> claimReport.addErrorsStrings (errors),
+            claimReport -> claimReport.addErrorsStrings(errors),
             () -> claimReports.add(new ClaimValidationReport(claimId, errors)));
   }
 

@@ -43,6 +43,13 @@ public class ClaimValidationReport {
     errors.forEach(e -> this.errors.add(e.getDescription()));
   }
 
+  /**
+   * Constructs a new instance of {@code ClaimValidationReport} with the specified claim ID
+   * and a collection of validation error messages.
+   *
+   * @param claimId the unique identifier for the claim
+   * @param errors a collection of validation error messages associated with the claim
+   */
   public ClaimValidationReport(String claimId, Collection<String> errors) {
     this.claimId = claimId;
     this.errors = new ArrayList<>(errors);
@@ -58,12 +65,12 @@ public class ClaimValidationReport {
     errors.add(error.getDescription());
   }
 
-  public void addErrors(List<ClaimValidationError> errorList) {
-    errorList.forEach(e -> errors.add(e.getDescription()));
-  }
-
   public void addError(String error) {
     errors.add(error);
+  }
+
+  public void addErrors(List<ClaimValidationError> errorList) {
+    errorList.forEach(e -> errors.add(e.getDescription()));
   }
 
   public void addErrorsStrings(List<String> errorList) {

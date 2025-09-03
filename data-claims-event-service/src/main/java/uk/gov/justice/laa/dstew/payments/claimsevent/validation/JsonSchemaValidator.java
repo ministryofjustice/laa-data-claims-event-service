@@ -4,12 +4,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.ValidationMessage;
+import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.Map;
-
+/**
+ * Class responsible for validating objects against predefined JSON schemas.
+ */
 @Component
 @RequiredArgsConstructor
 public class JsonSchemaValidator {
@@ -21,6 +23,7 @@ public class JsonSchemaValidator {
 
   /**
    * Validate an object against the schema identified by schemaName.
+   *
    * @param schemaName key in the schemas map
    * @param object any object that can be converted to JSON
    * @return list of enriched validation messages

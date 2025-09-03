@@ -40,6 +40,14 @@ public class SchemaValidationConfig {
     }
   }
 
+  /**
+   * Provides a map of JSON Schemas to be used for validation purposes.
+   * Schemas are loaded as beans and can be accessed by their identifiers.
+   *
+   * @return A map where the keys are schema identifiers (e.g., "submission", "claim")
+   *         and the values are instances of {@link JsonSchema} representing the loaded schemas.
+   * @throws IOException if an error occurs while loading the JSON Schemas.
+   */
   @Bean
   public Map<String, JsonSchema> jsonSchemas() throws IOException {
     return Map.of(

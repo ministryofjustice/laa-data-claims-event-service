@@ -19,8 +19,8 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
-import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.JsonSchemaValidator;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.provider.model.FirmOfficeContractAndScheduleDetails;
 import uk.gov.justice.laa.provider.model.FirmOfficeContractAndScheduleLine;
 import uk.gov.justice.laa.provider.model.ProviderFirmOfficeContractAndScheduleDto;
@@ -116,8 +116,8 @@ public class SubmissionValidationService {
         submissionValidationContext.addSubmissionValidationError(
             ClaimValidationError.INVALID_NIL_SUBMISSION_CONTAINS_CLAIMS.getDescription());
       }
-    } else if (Boolean.FALSE.equals(submission.getIsNilSubmission())&&
-        (submission.getClaims() == null || submission.getClaims().isEmpty())) {
+    } else if (Boolean.FALSE.equals(submission.getIsNilSubmission())
+        && (submission.getClaims() == null || submission.getClaims().isEmpty())) {
       submissionValidationContext.addSubmissionValidationError(
           ClaimValidationError.NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS.getDescription());
     }
