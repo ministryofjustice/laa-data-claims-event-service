@@ -14,7 +14,11 @@ public enum ClaimValidationError {
   INVALID_NIL_SUBMISSION_CONTAINS_CLAIMS(
       "Submission is marked as nil submission, but contains claims"),
   INVALID_FEE_CALCULATION_VALIDATION_FAILED(
-      "A validation error occurred when attempting to calculate the fee for this claim");
+      "A validation error occurred when attempting to calculate the fee for this claim"),
+  INVALID_CLAIM_HAS_DUPLICATE_IN_SUBMISSION(
+      "A duplicate claim was found within the same submission"),
+  INVALID_CLAIM_HAS_DUPLICATE_IN_ANOTHER_SUBMISSION(
+      "A duplicate claim was found in another submission");
 
   final String description;
 
