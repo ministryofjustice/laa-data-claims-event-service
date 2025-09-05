@@ -2,7 +2,7 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimFields;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.fee.scheme.model.BoltOnType;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationRequest;
 
@@ -40,7 +40,7 @@ public interface FeeSchemeMapper {
   @Mapping(target = "ufn", source = "uniqueFileNumber")
   @Mapping(target = "numberOfMediationSessions", source = "mediationSessionsCount")
   @Mapping(target = "jrFormFilling", source = "jrFormFillingAmount")
-  FeeCalculationRequest mapToFeeCalculationRequest(ClaimFields claim);
+  FeeCalculationRequest mapToFeeCalculationRequest(ClaimResponse claim);
 
   /**
    * Map claim fields to an object holding the bolt ons.
@@ -55,5 +55,5 @@ public interface FeeSchemeMapper {
   @Mapping(target = "boltOnCrmhTelephone", source = "cmrhTelephoneCount")
   @Mapping(target = "boltOnAdditionalTravel", ignore = true) // TODO: Missing from ClaimFields?
   @Mapping(target = "boltOnHomeOfficeInterview", source = "hoInterview")
-  BoltOnType mapToBoltOnType(ClaimFields claim);
+  BoltOnType mapToBoltOnType(ClaimResponse claim);
 }
