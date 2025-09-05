@@ -1,0 +1,10 @@
+replicas: 1
+ingress:
+  externalRoute:
+    enabled: true
+  whitelist:
+    includeNonProdAwsWorkspace: true
+    includeLondonNonProdNatGatewayWorkspaces: true
+    includeProdAwsWorkspace: false
+    includeLondonProdNatGatewayWorkspaces: false
+    includePrismaAccess: true

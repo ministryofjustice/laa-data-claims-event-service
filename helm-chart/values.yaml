@@ -1,0 +1,74 @@
+clusterDomain: apps.live.cloud-platform.service.justice.gov.uk
+
+image:
+  repository: ""
+
+ports:
+  protocol: TCP
+  port: 80
+  targetPort: 8085
+
+management:
+  enabled: true
+  protocol: TCP
+  port: 8081
+  targetPort: 8081
+
+securityContext:
+  fsGroup: 1000
+  runAsUser: 1000
+  runAsGroup: 1000
+
+ingress:
+  externalRoute:
+    enabled: true
+    hostname:
+      enabled: false
+
+probe:
+  enabled: true
+
+stickiness:
+  enabled: true
+
+env:
+  - name: AWS_REGION
+    valueFrom:
+      secretKeyRef:
+        name: laa-data-claims-event-service-secrets
+        key: AWS_REGION
+  - name: PROVIDER_DETAILS_API_HOSTNAME
+    valueFrom:
+      secretKeyRef:
+        name: laa-data-claims-event-service-secrets
+        key: PROVIDER_DETAILS_API_HOSTNAME
+  - name: PROVIDER_DETAILS_API_ACCESS_TOKEN
+    valueFrom:
+      secretKeyRef:
+        name: laa-data-claims-event-service-secrets
+        key: PROVIDER_DETAILS_API_ACCESS_TOKEN
+  - name: CLAIMS_API_HOSTNAME
+    valueFrom:
+      secretKeyRef:
+        name: laa-data-claims-event-service-secrets
+        key: CLAIMS_API_HOSTNAME
+  - name: CLAIMS_API_ACCESS_TOKEN
+    valueFrom:
+      secretKeyRef:
+        name: laa-data-claims-event-service-secrets
+        key: CLAIMS_API_ACCESS_TOKEN
+  - name: FEE_SCHEME_PLATFORM_API_URL
+    valueFrom:
+      secretKeyRef:
+        name: laa-data-claims-event-service-secrets
+        key: FEE_SCHEME_PLATFORM_API_URL
+  - name: FEE_SCHEME_PLATFORM_API_ACCESS_TOKEN
+    valueFrom:
+      secretKeyRef:
+        name: laa-data-claims-event-service-secrets
+        key: FEE_SCHEME_PLATFORM_API_ACCESS_TOKEN
+  - name: BULK_CLAIM_QUEUE_NAME
+    valueFrom:
+      secretKeyRef:
+        name: laa-data-claims-event-service-secrets
+        key: BULK_CLAIM_QUEUE_NAME

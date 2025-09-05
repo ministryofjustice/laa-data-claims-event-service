@@ -1,0 +1,257 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-{{ .Chart.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Release.Name }}-{{ .Chart.Name }}
+    appVersion: {{ .Chart.AppVersion }}
+spec:
+  replicas: {{ .Values.replicas | default 1 }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Release.Name }}-{{ .Chart.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-{{ .Chart.Name }}-pod
+        app.kubernetes.io/name: {{ .Release.Name }}-{{ .Chart.Name }}
+    spec:
+      serviceAccountName: {{ .Release.Namespace }}-service-account
+      {{- if .Values.securityContext }}
+      securityContext:
+        fsGroup: {{ .Values.securityContext.fsGroup }}
+        runAsUser: {{ .Values.securityContext.runAsUser }}
+        runAsGroup: {{ .Values.securityContext.runAsGroup }}
+        runAsNonRoot: true
+      {{- end }}
+      containers:
+        - name: {{ .Release.Name }}-{{ .Chart.Name }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          image: {{ required "image repository must be provided." .Values.image.repository }}:{{ .Chart.AppVersion }}
+          imagePullPolicy: IfNotPresent
+          {{- if .Values.command }}
+          command: [ '{{ .Values.command }}' ]
+          {{- end }}
+          {{- if .Values.resources }}
+          resources:
+            {{- if .Values.resources.limits }}
+            limits:
+              {{- if .Values.resources.limits.memory }}
+              memory: {{ .Values.resources.limits.memory }}
+              {{- end }}
+              {{- if .Values.resources.limits.cpu }}
+              cpu: {{ .Values.resources.limits.cpu }}
+              {{- end }}
+            {{- end }}
+            {{- if .Values.resources.requests }}
+            requests:
+              {{- if .Values.resources.requests.memory }}
+              memory: {{ .Values.resources.requests.memory }}
+              {{- end }}
+              {{- if .Values.resources.requests.cpu }}
+              cpu: {{ .Values.resources.requests.cpu }}
+              {{- end }}
+            {{- end }}
+          {{- end }}
+          ports:
+            {{- if .Values.ports }}
+            - containerPort: {{ .Values.ports.targetPort }}
+            {{- end }}
+          {{- if .Values.probe.enabled }}
+          livenessProbe:
+            httpGet:
+              {{- if (((.Values.probe).liveness).endpoint) }}
+              path: {{ .Values.probe.liveness.endpoint }}
+              {{- else }}
+              path: "/actuator/health/liveness"
+              {{- end }}
+              {{- if ((.Values.management).port) }}
+              port: {{ .Values.management.port }}
+              {{- end }}
+            {{- if (((.Values.probe).liveness).timeoutSeconds) }}
+            timeoutSeconds: {{ .Values.probe.liveness.timeoutSeconds }}
+            {{- else }}
+            timeoutSeconds: 1
+            {{- end }}
+            {{- if (((.Values.probe).liveness).failureThreshold) }}
+            failureThreshold: {{ .Values.probe.liveness.failureThreshold }}
+            {{- else }}
+            failureThreshold: 4
+            {{- end }}
+            {{- if (((.Values.probe).liveness).successThreshold) }}
+            successThreshold: {{ .Values.probe.liveness.successThreshold }}
+            {{- else }}
+            successThreshold: 1
+            {{- end }}
+            {{- if (((.Values.probe).liveness).periodSeconds) }}
+            periodSeconds: {{ .Values.probe.liveness.periodSeconds }}
+            {{- else }}
+            periodSeconds: 10
+            {{- end }}
+            {{- if (((.Values.probe).liveness).initialDelaySeconds) }}
+            initialDelaySeconds: {{ .Values.probe.liveness.initialDelaySeconds }}
+            {{- else }}
+            initialDelaySeconds: 10
+            {{- end }}
+          readinessProbe:
+            httpGet:
+              {{- if (((.Values.probe).readiness).endpoint) }}
+              path: {{ .Values.probe.readiness.endpoint }}
+              {{- else }}
+              path: "/actuator/health/readiness"
+              {{- end }}
+              {{- if ((.Values.management).port) }}
+              port: {{ .Values.management.port }}
+              {{- end }}
+            {{- if (((.Values.probe).readiness).timeoutSeconds) }}
+            timeoutSeconds: {{ .Values.probe.readiness.timeoutSeconds }}
+            {{- else }}
+            timeoutSeconds: 1
+            {{- end }}
+            {{- if (((.Values.probe).readiness).failureThreshold) }}
+            failureThreshold: {{ .Values.probe.readiness.failureThreshold }}
+            {{- else }}
+            failureThreshold: 2
+            {{- end }}
+            {{- if (((.Values.probe).readiness).successThreshold) }}
+            successThreshold: {{ .Values.probe.readiness.successThreshold }}
+            {{- else }}
+            successThreshold: 1
+            {{- end }}
+            {{- if (((.Values.probe).readiness).periodSeconds) }}
+            periodSeconds: {{ .Values.probe.readiness.periodSeconds }}
+            {{- else }}
+            periodSeconds: 5
+            {{- end }}
+            {{- if (((.Values.probe).readiness).initialDelaySeconds) }}
+            initialDelaySeconds: {{ .Values.probe.readiness.initialDelaySeconds }}
+            {{- else }}
+            initialDelaySeconds: 10
+            {{- end }}
+          {{- end }}
+          env:
+          {{- if .Values.env }}
+          {{- range .Values.env }}
+          - name: {{ .name }}
+            {{- if .value }}
+            value: {{ tpl .value $ | quote }}
+            {{- end }}
+            {{- if .valueFrom }}
+            valueFrom:
+              {{- if .valueFrom.secretKeyRef }}
+              secretKeyRef:
+                name: {{ tpl .valueFrom.secretKeyRef.name $ | quote }}
+                key: {{ .valueFrom.secretKeyRef.key }}
+              {{- end }}
+            {{- end }}
+          {{- end }}
+          {{- end }}
+          {{ if .Values.extraEnvVars }}
+          {{- range .Values.extraEnvVars }}
+          - name: {{ .name }}
+            {{- if .value }}
+            value: {{ tpl .value $ | quote }}
+            {{- end }}
+            {{- if .valueFrom }}
+            valueFrom:
+              {{- if .valueFrom.secretKeyRef }}
+              secretKeyRef:
+                name: {{ tpl .valueFrom.secretKeyRef.name $ | quote }}
+                key: {{ .valueFrom.secretKeyRef.key }}
+              {{- end }}
+            {{- end }}
+          {{- end }}
+          {{- end }}
+---
+{{- if .Values.ingress }}
+{{- if eq .Values.ingress.externalRoute.enabled true }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Release.Name }}-{{ .Chart.Name }}
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    {{- if hasKey .Values.ingress "whitelist" }}
+    nginx.ingress.kubernetes.io/whitelist-source-range: {{ include "laa.cidr-ranges.dynamic" . | quote }}
+    {{- end }}
+    {{- if and (hasKey .Values "stickiness") (eq .Values.stickiness.enabled true) }}
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-name: "route"
+    nginx.ingress.kubernetes.io/affinity-mode: "persistent"
+    {{- end }}
+    external-dns.alpha.kubernetes.io/set-identifier: {{ .Release.Name }}-{{ .Chart.Name }}-{{ .Release.Namespace }}-green
+    external-dns.alpha.kubernetes.io/aws-weight: "100"
+spec:
+  ingressClassName: default
+  tls:
+    - hosts:
+        - {{ .Release.Name }}-{{ .Chart.Name }}-{{ .Release.Namespace }}.{{ .Values.clusterDomain }}
+    {{- if .Values.ingress.externalRoute.hostname }}
+    {{- if eq .Values.ingress.externalRoute.hostname.enabled true }}
+    - hosts:
+        - {{ required "hostname value must be provided when hostname is enabled." .Values.ingress.externalRoute.hostname.value }}
+      secretName: {{ required "hostname certSecretName must be provided when hostname is enabled." .Values.ingress.externalRoute.hostname.certSecretName }}
+    {{- end }}
+    {{- end }}
+  rules:
+    - host: {{ .Release.Name }}-{{ .Chart.Name }}-{{ .Release.Namespace }}.{{ .Values.clusterDomain }}
+      http:
+        paths:
+            - path: /
+              pathType: ImplementationSpecific
+              backend:
+                service:
+                  name: {{ .Release.Name }}-{{ .Chart.Name }}-service
+                  port:
+                    number: 80
+    {{- if .Values.ingress.externalRoute.hostname }}
+    {{- if eq .Values.ingress.externalRoute.hostname.enabled true }}
+    - host: {{ required "hostname value must be provided when hostname is enabled." .Values.ingress.externalRoute.hostname.value }}
+      http:
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: {{ .Release.Name }}-{{ .Chart.Name }}-service
+                port:
+                  number: 80
+    {{- end }}
+    {{- end }}
+{{- end }}
+{{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-{{ .Chart.Name }}-service
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Release.Name }}-{{ .Chart.Name }}
+    app: {{ .Release.Name }}-{{ .Chart.Name }}-service
+spec:
+  {{- if and (hasKey .Values "stickiness") (eq .Values.stickiness.enabled true) }}
+  sessionAffinity: ClientIP
+  {{- end }}
+  ports:
+    {{- if .Values.ports }}
+    - protocol: {{ .Values.ports.protocol }}
+      name: {{ .Chart.Name }}-https
+      port: {{ .Values.ports.port }}
+      targetPort: {{ .Values.ports.targetPort }}
+    {{- end }}
+    {{- if .Values.management.enabled }}
+    - protocol: {{ .Values.management.protocol }}
+      name: {{ .Chart.Name }}-management
+      port: {{ .Values.management.port }}
+      targetPort: {{ .Values.management.targetPort }}
+    {{- end }}
+  selector:
+    app.kubernetes.io/name: {{ .Release.Name }}-{{ .Chart.Name }}
