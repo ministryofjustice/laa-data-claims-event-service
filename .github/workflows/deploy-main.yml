@@ -32,7 +32,7 @@ jobs:
       contents: read
       id-token: write
     with:
-      jar_subproject: 'laa-submit-a-bulk-claim-ui'
+      jar_subproject: 'data-claims-event-service'
       image_version: ${{ format('{0}-{1}', vars.IMAGE_PREFIX, needs.assemble.outputs.published_artifact_version) }}
     secrets:
       gh_token: ${{ secrets.GITHUB_TOKEN }}
@@ -40,20 +40,8 @@ jobs:
       ecr_region: ${{ vars.ECR_REGION }}
       ecr_role_to_assume: ${{ secrets.ECR_ROLE_TO_ASSUME }}
 
-  deploy-development:
-    needs: [ ecr-publish-image ]
-    permissions:
-      id-token: write
-      contents: read
-    uses: ./.github/workflows/helm-deploy.yml
-    with:
-      environment: development
-      deployment_name: dev
-      image_tag: ${{ needs.ecr-publish-image.outputs.published_image_version }}
-    secrets: inherit
-
   deploy-uat:
-    needs: [ ecr-publish-image, deploy-development ]
+    needs: [ ecr-publish-image ]
     permissions:
       id-token: write
       contents: read

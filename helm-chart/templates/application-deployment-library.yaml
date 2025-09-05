@@ -34,13 +34,9 @@ spec:
                 - ALL
             seccompProfile:
               type: RuntimeDefault
-          {{ if .Values.image }}
-          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
-          {{ else }}
-          image: {{ .Values.global.image.repository }}:{{ .Chart.AppVersion }}
-          {{- end }}
+          image: {{ required "image repository must be provided." .Values.image.repository }}:{{ .Chart.AppVersion }}
           imagePullPolicy: IfNotPresent
-          {{ if .Values.command }}
+          {{- if .Values.command }}
           command: [ '{{ .Values.command }}' ]
           {{- end }}
           {{- if .Values.resources }}
@@ -65,12 +61,10 @@ spec:
             {{- end }}
           {{- end }}
           ports:
-            {{ if .Values.ports }}
+            {{- if .Values.ports }}
             - containerPort: {{ .Values.ports.targetPort }}
-            {{ else }}
-            - containerPort: {{ .Values.global.ports.targetPort }}
             {{- end }}
-          {{ if .Values.probe.enabled }}
+          {{- if .Values.probe.enabled }}
           livenessProbe:
             httpGet:
               {{- if (((.Values.probe).liveness).endpoint) }}
@@ -80,8 +74,6 @@ spec:
               {{- end }}
               {{- if ((.Values.management).port) }}
               port: {{ .Values.management.port }}
-              {{- else }}
-              port: {{ .Values.global.management.port }}
               {{- end }}
             {{- if (((.Values.probe).liveness).timeoutSeconds) }}
             timeoutSeconds: {{ .Values.probe.liveness.timeoutSeconds }}
@@ -117,8 +109,6 @@ spec:
               {{- end }}
               {{- if ((.Values.management).port) }}
               port: {{ .Values.management.port }}
-              {{- else }}
-              port: {{ .Values.global.management.port }}
               {{- end }}
             {{- if (((.Values.probe).readiness).timeoutSeconds) }}
             timeoutSeconds: {{ .Values.probe.readiness.timeoutSeconds }}
@@ -147,7 +137,7 @@ spec:
             {{- end }}
           {{- end }}
           env:
-          {{ if .Values.env }}
+          {{- if .Values.env }}
           {{- range .Values.env }}
           - name: {{ .name }}
             {{- if .value }}
@@ -181,7 +171,7 @@ spec:
           {{- end }}
 ---
 {{- if .Values.ingress }}
-  {{- if eq .Values.ingress.externalRoute.enabled true }}
+{{- if eq .Values.ingress.externalRoute.enabled true }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -191,7 +181,7 @@ metadata:
     {{- if hasKey .Values.ingress "whitelist" }}
     nginx.ingress.kubernetes.io/whitelist-source-range: {{ include "laa.cidr-ranges.dynamic" . | quote }}
     {{- end }}
-    {{ if and (hasKey .Values "stickiness") (eq .Values.stickiness.enabled true) }}
+    {{- if and (hasKey .Values "stickiness") (eq .Values.stickiness.enabled true) }}
     nginx.ingress.kubernetes.io/affinity: "cookie"
     nginx.ingress.kubernetes.io/session-cookie-name: "route"
     nginx.ingress.kubernetes.io/affinity-mode: "persistent"
@@ -202,16 +192,16 @@ spec:
   ingressClassName: default
   tls:
     - hosts:
-        - {{ .Release.Name }}-{{ .Chart.Name }}-{{ .Release.Namespace }}.{{ .Values.global.clusterDomain }}
+        - {{ .Release.Name }}-{{ .Chart.Name }}-{{ .Release.Namespace }}.{{ .Values.clusterDomain }}
     {{- if .Values.ingress.externalRoute.hostname }}
     {{- if eq .Values.ingress.externalRoute.hostname.enabled true }}
     - hosts:
-    - {{ required "hostname value must be provided when hostname is enabled." .Values.ingress.externalRoute.hostname.value }}
-    secretName: {{ required "hostname certSecretName must be provided when hostname is enabled." .Values.ingress.externalRoute.hostname.certSecretName }}
-    {{ end }}
-    {{ end }}
+        - {{ required "hostname value must be provided when hostname is enabled." .Values.ingress.externalRoute.hostname.value }}
+      secretName: {{ required "hostname certSecretName must be provided when hostname is enabled." .Values.ingress.externalRoute.hostname.certSecretName }}
+    {{- end }}
+    {{- end }}
   rules:
-    - host: {{ .Release.Name }}-{{ .Chart.Name }}-{{ .Release.Namespace }}.{{ .Values.global.clusterDomain }}
+    - host: {{ .Release.Name }}-{{ .Chart.Name }}-{{ .Release.Namespace }}.{{ .Values.clusterDomain }}
       http:
         paths:
             - path: /
@@ -233,10 +223,10 @@ spec:
                 name: {{ .Release.Name }}-{{ .Chart.Name }}-service
                 port:
                   number: 80
-    {{ end }}
-    {{ end }}
-  {{- end }}
-  {{- end }}
+    {{- end }}
+    {{- end }}
+{{- end }}
+{{- end }}
 ---
 apiVersion: v1
 kind: Service
@@ -247,26 +237,21 @@ metadata:
     app.kubernetes.io/name: {{ .Release.Name }}-{{ .Chart.Name }}
     app: {{ .Release.Name }}-{{ .Chart.Name }}-service
 spec:
-  {{ if and (hasKey .Values "stickiness") (eq .Values.stickiness.enabled true) }}
+  {{- if and (hasKey .Values "stickiness") (eq .Values.stickiness.enabled true) }}
   sessionAffinity: ClientIP
-  {{ end }}
+  {{- end }}
   ports:
-    {{ if .Values.ports }}
+    {{- if .Values.ports }}
     - protocol: {{ .Values.ports.protocol }}
       name: {{ .Chart.Name }}-https
       port: {{ .Values.ports.port }}
       targetPort: {{ .Values.ports.targetPort }}
-    {{ else }}
-    - protocol: {{ .Values.global.ports.protocol }}
-      name: {{ .Chart.Name }}-https
-      port: {{ .Values.global.ports.port }}
-      targetPort: {{ .Values.global.ports.targetPort }}
     {{- end }}
-    {{ if .Values.global.management.enabled }}
-    - protocol: {{ .Values.global.management.protocol }}
+    {{- if .Values.management.enabled }}
+    - protocol: {{ .Values.management.protocol }}
       name: {{ .Chart.Name }}-management
-      port: {{ .Values.global.management.port }}
-      targetPort: {{ .Values.global.management.targetPort }}
+      port: {{ .Values.management.port }}
+      targetPort: {{ .Values.management.targetPort }}
     {{- end }}
   selector:
     app.kubernetes.io/name: {{ .Release.Name }}-{{ .Chart.Name }}

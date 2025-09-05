@@ -1,19 +1,35 @@
-global:
-  clusterDomain: apps.live.cloud-platform.service.justice.gov.uk
+clusterDomain: apps.live.cloud-platform.service.justice.gov.uk
 
-  image:
-    repository: ""
+image:
+  repository: ""
 
-  ports:
-    protocol: TCP
-    port: 80
-    targetPort: 8085
+ports:
+  protocol: TCP
+  port: 80
+  targetPort: 8085
 
-  management:
+management:
+  enabled: true
+  protocol: TCP
+  port: 8081
+  targetPort: 8081
+
+securityContext:
+  fsGroup: 1000
+  runAsUser: 1000
+  runAsGroup: 1000
+
+ingress:
+  externalRoute:
     enabled: true
-    protocol: TCP
-    port: 8081
-    targetPort: 8081
+    hostname:
+      enabled: false
+
+probe:
+  enabled: true
+
+stickiness:
+  enabled: true
 
 env:
   - name: AWS_REGION
@@ -56,20 +72,3 @@ env:
       secretKeyRef:
         name: laa-data-claims-event-service-secrets
         key: BULK_CLAIM_QUEUE_NAME
-
-securityContext:
-  fsGroup: 1000
-  runAsUser: 1000
-  runAsGroup: 1000
-
-ingress:
-  externalRoute:
-    enabled: true
-    hostname:
-      enabled: false
-
-probe:
-  enabled: true
-
-stickiness:
-  enabled: true
