@@ -1,23 +1,27 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.client;
 
+import java.util.List;
 import java.util.UUID;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.service.annotation.GetExchange;
 import org.springframework.web.service.annotation.HttpExchange;
 import org.springframework.web.service.annotation.PatchExchange;
 import org.springframework.web.service.annotation.PostExchange;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimFields;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPost;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.CreateMatterStart201Response;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetBulkSubmission200Response;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetSubmission200Response;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.MatterStartPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPost;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
 
 /**
  * REST client interface for fetching claims data. This interface communicates with the Data Claims
@@ -66,7 +70,7 @@ public interface DataClaimsRestClient {
    * @return submission details map: {@code submission}, {@code claims[]}, {@code matter_starts[]}
    */
   @GetExchange("/submissions/{id}")
-  ResponseEntity<GetSubmission200Response> getSubmission(@PathVariable("id") String id);
+  ResponseEntity<SubmissionResponse> getSubmission(@PathVariable("id") String id);
 
   /**
    * Add a claim to a submission.
@@ -81,6 +85,26 @@ public interface DataClaimsRestClient {
       @PathVariable("id") String submissionId, @RequestBody ClaimPost claim);
 
   /**
+   * Search for claims.
+   *
+   * @param submissionStatus the status of the parent submission
+   * @param feeCode the fee code of the claim
+   * @param uniqueFileNumber the unique file number of the claim
+   * @param uniqueClientNumber the unique client number of the claim
+   * @param claimStatus the claim status
+   * @return 200 OK with JSON body containing the list of matched claims
+   */
+  @PostExchange("/claims")
+  ResponseEntity<List<ClaimResponse>> searchClaims(
+      @RequestParam String officeCode,
+      @RequestParam(required = false) String submissionId,
+      @RequestParam(required = false) List<SubmissionStatus> submissionStatus,
+      @RequestParam(required = false) String feeCode,
+      @RequestParam(required = false) String uniqueFileNumber,
+      @RequestParam(required = false) String uniqueClientNumber,
+      @RequestParam(required = false) List<ClaimStatus> claimStatus);
+
+  /**
    * Get a specific claim for a submission.
    *
    * @param submissionId submission UUID
@@ -88,7 +112,7 @@ public interface DataClaimsRestClient {
    * @return full claim details map (fields per {@code ClaimFields})
    */
   @GetExchange("/submissions/{submission-id}/claims/{claim-id}")
-  ResponseEntity<ClaimFields> getClaim(
+  ResponseEntity<ClaimResponse> getClaim(
       @PathVariable("submission-id") UUID submissionId, @PathVariable("claim-id") UUID claimId);
 
   /**

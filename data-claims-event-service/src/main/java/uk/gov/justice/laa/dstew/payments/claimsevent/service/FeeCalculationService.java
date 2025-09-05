@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimFields;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.mapper.FeeSchemeMapper;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
@@ -32,7 +32,7 @@ public class FeeCalculationService {
    *
    * @param claim the submitted claim
    */
-  public void validateFeeCalculation(ClaimFields claim) {
+  public void validateFeeCalculation(ClaimResponse claim) {
     log.debug("Validating fee calculation for claim {}", claim.getId());
     if (!submissionValidationContext.isFlaggedForRetry(claim.getId())) {
       FeeCalculationRequest feeCalculationRequest =
