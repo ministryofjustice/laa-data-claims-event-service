@@ -52,7 +52,7 @@ jobs:
           helm upgrade --install --wait --timeout 5m \
             -f helm-chart/values/env-${{ inputs.environment }}.yaml \
             ${{ inputs.deployment_name }} helm-chart \
-            --set global.image.repository=${{ steps.login-ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY }}
+            --set image.repository=${{ steps.login-ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY }}
           IMAGES=$(helm get manifest ${{ inputs.deployment_name }} | yq -o=json '.' | jq -sc '[.[] | select(.kind == "Deployment") | select(.spec.template.spec.containers[0].image | contains("${{ steps.login-ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY }}")) | {image_version_tag: .metadata.labels.appVersion, release_tag: .metadata.name}]')
           echo "images=$IMAGES" >> $GITHUB_OUTPUT
           echo "Deployed Images: $(echo $IMAGES | jq)"
