@@ -21,7 +21,7 @@ jobs:
       packages: write
     with:
       integration_test_task: "integrationTest"
-      create_tag: 'false' # TODO: set to true
+      create_tag: 'true'
       github_bot_username: 'laa-ccms-caab-service'
       junit_results_path: 'data-claims-event-service/build/test-results'
       junit_report_path: 'data-claims-event-service/build/reports/tests'
@@ -29,7 +29,7 @@ jobs:
       jacoco_coverage_report_path: 'data-claims-event-service/build/reports/jacoco'
     secrets:
       gh_token: ${{ secrets.GITHUB_TOKEN }}
-      aws_region: 'eu-west-2'
+      aws_region: ${{ vars.AWS_REGION }}
       github_app_id: ${{ vars.LAA_CCMS_CAAB_SERVICE_APP_ID }}
       github_app_private_key: ${{ secrets.LAA_CCMS_CAAB_SERVICE_KEY }}
       github_app_organisation: 'ministryofjustice'

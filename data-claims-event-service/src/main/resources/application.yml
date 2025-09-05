@@ -20,6 +20,11 @@ spring:
     virtual:
       enabled: true
 
+  cloud:
+    aws:
+      region:
+        static: ${AWS_REGION}
+
 # used by actuator info endpoint
 info:
   app:
@@ -27,7 +32,13 @@ info:
     description: laa-data-claims-event-service application that provides a REST API.
     version: 1.0.0
 
+server:
+  port: 8085
+
 management:
+  server:
+    port: 8081
+
   # specify actuator endpoints to enable
   endpoints:
     web:
@@ -42,9 +53,6 @@ management:
 logging:
   level:
     "org.springframework.web.filter.CommonsRequestLoggingFilter": debug
-
-server:
-  port: 8085
 
 laa:
   provider-details-api:

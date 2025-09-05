@@ -1,0 +1,60 @@
+{{- define "laa.cidr-ranges.cp-live-cluster-gateway" -}}
+35.178.209.113/32,3.8.51.207/32,35.177.252.54/32
+{{- end -}}
+
+{{- define "laa.cidr-ranges.non-prod-aws-workspace" -}}
+10.200.0.0/20
+{{- end -}}
+
+{{- define "laa.cidr-ranges.prod-aws-workspace" -}}
+10.200.16.0/20
+{{- end -}}
+
+{{- define "laa.cidr-ranges.london-non-prod-nat-gateway-workspaces" -}}
+35.176.127.232/32,35.177.145.193/32,18.130.39.94/32
+{{- end -}}
+
+{{- define "laa.cidr-ranges.london-prod-nat-gateway-workspaces" -}}
+52.56.212.11/32,35.176.254.38/32,35.177.173.197/32
+{{- end -}}
+
+{{- define "laa.cidr-ranges.prisma-access" -}}
+128.77.75.64/26,51.149.250.0/24,51.149.249.0/29,194.33.249.0/29,51.149.249.32/29,194.33.248.0/29,20.49.214.199/32,20.49.214.228/32,20.26.11.71/32,20.26.11.108/32,51.149.251.0/24,51.149.249.64/29,1.149.249.0/29,194.33.192.0/25,194.33.196.0/25,18.169.147.172/32,35.176.93.186/32,18.130.148.126/32,35.176.148.126/32
+{{- end -}}
+
+{{- define "laa.cidr-ranges.mp-non-prod" -}}
+13.42.163.245/32,13.43.9.198/32,18.132.208.127/32
+{{- end -}}
+
+{{- define "laa.cidr-ranges.mp-prod" -}}
+13.41.38.176/32,3.11.197.133/32,3.8.81.175/32
+{{- end -}}
+
+{{- define "laa.cidr-ranges.dynamic" -}}
+{{- $ranges := list -}}
+{{- if .Values.ingress.whitelist.includeCpLiveCluster }}
+  {{- $ranges = append $ranges (include "laa.cidr-ranges.cp-live-cluster-gateway" .) }}
+{{- end }}
+{{- if .Values.ingress.whitelist.includeNonProdAwsWorkspace }}
+  {{- $ranges = append $ranges (include "laa.cidr-ranges.non-prod-aws-workspace" .) }}
+{{- end }}
+{{- if .Values.ingress.whitelist.includeProdAwsWorkspace }}
+  {{- $ranges = append $ranges (include "laa.cidr-ranges.prod-aws-workspace" .) }}
+{{- end }}
+{{- if .Values.ingress.whitelist.includeLondonNonProdNatGatewayWorkspaces }}
+  {{- $ranges = append $ranges (include "laa.cidr-ranges.london-non-prod-nat-gateway-workspaces" .) }}
+{{- end }}
+{{- if .Values.ingress.whitelist.includeLondonProdNatGatewayWorkspaces }}
+  {{- $ranges = append $ranges (include "laa.cidr-ranges.london-prod-nat-gateway-workspaces" .) }}
+{{- end }}
+{{- if .Values.ingress.whitelist.includePrismaAccess }}
+  {{- $ranges = append $ranges (include "laa.cidr-ranges.prisma-access" .) }}
+{{- end }}
+{{- if .Values.ingress.whitelist.includeMpNonProd }}
+  {{- $ranges = append $ranges (include "laa.cidr-ranges.mp-non-prod" .) }}
+{{- end }}
+{{- if .Values.ingress.whitelist.includeMpProd }}
+  {{- $ranges = append $ranges (include "laa.cidr-ranges.mp-prod" .) }}
+{{- end }}
+{{- join "," $ranges }}
+{{- end -}}

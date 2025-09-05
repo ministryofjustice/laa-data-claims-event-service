@@ -43,9 +43,6 @@ dependencies {
     // Upgrade to fix vulnerabilities in spring-webmvc
     implementation 'org.springframework:spring-webmvc:6.2.10'
 
-    // Import spring-cloud-aws BOM (Bill Of Materials) for dependency management
-    implementation platform('io.awspring.cloud:spring-cloud-aws:3.2.0')
-
     implementation project(':reference-data-claim-api')
     implementation project(':reference-provider-details-api')
     implementation project(':reference-fee-scheme-platform-api')
@@ -55,8 +52,13 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+    // Import spring-cloud-aws BOM (Bill Of Materials) for dependency management
+    implementation platform('io.awspring.cloud:spring-cloud-aws:3.2.0')
     implementation 'io.awspring.cloud:spring-cloud-aws-starter'
     implementation 'io.awspring.cloud:spring-cloud-aws-starter-sqs'
+    implementation 'com.amazonaws:aws-java-sdk-sts:1.12.788'
+
     implementation 'io.micrometer:micrometer-tracing-bridge-brave'
     implementation 'jakarta.validation:jakarta.validation-api:3.1.1'
     implementation 'org.projectlombok:lombok:1.18.38'

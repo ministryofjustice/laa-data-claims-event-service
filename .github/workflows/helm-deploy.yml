@@ -1,0 +1,58 @@
+name: Helm deploy
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      deployment_name:
+        required: true
+        type: string
+      image_tag:
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Authenticate to the cluster
+        run: |
+          echo "${{ secrets.kube_cert }}" > ca.crt
+          kubectl config set-cluster ${{ secrets.KUBE_CLUSTER }} --certificate-authority=./ca.crt --server=https://${{ secrets.KUBE_CLUSTER }}
+          kubectl config set-credentials deploy-user --token=${{ secrets.KUBE_TOKEN }}
+          kubectl config set-context ${{ secrets.KUBE_CLUSTER }} --cluster=${{ secrets.KUBE_CLUSTER }} --user=deploy-user --namespace=${{ secrets.KUBE_NAMESPACE }}
+          kubectl config use-context ${{ secrets.KUBE_CLUSTER }}
+
+      - name: Configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.ecr_role_to_assume }}
+          aws-region: ${{ vars.ECR_REGION }}
+
+      - name: Login ecr
+        uses: aws-actions/amazon-ecr-login@v1
+        id: login-ecr
+
+      - name: Set helm chart app version
+        run: |
+          yq eval-all "( .appVersion = \"${{ inputs.image_tag }}\" )" -i helm-chart/Chart.yaml
+          cat helm-chart/Chart.yaml
+
+      - name: Install or upgrade helm charts
+        id: helm-install
+        run: |
+          echo "Deploying Helm release '${{ inputs.deployment_name }}'..."
+          helm upgrade --install --wait --timeout 5m \
+            -f helm-chart/values/env-${{ inputs.environment }}.yaml \
+            ${{ inputs.deployment_name }} helm-chart \
+            --set global.image.repository=${{ steps.login-ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY }}
+          IMAGES=$(helm get manifest ${{ inputs.deployment_name }} | yq -o=json '.' | jq -sc '[.[] | select(.kind == "Deployment") | select(.spec.template.spec.containers[0].image | contains("${{ steps.login-ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY }}")) | {image_version_tag: .metadata.labels.appVersion, release_tag: .metadata.name}]')
+          echo "images=$IMAGES" >> $GITHUB_OUTPUT
+          echo "Deployed Images: $(echo $IMAGES | jq)"

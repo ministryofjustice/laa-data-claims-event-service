@@ -1,0 +1,9 @@
+replicas: 1
+ingress:
+  externalRoute:
+    enabled: true
+  whitelist:
+    includeCpLiveCluster: true
+    includeProdAwsWorkspace: true
+    includeLondonProdNatGatewayWorkspaces: true
+    includePrismaAccess: true
