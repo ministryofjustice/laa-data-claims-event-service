@@ -26,7 +26,7 @@ class FeeSchemeMapperTest {
       ClaimFields claim =
           new ClaimFields()
               .feeCode("feeCode")
-              .caseStartDate(LocalDate.parse("2025-01-01"))
+              .caseStartDate("01/01/2025")
               .netProfitCostsAmount(BigDecimal.valueOf(1.00))
               .netDisbursementAmount(BigDecimal.valueOf(1.01))
               .netCounselCostsAmount(BigDecimal.valueOf(1.02))
@@ -42,7 +42,7 @@ class FeeSchemeMapperTest {
               .netWaitingCostsAmount(BigDecimal.valueOf(1.05))
               .travelWaitingCostsAmount(BigDecimal.valueOf(1.06))
               .detentionTravelWaitingCostsAmount(BigDecimal.valueOf(1.07))
-              .caseConcludedDate(LocalDate.parse("2025-01-02"))
+              .caseConcludedDate("02/01/2025")
               .policeStationCourtPrisonId("policeCourtOrPrisonId")
               .isDutySolicitor(true)
               .schemeId("schemeId")

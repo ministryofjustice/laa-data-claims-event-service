@@ -3,7 +3,9 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.validation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.annotation.RequestScope;
 
@@ -14,16 +16,40 @@ import org.springframework.web.context.annotation.RequestScope;
 @Getter
 @RequestScope
 @Component
+@AllArgsConstructor
+@NoArgsConstructor
 public class SubmissionValidationContext {
 
-  private final List<ClaimValidationReport> claimReports;
+  private List<ClaimValidationReport> claimReports = new ArrayList<>();
+  private List<String> submissionValidationErrors = new ArrayList<>();
 
   /**
-   * Construct a new {@code SubmissionValidationContext} with an initialised empty list of claim
-   * reports.
+   * Adds a list of submission level validation error messages to the existing collection of errors.
+   *
+   * @param submissionValidationErrors the list of validation error messages to be added
    */
-  public SubmissionValidationContext() {
-    this.claimReports = new ArrayList<>();
+  public void addSubmissionValidationErrors(List<String> submissionValidationErrors) {
+    this.submissionValidationErrors.addAll(submissionValidationErrors);
+  }
+
+  /**
+   * Adds a single submission-level validation error message to the existing collection of errors.
+   *
+   * @param submissionValidationError the validation error message to be added
+   */
+  public void addSubmissionValidationError(String submissionValidationError) {
+    this.submissionValidationErrors.add(submissionValidationError);
+  }
+
+  /**
+   * Add an error to the report (Extracts the error message and passes it on to the overloaded
+   * method).
+   *
+   * @param claimId the ID of the claim for which to report an error
+   * @param error the claim validation error
+   */
+  public void addClaimError(String claimId, ClaimValidationError error) {
+    addClaimError(claimId, error.getDescription());
   }
 
   /**
@@ -32,9 +58,9 @@ public class SubmissionValidationContext {
    * existing claim report.
    *
    * @param claimId the ID of the claim for which to report an error
-   * @param error the claim validation error
+   * @param error the claim validation error as a plain String
    */
-  public void addClaimError(String claimId, ClaimValidationError error) {
+  public void addClaimError(String claimId, String error) {
     claimReports.stream()
         .filter(claimReport -> claimReport.getClaimId().equals(claimId))
         .findFirst()
@@ -44,21 +70,29 @@ public class SubmissionValidationContext {
   }
 
   /**
+   * Add a list of claim errors to the validation context. If a report has not yet been created for
+   * the claim, creates a new claim report and adds the errors. Otherwise, the errors are added to
+   * the existing claim report.
+   *
+   * @param claimId the ID of the claim for which to report an error
+   * @param errors the list of claim validation errors
+   */
+  public void addClaimErrors(String claimId, List<String> errors) {
+    claimReports.stream()
+        .filter(claimReport -> claimReport.getClaimId().equals(claimId))
+        .findFirst()
+        .ifPresentOrElse(
+            claimReport -> claimReport.addErrorsStrings(errors),
+            () -> claimReports.add(new ClaimValidationReport(claimId, errors)));
+  }
+
+  /**
    * Add a list of claim reports to the validation context.
    *
    * @param reports the list of {@link ClaimValidationReport}
    */
   public void addClaimReports(List<ClaimValidationReport> reports) {
     claimReports.addAll(reports);
-  }
-
-  /**
-   * Add a claim validation error to all current claim reports.
-   *
-   * @param error the {@link ClaimValidationError} to add
-   */
-  public void addToAllClaimReports(ClaimValidationError error) {
-    claimReports.forEach(claimReport -> claimReport.addError(error));
   }
 
   /**
@@ -119,6 +153,7 @@ public class SubmissionValidationContext {
    * @return true if any claim has a validation error, false otherwise.
    */
   public boolean hasErrors() {
-    return claimReports.stream().anyMatch(ClaimValidationReport::hasErrors);
+    return !submissionValidationErrors.isEmpty()
+        || claimReports.stream().anyMatch(ClaimValidationReport::hasErrors);
   }
 }
