@@ -1,7 +1,7 @@
 plugins {
     id 'io.freefair.lombok' version '8.14'
     id("com.diffplug.spotless") version "7.2.1"
-    id 'uk.gov.laa.springboot.laa-spring-boot-gradle-plugin' version '1.0.2'
+    id 'uk.gov.laa.springboot.laa-spring-boot-gradle-plugin' version '1.0.4'
 }
 
 test {
@@ -44,8 +44,6 @@ dependencies {
     implementation 'org.apache.commons:commons-lang3:3.18.0'
     // Upgrade to fix vulnerabilities in tomcat-embed-core
     implementation 'org.apache.tomcat.embed:tomcat-embed-core:11.0.10'
-    // Upgrade to fix vulnerabilities in netty
-    implementation 'io.netty:netty-codec-http2:4.2.4.Final'
     // Upgrade to fix vulnerabilities in spring-webmvc
     implementation 'org.springframework:spring-webmvc:6.2.10'
 
@@ -54,7 +52,6 @@ dependencies {
     implementation project(':reference-fee-scheme-platform-api')
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
@@ -63,7 +60,7 @@ dependencies {
     implementation platform('io.awspring.cloud:spring-cloud-aws:3.2.0')
     implementation 'io.awspring.cloud:spring-cloud-aws-starter'
     implementation 'io.awspring.cloud:spring-cloud-aws-starter-sqs'
-    implementation 'com.amazonaws:aws-java-sdk-sts:1.12.788'
+    implementation 'software.amazon.awssdk:sts:2.33.4'
 
     implementation 'io.micrometer:micrometer-tracing-bridge-brave'
     implementation 'jakarta.validation:jakarta.validation-api:3.1.1'
@@ -78,8 +75,6 @@ dependencies {
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml'
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
-
-    runtimeOnly 'com.h2database:h2'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.testcontainers:junit-jupiter'
