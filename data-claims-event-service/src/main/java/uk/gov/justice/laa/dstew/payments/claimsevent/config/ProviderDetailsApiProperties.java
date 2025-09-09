@@ -11,6 +11,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class ProviderDetailsApiProperties extends ApiProperties {
 
   public ProviderDetailsApiProperties(String url, String host, int port, String accessToken) {
-    super(url, host, port, accessToken);
+    super(url, host, port, accessToken, "X-Authorization");
   }
 }

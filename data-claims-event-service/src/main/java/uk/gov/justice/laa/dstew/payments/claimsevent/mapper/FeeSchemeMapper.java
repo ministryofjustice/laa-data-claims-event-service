@@ -17,7 +17,7 @@ public interface FeeSchemeMapper {
    * @return a {@code FeeCalculationRequest} representing the claim
    */
   @Mapping(target = "feeCode", source = "feeCode")
-  @Mapping(target = "startDate", source = "caseStartDate", dateFormat = "dd/MM/yyyy")
+  @Mapping(target = "startDate", source = "caseStartDate", dateFormat = "yyyy-MM-dd")
   @Mapping(target = "netProfitCosts", source = "netProfitCostsAmount")
   @Mapping(target = "netDisbursementAmount", source = "netDisbursementAmount")
   @Mapping(target = "netCostOfCounsel", source = "netCounselCostsAmount")
@@ -31,7 +31,7 @@ public interface FeeSchemeMapper {
   @Mapping(target = "netWaitingCosts", source = "netWaitingCostsAmount")
   @Mapping(target = "travelAndWaitingCosts", source = "travelWaitingCostsAmount")
   @Mapping(target = "detentionAndWaitingCosts", source = "detentionTravelWaitingCostsAmount")
-  @Mapping(target = "caseConcludedDate", source = "caseConcludedDate", dateFormat = "dd/MM/yyyy")
+  @Mapping(target = "caseConcludedDate", source = "caseConcludedDate", dateFormat = "yyyy-MM-dd")
   @Mapping(target = "policeCourtOrPrisonId", source = "policeStationCourtPrisonId")
   @Mapping(
       target = "dutySolicitor",

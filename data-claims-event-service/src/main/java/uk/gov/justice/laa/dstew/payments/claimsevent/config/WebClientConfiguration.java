@@ -96,7 +96,7 @@ public class WebClientConfiguration {
         ExchangeStrategies.builder().codecs(ClientCodecConfigurer::defaultCodecs).build();
     return WebClient.builder()
         .baseUrl(apiProperties.getUrl())
-        .defaultHeader(HttpHeaders.AUTHORIZATION, apiProperties.getAccessToken())
+        .defaultHeader(apiProperties.getAuthHeader(), apiProperties.getAccessToken())
         .exchangeStrategies(strategies)
         .build();
   }

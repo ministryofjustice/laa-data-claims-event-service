@@ -16,7 +16,7 @@ import uk.gov.justice.laa.provider.model.ProviderFirmOfficeContractAndScheduleDt
  *
  * @author Jamie Briggs
  */
-@HttpExchange(value = "/provider-offices", accept = MediaType.APPLICATION_JSON_VALUE)
+@HttpExchange(value = "/api/v2/provider-offices", accept = MediaType.APPLICATION_JSON_VALUE)
 public interface ProviderDetailsRestClient {
 
   /**

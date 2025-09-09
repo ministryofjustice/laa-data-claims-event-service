@@ -620,8 +620,9 @@ components:
           type: integer
           description: Number of claims in this submission.
         submitted:
-          type: date
-          description: Date the submission was submitted
+          type: string
+          format: date-time
+          description: Date and time the submission was submitted
     SubmissionsResultSet:
       allOf:
         - $ref: "#/components/schemas/page"
@@ -680,8 +681,10 @@ components:
           type: string
         case_start_date:
           type: string
+          description: Date the case was started (format DD/MM/YYYY)
         case_concluded_date:
           type: string
+          description: Date the case was concluded (format DD/MM/YYYY)
         matter_type_code:
           type: string
         crime_matter_type_code:
@@ -698,6 +701,7 @@ components:
           type: string
         representation_order_date:
           type: string
+          description: Date the rep order was created (format DD/MM/YYYY)
         suspects_defendants_count:
           type: integer
         police_station_court_attendances_count:
@@ -732,6 +736,7 @@ components:
           type: string
         client_date_of_birth:
           type: string
+          description: Client's date of birth (format DD/MM/YYYY)
         unique_client_number:
           type: string
         client_postcode:
@@ -758,6 +763,7 @@ components:
           type: string
         client_2_date_of_birth:
           type: string
+          description: Client 2's date of birth (format DD/MM/YYYY)
         client_2_ucn:
           type: string
         client_2_postcode:
@@ -796,8 +802,7 @@ components:
           type: string
         transfer_date:
           type: string
-          format: date
-          description: Transfer Date (format YYYY-MM-DD)
+          description: Transfer Date (format DD/MM/YYYY)
         exemption_criteria_satisfied:
           type: string
         exceptional_case_funding_reference:
@@ -854,6 +859,7 @@ components:
           type: boolean
         surgery_date:
           type: string
+          description: Surgery Date (format DD/MM/YYYY)
         surgery_clients_count:
           type: integer
         surgery_matters_count:
