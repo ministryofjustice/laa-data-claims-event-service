@@ -1,20 +1,6 @@
 spring:
   application:
     name: laa-data-claims-event-service
-  # example database
-  datasource:
-    url: jdbc:h2:mem:itemsDb
-    driver-class-name: org.h2.Driver
-    username: sa
-    password: password
-  h2:
-    console:
-      enabled: true
-
-  #do not auto create db schema, use .sql scripts
-  jpa:
-    hibernate:
-      ddl-auto: none
 
   threads:
     virtual:
@@ -22,6 +8,8 @@ spring:
 
   cloud:
     aws:
+      sqs:
+        queue-not-found-strategy: fail
       region:
         static: ${AWS_REGION}
 
@@ -43,16 +31,12 @@ management:
   endpoints:
     web:
       exposure:
-        include: health
+        include: health, info
 
   # show detailed health status
   endpoint:
     health:
       show-details: always
-
-logging:
-  level:
-    "org.springframework.web.filter.CommonsRequestLoggingFilter": debug
 
 laa:
   provider-details-api:
