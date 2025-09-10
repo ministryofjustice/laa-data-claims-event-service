@@ -21,6 +21,9 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 @AllArgsConstructor
 public class ClaimValidationService {
 
+  public static final String OLDEST_DATE_ALLOWED_1 = "01/01/1995";
+  public static final String MIN_REP_ORDER_DATE = "01/04/2016";
+  public static final String MIN_BIRTH_DATE = "01/01/1900";
   private final CategoryOfLawValidationService categoryOfLawValidationService;
   private final DuplicateClaimValidationService duplicateClaimValidationService;
   private final FeeCalculationService feeCalculationService;
@@ -58,8 +61,12 @@ public class ClaimValidationService {
         claim.getId(), jsonSchemaValidator.validate("claim", claim));
 
     validateUniqueFileNumber(claim);
-    checkDateInPast(claim, "Case Start Date", claim.getCaseStartDate());
-    checkDateInPast(claim, "Case Concluded Date", claim.getCaseConcludedDate());
+    checkDateInPast(claim, "Case Start Date", claim.getCaseStartDate(), OLDEST_DATE_ALLOWED_1);
+    checkDateInPast(claim, "Case Concluded Date", claim.getCaseConcludedDate(), OLDEST_DATE_ALLOWED_1);
+    checkDateInPast(claim, "Transfer Date", claim.getTransferDate(), OLDEST_DATE_ALLOWED_1);
+    checkDateInPast(claim, "Representation Order Date", claim.getRepresentationOrderDate(), MIN_REP_ORDER_DATE);
+    checkDateInPast(claim, "Client Date of Birth", claim.getClientDateOfBirth(), MIN_BIRTH_DATE);
+    checkDateInPast(claim, "Client2 Date of Birth", claim.getClient2DateOfBirth(), MIN_BIRTH_DATE);
     categoryOfLawValidationService.validateCategoryOfLaw(
         claim, categoryOfLawLookup, providerCategoriesOfLaw);
     duplicateClaimValidationService.validateDuplicateClaims(claim);
@@ -100,18 +107,18 @@ public class ClaimValidationService {
    * @param fieldName The name of the field associated with the date being validated.
    * @param dateValueToCheck The date value to validate in the format "dd/MM/yyyy".
    */
-  private void checkDateInPast(ClaimFields claim, String fieldName, String dateValueToCheck) {
+  private void checkDateInPast(ClaimFields claim, String fieldName, String dateValueToCheck, String oldestDateAllowedStr) {
     if (dateValueToCheck != null) {
       DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-      LocalDate minDate = LocalDate.of(1995, 1, 1);
       try {
+        LocalDate oldestDateAllowed = LocalDate.parse(oldestDateAllowedStr, formatter);
         LocalDate date = LocalDate.parse(dateValueToCheck, formatter);
-        if (date.isBefore(minDate) || date.isAfter(LocalDate.now())) {
+        if (date.isBefore(oldestDateAllowed) || date.isAfter(LocalDate.now())) {
           submissionValidationContext.addClaimError(
               claim.getId(),
               String.format(
-                  "Invalid date value for %s (Must be between 01/01/1995 and today): %s",
-                  fieldName, dateValueToCheck));
+                  "Invalid date value for %s (Must be between %s and today): %s",
+                  fieldName, oldestDateAllowedStr, dateValueToCheck));
         }
       } catch (DateTimeParseException e) {
         submissionValidationContext.addClaimError(

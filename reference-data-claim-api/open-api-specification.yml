@@ -681,10 +681,10 @@ components:
           type: string
         case_start_date:
           type: string
-          description: Date the case was started (format DD/MM/YYYY)
+          description: Date the case was started (format YYYY-MM-DD)
         case_concluded_date:
           type: string
-          description: Date the case was concluded (format DD/MM/YYYY)
+          description: Date the case was concluded (format YYYY-MM-DD)
         matter_type_code:
           type: string
         crime_matter_type_code:
@@ -701,7 +701,7 @@ components:
           type: string
         representation_order_date:
           type: string
-          description: Date the rep order was created (format DD/MM/YYYY)
+          description: Date the rep order was created (format YYYY-MM-DD)
         suspects_defendants_count:
           type: integer
         police_station_court_attendances_count:
@@ -736,7 +736,7 @@ components:
           type: string
         client_date_of_birth:
           type: string
-          description: Client's date of birth (format DD/MM/YYYY)
+          description: Client's date of birth (format YYYY-MM-DD)
         unique_client_number:
           type: string
         client_postcode:
@@ -763,7 +763,7 @@ components:
           type: string
         client_2_date_of_birth:
           type: string
-          description: Client 2's date of birth (format DD/MM/YYYY)
+          description: Client 2's date of birth (format YYYY-MM-DD)
         client_2_ucn:
           type: string
         client_2_postcode:
@@ -802,7 +802,7 @@ components:
           type: string
         transfer_date:
           type: string
-          description: Transfer Date (format DD/MM/YYYY)
+          description: Transfer Date (format YYYY-MM-DD)
         exemption_criteria_satisfied:
           type: string
         exceptional_case_funding_reference:
@@ -859,7 +859,7 @@ components:
           type: boolean
         surgery_date:
           type: string
-          description: Surgery Date (format DD/MM/YYYY)
+          description: Surgery Date (format YYYY-MM-DD)
         surgery_clients_count:
           type: integer
         surgery_matters_count:
@@ -873,7 +873,7 @@ components:
         is_substantive_hearing:
           type: boolean
         ho_interview:
-          type: string
+          type: integer
         local_authority_number:
           type: string
     BulkSubmissionMatterStart:

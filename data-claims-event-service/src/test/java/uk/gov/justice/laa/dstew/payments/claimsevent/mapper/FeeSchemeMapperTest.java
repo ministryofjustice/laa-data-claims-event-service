@@ -26,7 +26,7 @@ class FeeSchemeMapperTest {
       ClaimFields claim =
           new ClaimFields()
               .feeCode("feeCode")
-              .caseStartDate("01/01/2025")
+              .caseStartDate("2025-01-01")
               .netProfitCostsAmount(BigDecimal.valueOf(1.00))
               .netDisbursementAmount(BigDecimal.valueOf(1.01))
               .netCounselCostsAmount(BigDecimal.valueOf(1.02))
@@ -37,12 +37,12 @@ class FeeSchemeMapperTest {
               .cmrhOralCount(2)
               .cmrhTelephoneCount(3)
               // TODO: add additional travel property
-              .hoInterview("5")
+              .hoInterview(5)
               // TODO: add net travel costs property
               .netWaitingCostsAmount(BigDecimal.valueOf(1.05))
               .travelWaitingCostsAmount(BigDecimal.valueOf(1.06))
               .detentionTravelWaitingCostsAmount(BigDecimal.valueOf(1.07))
-              .caseConcludedDate("02/01/2025")
+              .caseConcludedDate("2025-01-02")
               .policeStationCourtPrisonId("policeCourtOrPrisonId")
               .isDutySolicitor(true)
               .schemeId("schemeId")
@@ -104,7 +104,7 @@ class FeeSchemeMapperTest {
               .cmrhOralCount(2)
               .cmrhTelephoneCount(3)
               // TODO: add additional travel property
-              .hoInterview("5");
+              .hoInterview(5);
 
       BoltOnType expected =
           new BoltOnType()

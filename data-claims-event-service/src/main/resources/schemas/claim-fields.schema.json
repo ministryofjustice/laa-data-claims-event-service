@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "http://json-schema.org/draft/2020-12/schema",
   "title": "ClaimFields",
   "type": "object",
   "properties": {
@@ -8,7 +8,7 @@
     },
     "schedule_reference": {
       "type": "string",
-      "pattern": "^[a-zA-Z0-9]+$",
+      "pattern": "^[a-zA-Z0-9/]+$",
       "maxLength": 20
     },
     "line_number": {
@@ -17,7 +17,7 @@
     },
     "case_reference_number": {
       "type": "string",
-      "pattern": "^[a-zA-Z0-9]+$",
+      "pattern": "^[a-zA-Z0-9/]+$",
       "maxLength": 30
     },
     "unique_file_number": {
@@ -33,17 +33,21 @@
       ]
     },
     "case_start_date": {
-      "type": "string"
+      "type": "string",
+      "format": "date"
     },
     "case_concluded_date": {
-      "type": "string"
+      "type": "string",
+      "format": "date"
     },
     "matter_type_code": {
       "type": "string",
       "pattern": "^[a-zA-Z0-9]+$"
     },
     "crime_matter_type_code": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^[0-9][0-9]$",
+      "maxLength": 10
     },
     "fee_scheme_code": {
       "type": "string"
@@ -54,17 +58,20 @@
       "maxLength": 10
     },
     "procurement_area_code": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^[A-Z]{2}[0-9]{5}$"
     },
     "access_point_code": {
       "type": "string",
-      "pattern": "^[a-zA-Z0-9]+$"
+      "pattern": "^AP[0-9]{5}$"
     },
     "delivery_location": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^[A-Z]{2}[0-9]{5}$"
     },
     "representation_order_date": {
-      "type": "string"
+      "type": "string",
+      "format": "date"
     },
     "suspects_defendants_count": {
       "type": "integer",
@@ -78,19 +85,19 @@
     },
     "police_station_court_prison_id": {
       "type": "string",
-      "pattern": "^[a-zA-Z0-9]+$"
+      "pattern": "^[a-zA-Z0-9]{1,6}$"
     },
     "dscc_number": {
       "type": "string",
-      "pattern": "^[a-zA-Z0-9]+$"
+      "pattern": "^[a-zA-Z0-9]{10}$"
     },
     "maat_id": {
       "type": "string",
-      "pattern": "^[a-zA-Z0-9]+$"
+      "pattern": "^[a-zA-Z0-9]{10}$"
     },
     "prison_law_prior_approval_number": {
       "type": "string",
-      "pattern": "^[a-zA-Z0-9]+$"
+      "pattern": "^[a-zA-Z0-9]{10}$"
     },
     "is_duty_solicitor": {
       "type": "boolean"
@@ -100,7 +107,7 @@
     },
     "scheme_id": {
       "type": "string",
-      "pattern": "^[a-zA-Z0-9]+$"
+      "pattern": "^[a-zA-Z0-9]{4}$"
     },
     "mediation_sessions_count": {
       "type": "integer",
@@ -110,13 +117,11 @@
     "mediation_time_minutes": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 99
+      "maximum": 99999
     },
     "outreach_location": {
       "type": "string",
-      "pattern": "^[a-zA-Z0-9]+$",
-      "minLength": 3,
-      "maxLength": 3
+      "pattern": "^[a-zA-Z0-9]{3}$"
     },
     "referral_source": {
       "type": "string",
@@ -127,13 +132,11 @@
     },
     "client_forename": {
       "type": "string",
-      "pattern": "^[a-zA-Z0-9]+$",
-      "maxLength": 30
+      "pattern": "^[\\p{L}\\p{N}\\p{Zs}\\-’'&]{1,30}$"
     },
     "client_surname": {
       "type": "string",
-      "pattern": "^[a-zA-Z0-9]+$",
-      "maxLength": 30
+      "pattern": "^[\\p{L}\\p{N}\\p{Zs}\\-’'&]{1,30}$"
     },
     "client_date_of_birth": {
       "type": "string",
@@ -141,22 +144,26 @@
     },
     "unique_client_number": {
       "type": "string",
-      "pattern": "^[a-zA-Z0-9]+$",
+      "pattern": "^(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[0-2])(19[0-9]{2}|20[0-9]{2})/[\\p{L}0-9 \\-’'&]/[\\p{L}0-9 \\-’'&]{1,4}$",
       "maxLength": 15
     },
     "client_postcode": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^NFA|GIR 0AA|[A-Z]{1,2}[0-9][0-9A-Z]?\\s?[0-9][A-Z]{2}$"
     },
     "gender_code": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^([MFU])$"
     },
     "ethnicity_code": {
       "type": "string",
+      "pattern": "^(0[0-9]|1[0-6]|99)$",
       "minLength": 2,
       "maxLength": 2
     },
     "disability_code": {
       "type": "string",
+      "pattern": "^(NCD|MOB|DEA|HEA|VIS|BLI|MHC|LDD|COG|ILL|OTH|UKN|PHY|SEN)$",
       "minLength": 3,
       "maxLength": 3
     },
@@ -164,7 +171,8 @@
       "type": "boolean"
     },
     "client_type_code": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^([PCJ])$"
     },
     "home_office_client_number": {
       "type": "string",
@@ -172,7 +180,8 @@
       "maxLength": 16
     },
     "cla_reference_number": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^[0-9]{1,7}$"
     },
     "cla_exemption_code": {
       "type": "string",
@@ -181,13 +190,11 @@
     },
     "client_2_forename": {
       "type": "string",
-      "pattern": "^[a-zA-Z0-9]+$",
-      "maxLength": 30
+      "pattern": "^[\\p{L}\\p{N}\\p{Zs}\\-’'&]{1,30}$"
     },
     "client_2_surname": {
       "type": "string",
-      "pattern": "^[a-zA-Z0-9]+$",
-      "maxLength": 30
+      "pattern": "^[\\p{L}\\p{N}\\p{Zs}\\-’'&]{1,30}$"
     },
     "client_2_date_of_birth": {
       "type": "string",
@@ -195,22 +202,26 @@
     },
     "client_2_ucn": {
       "type": "string",
-      "pattern": "^[a-zA-Z0-9]+$",
+      "pattern": "^(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[0-2])(19[0-9]{2}|20[0-9]{2})/[\\p{L}0-9 \\-’'&]/[\\p{L}0-9 \\-’'&]{1,4}$",
       "maxLength": 15
     },
     "client_2_postcode": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^NFA|GIR 0AA|[A-Z]{1,2}[0-9][0-9A-Z]?\\s?[0-9][A-Z]{2}$"
     },
     "client_2_gender_code": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^([MFU])$"
     },
     "client_2_ethnicity_code": {
       "type": "string",
+      "pattern": "^(0[0-9]|1[0-6]|99)$",
       "minLength": 2,
       "maxLength": 2
     },
     "client_2_disability_code": {
       "type": "string",
+      "pattern": "^(NCD|MOB|DEA|HEA|VIS|BLI|MHC|LDD|COG|ILL|OTH|UKN|PHY|SEN)$",
       "minLength": 3,
       "maxLength": 3
     },
@@ -218,14 +229,16 @@
       "type": "boolean"
     },
     "case_id": {
-      "type": "string"
-    },
+      "type": "string",
+      "pattern": "^[0-9]{3}$"
+},
     "unique_case_id": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^\\s*\\S.*$"
     },
     "case_stage_code": {
       "type": "string",
-      "pattern": "^[a-zA-Z0-9]+$",
+      "pattern": "^(FPL(0[1-9]|1[0-9]|20|21)|FPC0[1-3]|MHL0[1-9])$",
       "minLength": 5,
       "maxLength": 5
     },
@@ -236,7 +249,8 @@
       "maxLength": 2
     },
     "standard_fee_category_code": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^(1A|2A|1B|2B|1A-HSF|1B-HSF|1A-LSF|1B-LSF|1EW|1SO|2|3|ULF|UHF|CLF|CHF|Sending Hearing Fixed Fee)$"
     },
     "outcome_code": {
       "type": "string",
@@ -245,7 +259,8 @@
       "maxLength": 2
     },
     "designated_accredited_representative_code": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^[1-5]$"
     },
     "is_postal_application_accepted": {
       "type": "boolean"
@@ -254,23 +269,28 @@
       "type": "boolean"
     },
     "mental_health_tribunal_reference": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^([A-Z]{2}/[0-9]{4}/[0-9]{4}|[A-Z]{2}[0-9]{6})$"
     },
     "is_nrm_advice": {
       "type": "boolean"
     },
     "follow_on_work": {
-      "type": "string"
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1
     },
     "transfer_date": {
       "type": "string",
       "format": "date"
     },
     "exemption_criteria_satisfied": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^(DV0(0[1-9]|1[0-9]|19)|CA00[1-8]|TR001|CN001|UA001)$"
     },
     "exceptional_case_funding_reference": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^[0-9]{7}[A-Z]{2}$"
     },
     "is_legacy_case": {
       "type": "boolean"
@@ -278,40 +298,46 @@
     "advice_time": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 99
+      "maximum": 99999
     },
     "travel_time": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 99
+      "maximum": 99999
     },
     "waiting_time": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 99
+      "maximum": 99999
     },
     "net_profit_costs_amount": {
       "type": "number",
+      "minimum": 0.0,
       "maximum": 999999999.99
     },
     "net_disbursement_amount": {
       "type": "number",
+      "minimum": 0.0,
       "maximum": 999999999.99
     },
     "net_counsel_costs_amount": {
       "type": "number",
+      "minimum": 0.0,
       "maximum": 99999.99
     },
     "disbursements_vat_amount": {
       "type": "number",
+      "minimum": 0.0,
       "maximum": 99999.99
     },
     "travel_waiting_costs_amount": {
       "type": "number",
+      "minimum": 0.0,
       "maximum": 9999.99
     },
     "net_waiting_costs_amount": {
       "type": "number",
+      "minimum": 0.0,
       "maximum": 999999.99
     },
     "is_vat_applicable": {
@@ -339,27 +365,33 @@
     },
     "costs_damages_recovered_amount": {
       "type": "number",
+      "minimum": 0.0,
       "maximum": 99999.99
     },
     "meetings_attended_code": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^MTGA(0[1-9]|1[0-2])$"
     },
     "detention_travel_waiting_costs_amount": {
       "type": "number",
+      "minimum": 0.0,
       "maximum": 99999999.99
     },
     "jr_form_filling_amount": {
       "type": "number",
+      "minimum": 0.0,
       "maximum": 9999.99
     },
     "is_eligible_client": {
       "type": "boolean"
     },
     "court_location_code": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^HPCDS(00[1-9]|0[1-9][0-9]|1[0-9]{2}|20[0-9]|21[0-5])$"
     },
     "advice_type_code": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^(FTF|REM)$"
     },
     "medical_reports_count": {
       "type": "integer",
@@ -371,7 +403,7 @@
     },
     "surgery_date": {
       "type": "string",
-      "format": "date"
+      "maxLength": 30
     },
     "surgery_clients_count": {
       "type": "integer",
@@ -394,7 +426,10 @@
       "maximum": 9
     },
     "ait_hearing_centre_code": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^(0[1-9]|1[0-6])$",
+      "minLength": 2,
+      "maxLength": 2
     },
     "is_substantive_hearing": {
       "type": "boolean"
@@ -406,7 +441,8 @@
     },
     "local_authority_number": {
       "type": "string",
-      "pattern": "^[a-zA-Z0-9]+$"
+      "pattern": "^[a-zA-Z0-9]+$",
+      "maxLength": 30
     }
   },
   "additionalProperties": false,
