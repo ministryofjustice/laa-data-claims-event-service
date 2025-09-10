@@ -7,7 +7,7 @@ import java.time.LocalDate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimFields;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.fee.scheme.model.BoltOnType;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationRequest;
 
@@ -23,8 +23,8 @@ class FeeSchemeMapperTest {
     @DisplayName("Maps to fee calculation request")
     void mapsToFeeCalculationRequest() {
 
-      ClaimFields claim =
-          new ClaimFields()
+      ClaimResponse claim =
+          new ClaimResponse()
               .feeCode("feeCode")
               .caseStartDate("2025-01-01")
               .netProfitCostsAmount(BigDecimal.valueOf(1.00))
@@ -98,8 +98,8 @@ class FeeSchemeMapperTest {
     @DisplayName("Maps to bolt on type")
     void mapsToBoltOnType() {
 
-      ClaimFields claim =
-          new ClaimFields()
+      ClaimResponse claim =
+          new ClaimResponse()
               .adjournedHearingFeeAmount(BigDecimal.valueOf(1))
               .cmrhOralCount(2)
               .cmrhTelephoneCount(3)

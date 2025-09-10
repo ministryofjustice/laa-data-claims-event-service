@@ -1,0 +1,77 @@
+name: Deploy main
+
+on:
+  push:
+    tags:
+      - '*'
+
+permissions:
+  contents: read
+
+jobs:
+  assemble:
+    uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/gradle-build-and-publish.yml@v1
+    permissions:
+      contents: write
+      packages: write
+    with:
+      build_command: 'assemble'
+      publish_package: 'false'
+      junit_results: 'false'
+      junit_report: 'false'
+      checkstyle_report: 'false'
+      jacoco_coverage_report: 'false'
+    secrets:
+      gh_token: ${{ secrets.GITHUB_TOKEN }}
+      aws_region: ${{ vars.AWS_REGION }}
+
+  ecr-publish-image:
+    needs: [ assemble ]
+    uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/ecr-publish-image.yml@v1
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      jar_subproject: 'data-claims-event-service'
+      image_version: ${{ format('{0}-{1}', vars.IMAGE_PREFIX, needs.assemble.outputs.published_artifact_version) }}
+    secrets:
+      gh_token: ${{ secrets.GITHUB_TOKEN }}
+      ecr_repository: ${{ vars.ECR_REPOSITORY }}
+      ecr_region: ${{ vars.ECR_REGION }}
+      ecr_role_to_assume: ${{ secrets.ECR_ROLE_TO_ASSUME }}
+
+  deploy-uat:
+    needs: [ ecr-publish-image ]
+    permissions:
+      id-token: write
+      contents: read
+    uses: ./.github/workflows/helm-deploy.yml
+    with:
+      environment: uat
+      deployment_name: uat
+      image_tag: ${{ needs.ecr-publish-image.outputs.published_image_version }}
+    secrets: inherit
+
+  deploy-staging:
+    needs: [ ecr-publish-image, deploy-uat ]
+    permissions:
+      id-token: write
+      contents: read
+    uses: ./.github/workflows/helm-deploy.yml
+    with:
+      environment: staging
+      deployment_name: stg
+      image_tag: ${{ needs.ecr-publish-image.outputs.published_image_version }}
+    secrets: inherit
+
+#  deploy-production:
+#    needs: [ ecr-publish-image, deploy-staging ]
+#    permissions:
+#      id-token: write
+#      contents: read
+#    uses: ./.github/workflows/helm-deploy.yml
+#    with:
+#      environment: production
+#      deployment_name: prod
+#      image_tag: ${{ needs.ecr-publish-image.outputs.published_image_version }}
+#    secrets: inherit

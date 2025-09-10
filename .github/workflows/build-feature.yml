@@ -22,14 +22,14 @@ jobs:
       packages: write
     with:
       integration_test_task: "integrationTest"
-      publish_package: 'false' # TODO: set to true
+      publish_package: 'false'
       junit_results_path: 'data-claims-event-service/build/test-results'
       junit_report_path: 'data-claims-event-service/build/reports/tests'
       checkstyle_report_path: 'data-claims-event-service/build/reports/checkstyle'
       jacoco_coverage_report_path: 'data-claims-event-service/build/reports/jacoco'
     secrets:
       gh_token: ${{ secrets.GITHUB_TOKEN }}
-      aws_region: 'eu-west-2'
+      aws_region: ${{ vars.AWS_REGION }}
 
   scan-image:
     needs: [ build ]

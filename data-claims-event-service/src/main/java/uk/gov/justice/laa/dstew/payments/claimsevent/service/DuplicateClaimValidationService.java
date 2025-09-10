@@ -2,7 +2,7 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimFields;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 
 /** Service responsible for validating whether a claim is a duplicate. */
 @Slf4j
@@ -14,7 +14,7 @@ public class DuplicateClaimValidationService {
    *
    * @param claim the submitted claim
    */
-  public void validateDuplicateClaims(ClaimFields claim) {
+  public void validateDuplicateClaims(ClaimResponse claim) {
     log.debug("Validating duplicated for claim {}", claim.getId());
     // TODO: Duplicate validation. See https://dsdmoj.atlassian.net/browse/CCMSPUI-790.
     log.debug("Duplicate validation completed for claim {}", claim.getId());

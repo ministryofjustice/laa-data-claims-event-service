@@ -7,8 +7,6 @@
 Includes the following subprojects:
 
 - `data-claims-event-service` - Data claims event service which processes claims from an SQS queue.
-- `reference-data-claim-api` - OpenAPI specification for the Data Claims API used for generating
-  model classes.
 - `reference-provider-details-api` - OpenAPI specification for the Provider Details API used for
   generating model classes.
 

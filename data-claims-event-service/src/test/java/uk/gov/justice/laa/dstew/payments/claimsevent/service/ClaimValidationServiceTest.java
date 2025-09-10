@@ -14,7 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimFields;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.JsonSchemaValidator;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
@@ -40,9 +40,9 @@ class ClaimValidationServiceTest {
     @Test
     @DisplayName("Validates category of law, duplicates and fee calculation for all claims")
     void validateCategoryOfLawAndDuplicatesAndFeeCalculation() {
-      ClaimFields claim1 = new ClaimFields().id("claim1").feeCode("feeCode1");
-      ClaimFields claim2 = new ClaimFields().id("claim2").feeCode("feeCode2");
-      List<ClaimFields> claims = List.of(claim1, claim2);
+      ClaimResponse claim1 = new ClaimResponse().id("claim1").feeCode("feeCode1");
+      ClaimResponse claim2 = new ClaimResponse().id("claim2").feeCode("feeCode2");
+      List<ClaimResponse> claims = List.of(claim1, claim2);
       List<String> providerCategoriesOfLaw = List.of("categoryOfLaw1");
       Map<String, CategoryOfLawResult> categoryOfLawLookup = Collections.emptyMap();
 

@@ -7,13 +7,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimFields;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPatch;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetSubmission200Response;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetSubmission200ResponseClaimsInner;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetSubmission200ResponseClaimsInner.StatusEnum;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionClaim;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
@@ -46,7 +45,7 @@ public class SubmissionValidationService {
    *
    * @param submission the submission to validate
    */
-  public void validateSubmission(GetSubmission200Response submission) {
+  public void validateSubmission(SubmissionResponse submission) {
     UUID submissionId = submission.getSubmissionId();
 
     log.debug("Validating submission {}", submissionId);
@@ -56,7 +55,7 @@ public class SubmissionValidationService {
     submissionValidationContext.addSubmissionValidationErrors(
         jsonSchemaValidator.validate("submission", submission));
 
-    List<ClaimFields> claims = getReadyToProcessClaims(submission);
+    List<ClaimResponse> claims = getReadyToProcessClaims(submission);
 
     initialiseValidationContext(claims);
 
@@ -111,7 +110,7 @@ public class SubmissionValidationService {
     dataClaimsRestClient.updateSubmission(submissionId.toString(), submissionPatch);
   }
 
-  private void validateNilSubmission(GetSubmission200Response submission) {
+  private void validateNilSubmission(SubmissionResponse submission) {
     log.debug("Validating nil submission for submission {}", submission.getSubmissionId());
     if (Boolean.TRUE.equals(submission.getIsNilSubmission())) {
       if (submission.getClaims() != null && !submission.getClaims().isEmpty()) {
@@ -162,7 +161,7 @@ public class SubmissionValidationService {
    * @param submissionId the ID of the submission
    * @param claims the claims in the submission
    */
-  private void updateClaims(UUID submissionId, List<ClaimFields> claims) {
+  private void updateClaims(UUID submissionId, List<ClaimResponse> claims) {
     log.debug("Updating claims for submission {}", submissionId.toString());
     AtomicInteger claimsUpdated = new AtomicInteger();
     AtomicInteger claimsFlaggedForRetry = new AtomicInteger();
@@ -213,9 +212,9 @@ public class SubmissionValidationService {
         .toList();
   }
 
-  private void initialiseValidationContext(List<ClaimFields> claims) {
+  private void initialiseValidationContext(List<ClaimResponse> claims) {
     List<ClaimValidationReport> claimValidationErrors =
-        claims.stream().map(ClaimFields::getId).map(ClaimValidationReport::new).toList();
+        claims.stream().map(ClaimResponse::getId).map(ClaimValidationReport::new).toList();
     submissionValidationContext.addClaimReports(claimValidationErrors);
   }
 
@@ -225,13 +224,13 @@ public class SubmissionValidationService {
    * @param submission the submission
    * @return a list of claims in the submission that are ready for processing.
    */
-  private List<ClaimFields> getReadyToProcessClaims(GetSubmission200Response submission) {
+  private List<ClaimResponse> getReadyToProcessClaims(SubmissionResponse submission) {
     if (submission.getClaims() == null) {
       return Collections.emptyList();
     }
     return submission.getClaims().stream()
-        .filter(claim -> StatusEnum.READY_TO_PROCESS.equals(claim.getStatus()))
-        .map(GetSubmission200ResponseClaimsInner::getClaimId)
+        .filter(claim -> ClaimStatus.READY_TO_PROCESS.equals(claim.getStatus()))
+        .map(SubmissionClaim::getClaimId)
         .map(
             claimId ->
                 dataClaimsRestClient.getClaim(submission.getSubmissionId(), claimId).getBody())
