@@ -85,7 +85,7 @@ public interface DataClaimsRestClient {
    *
    * @param submissionId submission UUID
    * @param claimId claim UUID
-   * @return full claim details map (fields per {@code ClaimFields})
+   * @return full claim details map (fields per {@code ClaimResponse})
    */
   @GetExchange("/submissions/{submission-id}/claims/{claim-id}")
   ResponseEntity<ClaimResponse> getClaim(

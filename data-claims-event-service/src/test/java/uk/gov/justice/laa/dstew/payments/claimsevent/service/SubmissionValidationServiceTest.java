@@ -80,12 +80,12 @@ public class SubmissionValidationServiceTest {
               .claims(List.of(claim))
               .build();
 
-      ClaimResponse claimFields = new ClaimResponse();
-      claimFields.id(claimId.toString());
-      claimFields.feeCode("feeCode");
+      ClaimResponse claimResponse = new ClaimResponse();
+      claimResponse.id(claimId.toString());
+      claimResponse.feeCode("feeCode");
 
       when(dataClaimsRestClient.getClaim(submissionId, claimId))
-          .thenReturn(ResponseEntity.of(Optional.of(claimFields)));
+          .thenReturn(ResponseEntity.of(Optional.of(claimResponse)));
 
       FirmOfficeContractAndScheduleLine scheduleLine = new FirmOfficeContractAndScheduleLine();
       scheduleLine.setCategoryOfLaw(categoryOfLaw);
@@ -125,7 +125,7 @@ public class SubmissionValidationServiceTest {
       verify(providerDetailsRestClient, times(1))
           .getProviderFirmSchedules(officeAccountNumber, areaOfLaw);
       verify(claimValidationService, times(1))
-          .validateClaims(List.of(claimFields), List.of(categoryOfLaw));
+          .validateClaims(List.of(claimResponse), List.of(categoryOfLaw));
       verify(dataClaimsRestClient, times(1)).updateClaim(submissionId, claimId, claimPatch);
     }
 
@@ -153,12 +153,12 @@ public class SubmissionValidationServiceTest {
               .claims(List.of(claim))
               .build();
 
-      ClaimResponse claimFields = new ClaimResponse();
-      claimFields.id(claimId.toString());
-      claimFields.feeCode("feeCode");
+      ClaimResponse claimResponse = new ClaimResponse();
+      claimResponse.id(claimId.toString());
+      claimResponse.feeCode("feeCode");
 
       when(dataClaimsRestClient.getClaim(submissionId, claimId))
-          .thenReturn(ResponseEntity.of(Optional.of(claimFields)));
+          .thenReturn(ResponseEntity.of(Optional.of(claimResponse)));
 
       FirmOfficeContractAndScheduleLine scheduleLine = new FirmOfficeContractAndScheduleLine();
       scheduleLine.setCategoryOfLaw(categoryOfLaw);
@@ -200,7 +200,7 @@ public class SubmissionValidationServiceTest {
       verify(providerDetailsRestClient, times(1))
           .getProviderFirmSchedules(officeAccountNumber, areaOfLaw);
       verify(claimValidationService, times(1))
-          .validateClaims(List.of(claimFields), List.of(categoryOfLaw));
+          .validateClaims(List.of(claimResponse), List.of(categoryOfLaw));
       verify(dataClaimsRestClient, times(1)).updateClaim(submissionId, claimId, claimPatch);
     }
 
@@ -255,12 +255,12 @@ public class SubmissionValidationServiceTest {
               .claims(List.of(claim))
               .build();
 
-      ClaimResponse claimFields = new ClaimResponse();
-      claimFields.id(claimId.toString());
-      claimFields.feeCode("feeCode");
+      ClaimResponse claimResponse = new ClaimResponse();
+      claimResponse.id(claimId.toString());
+      claimResponse.feeCode("feeCode");
 
       when(dataClaimsRestClient.getClaim(submissionId, claimId))
-          .thenReturn(ResponseEntity.of(Optional.of(claimFields)));
+          .thenReturn(ResponseEntity.of(Optional.of(claimResponse)));
 
       when(providerDetailsRestClient.getProviderFirmSchedules(officeAccountNumber, areaOfLaw))
           .thenReturn(Mono.empty());
@@ -304,7 +304,7 @@ public class SubmissionValidationServiceTest {
       verify(providerDetailsRestClient, times(1))
           .getProviderFirmSchedules(officeAccountNumber, areaOfLaw);
       verify(claimValidationService, times(1))
-          .validateClaims(List.of(claimFields), Collections.emptyList());
+          .validateClaims(List.of(claimResponse), Collections.emptyList());
       verify(dataClaimsRestClient, times(1)).updateClaim(submissionId, claimId, claimPatch);
     }
 

@@ -27,7 +27,7 @@ public interface FeeSchemeMapper {
   @Mapping(target = "boltOns", source = "claim")
   @Mapping(
       target = "netTravelCosts",
-      ignore = true) // TODO: netTravelCosts missing from ClaimFields?
+      ignore = true) // TODO: netTravelCosts missing from ClaimResponse?
   @Mapping(target = "netWaitingCosts", source = "netWaitingCostsAmount")
   @Mapping(target = "travelAndWaitingCosts", source = "travelWaitingCostsAmount")
   @Mapping(target = "detentionAndWaitingCosts", source = "detentionTravelWaitingCostsAmount")
@@ -53,7 +53,7 @@ public interface FeeSchemeMapper {
       source = "adjournedHearingFeeAmount") // TODO: Mismatch in types Integer <-> BigDecimal
   @Mapping(target = "boltOnCmrhOral", source = "cmrhOralCount")
   @Mapping(target = "boltOnCrmhTelephone", source = "cmrhTelephoneCount")
-  @Mapping(target = "boltOnAdditionalTravel", ignore = true) // TODO: Missing from ClaimFields?
+  @Mapping(target = "boltOnAdditionalTravel", ignore = true) // TODO: Missing from ClaimResponse?
   @Mapping(target = "boltOnHomeOfficeInterview", source = "hoInterview")
   BoltOnType mapToBoltOnType(ClaimResponse claim);
 }
