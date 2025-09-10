@@ -30,9 +30,9 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.service.BulkParsingService;
 @ExtendWith(MockitoExtension.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @DisplayName("Bulk submissions listener integration test")
-public class BulkSubmissionListenerIntegrationTests extends LocalstackBaseIntegrationTest {
+public class SubmissionListenerIntegrationTests extends LocalstackBaseIntegrationTest {
 
-  @InjectMocks BulkSubmissionListener listener;
+  @InjectMocks SubmissionListener listener;
 
   @MockitoBean BulkParsingService bulkParsingService;
 
