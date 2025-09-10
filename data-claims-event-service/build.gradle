@@ -47,9 +47,10 @@ dependencies {
     // Upgrade to fix vulnerabilities in spring-webmvc
     implementation 'org.springframework:spring-webmvc:6.2.10'
 
-    implementation project(':reference-data-claim-api')
     implementation project(':reference-provider-details-api')
     implementation project(':reference-fee-scheme-platform-api')
+
+    implementation 'uk.gov.justice.laa.datastewardship.payments:data-claims-api-models:11a9b3c'
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-validation'

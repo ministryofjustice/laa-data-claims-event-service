@@ -23,13 +23,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.Mono;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimFields;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPatch;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetSubmission200Response;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetSubmission200ResponseClaimsInner;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetSubmission200ResponseClaimsInner.StatusEnum;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionClaim;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
@@ -68,12 +67,12 @@ public class SubmissionValidationServiceTest {
       String categoryOfLaw = "categoryOfLaw";
       String officeAccountNumber = "officeAccountNumber";
 
-      GetSubmission200ResponseClaimsInner claim = new GetSubmission200ResponseClaimsInner();
+      SubmissionClaim claim = new SubmissionClaim();
       claim.setClaimId(claimId);
-      claim.setStatus(StatusEnum.READY_TO_PROCESS);
+      claim.setStatus(ClaimStatus.READY_TO_PROCESS);
 
-      GetSubmission200Response submission =
-          GetSubmission200Response.builder()
+      SubmissionResponse submission =
+          SubmissionResponse.builder()
               .submissionId(submissionId)
               .areaOfLaw(areaOfLaw)
               .officeAccountNumber(officeAccountNumber)
@@ -81,12 +80,12 @@ public class SubmissionValidationServiceTest {
               .claims(List.of(claim))
               .build();
 
-      ClaimFields claimFields = new ClaimFields();
-      claimFields.id(claimId.toString());
-      claimFields.feeCode("feeCode");
+      ClaimResponse claimResponse = new ClaimResponse();
+      claimResponse.id(claimId.toString());
+      claimResponse.feeCode("feeCode");
 
       when(dataClaimsRestClient.getClaim(submissionId, claimId))
-          .thenReturn(ResponseEntity.of(Optional.of(claimFields)));
+          .thenReturn(ResponseEntity.of(Optional.of(claimResponse)));
 
       FirmOfficeContractAndScheduleLine scheduleLine = new FirmOfficeContractAndScheduleLine();
       scheduleLine.setCategoryOfLaw(categoryOfLaw);
@@ -126,7 +125,7 @@ public class SubmissionValidationServiceTest {
       verify(providerDetailsRestClient, times(1))
           .getProviderFirmSchedules(officeAccountNumber, areaOfLaw);
       verify(claimValidationService, times(1))
-          .validateClaims(List.of(claimFields), List.of(categoryOfLaw));
+          .validateClaims(List.of(claimResponse), List.of(categoryOfLaw));
       verify(dataClaimsRestClient, times(1)).updateClaim(submissionId, claimId, claimPatch);
     }
 
@@ -140,12 +139,12 @@ public class SubmissionValidationServiceTest {
       String categoryOfLaw = "categoryOfLaw";
       String officeAccountNumber = "officeAccountNumber";
 
-      GetSubmission200ResponseClaimsInner claim = new GetSubmission200ResponseClaimsInner();
+      SubmissionClaim claim = new SubmissionClaim();
       claim.setClaimId(claimId);
-      claim.setStatus(StatusEnum.READY_TO_PROCESS);
+      claim.setStatus(ClaimStatus.READY_TO_PROCESS);
 
-      GetSubmission200Response submission =
-          GetSubmission200Response.builder()
+      SubmissionResponse submission =
+          SubmissionResponse.builder()
               .submissionId(submissionId)
               .areaOfLaw(areaOfLaw)
               .officeAccountNumber(officeAccountNumber)
@@ -154,12 +153,12 @@ public class SubmissionValidationServiceTest {
               .claims(List.of(claim))
               .build();
 
-      ClaimFields claimFields = new ClaimFields();
-      claimFields.id(claimId.toString());
-      claimFields.feeCode("feeCode");
+      ClaimResponse claimResponse = new ClaimResponse();
+      claimResponse.id(claimId.toString());
+      claimResponse.feeCode("feeCode");
 
       when(dataClaimsRestClient.getClaim(submissionId, claimId))
-          .thenReturn(ResponseEntity.of(Optional.of(claimFields)));
+          .thenReturn(ResponseEntity.of(Optional.of(claimResponse)));
 
       FirmOfficeContractAndScheduleLine scheduleLine = new FirmOfficeContractAndScheduleLine();
       scheduleLine.setCategoryOfLaw(categoryOfLaw);
@@ -201,7 +200,7 @@ public class SubmissionValidationServiceTest {
       verify(providerDetailsRestClient, times(1))
           .getProviderFirmSchedules(officeAccountNumber, areaOfLaw);
       verify(claimValidationService, times(1))
-          .validateClaims(List.of(claimFields), List.of(categoryOfLaw));
+          .validateClaims(List.of(claimResponse), List.of(categoryOfLaw));
       verify(dataClaimsRestClient, times(1)).updateClaim(submissionId, claimId, claimPatch);
     }
 
@@ -213,8 +212,8 @@ public class SubmissionValidationServiceTest {
       String areaOfLaw = "areaOfLaw";
       String officeAccountNumber = "officeAccountNumber";
 
-      GetSubmission200Response submission =
-          GetSubmission200Response.builder()
+      SubmissionResponse submission =
+          SubmissionResponse.builder()
               .submissionId(submissionId)
               .areaOfLaw(areaOfLaw)
               .officeAccountNumber(officeAccountNumber)
@@ -243,12 +242,12 @@ public class SubmissionValidationServiceTest {
       String areaOfLaw = "areaOfLaw";
       String officeAccountNumber = "officeAccountNumber";
 
-      GetSubmission200ResponseClaimsInner claim = new GetSubmission200ResponseClaimsInner();
+      SubmissionClaim claim = new SubmissionClaim();
       claim.setClaimId(claimId);
-      claim.setStatus(StatusEnum.READY_TO_PROCESS);
+      claim.setStatus(ClaimStatus.READY_TO_PROCESS);
 
-      GetSubmission200Response submission =
-          GetSubmission200Response.builder()
+      SubmissionResponse submission =
+          SubmissionResponse.builder()
               .submissionId(submissionId)
               .areaOfLaw(areaOfLaw)
               .officeAccountNumber(officeAccountNumber)
@@ -256,12 +255,12 @@ public class SubmissionValidationServiceTest {
               .claims(List.of(claim))
               .build();
 
-      ClaimFields claimFields = new ClaimFields();
-      claimFields.id(claimId.toString());
-      claimFields.feeCode("feeCode");
+      ClaimResponse claimResponse = new ClaimResponse();
+      claimResponse.id(claimId.toString());
+      claimResponse.feeCode("feeCode");
 
       when(dataClaimsRestClient.getClaim(submissionId, claimId))
-          .thenReturn(ResponseEntity.of(Optional.of(claimFields)));
+          .thenReturn(ResponseEntity.of(Optional.of(claimResponse)));
 
       when(providerDetailsRestClient.getProviderFirmSchedules(officeAccountNumber, areaOfLaw))
           .thenReturn(Mono.empty());
@@ -305,7 +304,7 @@ public class SubmissionValidationServiceTest {
       verify(providerDetailsRestClient, times(1))
           .getProviderFirmSchedules(officeAccountNumber, areaOfLaw);
       verify(claimValidationService, times(1))
-          .validateClaims(List.of(claimFields), Collections.emptyList());
+          .validateClaims(List.of(claimResponse), Collections.emptyList());
       verify(dataClaimsRestClient, times(1)).updateClaim(submissionId, claimId, claimPatch);
     }
 
@@ -318,8 +317,8 @@ public class SubmissionValidationServiceTest {
       String areaOfLaw = "areaOfLaw";
       String officeAccountNumber = "officeAccountNumber";
 
-      GetSubmission200Response submission =
-          GetSubmission200Response.builder()
+      SubmissionResponse submission =
+          SubmissionResponse.builder()
               .submissionId(submissionId)
               .areaOfLaw(areaOfLaw)
               .officeAccountNumber(officeAccountNumber)
@@ -354,8 +353,8 @@ public class SubmissionValidationServiceTest {
       String areaOfLaw = "areaOfLaw";
       String officeAccountNumber = "officeAccountNumber";
 
-      GetSubmission200Response submission =
-          GetSubmission200Response.builder()
+      SubmissionResponse submission =
+          SubmissionResponse.builder()
               .submissionId(submissionId)
               .areaOfLaw(areaOfLaw)
               .officeAccountNumber(officeAccountNumber)

@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimFields;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 
 /**
  * A service for validating submitted claims that are ready to process. Validation errors will
@@ -24,7 +24,7 @@ public class ClaimValidationService {
    *
    * @param claims the claims in a submission
    */
-  public void validateClaims(List<ClaimFields> claims, List<String> providerCategoriesOfLaw) {
+  public void validateClaims(List<ClaimResponse> claims, List<String> providerCategoriesOfLaw) {
     Map<String, CategoryOfLawResult> categoryOfLawLookup =
         categoryOfLawValidationService.getCategoryOfLawLookup(claims);
     claims.forEach(claim -> validateClaim(claim, categoryOfLawLookup, providerCategoriesOfLaw));
@@ -45,7 +45,7 @@ public class ClaimValidationService {
    * @param categoryOfLawLookup the lookup of fee code -> category of law for the submission
    */
   private void validateClaim(
-      ClaimFields claim,
+      ClaimResponse claim,
       Map<String, CategoryOfLawResult> categoryOfLawLookup,
       List<String> providerCategoriesOfLaw) {
     categoryOfLawValidationService.validateCategoryOfLaw(

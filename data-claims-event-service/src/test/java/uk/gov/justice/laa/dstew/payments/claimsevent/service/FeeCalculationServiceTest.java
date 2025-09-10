@@ -14,7 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimFields;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.mapper.FeeSchemeMapper;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
@@ -42,7 +42,7 @@ class FeeCalculationServiceTest {
     @DisplayName("Successful validation does not update context")
     void successfulValidationDoesNotUpdateContext() {
 
-      ClaimFields claim = new ClaimFields().id("claimId").feeCode("feeCode");
+      ClaimResponse claim = new ClaimResponse().id("claimId").feeCode("feeCode");
 
       FeeCalculationRequest feeCalculationRequest = new FeeCalculationRequest().feeCode("feeCode");
       FeeCalculationResponse feeCalculationResponse = new FeeCalculationResponse();
@@ -61,7 +61,7 @@ class FeeCalculationServiceTest {
     @DisplayName("Warning in fee calculation response results in claim error added to context")
     void warningResponseResultsInClaimErrorAddedToContext() {
 
-      ClaimFields claim = new ClaimFields().id("claimId").feeCode("feeCode");
+      ClaimResponse claim = new ClaimResponse().id("claimId").feeCode("feeCode");
 
       FeeCalculationRequest feeCalculationRequest = new FeeCalculationRequest().feeCode("feeCode");
 
@@ -85,7 +85,7 @@ class FeeCalculationServiceTest {
     @DisplayName("404 Not found response results in claim being flagged for retry")
     void notFoundResponseResultsInClaimBeingFlaggedForRetry() {
 
-      ClaimFields claim = new ClaimFields().id("claimId").feeCode("feeCode");
+      ClaimResponse claim = new ClaimResponse().id("claimId").feeCode("feeCode");
 
       FeeCalculationRequest feeCalculationRequest = new FeeCalculationRequest().feeCode("feeCode");
 
@@ -107,7 +107,7 @@ class FeeCalculationServiceTest {
     @DisplayName("500 Server error response results in claim being flagged for retry")
     void serverErrorResponseResultsInClaimBeingFlaggedForRetry() {
 
-      ClaimFields claim = new ClaimFields().id("claimId").feeCode("feeCode");
+      ClaimResponse claim = new ClaimResponse().id("claimId").feeCode("feeCode");
 
       FeeCalculationRequest feeCalculationRequest = new FeeCalculationRequest().feeCode("feeCode");
 
@@ -127,7 +127,7 @@ class FeeCalculationServiceTest {
     @DisplayName("Skips validation if claim is flagged for retry")
     void skipsValidationIfClaimIsFlaggedForRetry() {
 
-      ClaimFields claim = new ClaimFields().id("claimId").feeCode("feeCode");
+      ClaimResponse claim = new ClaimResponse().id("claimId").feeCode("feeCode");
 
       when(validationContext.isFlaggedForRetry("claimId")).thenReturn(true);
 

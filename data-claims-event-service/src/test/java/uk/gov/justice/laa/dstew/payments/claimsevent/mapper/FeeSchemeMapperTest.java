@@ -7,7 +7,7 @@ import java.time.LocalDate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimFields;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.fee.scheme.model.BoltOnType;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationRequest;
 
@@ -23,10 +23,10 @@ class FeeSchemeMapperTest {
     @DisplayName("Maps to fee calculation request")
     void mapsToFeeCalculationRequest() {
 
-      ClaimFields claim =
-          new ClaimFields()
+      ClaimResponse claim =
+          new ClaimResponse()
               .feeCode("feeCode")
-              .caseStartDate(LocalDate.parse("2025-01-01"))
+              .caseStartDate("2025-01-01")
               .netProfitCostsAmount(BigDecimal.valueOf(1.00))
               .netDisbursementAmount(BigDecimal.valueOf(1.01))
               .netCounselCostsAmount(BigDecimal.valueOf(1.02))
@@ -42,7 +42,7 @@ class FeeSchemeMapperTest {
               .netWaitingCostsAmount(BigDecimal.valueOf(1.05))
               .travelWaitingCostsAmount(BigDecimal.valueOf(1.06))
               .detentionTravelWaitingCostsAmount(BigDecimal.valueOf(1.07))
-              .caseConcludedDate(LocalDate.parse("2025-01-02"))
+              .caseConcludedDate("2025-01-02")
               .policeStationCourtPrisonId("policeCourtOrPrisonId")
               .isDutySolicitor(true)
               .schemeId("schemeId")
@@ -98,8 +98,8 @@ class FeeSchemeMapperTest {
     @DisplayName("Maps to bolt on type")
     void mapsToBoltOnType() {
 
-      ClaimFields claim =
-          new ClaimFields()
+      ClaimResponse claim =
+          new ClaimResponse()
               .adjournedHearingFeeAmount(BigDecimal.valueOf(1))
               .cmrhOralCount(2)
               .cmrhTelephoneCount(3)

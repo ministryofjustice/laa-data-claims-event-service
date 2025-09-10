@@ -18,7 +18,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimFields;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
@@ -40,7 +40,7 @@ class CategoryOfLawValidationServiceTest {
     @Test
     @DisplayName("Validates category of law without errors")
     void validatesCategoryOfLawWithoutErrors() {
-      ClaimFields claim = new ClaimFields().id("claimId").feeCode("feeCode");
+      ClaimResponse claim = new ClaimResponse().id("claimId").feeCode("feeCode");
       Map<String, CategoryOfLawResult> categoryOfLawLookup =
           Map.of("feeCode", CategoryOfLawResult.withCategoryOfLaw("categoryOfLaw"));
       List<String> providerCategoriesOfLaw = List.of("categoryOfLaw");
@@ -56,7 +56,7 @@ class CategoryOfLawValidationServiceTest {
         "Marks claim as invalid when category of law could not be found for the provided "
             + "fee code")
     void marksClaimAsInvalidWhenCategoryOfLawNotFoundForFeeCode() {
-      ClaimFields claim = new ClaimFields().id("claimId").feeCode("feeCode");
+      ClaimResponse claim = new ClaimResponse().id("claimId").feeCode("feeCode");
       Map<String, CategoryOfLawResult> categoryOfLawLookup = new HashMap<>();
       categoryOfLawLookup.put("feeCode", CategoryOfLawResult.withCategoryOfLaw(null));
       List<String> providerCategoriesOfLaw = List.of("categoryOfLaw");
@@ -71,7 +71,7 @@ class CategoryOfLawValidationServiceTest {
     @Test
     @DisplayName("Marks claim as invalid when category of law not found in provider contracts")
     void marksClaimAsInvalidWhenCategoryOfLawNotFoundForProvider() {
-      ClaimFields claim = new ClaimFields().id("claimId").feeCode("feeCode");
+      ClaimResponse claim = new ClaimResponse().id("claimId").feeCode("feeCode");
       Map<String, CategoryOfLawResult> categoryOfLawLookup = new HashMap<>();
       categoryOfLawLookup.put("feeCode", CategoryOfLawResult.withCategoryOfLaw("categoryOfLaw"));
       List<String> providerCategoriesOfLaw = Collections.emptyList();
@@ -87,7 +87,7 @@ class CategoryOfLawValidationServiceTest {
     @Test
     @DisplayName("Flags claim for retry when category of law response resulted in error")
     void flagsClaimForRetryWhenCategoryOfLawResponseResultInError() {
-      ClaimFields claim = new ClaimFields().id("claimId").feeCode("feeCode");
+      ClaimResponse claim = new ClaimResponse().id("claimId").feeCode("feeCode");
       Map<String, CategoryOfLawResult> categoryOfLawLookup = new HashMap<>();
       categoryOfLawLookup.put("feeCode", CategoryOfLawResult.error());
       List<String> providerCategoriesOfLaw = List.of("categoryOfLaw");
@@ -106,13 +106,13 @@ class CategoryOfLawValidationServiceTest {
     @Test
     @DisplayName("Returns map of fee code -> category of law container")
     void getCategoryOfLawLookup() {
-      ClaimFields claim1 = new ClaimFields().id("claimId1").feeCode("feeCode1");
+      ClaimResponse claim1 = new ClaimResponse().id("claimId1").feeCode("feeCode1");
 
-      ClaimFields claim2 = new ClaimFields().id("claimId2").feeCode("feeCode2");
+      ClaimResponse claim2 = new ClaimResponse().id("claimId2").feeCode("feeCode2");
 
-      ClaimFields claim3 = new ClaimFields().id("claimId3").feeCode("feeCode3");
+      ClaimResponse claim3 = new ClaimResponse().id("claimId3").feeCode("feeCode3");
 
-      ClaimFields claim4 = new ClaimFields().id("claimId4").feeCode("feeCode4");
+      ClaimResponse claim4 = new ClaimResponse().id("claimId4").feeCode("feeCode4");
 
       CategoryOfLawResponse categoryOfLawResponse1 =
           new CategoryOfLawResponse().categoryOfLawCode("categoryOfLaw1");
