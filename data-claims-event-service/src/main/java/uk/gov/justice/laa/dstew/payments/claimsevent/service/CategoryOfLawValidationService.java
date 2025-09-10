@@ -10,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimFields;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
@@ -34,7 +34,7 @@ public class CategoryOfLawValidationService {
    *     submission
    */
   public void validateCategoryOfLaw(
-      ClaimFields claim,
+      ClaimResponse claim,
       Map<String, CategoryOfLawResult> categoryOfLawLookup,
       List<String> providerCategoriesOfLaw) {
 
@@ -69,9 +69,9 @@ public class CategoryOfLawValidationService {
    * @param claims the list of claims (from the submission)
    * @return the feeCode -> categoryOfLaw lookup
    */
-  public Map<String, CategoryOfLawResult> getCategoryOfLawLookup(List<ClaimFields> claims) {
+  public Map<String, CategoryOfLawResult> getCategoryOfLawLookup(List<ClaimResponse> claims) {
     Set<String> uniqueFeeCodes =
-        claims.stream().map(ClaimFields::getFeeCode).collect(Collectors.toSet());
+        claims.stream().map(ClaimResponse::getFeeCode).collect(Collectors.toSet());
 
     Map<String, CategoryOfLawResult> categoryOfLawLookup = new HashMap<>();
 

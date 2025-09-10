@@ -9,15 +9,15 @@ import org.springframework.web.service.annotation.GetExchange;
 import org.springframework.web.service.annotation.HttpExchange;
 import org.springframework.web.service.annotation.PatchExchange;
 import org.springframework.web.service.annotation.PostExchange;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimFields;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPost;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.CreateMatterStart201Response;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetBulkSubmission200Response;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetSubmission200Response;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.MatterStartPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPost;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
 
 /**
  * REST client interface for fetching claims data. This interface communicates with the Data Claims
@@ -66,7 +66,7 @@ public interface DataClaimsRestClient {
    * @return submission details map: {@code submission}, {@code claims[]}, {@code matter_starts[]}
    */
   @GetExchange("/submissions/{id}")
-  ResponseEntity<GetSubmission200Response> getSubmission(@PathVariable("id") String id);
+  ResponseEntity<SubmissionResponse> getSubmission(@PathVariable("id") String id);
 
   /**
    * Add a claim to a submission.
@@ -88,7 +88,7 @@ public interface DataClaimsRestClient {
    * @return full claim details map (fields per {@code ClaimFields})
    */
   @GetExchange("/submissions/{submission-id}/claims/{claim-id}")
-  ResponseEntity<ClaimFields> getClaim(
+  ResponseEntity<ClaimResponse> getClaim(
       @PathVariable("submission-id") UUID submissionId, @PathVariable("claim-id") UUID claimId);
 
   /**
