@@ -56,7 +56,7 @@ class DuplicateClaimValidationServiceTest {
       List<ClaimResponse> submissionClaims = List.of(claim1, claim2);
 
       when(submissionValidationContext.isFlaggedForRetry("claimId1")).thenReturn(false);
-      when(dataClaimsRestClient.searchClaims(any(), any(), any(), any(), any(), any(), any()))
+      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(Collections.emptyList())));
 
       // When
@@ -89,7 +89,7 @@ class DuplicateClaimValidationServiceTest {
       List<ClaimResponse> submissionClaims = List.of(claim1, claim2);
 
       when(submissionValidationContext.isFlaggedForRetry("claimId1")).thenReturn(false);
-      when(dataClaimsRestClient.searchClaims(any(), any(), any(), any(), any(), any(), any()))
+      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(Collections.emptyList())));
 
       // When
@@ -122,7 +122,7 @@ class DuplicateClaimValidationServiceTest {
       List<ClaimResponse> submissionClaims = List.of(claim1, claim2);
 
       when(submissionValidationContext.isFlaggedForRetry("claimId1")).thenReturn(false);
-      when(dataClaimsRestClient.searchClaims(any(), any(), any(), any(), any(), any(), any()))
+      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(Collections.emptyList())));
 
       // When
@@ -156,7 +156,7 @@ class DuplicateClaimValidationServiceTest {
       List<ClaimResponse> submissionClaims = List.of(claim1, claim2);
 
       when(submissionValidationContext.isFlaggedForRetry("claimId1")).thenReturn(false);
-      when(dataClaimsRestClient.searchClaims(any(), any(), any(), any(), any(), any(), any()))
+      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(Collections.emptyList())));
 
       // When
@@ -189,7 +189,7 @@ class DuplicateClaimValidationServiceTest {
       List<ClaimResponse> submissionClaims = List.of(claim1, claim2);
 
       when(submissionValidationContext.isFlaggedForRetry("claimId1")).thenReturn(false);
-      when(dataClaimsRestClient.searchClaims(any(), any(), any(), any(), any(), any(), any()))
+      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(Collections.emptyList())));
 
       // When
@@ -224,7 +224,7 @@ class DuplicateClaimValidationServiceTest {
       List<ClaimResponse> submissionClaims = List.of(claim1);
 
       when(submissionValidationContext.isFlaggedForRetry("claimId1")).thenReturn(false);
-      when(dataClaimsRestClient.searchClaims(any(), any(), any(), any(), any(), any(), any()))
+      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(List.of(otherClaim))));
 
       // When
@@ -263,7 +263,7 @@ class DuplicateClaimValidationServiceTest {
       List<ClaimResponse> submissionClaims = List.of(claim1, claim2);
 
       when(submissionValidationContext.isFlaggedForRetry("claimId1")).thenReturn(false);
-      when(dataClaimsRestClient.searchClaims(any(), any(), any(), any(), any(), any(), any()))
+      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(List.of(otherClaim))));
 
       // When

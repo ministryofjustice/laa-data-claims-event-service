@@ -31,7 +31,7 @@ public class ClaimValidationService {
   public void validateClaims(SubmissionResponse submission, List<String> providerCategoriesOfLaw) {
     List<ClaimResponse> submissionClaims =
         dataClaimsRestClient
-            .searchClaims(
+            .getClaims(
                 submission.getOfficeAccountNumber(),
                 submission.getSubmissionId().toString(),
                 null,
