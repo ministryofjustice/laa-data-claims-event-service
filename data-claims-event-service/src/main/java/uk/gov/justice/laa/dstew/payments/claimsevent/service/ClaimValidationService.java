@@ -5,6 +5,9 @@ import java.util.Map;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
+import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 
 /**
  * A service for validating submitted claims that are ready to process. Validation errors will
@@ -18,16 +21,38 @@ public class ClaimValidationService {
   private final CategoryOfLawValidationService categoryOfLawValidationService;
   private final DuplicateClaimValidationService duplicateClaimValidationService;
   private final FeeCalculationService feeCalculationService;
+  private final DataClaimsRestClient dataClaimsRestClient;
 
   /**
    * Validate a list of claims in a submission.
    *
-   * @param claims the claims in a submission
+   * @param submission the claim submission
    */
-  public void validateClaims(List<ClaimResponse> claims, List<String> providerCategoriesOfLaw) {
+  public void validateClaims(SubmissionResponse submission, List<String> providerCategoriesOfLaw) {
+    List<ClaimResponse> submissionClaims =
+        dataClaimsRestClient
+            .getClaims(
+                submission.getOfficeAccountNumber(),
+                submission.getSubmissionId().toString(),
+                null,
+                null,
+                null,
+                null,
+                null)
+            .getBody();
     Map<String, CategoryOfLawResult> categoryOfLawLookup =
-        categoryOfLawValidationService.getCategoryOfLawLookup(claims);
-    claims.forEach(claim -> validateClaim(claim, categoryOfLawLookup, providerCategoriesOfLaw));
+        categoryOfLawValidationService.getCategoryOfLawLookup(submissionClaims);
+    submissionClaims.stream()
+        .filter(claim -> ClaimStatus.READY_TO_PROCESS.equals(claim.getStatus()))
+        .forEach(
+            claim ->
+                validateClaim(
+                    claim,
+                    submissionClaims,
+                    categoryOfLawLookup,
+                    providerCategoriesOfLaw,
+                    submission.getAreaOfLaw(),
+                    submission.getOfficeAccountNumber()));
   }
 
   /**
@@ -46,11 +71,15 @@ public class ClaimValidationService {
    */
   private void validateClaim(
       ClaimResponse claim,
+      List<ClaimResponse> submissionClaims,
       Map<String, CategoryOfLawResult> categoryOfLawLookup,
-      List<String> providerCategoriesOfLaw) {
+      List<String> providerCategoriesOfLaw,
+      String areaOfLaw,
+      String officeCode) {
     categoryOfLawValidationService.validateCategoryOfLaw(
         claim, categoryOfLawLookup, providerCategoriesOfLaw);
-    duplicateClaimValidationService.validateDuplicateClaims(claim);
+    duplicateClaimValidationService.validateDuplicateClaims(
+        claim, submissionClaims, areaOfLaw, officeCode);
     feeCalculationService.validateFeeCalculation(claim);
   }
 }
