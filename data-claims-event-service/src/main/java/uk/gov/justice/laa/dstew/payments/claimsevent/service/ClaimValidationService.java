@@ -80,7 +80,7 @@ public class ClaimValidationService {
    *
    * @param claim the claim object containing the unique file number to be validated
    */
-  private void validateUniqueFileNumber(ClaimFields claim) {
+  private void validateUniqueFileNumber(ClaimResponse claim) {
     String uniqueFileNumber = claim.getUniqueFileNumber();
     if (uniqueFileNumber != null && uniqueFileNumber.length() > 1) {
       String datePart = uniqueFileNumber.substring(0, 6); // DDMMYY
@@ -107,7 +107,7 @@ public class ClaimValidationService {
    * @param fieldName The name of the field associated with the date being validated.
    * @param dateValueToCheck The date value to validate in the format "dd/MM/yyyy".
    */
-  private void checkDateInPast(ClaimFields claim, String fieldName, String dateValueToCheck, String oldestDateAllowedStr) {
+  private void checkDateInPast(ClaimResponse claim, String fieldName, String dateValueToCheck, String oldestDateAllowedStr) {
     if (dateValueToCheck != null) {
       DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
       try {

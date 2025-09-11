@@ -21,12 +21,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.Mono;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimFields;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetSubmission200Response;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetSubmission200ResponseClaimsInner;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetSubmission200ResponseClaimsInner.StatusEnum;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionClaim;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
@@ -74,11 +73,11 @@ public class SubmissionValidationServiceTest {
       String officeAccountNumber = "officeAccountNumber";
       String areaOfLaw = "areaOfLaw";
 
-      GetSubmission200Response submission = buildSubmission(submissionId, claimId, isNilSubmission);
+      SubmissionResponse submission = buildSubmission(submissionId, claimId, isNilSubmission);
 
       if (claimId != null) {
-        ClaimFields claimFields = buildClaimFields(claimId);
-        mockClaimRetrieval(submissionId, claimId, claimFields);
+        ClaimResponse ClaimResponse = buildClaimResponse(claimId);
+        mockClaimRetrieval(submissionId, claimId, ClaimResponse);
         mockProviderSchedules(officeAccountNumber, areaOfLaw, categoryOfLaw);
 
         SubmissionPatch submissionPatch = buildSubmissionPatch(submissionId);
@@ -97,7 +96,7 @@ public class SubmissionValidationServiceTest {
             claimId,
             officeAccountNumber,
             areaOfLaw,
-            claimFields,
+            ClaimResponse,
             categoryOfLaw,
             submissionPatch,
             claimPatch);
@@ -131,7 +130,7 @@ public class SubmissionValidationServiceTest {
       String categoryOfLaw = "categoryOfLaw";
       String officeAccountNumber = "officeAccountNumber";
 
-      GetSubmission200Response submission =
+      SubmissionResponse submission =
           getSubmission(
               SubmissionStatus.READY_FOR_VALIDATION,
               submissionId,
@@ -160,16 +159,12 @@ public class SubmissionValidationServiceTest {
       String areaOfLaw = "areaOfLaw";
       String officeAccountNumber = "officeAccountNumber";
 
-      GetSubmission200ResponseClaimsInner claim = new GetSubmission200ResponseClaimsInner();
-      claim.setClaimId(claimId);
-      claim.setStatus(StatusEnum.READY_TO_PROCESS);
+      SubmissionResponse submission = buildSubmission(submissionId, claimId, false);
 
-      GetSubmission200Response submission = buildSubmission(submissionId, claimId, false);
-
-      ClaimFields claimFields = buildClaimFields(claimId);
+      ClaimResponse ClaimResponse = buildClaimResponse(claimId);
 
       when(dataClaimsRestClient.getClaim(submissionId, claimId))
-          .thenReturn(ResponseEntity.of(Optional.of(claimFields)));
+          .thenReturn(ResponseEntity.of(Optional.of(ClaimResponse)));
 
       when(providerDetailsRestClient.getProviderFirmSchedules(officeAccountNumber, areaOfLaw))
           .thenReturn(Mono.empty());
@@ -209,7 +204,7 @@ public class SubmissionValidationServiceTest {
       verify(providerDetailsRestClient, times(1))
           .getProviderFirmSchedules(officeAccountNumber, areaOfLaw);
       verify(claimValidationService, times(1))
-          .validateClaims(List.of(claimFields), Collections.emptyList());
+          .validateClaims(List.of(ClaimResponse), Collections.emptyList());
       verify(dataClaimsRestClient, times(1)).updateClaim(submissionId, claimId, claimPatch);
     }
 
@@ -222,7 +217,7 @@ public class SubmissionValidationServiceTest {
       String areaOfLaw = "areaOfLaw";
       String officeAccountNumber = "officeAccountNumber";
 
-      GetSubmission200Response submission =
+      SubmissionResponse submission =
           getSubmission(
               submissionStatus, submissionId, areaOfLaw, officeAccountNumber, false, null);
 
@@ -253,7 +248,7 @@ public class SubmissionValidationServiceTest {
       String areaOfLaw = "areaOfLaw";
       String officeAccountNumber = "officeAccountNumber";
 
-      GetSubmission200Response submission =
+      SubmissionResponse submission =
           getSubmission(null, submissionId, areaOfLaw, officeAccountNumber, false, null);
 
       mockProviderSchedules(officeAccountNumber, areaOfLaw, "categoryOfLaw");
@@ -283,11 +278,11 @@ public class SubmissionValidationServiceTest {
               "Marks claims as invalid if nil submission contains claims"));
     }
 
-    private GetSubmission200Response buildSubmission(
+    private SubmissionResponse buildSubmission(
         UUID submissionId, UUID claimId, boolean isNilSubmission) {
-      GetSubmission200ResponseClaimsInner claim = new GetSubmission200ResponseClaimsInner();
+      SubmissionClaim claim = new SubmissionClaim();
       claim.setClaimId(claimId);
-      claim.setStatus(StatusEnum.READY_TO_PROCESS);
+      claim.setStatus(ClaimStatus.READY_TO_PROCESS);
 
       return getSubmission(
           SubmissionStatus.READY_FOR_VALIDATION,
@@ -298,16 +293,16 @@ public class SubmissionValidationServiceTest {
           List.of(claim));
     }
 
-    private ClaimFields buildClaimFields(UUID claimId) {
-      ClaimFields claimFields = new ClaimFields();
-      claimFields.id(claimId.toString());
-      claimFields.feeCode("feeCode");
-      return claimFields;
+    private ClaimResponse buildClaimResponse(UUID claimId) {
+      ClaimResponse ClaimResponse = new ClaimResponse();
+      ClaimResponse.id(claimId.toString());
+      ClaimResponse.feeCode("feeCode");
+      return ClaimResponse;
     }
 
-    private void mockClaimRetrieval(UUID submissionId, UUID claimId, ClaimFields claimFields) {
+    private void mockClaimRetrieval(UUID submissionId, UUID claimId, ClaimResponse ClaimResponse) {
       when(dataClaimsRestClient.getClaim(submissionId, claimId))
-          .thenReturn(ResponseEntity.of(Optional.of(claimFields)));
+          .thenReturn(ResponseEntity.of(Optional.of(ClaimResponse)));
     }
 
     private void mockProviderSchedules(
@@ -347,7 +342,7 @@ public class SubmissionValidationServiceTest {
         UUID claimId,
         String officeAccountNumber,
         String areaOfLaw,
-        ClaimFields claimFields,
+        ClaimResponse ClaimResponse,
         String categoryOfLaw,
         SubmissionPatch submissionPatch,
         ClaimPatch claimPatch) {
@@ -357,19 +352,19 @@ public class SubmissionValidationServiceTest {
       verify(providerDetailsRestClient, times(1))
           .getProviderFirmSchedules(officeAccountNumber, areaOfLaw);
       verify(claimValidationService, times(1))
-          .validateClaims(List.of(claimFields), List.of(categoryOfLaw));
+          .validateClaims(List.of(ClaimResponse), List.of(categoryOfLaw));
       verify(dataClaimsRestClient, times(1)).updateClaim(submissionId, claimId, claimPatch);
     }
   }
 
-  private static GetSubmission200Response getSubmission(
+  private static SubmissionResponse getSubmission(
       SubmissionStatus submissionStatus,
       UUID submissionId,
       String areaOfLaw,
       String officeAccountNumber,
       boolean isNilSubmission,
-      List<GetSubmission200ResponseClaimsInner> claims) {
-    return GetSubmission200Response.builder()
+      List<SubmissionClaim> claims) {
+    return SubmissionResponse.builder()
         .submissionId(submissionId)
         .areaOfLaw(areaOfLaw)
         .officeAccountNumber(officeAccountNumber)

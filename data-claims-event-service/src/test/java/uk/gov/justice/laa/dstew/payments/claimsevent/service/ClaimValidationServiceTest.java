@@ -65,11 +65,11 @@ class ClaimValidationServiceTest {
 
     @Test
     void validatePastDates() {
-      ClaimFields claim1 =
-          new ClaimFields().id("claim1").feeCode("feeCode1").caseStartDate("34/13/2003").transferDate("02/12/2090").caseConcludedDate("01/01/2090").representationOrderDate("01/01/2090").clientDateOfBirth("31/12/2099").client2DateOfBirth("31/12/2099");
-      ClaimFields claim2 =
-          new ClaimFields().id("claim2").feeCode("feeCode2").caseStartDate("03/01/1993").transferDate("02/12/1990").caseConcludedDate("01/01/1993").representationOrderDate("30/03/2016").clientDateOfBirth("31/12/1899").client2DateOfBirth("31/12/1899");
-      List<ClaimFields> claims = List.of(claim1, claim2);
+      ClaimResponse claim1 =
+          new ClaimResponse().id("claim1").feeCode("feeCode1").caseStartDate("34/13/2003").transferDate("02/12/2090").caseConcludedDate("01/01/2090").representationOrderDate("01/01/2090").clientDateOfBirth("31/12/2099").client2DateOfBirth("31/12/2099");
+      ClaimResponse claim2 =
+          new ClaimResponse().id("claim2").feeCode("feeCode2").caseStartDate("03/01/1993").transferDate("02/12/1990").caseConcludedDate("01/01/1993").representationOrderDate("30/03/2016").clientDateOfBirth("31/12/1899").client2DateOfBirth("31/12/1899");
+      List<ClaimResponse> claims = List.of(claim1, claim2);
 
       List<String> providerCategoriesOfLaw = List.of("categoryOfLaw1");
       Map<String, CategoryOfLawResult> categoryOfLawLookup = Collections.emptyMap();

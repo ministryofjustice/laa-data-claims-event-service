@@ -25,9 +25,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimFields;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionFields;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -83,7 +83,7 @@ class JsonSchemaValidatorTest {
 
     @Test
     void validateReturnsMultipleErrorsForInvalidSubmission() {
-      SubmissionFields submission = new SubmissionFields();
+      SubmissionResponse submission = new SubmissionResponse();
       submission.setOfficeAccountNumber("abc123");
       submission.setSubmissionPeriod("OCTOBER-2024");
       submission.setAreaOfLaw("INVALID");
@@ -114,7 +114,7 @@ class JsonSchemaValidatorTest {
     })
     void validateSubmissionIndividualInvalidField(
         String fieldName, String badValue, String expectedError) {
-      SubmissionFields submission = getMinimumValidSubmission();
+      SubmissionResponse submission = getMinimumValidSubmission();
       setField(submission, fieldName, badValue);
       List<String> errors = jsonSchemaValidator.validate("submission", submission);
       assertThat(errors).contains(expectedError);
@@ -122,7 +122,7 @@ class JsonSchemaValidatorTest {
 
     @Test
     void validateReturnsEmptyListForValidSubmission() {
-      SubmissionFields submission = new SubmissionFields();
+      SubmissionResponse submission = new SubmissionResponse();
       submission.setSubmissionId(UUID.randomUUID());
       submission.setBulkSubmissionId(UUID.randomUUID());
       submission.setStatus(SubmissionStatus.CREATED);
@@ -145,7 +145,7 @@ class JsonSchemaValidatorTest {
 
     @Test
     void validateNoErrorsForClaimWithRequiredFields() {
-      ClaimFields claim = getMinimumValidClaim();
+      ClaimResponse claim = getMinimumValidClaim();
       List<String> errors = jsonSchemaValidator.validate(CLAIM_SCHEMA, claim);
       assertThat(errors).isEmpty();
     }
@@ -159,7 +159,7 @@ class JsonSchemaValidatorTest {
       "disbursements_vat_amount",
       "fee_code",
     })
-    void validateErrorForMissingRequiredClaimFields(String jsonField) {
+    void validateErrorForMissingRequiredClaimResponse(String jsonField) {
       Object claim = getMinimumValidClaim();
       String fieldName = toCamelCase(jsonField);
       setField(claim, fieldName, null);
@@ -314,10 +314,10 @@ class JsonSchemaValidatorTest {
         "client_2_surname, true, 'client_2_surname: boolean found, string expected (provided value: true)'",
         "unique_client_number, 10, 'unique_client_number: integer found, string expected (provided value: 10)'",
         "unique_client_number, true, 'unique_client_number: boolean found, string expected (provided value: true)'",
-        "client_postcode, 10, 'client_postcode: integer found, string expected (provided value: 10)'",
-        "client_postcode, true, 'client_postcode: boolean found, string expected (provided value: true)'",
-        "client_2_postcode, 10, 'client_2_postcode: integer found, string expected (provided value: 10)'",
-        "client_2_postcode, true, 'client_2_postcode: boolean found, string expected (provided value: true)'",
+        "client_post_code, 10, 'client_post_code: integer found, string expected (provided value: 10)'",
+        "client_post_code, true, 'client_post_code: boolean found, string expected (provided value: true)'",
+        "client_2_post_code, 10, 'client_2_post_code: integer found, string expected (provided value: 10)'",
+        "client_2_post_code, true, 'client_2_post_code: boolean found, string expected (provided value: true)'",
         "gender_code, 12345, 'gender_code: integer found, string expected (provided value: 12345)'",
         "gender_code, true, 'gender_code: boolean found, string expected (provided value: true)'",
         "ethnicity_code, 12345, 'ethnicity_code: integer found, string expected (provided value: 12345)'",
@@ -516,10 +516,10 @@ class JsonSchemaValidatorTest {
         "uniqueClientNumber, '31121899/A/ABCD', 'unique_client_number: does not match the regex pattern ^(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[0-2])(19[0-9]{2}|20[0-9]{2})/[\\p{L}0-9 \\-’''&]/[\\p{L}0-9 \\-’''&]{1,4}$ (provided value: 31121899/A/ABCD)'",
         "uniqueClientNumber, '01012100/A/ABCD', 'unique_client_number: does not match the regex pattern ^(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[0-2])(19[0-9]{2}|20[0-9]{2})/[\\p{L}0-9 \\-’''&]/[\\p{L}0-9 \\-’''&]{1,4}$ (provided value: 01012100/A/ABCD)'",
 
-        "clientPostcode, 'ABCD', 'client_postcode: does not match the regex pattern ^NFA|GIR 0AA|[A-Z]{1,2}[0-9][0-9A-Z]?\\s?[0-9][A-Z]{2}$ (provided value: ABCD)'",
-        "clientPostcode, 'ABC12 BCD', 'client_postcode: does not match the regex pattern ^NFA|GIR 0AA|[A-Z]{1,2}[0-9][0-9A-Z]?\\s?[0-9][A-Z]{2}$ (provided value: ABC12 BCD)'",
-        "client2Postcode, 'ABCD', 'client_2_postcode: does not match the regex pattern ^NFA|GIR 0AA|[A-Z]{1,2}[0-9][0-9A-Z]?\\s?[0-9][A-Z]{2}$ (provided value: ABCD)'",
-        "client2Postcode, 'ABC12 BCD', 'client_2_postcode: does not match the regex pattern ^NFA|GIR 0AA|[A-Z]{1,2}[0-9][0-9A-Z]?\\s?[0-9][A-Z]{2}$ (provided value: ABC12 BCD)'",
+        "clientPostCode, 'ABCD', 'client_post_code: does not match the regex pattern ^NFA|GIR 0AA|[A-Z]{1,2}[0-9][0-9A-Z]?\\s?[0-9][A-Z]{2}$ (provided value: ABCD)'",
+        "clientPostCode, 'ABC12 BCD', 'client_post_code: does not match the regex pattern ^NFA|GIR 0AA|[A-Z]{1,2}[0-9][0-9A-Z]?\\s?[0-9][A-Z]{2}$ (provided value: ABC12 BCD)'",
+        "client2PostCode, 'ABCD', 'client_2_post_code: does not match the regex pattern ^NFA|GIR 0AA|[A-Z]{1,2}[0-9][0-9A-Z]?\\s?[0-9][A-Z]{2}$ (provided value: ABCD)'",
+        "client2PostCode, 'ABC12 BCD', 'client_2_post_code: does not match the regex pattern ^NFA|GIR 0AA|[A-Z]{1,2}[0-9][0-9A-Z]?\\s?[0-9][A-Z]{2}$ (provided value: ABC12 BCD)'",
 
         "genderCode, 'MF', 'gender_code: does not match the regex pattern ^([MFU])$ (provided value: MF)'",
         "genderCode, 'A', 'gender_code: does not match the regex pattern ^([MFU])$ (provided value: A)'",
@@ -580,10 +580,46 @@ class JsonSchemaValidatorTest {
         "aitHearingCentreCode, '1', 'ait_hearing_centre_code: must be at least 2 characters long (provided value: 1)'",
         "aitHearingCentreCode, '001', 'ait_hearing_centre_code: must be at most 2 characters long (provided value: 001)'",
         "localAuthorityNumber, 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB', 'local_authority_number: must be at most 30 characters long (provided value: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB)'",
+        //Dates in YYYY-MM-DD format between 1900-01-01 and 2101-01-01
+        "caseStartDate, '1899-12-31', 'case_start_date: does not match the regex pattern ^(19\\d{2}|20\\d{2}|2100)-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$ (provided value: 1899-12-31)'",
+        "caseStartDate, '2101-01-01', 'case_start_date: does not match the regex pattern ^(19\\d{2}|20\\d{2}|2100)-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$ (provided value: 2101-01-01)'",
+        "caseStartDate, '2025-13-01', 'case_start_date: does not match the regex pattern ^(19\\d{2}|20\\d{2}|2100)-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$ (provided value: 2025-13-01)'",
+        "caseStartDate, '2025-00-10', 'case_start_date: does not match the regex pattern ^(19\\d{2}|20\\d{2}|2100)-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$ (provided value: 2025-00-10)'",
+        "caseStartDate, '2025-02-32', 'case_start_date: does not match the regex pattern ^(19\\d{2}|20\\d{2}|2100)-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$ (provided value: 2025-02-32)'",
+
+        "caseConcludedDate, '1899-12-31', 'case_concluded_date: does not match the regex pattern ^(19\\d{2}|20\\d{2}|2100)-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$ (provided value: 1899-12-31)'",
+        "caseConcludedDate, '2101-01-01', 'case_concluded_date: does not match the regex pattern ^(19\\d{2}|20\\d{2}|2100)-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$ (provided value: 2101-01-01)'",
+        "caseConcludedDate, '2025-13-01', 'case_concluded_date: does not match the regex pattern ^(19\\d{2}|20\\d{2}|2100)-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$ (provided value: 2025-13-01)'",
+        "caseConcludedDate, '2025-00-10', 'case_concluded_date: does not match the regex pattern ^(19\\d{2}|20\\d{2}|2100)-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$ (provided value: 2025-00-10)'",
+        "caseConcludedDate, '2025-02-32', 'case_concluded_date: does not match the regex pattern ^(19\\d{2}|20\\d{2}|2100)-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$ (provided value: 2025-02-32)'",
+
+        "representationOrderDate, '1899-12-31', 'representation_order_date: does not match the regex pattern ^(19\\d{2}|20\\d{2}|2100)-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$ (provided value: 1899-12-31)'",
+        "representationOrderDate, '2101-01-01', 'representation_order_date: does not match the regex pattern ^(19\\d{2}|20\\d{2}|2100)-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$ (provided value: 2101-01-01)'",
+        "representationOrderDate, '2025-13-01', 'representation_order_date: does not match the regex pattern ^(19\\d{2}|20\\d{2}|2100)-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$ (provided value: 2025-13-01)'",
+        "representationOrderDate, '2025-00-10', 'representation_order_date: does not match the regex pattern ^(19\\d{2}|20\\d{2}|2100)-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$ (provided value: 2025-00-10)'",
+        "representationOrderDate, '2025-02-32', 'representation_order_date: does not match the regex pattern ^(19\\d{2}|20\\d{2}|2100)-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$ (provided value: 2025-02-32)'",
+
+        "clientDateOfBirth, '1899-12-31', 'client_date_of_birth: does not match the regex pattern ^(19\\d{2}|20\\d{2}|2100)-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$ (provided value: 1899-12-31)'",
+        "clientDateOfBirth, '2101-01-01', 'client_date_of_birth: does not match the regex pattern ^(19\\d{2}|20\\d{2}|2100)-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$ (provided value: 2101-01-01)'",
+        "clientDateOfBirth, '2025-13-01', 'client_date_of_birth: does not match the regex pattern ^(19\\d{2}|20\\d{2}|2100)-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$ (provided value: 2025-13-01)'",
+        "clientDateOfBirth, '2025-00-10', 'client_date_of_birth: does not match the regex pattern ^(19\\d{2}|20\\d{2}|2100)-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$ (provided value: 2025-00-10)'",
+        "clientDateOfBirth, '2025-02-32', 'client_date_of_birth: does not match the regex pattern ^(19\\d{2}|20\\d{2}|2100)-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$ (provided value: 2025-02-32)'",
+
+        "client2DateOfBirth, '1899-12-31', 'client_2_date_of_birth: does not match the regex pattern ^(19\\d{2}|20\\d{2}|2100)-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$ (provided value: 1899-12-31)'",
+        "client2DateOfBirth, '2101-01-01', 'client_2_date_of_birth: does not match the regex pattern ^(19\\d{2}|20\\d{2}|2100)-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$ (provided value: 2101-01-01)'",
+        "client2DateOfBirth, '2025-13-01', 'client_2_date_of_birth: does not match the regex pattern ^(19\\d{2}|20\\d{2}|2100)-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$ (provided value: 2025-13-01)'",
+        "client2DateOfBirth, '2025-00-10', 'client_2_date_of_birth: does not match the regex pattern ^(19\\d{2}|20\\d{2}|2100)-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$ (provided value: 2025-00-10)'",
+        "client2DateOfBirth, '2025-02-32', 'client_2_date_of_birth: does not match the regex pattern ^(19\\d{2}|20\\d{2}|2100)-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$ (provided value: 2025-02-32)'",
+
+        "transferDate, '1899-12-31', 'transfer_date: does not match the regex pattern ^(19\\d{2}|20\\d{2}|2100)-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$ (provided value: 1899-12-31)'",
+        "transferDate, '2101-01-01', 'transfer_date: does not match the regex pattern ^(19\\d{2}|20\\d{2}|2100)-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$ (provided value: 2101-01-01)'",
+        "transferDate, '2025-13-01', 'transfer_date: does not match the regex pattern ^(19\\d{2}|20\\d{2}|2100)-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$ (provided value: 2025-13-01)'",
+        "transferDate, '2025-00-10', 'transfer_date: does not match the regex pattern ^(19\\d{2}|20\\d{2}|2100)-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$ (provided value: 2025-00-10)'",
+        "transferDate, '2025-02-32', 'transfer_date: does not match the regex pattern ^(19\\d{2}|20\\d{2}|2100)-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$ (provided value: 2025-02-32)'"
     })
     void validateClaimIndividualInvalidField(
         String fieldName, String badValue, String expectedError) {
-      ClaimFields claim = getMinimumValidClaim();
+      ClaimResponse claim = getMinimumValidClaim();
       setField(claim, fieldName, badValue);
       List<String> errors = jsonSchemaValidator.validate("claim", claim);
       assertThat(errors).contains(expectedError);
@@ -658,16 +694,16 @@ class JsonSchemaValidatorTest {
         "uniqueClientNumber, '12121999/A/HELL'",
         "uniqueClientNumber, '01011900/A/D''SO'",
         "uniqueClientNumber, '31122099/À/D123'",
-        "clientPostcode, 'AB12 9CD'",
-        "clientPostcode, 'A12 9CD'",
-        "clientPostcode, 'A129CD'",
-        "clientPostcode, 'A1B 9CD'",
-        "clientPostcode, 'NFA'",
-        "client2Postcode, 'AB12 9CD'",
-        "client2Postcode, 'A12 9CD'",
-        "client2Postcode, 'A129CD'",
-        "client2Postcode, 'A1B 9CD'",
-        "client2Postcode, 'NFA'",
+        "clientPostCode, 'AB12 9CD'",
+        "clientPostCode, 'A12 9CD'",
+        "clientPostCode, 'A129CD'",
+        "clientPostCode, 'A1B 9CD'",
+        "clientPostCode, 'NFA'",
+        "client2PostCode, 'AB12 9CD'",
+        "client2PostCode, 'A12 9CD'",
+        "client2PostCode, 'A129CD'",
+        "client2PostCode, 'A1B 9CD'",
+        "client2PostCode, 'NFA'",
         "genderCode, 'M'",
         "genderCode, 'F'",
         "genderCode, 'U'",
@@ -682,15 +718,15 @@ class JsonSchemaValidatorTest {
         "clientTypeCode, 'J'",
     })
     void validateClaimIndividualValidField(String fieldName, String badValue) {
-      ClaimFields claim = getMinimumValidClaim();
+      ClaimResponse claim = getMinimumValidClaim();
       setField(claim, fieldName, badValue);
       List<String> errors = jsonSchemaValidator.validate("claim", claim);
       assertThat(errors).isEmpty();
     }
   }
 
-  private static @NotNull SubmissionFields getMinimumValidSubmission() {
-    SubmissionFields submission = new SubmissionFields();
+  private static @NotNull SubmissionResponse getMinimumValidSubmission() {
+    SubmissionResponse submission = new SubmissionResponse();
     submission
         .submissionId(UUID.randomUUID())
         .bulkSubmissionId(UUID.randomUUID())
@@ -701,14 +737,14 @@ class JsonSchemaValidatorTest {
     return submission;
   }
 
-  private static @NotNull ClaimFields getMinimumValidClaim() {
-    ClaimFields claim = new ClaimFields();
+  private static @NotNull ClaimResponse getMinimumValidClaim() {
+    ClaimResponse claim = new ClaimResponse();
     claim
         .lineNumber(1)
         .caseReferenceNumber("CaseReferenceNumber")
         .status(ClaimStatus.READY_TO_PROCESS)
         .scheduleReference("ScheduleReference")
-        .caseStartDate("10/04/2020")
+        .caseStartDate("2020-04-10")
         .disbursementsVatAmount(BigDecimal.valueOf(10.20))
         .feeCode("FeeCode");
     return claim;
