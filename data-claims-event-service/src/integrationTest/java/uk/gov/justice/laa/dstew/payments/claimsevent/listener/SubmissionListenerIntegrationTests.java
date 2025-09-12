@@ -104,7 +104,7 @@ public class SubmissionListenerIntegrationTests extends LocalstackBaseIntegratio
                             .build())));
 
     // Use await to assert once the listener has received the message from the queue, and passed
-    // the submission to the bulkParsingService
+    // the submission to the submissionValidationService
     await()
         .pollInterval(Duration.ofMillis(500))
         .atMost(Duration.ofSeconds(10))
