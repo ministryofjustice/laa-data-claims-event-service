@@ -33,11 +33,11 @@ class FeeSchemeMapperTest {
               .disbursementsVatAmount(BigDecimal.valueOf(1.03))
               .isVatApplicable(true)
               .priorAuthorityReference("disbursementPriorAuthority")
-              .adjournedHearingFeeAmount(BigDecimal.valueOf(1))
+              .adjournedHearingFeeAmount(1)
               .cmrhOralCount(2)
               .cmrhTelephoneCount(3)
               // TODO: add additional travel property
-              .hoInterview("5")
+              .hoInterview(5)
               // TODO: add net travel costs property
               .netWaitingCostsAmount(BigDecimal.valueOf(1.05))
               .travelWaitingCostsAmount(BigDecimal.valueOf(1.06))
@@ -100,11 +100,11 @@ class FeeSchemeMapperTest {
 
       ClaimResponse claim =
           new ClaimResponse()
-              .adjournedHearingFeeAmount(BigDecimal.valueOf(1))
+              .adjournedHearingFeeAmount(1)
               .cmrhOralCount(2)
               .cmrhTelephoneCount(3)
               // TODO: add additional travel property
-              .hoInterview("5");
+              .hoInterview(5);
 
       BoltOnType expected =
           new BoltOnType()

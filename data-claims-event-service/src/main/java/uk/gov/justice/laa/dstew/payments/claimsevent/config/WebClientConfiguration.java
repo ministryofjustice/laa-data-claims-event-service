@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.codec.ClientCodecConfigurer;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -96,7 +95,7 @@ public class WebClientConfiguration {
         ExchangeStrategies.builder().codecs(ClientCodecConfigurer::defaultCodecs).build();
     return WebClient.builder()
         .baseUrl(apiProperties.getUrl())
-        .defaultHeader(HttpHeaders.AUTHORIZATION, apiProperties.getAccessToken())
+        .defaultHeader(apiProperties.getAuthHeader(), apiProperties.getAccessToken())
         .exchangeStrategies(strategies)
         .build();
   }

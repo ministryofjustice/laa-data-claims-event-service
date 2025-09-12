@@ -89,7 +89,8 @@ public abstract class MockServerIntegrationTest {
             mockServerContainer.getEndpoint(),
             String.valueOf(mockServerContainer.getServerPort()),
             0,
-            "");
+            "",
+            "Authorization");
     return WebClientConfiguration.createWebClient(apiProperties);
   }
 

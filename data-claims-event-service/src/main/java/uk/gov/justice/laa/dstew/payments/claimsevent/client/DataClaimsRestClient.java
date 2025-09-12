@@ -66,7 +66,7 @@ public interface DataClaimsRestClient {
    * @return submission details map: {@code submission}, {@code claims[]}, {@code matter_starts[]}
    */
   @GetExchange("/submissions/{id}")
-  ResponseEntity<SubmissionResponse> getSubmission(@PathVariable("id") String id);
+  ResponseEntity<SubmissionResponse> getSubmission(@PathVariable("id") UUID id);
 
   /**
    * Add a claim to a submission.

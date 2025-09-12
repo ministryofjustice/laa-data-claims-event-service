@@ -18,4 +18,5 @@ public class ApiProperties {
   private final String host;
   private final int port;
   private final String accessToken;
+  private final String authHeader;
 }

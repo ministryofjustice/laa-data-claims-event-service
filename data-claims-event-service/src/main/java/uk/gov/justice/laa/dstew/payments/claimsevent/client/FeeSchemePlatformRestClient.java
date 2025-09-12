@@ -15,7 +15,7 @@ import uk.gov.justice.laa.fee.scheme.model.FeeCalculationResponse;
  * REST service interface for verifying category of law against a fee code and calculating fee
  * totals. This interface communicates with the Fee Scheme Platform API.
  */
-@HttpExchange(value = "/api/v0", accept = MediaType.APPLICATION_JSON_VALUE)
+@HttpExchange(value = "/api/v1", accept = MediaType.APPLICATION_JSON_VALUE)
 public interface FeeSchemePlatformRestClient {
 
   /**

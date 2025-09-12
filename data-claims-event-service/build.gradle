@@ -50,7 +50,7 @@ dependencies {
     implementation project(':reference-provider-details-api')
     implementation project(':reference-fee-scheme-platform-api')
 
-    implementation 'uk.gov.justice.laa.datastewardship.payments:data-claims-api-models:11a9b3c'
+    implementation 'uk.gov.justice.laa.datastewardship.payments:data-claims-api-models:d707afe'
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
@@ -58,7 +58,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
     // Import spring-cloud-aws BOM (Bill Of Materials) for dependency management
-    implementation platform('io.awspring.cloud:spring-cloud-aws:3.2.0')
+    implementation platform('io.awspring.cloud:spring-cloud-aws:3.4.0')
     implementation 'io.awspring.cloud:spring-cloud-aws-starter'
     implementation 'io.awspring.cloud:spring-cloud-aws-starter-sqs'
     implementation 'software.amazon.awssdk:sts:2.33.4'
@@ -76,6 +76,7 @@ dependencies {
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml'
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+    implementation 'com.networknt:json-schema-validator:1.5.8'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.testcontainers:junit-jupiter'

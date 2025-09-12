@@ -53,7 +53,7 @@ class FeeSchemePlatformRestClientIntegrationTest extends MockServerIntegrationTe
           .when(
               HttpRequest.request()
                   .withMethod("GET")
-                  .withPath("/api/v0/category-of-law/" + feeCode))
+                  .withPath("/api/v1/category-of-law/" + feeCode))
           .respond(
               HttpResponse.response()
                   .withStatusCode(200)
@@ -85,7 +85,7 @@ class FeeSchemePlatformRestClientIntegrationTest extends MockServerIntegrationTe
           .when(
               HttpRequest.request()
                   .withMethod("GET")
-                  .withPath("/api/v0/category-of-law/" + feeCode))
+                  .withPath("/api/v1/category-of-law/" + feeCode))
           .respond(
               HttpResponse.response()
                   .withStatusCode(statusCode)
@@ -100,7 +100,7 @@ class FeeSchemePlatformRestClientIntegrationTest extends MockServerIntegrationTe
       assertThatThrownBy(result)
           .isInstanceOf(WebClientResponseException.class)
           .hasMessageContaining(
-              "%s %s from GET %s/api/v0/category-of-law/%s"
+              "%s %s from GET %s/api/v1/category-of-law/%s"
                   .formatted(
                       httpStatusCode.code(),
                       httpStatusCode.reasonPhrase(),
@@ -121,7 +121,7 @@ class FeeSchemePlatformRestClientIntegrationTest extends MockServerIntegrationTe
       String expectedBody = readJsonFromFile("fee-scheme/post-fee-calculation-200.json");
 
       mockServerClient
-          .when(HttpRequest.request().withMethod("POST").withPath("/api/v0/fee-calculation"))
+          .when(HttpRequest.request().withMethod("POST").withPath("/api/v1/fee-calculation"))
           .respond(
               HttpResponse.response()
                   .withStatusCode(200)
@@ -149,7 +149,7 @@ class FeeSchemePlatformRestClientIntegrationTest extends MockServerIntegrationTe
       String expectedBody = readJsonFromFile("fee-scheme/post-fee-calculation-200.json");
 
       mockServerClient
-          .when(HttpRequest.request().withMethod("POST").withPath("/api/v0/fee-calculation"))
+          .when(HttpRequest.request().withMethod("POST").withPath("/api/v1/fee-calculation"))
           .respond(
               HttpResponse.response()
                   .withStatusCode(statusCode)
@@ -165,7 +165,7 @@ class FeeSchemePlatformRestClientIntegrationTest extends MockServerIntegrationTe
       assertThatThrownBy(result)
           .isInstanceOf(WebClientResponseException.class)
           .hasMessageContaining(
-              "%s %s from POST %s/api/v0/fee-calculation"
+              "%s %s from POST %s/api/v1/fee-calculation"
                   .formatted(
                       httpStatusCode.code(),
                       httpStatusCode.reasonPhrase(),
