@@ -35,10 +35,6 @@ dependencyManagement {
     }
 }
 
-repositories {
-    mavenLocal()
-}
-
 dependencies {
 
     /**
@@ -54,7 +50,7 @@ dependencies {
     implementation project(':reference-provider-details-api')
     implementation project(':reference-fee-scheme-platform-api')
 
-    implementation 'uk.gov.justice.laa.datastewardship.payments:data-claims-api-models:event-models'
+    implementation 'uk.gov.justice.laa.datastewardship.payments:data-claims-api-models:1589f7f'
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
