@@ -66,6 +66,7 @@ public class SubmissionListenerIntegrationTests extends LocalstackBaseIntegratio
                     Map.of(
                         "SubmissionEventType",
                         MessageAttributeValue.builder()
+                            .dataType("String")
                             .stringValue(SubmissionEventType.PARSE_BULK_SUBMISSION.toString())
                             .build())));
 
@@ -98,6 +99,7 @@ public class SubmissionListenerIntegrationTests extends LocalstackBaseIntegratio
                     Map.of(
                         "SubmissionEventType",
                         MessageAttributeValue.builder()
+                            .dataType("String")
                             .stringValue(SubmissionEventType.VALIDATE_SUBMISSION.toString())
                             .build())));
 
