@@ -50,17 +50,11 @@ class ClaimValidationServiceTest {
     @BeforeEach
     void setup() {
       // Define the map for the test
-      Map<String, List<String>> civilMandatoryFields = Map.of(
-          "CIVIL", List.of(
-              "uniqueFileNumber"
-          ),
-          "CRIME", List.of(
-              "uniqueFileNumber"
-          ),
-          "MEDIATION", List.of(
-              "uniqueFileNumber"
-          )
-          );
+      Map<String, List<String>> civilMandatoryFields =
+          Map.of(
+              "CIVIL", List.of("uniqueFileNumber"),
+              "CRIME", List.of("uniqueFileNumber"),
+              "MEDIATION", List.of("uniqueFileNumber"));
 
       when(mandatoryFieldsRegistry.getMandatoryFieldsByAreaOfLaw())
           .thenReturn(civilMandatoryFields);
@@ -69,8 +63,10 @@ class ClaimValidationServiceTest {
     @Test
     @DisplayName("Validates category of law, duplicates and fee calculation for all claims")
     void validateCategoryOfLawAndDuplicatesAndFeeCalculation() {
-      ClaimResponse claim1 = new ClaimResponse().id("claim1").feeCode("feeCode1").matterTypeCode("ab:cd");
-      ClaimResponse claim2 = new ClaimResponse().id("claim2").feeCode("feeCode2").matterTypeCode("1:2");
+      ClaimResponse claim1 =
+          new ClaimResponse().id("claim1").feeCode("feeCode1").matterTypeCode("ab:cd");
+      ClaimResponse claim2 =
+          new ClaimResponse().id("claim2").feeCode("feeCode2").matterTypeCode("1:2");
       List<ClaimResponse> claims = List.of(claim1, claim2);
       List<String> providerCategoriesOfLaw = List.of("categoryOfLaw1");
       Map<String, CategoryOfLawResult> categoryOfLawLookup = Collections.emptyMap();
@@ -95,15 +91,27 @@ class ClaimValidationServiceTest {
     @Test
     void validatePastDates() {
       ClaimResponse claim1 =
-          new ClaimResponse().id("claim1").feeCode("feeCode1").caseStartDate("2003-13-34")
-              .transferDate("2090-12-02").caseConcludedDate("2090-01-01")
-              .representationOrderDate("2090-01-01").clientDateOfBirth("2099-12-31")
-              .client2DateOfBirth("2099-12-31").matterTypeCode("a:b");
+          new ClaimResponse()
+              .id("claim1")
+              .feeCode("feeCode1")
+              .caseStartDate("2003-13-34")
+              .transferDate("2090-12-02")
+              .caseConcludedDate("2090-01-01")
+              .representationOrderDate("2090-01-01")
+              .clientDateOfBirth("2099-12-31")
+              .client2DateOfBirth("2099-12-31")
+              .matterTypeCode("a:b");
       ClaimResponse claim2 =
-          new ClaimResponse().id("claim2").feeCode("feeCode2").caseStartDate("1993-01-03")
-              .transferDate("1990-12-02").caseConcludedDate("1993-01-01")
-              .representationOrderDate("2016-03-30").clientDateOfBirth("1899-12-31")
-              .client2DateOfBirth("1899-12-31").matterTypeCode("1:2");
+          new ClaimResponse()
+              .id("claim2")
+              .feeCode("feeCode2")
+              .caseStartDate("1993-01-03")
+              .transferDate("1990-12-02")
+              .caseConcludedDate("1993-01-01")
+              .representationOrderDate("2016-03-30")
+              .clientDateOfBirth("1899-12-31")
+              .client2DateOfBirth("1899-12-31")
+              .matterTypeCode("1:2");
       List<ClaimResponse> claims = List.of(claim1, claim2);
 
       List<String> providerCategoriesOfLaw = List.of("categoryOfLaw1");
@@ -171,7 +179,11 @@ class ClaimValidationServiceTest {
     @Test
     void checkConditionallyMandatoryFields() {
       ClaimResponse claim1 =
-          new ClaimResponse().id("claim1").feeCode("feeCode1").uniqueFileNumber("uniqueFileNumber1").matterTypeCode("AB:CD");
+          new ClaimResponse()
+              .id("claim1")
+              .feeCode("feeCode1")
+              .uniqueFileNumber("uniqueFileNumber1")
+              .matterTypeCode("AB:CD");
       ClaimResponse claim2 =
           new ClaimResponse().id("claim2").feeCode("feeCode2").matterTypeCode("123:456");
       List<ClaimResponse> claims = List.of(claim1, claim2);
@@ -191,17 +203,20 @@ class ClaimValidationServiceTest {
           .addClaimError("claim2", "uniqueFileNumber is required for area of law: CIVIL");
     }
 
-    @ParameterizedTest(name = "{index} => claimId={0}, matterType={1}, areaOfLaw={2}, expectedError={3}")
+    @ParameterizedTest(
+        name = "{index} => claimId={0}, matterType={1}, areaOfLaw={2}, expectedError={3}")
     @CsvSource({
-        "claim1, BadMatterType, CIVIL, true",
-        "claim2, ab12:bc24, CIVIL, false",
-        "claim3, AB-CD, CIVIL, false",
-        "claim4, ABCD:EFGH, MEDIATION, false",
-        "claim5, AB12:CD34, MEDIATION, true",
-        "claim3, AB-CD, MEDIATION, true",
+      "claim1, BadMatterType, CIVIL, true",
+      "claim2, ab12:bc24, CIVIL, false",
+      "claim3, AB-CD, CIVIL, false",
+      "claim4, ABCD:EFGH, MEDIATION, false",
+      "claim5, AB12:CD34, MEDIATION, true",
+      "claim3, AB-CD, MEDIATION, true",
     })
-    void checkMatterType(String claimId, String matterTypeCode, String areaOfLaw, boolean expectError) {
-      ClaimResponse claim = new ClaimResponse().id(claimId).feeCode("feeCode1").matterTypeCode(matterTypeCode);
+    void checkMatterType(
+        String claimId, String matterTypeCode, String areaOfLaw, boolean expectError) {
+      ClaimResponse claim =
+          new ClaimResponse().id(claimId).feeCode("feeCode1").matterTypeCode(matterTypeCode);
 
       List<ClaimResponse> claims = List.of(claim);
       List<String> providerCategoriesOfLaw = List.of("categoryOfLaw1");
@@ -214,20 +229,20 @@ class ClaimValidationServiceTest {
       claimValidationService.validateClaims(claims, providerCategoriesOfLaw, areaOfLaw);
 
       if (expectError) {
-        String expectedMessage = String.format(
-            "Invalid Matter Type [%s] for Area of Law: %s",
-            matterTypeCode, areaOfLaw
-        );
+        String expectedMessage =
+            String.format(
+                "Invalid Matter Type [%s] for Area of Law: %s", matterTypeCode, areaOfLaw);
         verify(submissionValidationContext).addClaimError(claimId, expectedMessage);
       } else {
         verify(submissionValidationContext, never())
-            .addClaimError(eq(claimId),
-                (String) argThat(msg -> msg != null && ((String) msg).contains("Invalid Matter Type")));
+            .addClaimError(
+                eq(claimId),
+                (String)
+                    argThat(msg -> msg != null && ((String) msg).contains("Invalid Matter Type")));
       }
 
       // Reset mocks for next iteration
       reset(submissionValidationContext);
     }
-
   }
 }
