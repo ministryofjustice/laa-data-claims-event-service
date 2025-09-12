@@ -70,7 +70,14 @@ class JsonSchemaValidatorTest {
     }
 
     @ParameterizedTest(name = "Missing required field: {0}")
-    @CsvSource({"office_account_number", "submission_period", "area_of_law", "number_of_claims"})
+    @CsvSource({"office_account_number",
+        "submission_period",
+        "area_of_law",
+        "status",
+        "schedule_number",
+        "is_nil_submission",
+        "number_of_claims"
+    })
     void validateErrorForMissingRequiredFields(String jsonField) {
       Object submission = getMinimumValidSubmission();
       String fieldName = toCamelCase(jsonField);
@@ -88,6 +95,8 @@ class JsonSchemaValidatorTest {
       submission.setSubmissionPeriod("OCTOBER-2024");
       submission.setAreaOfLaw("INVALID");
       submission.setNumberOfClaims(-1);
+      submission.setScheduleNumber("SCHEDULE");
+      submission.setIsNilSubmission(false);
       submission.setStatus(SubmissionStatus.CREATED);
       List<String> errors = jsonSchemaValidator.validate("submission", submission);
 
@@ -97,6 +106,28 @@ class JsonSchemaValidatorTest {
               "submission_period: does not match the regex pattern ^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-[0-9]{4}$ (provided value: OCTOBER-2024)",
               "area_of_law: does not have a value in the enumeration [\"CIVIL\", \"CRIME\", \"MEDIATION\", \"CRIME LOWER\", \"LEGAL HELP\"] (provided value: INVALID)",
               "number_of_claims: must have a minimum value of 0 (provided value: -1)");
+    }
+
+    /**
+     * Validates that an error is returned when a field in the JSON object contains an invalid data type.
+     * The method performs validation against a JSON schema for a given field, using invalid data types
+     * as input to confirm that the correct error messages are returned. A parameterized test is used
+     * to evaluate multiple fields and invalid data combinations.
+     *
+     * @param fieldName The name of the JSON field to be tested (as found in the json schema, i.e. snake_case).
+     * @param badJsonValue The invalid data value to be set for the field (as a JSON-formatted string).
+     * @param expectedError The expected validation error message for the field with the invalid value.
+     * @throws Exception if an error occurs during JSON parsing or validation.
+     */
+    @ParameterizedTest(name = "Invalid type for field {0} should return error")
+    @CsvSource({
+        // integer fields
+        "status, '\"SNAFU\"', 'status: does not have a value in the enumeration [\"CREATED\", \"READY_FOR_VALIDATION\", \"VALIDATION_IN_PROGRESS\", \"VALIDATION_SUCCEEDED\", \"VALIDATION_FAILED\", \"REPLACED\"] (provided value: SNAFU)'",
+    })
+    void validateSubmissionForInvalidDataTypes(
+        String fieldName, String badJsonValue, String expectedError) throws Exception {
+      List<String> errors = validateForInvalidDataTypes("submission", getMinimumValidSubmission(), fieldName, badJsonValue);
+      assertThat(errors).contains(expectedError);
     }
 
     @ParameterizedTest(name = "Invalid value for {0} should return error")
@@ -111,6 +142,7 @@ class JsonSchemaValidatorTest {
           + "^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-[0-9]{4}$ (provided value: OCT-20)'",
       "submissionPeriod, 'OCT/2020', 'submission_period: does not match the regex pattern "
           + "^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-[0-9]{4}$ (provided value: OCT/2020)'",
+      "scheduleNumber, 'A/VERY/LONG/SCHEDULE/NUMBER', 'schedule_number: must be at most 20 characters long (provided value: A/VERY/LONG/SCHEDULE/NUMBER)'",
     })
     void validateSubmissionIndividualInvalidField(
         String fieldName, String badValue, String expectedError) {
@@ -157,6 +189,8 @@ class JsonSchemaValidatorTest {
       "line_number",
       "case_reference_number",
       "disbursements_vat_amount",
+      "net_disbursement_amount",
+      "is_vat_applicable",
       "fee_code",
     })
     void validateErrorForMissingRequiredClaimResponse(String jsonField) {
@@ -314,10 +348,10 @@ class JsonSchemaValidatorTest {
         "client_2_surname, true, 'client_2_surname: boolean found, string expected (provided value: true)'",
         "unique_client_number, 10, 'unique_client_number: integer found, string expected (provided value: 10)'",
         "unique_client_number, true, 'unique_client_number: boolean found, string expected (provided value: true)'",
-        "client_post_code, 10, 'client_post_code: integer found, string expected (provided value: 10)'",
-        "client_post_code, true, 'client_post_code: boolean found, string expected (provided value: true)'",
-        "client_2_post_code, 10, 'client_2_post_code: integer found, string expected (provided value: 10)'",
-        "client_2_post_code, true, 'client_2_post_code: boolean found, string expected (provided value: true)'",
+        "client_postcode, 10, 'client_postcode: integer found, string expected (provided value: 10)'",
+        "client_postcode, true, 'client_postcode: boolean found, string expected (provided value: true)'",
+        "client_2_postcode, 10, 'client_2_postcode: integer found, string expected (provided value: 10)'",
+        "client_2_postcode, true, 'client_2_postcode: boolean found, string expected (provided value: true)'",
         "gender_code, 12345, 'gender_code: integer found, string expected (provided value: 12345)'",
         "gender_code, true, 'gender_code: boolean found, string expected (provided value: true)'",
         "ethnicity_code, 12345, 'ethnicity_code: integer found, string expected (provided value: 12345)'",
@@ -378,15 +412,9 @@ class JsonSchemaValidatorTest {
         "client_2_date_of_birth, 12345, 'client_2_date_of_birth: integer found, string expected (provided value: 12345)'",
         "client_2_date_of_birth, true, 'client_2_date_of_birth: boolean found, string expected (provided value: true)'",
     })
-    void validateErrorForInvalidDataTypes(
+    void validateClaimForInvalidDataTypes(
         String fieldName, String badJsonValue, String expectedError) throws Exception {
-      ObjectMapper mapper =
-          new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL)
-                            .configure(JsonGenerator.Feature.WRITE_BIGDECIMAL_AS_PLAIN, true);
-      JsonNode validNode = mapper.valueToTree(getMinimumValidClaim());
-      ObjectNode node = validNode.deepCopy();
-      node.set(fieldName, mapper.readTree(badJsonValue));
-      List<String> errors = jsonSchemaValidator.validate("claim", node);
+      List<String> errors = validateForInvalidDataTypes("claim", getMinimumValidClaim(), fieldName, badJsonValue);
       assertThat(errors).contains(expectedError);
     }
 
@@ -516,10 +544,10 @@ class JsonSchemaValidatorTest {
         "uniqueClientNumber, '31121899/A/ABCD', 'unique_client_number: does not match the regex pattern ^(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[0-2])(19[0-9]{2}|20[0-9]{2})/[\\p{L}0-9 \\-’''&]/[\\p{L}0-9 \\-’''&]{1,4}$ (provided value: 31121899/A/ABCD)'",
         "uniqueClientNumber, '01012100/A/ABCD', 'unique_client_number: does not match the regex pattern ^(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[0-2])(19[0-9]{2}|20[0-9]{2})/[\\p{L}0-9 \\-’''&]/[\\p{L}0-9 \\-’''&]{1,4}$ (provided value: 01012100/A/ABCD)'",
 
-        "clientPostCode, 'ABCD', 'client_post_code: does not match the regex pattern ^NFA|GIR 0AA|[A-Z]{1,2}[0-9][0-9A-Z]?\\s?[0-9][A-Z]{2}$ (provided value: ABCD)'",
-        "clientPostCode, 'ABC12 BCD', 'client_post_code: does not match the regex pattern ^NFA|GIR 0AA|[A-Z]{1,2}[0-9][0-9A-Z]?\\s?[0-9][A-Z]{2}$ (provided value: ABC12 BCD)'",
-        "client2PostCode, 'ABCD', 'client_2_post_code: does not match the regex pattern ^NFA|GIR 0AA|[A-Z]{1,2}[0-9][0-9A-Z]?\\s?[0-9][A-Z]{2}$ (provided value: ABCD)'",
-        "client2PostCode, 'ABC12 BCD', 'client_2_post_code: does not match the regex pattern ^NFA|GIR 0AA|[A-Z]{1,2}[0-9][0-9A-Z]?\\s?[0-9][A-Z]{2}$ (provided value: ABC12 BCD)'",
+        "clientPostcode, 'ABCD', 'client_postcode: does not match the regex pattern ^NFA|GIR 0AA|[A-Z]{1,2}[0-9][0-9A-Z]?\\s?[0-9][A-Z]{2}$ (provided value: ABCD)'",
+        "clientPostcode, 'ABC12 BCD', 'client_postcode: does not match the regex pattern ^NFA|GIR 0AA|[A-Z]{1,2}[0-9][0-9A-Z]?\\s?[0-9][A-Z]{2}$ (provided value: ABC12 BCD)'",
+        "client2Postcode, 'ABCD', 'client_2_postcode: does not match the regex pattern ^NFA|GIR 0AA|[A-Z]{1,2}[0-9][0-9A-Z]?\\s?[0-9][A-Z]{2}$ (provided value: ABCD)'",
+        "client2Postcode, 'ABC12 BCD', 'client_2_postcode: does not match the regex pattern ^NFA|GIR 0AA|[A-Z]{1,2}[0-9][0-9A-Z]?\\s?[0-9][A-Z]{2}$ (provided value: ABC12 BCD)'",
 
         "genderCode, 'MF', 'gender_code: does not match the regex pattern ^([MFU])$ (provided value: MF)'",
         "genderCode, 'A', 'gender_code: does not match the regex pattern ^([MFU])$ (provided value: A)'",
@@ -694,16 +722,16 @@ class JsonSchemaValidatorTest {
         "uniqueClientNumber, '12121999/A/HELL'",
         "uniqueClientNumber, '01011900/A/D''SO'",
         "uniqueClientNumber, '31122099/À/D123'",
-        "clientPostCode, 'AB12 9CD'",
-        "clientPostCode, 'A12 9CD'",
-        "clientPostCode, 'A129CD'",
-        "clientPostCode, 'A1B 9CD'",
-        "clientPostCode, 'NFA'",
-        "client2PostCode, 'AB12 9CD'",
-        "client2PostCode, 'A12 9CD'",
-        "client2PostCode, 'A129CD'",
-        "client2PostCode, 'A1B 9CD'",
-        "client2PostCode, 'NFA'",
+        "clientPostcode, 'AB12 9CD'",
+        "clientPostcode, 'A12 9CD'",
+        "clientPostcode, 'A129CD'",
+        "clientPostcode, 'A1B 9CD'",
+        "clientPostcode, 'NFA'",
+        "client2Postcode, 'AB12 9CD'",
+        "client2Postcode, 'A12 9CD'",
+        "client2Postcode, 'A129CD'",
+        "client2Postcode, 'A1B 9CD'",
+        "client2Postcode, 'NFA'",
         "genderCode, 'M'",
         "genderCode, 'F'",
         "genderCode, 'U'",
@@ -733,6 +761,9 @@ class JsonSchemaValidatorTest {
         .officeAccountNumber("2Q286D")
         .submissionPeriod("OCT-2024")
         .areaOfLaw("CRIME")
+        .status(SubmissionStatus.CREATED)
+        .scheduleNumber("SCHEDULE/NUMBER/1")
+        .isNilSubmission(false)
         .numberOfClaims(1);
     return submission;
   }
@@ -745,7 +776,9 @@ class JsonSchemaValidatorTest {
         .status(ClaimStatus.READY_TO_PROCESS)
         .scheduleReference("ScheduleReference")
         .caseStartDate("2020-04-10")
+        .netDisbursementAmount(BigDecimal.valueOf(20.10))
         .disbursementsVatAmount(BigDecimal.valueOf(10.20))
+        .isVatApplicable(true)
         .feeCode("FeeCode");
     return claim;
   }
@@ -764,15 +797,32 @@ class JsonSchemaValidatorTest {
           value = new BigDecimal(rawValue);
         } else if (paramType.equals(Boolean.class)) {
           value = Boolean.valueOf(rawValue);
+        } else if (paramType.isEnum()) {
+          @SuppressWarnings({ "rawtypes", "unchecked" })
+          Class<? extends Enum> enumType = (Class<? extends Enum>) paramType;
+          value = Enum.valueOf(enumType, rawValue);
         } else {
           value = rawValue; // default: String
         }
       }
-
       setter.invoke(target, value);
     } catch (Exception e) {
       throw new RuntimeException("Failed to set field '" + fieldName + "' on object " + target.getClass(), e);
     }
+  }
+
+  private List<String> validateForInvalidDataTypes(
+      String schemaName, Object baseValidObject, String fieldName, String badJsonValue) throws Exception {
+
+    ObjectMapper mapper = new ObjectMapper()
+        .setSerializationInclusion(JsonInclude.Include.NON_NULL)
+        .configure(JsonGenerator.Feature.WRITE_BIGDECIMAL_AS_PLAIN, true);
+
+    JsonNode validNode = mapper.valueToTree(baseValidObject);
+    ObjectNode node = validNode.deepCopy();
+    node.set(fieldName, mapper.readTree(badJsonValue));
+
+    return jsonSchemaValidator.validate(schemaName, node);
   }
 
   // Utility to convert snake_case to camelCase

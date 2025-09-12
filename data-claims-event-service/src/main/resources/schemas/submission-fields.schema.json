@@ -3,7 +3,7 @@
   "title": "SubmissionFields",
   "type": "object",
   "properties": {
-    "submission_d": {
+    "submission_id": {
       "type": "string",
       "format": "uuid"
     },
@@ -24,10 +24,20 @@
       "enum": ["CIVIL", "CRIME", "MEDIATION", "CRIME LOWER", "LEGAL HELP"]
     },
     "status": {
-      "type": "string"
+      "type": "string",
+      "enum": [
+        "CREATED",
+        "READY_FOR_VALIDATION",
+        "VALIDATION_IN_PROGRESS",
+        "VALIDATION_SUCCEEDED",
+        "VALIDATION_FAILED",
+        "REPLACED"
+      ]
     },
     "schedule_number": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9/]+$",
+      "maxLength": 20
     },
     "previous_submission_id": {
       "type": "string",
@@ -45,6 +55,9 @@
     "office_account_number",
     "submission_period",
     "area_of_law",
+    "status",
+    "schedule_number",
+    "is_nil_submission",
     "number_of_claims"
   ]
 }

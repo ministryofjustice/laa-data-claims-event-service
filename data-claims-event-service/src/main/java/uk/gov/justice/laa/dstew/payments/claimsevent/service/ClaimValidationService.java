@@ -1,5 +1,9 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
+import java.beans.IntrospectionException;
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -8,6 +12,7 @@ import java.util.Map;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
+import uk.gov.justice.laa.dstew.payments.claimsevent.config.MandatoryFieldsRegistry;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.JsonSchemaValidator;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
@@ -21,24 +26,27 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 @AllArgsConstructor
 public class ClaimValidationService {
 
-  public static final String OLDEST_DATE_ALLOWED_1 = "01/01/1995";
-  public static final String MIN_REP_ORDER_DATE = "01/04/2016";
-  public static final String MIN_BIRTH_DATE = "01/01/1900";
+  public static final String OLDEST_DATE_ALLOWED_1 = "1995-01-01";
+  public static final String MIN_REP_ORDER_DATE = "2016-04-01";
+  public static final String MIN_BIRTH_DATE = "1900-01-01";
   private final CategoryOfLawValidationService categoryOfLawValidationService;
   private final DuplicateClaimValidationService duplicateClaimValidationService;
   private final FeeCalculationService feeCalculationService;
   private final SubmissionValidationContext submissionValidationContext;
   private final JsonSchemaValidator jsonSchemaValidator;
+  private final MandatoryFieldsRegistry mandatoryFieldsRegistry;
 
   /**
    * Validate a list of claims in a submission.
    *
-   * @param claims the claims in a submission
+   * @param claims    the claims in a submission
+   * @param areaOfLaw the Area of Law that this submission belongs to: used to apply conditional validations
    */
-  public void validateClaims(List<ClaimResponse> claims, List<String> providerCategoriesOfLaw) {
+  public void validateClaims(List<ClaimResponse> claims, List<String> providerCategoriesOfLaw,
+      String areaOfLaw) {
     Map<String, CategoryOfLawResult> categoryOfLawLookup =
         categoryOfLawValidationService.getCategoryOfLawLookup(claims);
-    claims.forEach(claim -> validateClaim(claim, categoryOfLawLookup, providerCategoriesOfLaw));
+    claims.forEach(claim -> validateClaim(claim, categoryOfLawLookup, providerCategoriesOfLaw, areaOfLaw));
   }
 
   /**
@@ -48,18 +56,21 @@ public class ClaimValidationService {
    * errors encountered during the validation process are added to the submission validation
    * context.
    *
-   * @param claim the claim object to validate
-   * @param categoryOfLawLookup a map containing category of law codes and their corresponding
-   *     descriptions
+   * @param claim                   the claim object to validate
+   * @param categoryOfLawLookup     a map containing category of law codes and their corresponding
+   *                                descriptions
    * @param providerCategoriesOfLaw a list of categories of law applicable to the provider
+   * @param areaOfLaw               the area of law for the parent submission: some validations
+   *                                change depending on the area of law.
    */
   private void validateClaim(
       ClaimResponse claim,
       Map<String, CategoryOfLawResult> categoryOfLawLookup,
-      List<String> providerCategoriesOfLaw) {
+      List<String> providerCategoriesOfLaw, String areaOfLaw) {
     submissionValidationContext.addClaimErrors(
         claim.getId(), jsonSchemaValidator.validate("claim", claim));
 
+    checkMandatoryFields(claim, areaOfLaw);
     validateUniqueFileNumber(claim);
     checkDateInPast(claim, "Case Start Date", claim.getCaseStartDate(), OLDEST_DATE_ALLOWED_1);
     checkDateInPast(claim, "Case Concluded Date", claim.getCaseConcludedDate(), OLDEST_DATE_ALLOWED_1);
@@ -67,19 +78,63 @@ public class ClaimValidationService {
     checkDateInPast(claim, "Representation Order Date", claim.getRepresentationOrderDate(), MIN_REP_ORDER_DATE);
     checkDateInPast(claim, "Client Date of Birth", claim.getClientDateOfBirth(), MIN_BIRTH_DATE);
     checkDateInPast(claim, "Client2 Date of Birth", claim.getClient2DateOfBirth(), MIN_BIRTH_DATE);
+    checkMatterType(claim, areaOfLaw);
     categoryOfLawValidationService.validateCategoryOfLaw(
         claim, categoryOfLawLookup, providerCategoriesOfLaw);
     duplicateClaimValidationService.validateDuplicateClaims(claim);
     feeCalculationService.validateFeeCalculation(claim);
   }
 
-  /**
-   * Validates the unique file number of the given claim to ensure it contains a valid and
-   * non-future date in the format DDMMYY. If the date is invalid or in the future, an error is
-   * added to the submission validation context.
-   *
-   * @param claim the claim object containing the unique file number to be validated
-   */
+  private void checkMandatoryFields(ClaimResponse claim, String areaOfLaw) {
+    List<String> mandatoryFields = mandatoryFieldsRegistry.getMandatoryFieldsByAreaOfLaw().get(areaOfLaw);
+    for (String fieldName : mandatoryFields) {
+      try {
+        // Look up getter method for the property
+        PropertyDescriptor pd = new PropertyDescriptor(fieldName, ClaimResponse.class);
+        Method getter = pd.getReadMethod();
+
+        if (getter == null) {
+          throw new IllegalStateException("No getter for field in ClaimResponse: " + fieldName);
+        }
+
+        Object value = getter.invoke(claim);
+
+        if (value == null || (value instanceof String s && s.trim().isEmpty())) {
+          submissionValidationContext.addClaimError(
+              claim.getId(),
+              String.format("%s is required for area of law: %s", fieldName, areaOfLaw)
+          );
+        }
+
+      } catch (IntrospectionException | IllegalAccessException | InvocationTargetException e) {
+        throw new IllegalStateException("Error accessing property in ClaimResponse: " + fieldName, e);
+      }
+    }
+  }
+
+  private void checkMatterType(ClaimResponse claim, String areaOfLaw) {
+    String matterType = claim.getMatterTypeCode();
+
+    String regex =    switch (areaOfLaw)  {
+      case "CIVIL" -> "^[a-zA-Z0-9]{1,4}[-:][a-zA-Z0-9]{1,4}$";
+      case "MEDIATION" -> "^[A-Z]{4}[-:][A-Z]{4}$";
+      default -> null;
+    };
+
+    if (regex != null && !matterType.matches(regex)) {
+      submissionValidationContext.addClaimError(
+          claim.getId(),
+          String.format("Invalid Matter Type [%s] for Area of Law: %s", matterType, areaOfLaw));
+    }
+  }
+
+    /**
+     * Validates the unique file number of the given claim to ensure it contains a valid and
+     * non-future date in the format DDMMYY. If the date is invalid or in the future, an error is
+     * added to the submission validation context.
+     *
+     * @param claim the claim object containing the unique file number to be validated
+     */
   private void validateUniqueFileNumber(ClaimResponse claim) {
     String uniqueFileNumber = claim.getUniqueFileNumber();
     if (uniqueFileNumber != null && uniqueFileNumber.length() > 1) {
@@ -105,11 +160,11 @@ public class ClaimValidationService {
    *
    * @param claim The claim object associated with the date being checked.
    * @param fieldName The name of the field associated with the date being validated.
-   * @param dateValueToCheck The date value to validate in the format "dd/MM/yyyy".
+   * @param dateValueToCheck The date value to validate in the format "yyyy-MM-dd".
    */
   private void checkDateInPast(ClaimResponse claim, String fieldName, String dateValueToCheck, String oldestDateAllowedStr) {
     if (dateValueToCheck != null) {
-      DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+      DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
       try {
         LocalDate oldestDateAllowed = LocalDate.parse(oldestDateAllowedStr, formatter);
         LocalDate date = LocalDate.parse(dateValueToCheck, formatter);
@@ -127,4 +182,5 @@ public class ClaimValidationService {
       }
     }
   }
+
 }

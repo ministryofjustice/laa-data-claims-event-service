@@ -63,8 +63,7 @@ public class SubmissionValidationServiceTest {
         boolean isNilSubmission,
         ClaimStatus claimStatus,
         boolean hasErrors,
-        boolean expectsValidationError,
-        String displayName) {
+        boolean expectsValidationError) {
       // Given
       UUID submissionId = new UUID(0, 0);
       UUID claimId =
@@ -76,8 +75,8 @@ public class SubmissionValidationServiceTest {
       SubmissionResponse submission = buildSubmission(submissionId, claimId, isNilSubmission);
 
       if (claimId != null) {
-        ClaimResponse ClaimResponse = buildClaimResponse(claimId);
-        mockClaimRetrieval(submissionId, claimId, ClaimResponse);
+        ClaimResponse claimResponse = buildClaimResponse(claimId);
+        mockClaimRetrieval(submissionId, claimId, claimResponse);
         mockProviderSchedules(officeAccountNumber, areaOfLaw, categoryOfLaw);
 
         SubmissionPatch submissionPatch = buildSubmissionPatch(submissionId);
@@ -96,7 +95,7 @@ public class SubmissionValidationServiceTest {
             claimId,
             officeAccountNumber,
             areaOfLaw,
-            ClaimResponse,
+            claimResponse,
             categoryOfLaw,
             submissionPatch,
             claimPatch);
@@ -161,10 +160,10 @@ public class SubmissionValidationServiceTest {
 
       SubmissionResponse submission = buildSubmission(submissionId, claimId, false);
 
-      ClaimResponse ClaimResponse = buildClaimResponse(claimId);
+      ClaimResponse claimResponse = buildClaimResponse(claimId);
 
       when(dataClaimsRestClient.getClaim(submissionId, claimId))
-          .thenReturn(ResponseEntity.of(Optional.of(ClaimResponse)));
+          .thenReturn(ResponseEntity.of(Optional.of(claimResponse)));
 
       when(providerDetailsRestClient.getProviderFirmSchedules(officeAccountNumber, areaOfLaw))
           .thenReturn(Mono.empty());
@@ -204,7 +203,7 @@ public class SubmissionValidationServiceTest {
       verify(providerDetailsRestClient, times(1))
           .getProviderFirmSchedules(officeAccountNumber, areaOfLaw);
       verify(claimValidationService, times(1))
-          .validateClaims(List.of(ClaimResponse), Collections.emptyList());
+          .validateClaims(List.of(claimResponse), Collections.emptyList(), areaOfLaw);
       verify(dataClaimsRestClient, times(1)).updateClaim(submissionId, claimId, claimPatch);
     }
 
@@ -294,15 +293,15 @@ public class SubmissionValidationServiceTest {
     }
 
     private ClaimResponse buildClaimResponse(UUID claimId) {
-      ClaimResponse ClaimResponse = new ClaimResponse();
-      ClaimResponse.id(claimId.toString());
-      ClaimResponse.feeCode("feeCode");
-      return ClaimResponse;
+      ClaimResponse claimResponse = new ClaimResponse();
+      claimResponse.id(claimId.toString());
+      claimResponse.feeCode("feeCode");
+      return claimResponse;
     }
 
-    private void mockClaimRetrieval(UUID submissionId, UUID claimId, ClaimResponse ClaimResponse) {
+    private void mockClaimRetrieval(UUID submissionId, UUID claimId, ClaimResponse claimResponse) {
       when(dataClaimsRestClient.getClaim(submissionId, claimId))
-          .thenReturn(ResponseEntity.of(Optional.of(ClaimResponse)));
+          .thenReturn(ResponseEntity.of(Optional.of(claimResponse)));
     }
 
     private void mockProviderSchedules(
@@ -342,7 +341,7 @@ public class SubmissionValidationServiceTest {
         UUID claimId,
         String officeAccountNumber,
         String areaOfLaw,
-        ClaimResponse ClaimResponse,
+        ClaimResponse claimResponse,
         String categoryOfLaw,
         SubmissionPatch submissionPatch,
         ClaimPatch claimPatch) {
@@ -352,7 +351,7 @@ public class SubmissionValidationServiceTest {
       verify(providerDetailsRestClient, times(1))
           .getProviderFirmSchedules(officeAccountNumber, areaOfLaw);
       verify(claimValidationService, times(1))
-          .validateClaims(List.of(ClaimResponse), List.of(categoryOfLaw));
+          .validateClaims(List.of(claimResponse), List.of(categoryOfLaw), areaOfLaw);
       verify(dataClaimsRestClient, times(1)).updateClaim(submissionId, claimId, claimPatch);
     }
   }

@@ -66,7 +66,7 @@ public class SubmissionValidationService {
     List<String> providerCategoriesOfLaw = getProviderCategoriesOfLaw(officeCode, areaOfLaw);
     validateProviderContract(submissionId.toString(), providerCategoriesOfLaw);
 
-    claimValidationService.validateClaims(claims, providerCategoriesOfLaw);
+    claimValidationService.validateClaims(claims, providerCategoriesOfLaw, areaOfLaw);
 
     // TODO: Send through all claim errors in the patch request.
     updateClaims(submissionId, claims);
