@@ -50,7 +50,7 @@ dependencies {
     implementation project(':reference-provider-details-api')
     implementation project(':reference-fee-scheme-platform-api')
 
-    implementation 'uk.gov.justice.laa.datastewardship.payments:data-claims-api-models:11a9b3c'
+    implementation 'uk.gov.justice.laa.datastewardship.payments:data-claims-api-models:1589f7f'
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
@@ -58,10 +58,10 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
     // Import spring-cloud-aws BOM (Bill Of Materials) for dependency management
-    implementation platform('io.awspring.cloud:spring-cloud-aws:3.2.0')
+    implementation platform('io.awspring.cloud:spring-cloud-aws:3.4.0')
     implementation 'io.awspring.cloud:spring-cloud-aws-starter'
     implementation 'io.awspring.cloud:spring-cloud-aws-starter-sqs'
-    implementation 'software.amazon.awssdk:sts:2.33.4'
+    implementation 'software.amazon.awssdk:sts:2.33.7'
 
     implementation 'io.micrometer:micrometer-tracing-bridge-brave'
     implementation 'jakarta.validation:jakarta.validation-api:3.1.1'

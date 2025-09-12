@@ -80,6 +80,9 @@ public class SubmissionValidationServiceTest {
               .claims(List.of(claim))
               .build();
 
+      when(dataClaimsRestClient.getSubmission(submissionId.toString()))
+          .thenReturn(ResponseEntity.of(Optional.of(submission)));
+
       ClaimResponse claimResponse = new ClaimResponse();
       claimResponse.id(claimId.toString());
       claimResponse.feeCode("feeCode");
@@ -116,7 +119,7 @@ public class SubmissionValidationServiceTest {
           .thenReturn(ResponseEntity.ok().build());
 
       // When
-      submissionValidationService.validateSubmission(submission);
+      submissionValidationService.validateSubmission(submissionId);
 
       // Then
       verify(dataClaimsRestClient, times(1))
@@ -152,6 +155,9 @@ public class SubmissionValidationServiceTest {
               .isNilSubmission(true)
               .claims(List.of(claim))
               .build();
+
+      when(dataClaimsRestClient.getSubmission(submissionId.toString()))
+          .thenReturn(ResponseEntity.of(Optional.of(submission)));
 
       ClaimResponse claimResponse = new ClaimResponse();
       claimResponse.id(claimId.toString());
@@ -189,7 +195,7 @@ public class SubmissionValidationServiceTest {
       when(submissionValidationContext.hasErrors(claimId.toString())).thenReturn(true);
 
       // When
-      submissionValidationService.validateSubmission(submission);
+      submissionValidationService.validateSubmission(submissionId);
 
       // Then
       verify(dataClaimsRestClient, times(1))
@@ -222,9 +228,12 @@ public class SubmissionValidationServiceTest {
               .claims(null)
               .build();
 
+      when(dataClaimsRestClient.getSubmission(submissionId.toString()))
+          .thenReturn(ResponseEntity.of(Optional.of(submission)));
+
       // When
       ThrowingCallable throwingCallable =
-          () -> submissionValidationService.validateSubmission(submission);
+          () -> submissionValidationService.validateSubmission(submissionId);
 
       // Then
       assertThatThrownBy(throwingCallable)
@@ -254,6 +263,9 @@ public class SubmissionValidationServiceTest {
               .status(SubmissionStatus.READY_FOR_VALIDATION)
               .claims(List.of(claim))
               .build();
+
+      when(dataClaimsRestClient.getSubmission(submissionId.toString()))
+          .thenReturn(ResponseEntity.of(Optional.of(submission)));
 
       ClaimResponse claimResponse = new ClaimResponse();
       claimResponse.id(claimId.toString());
@@ -293,7 +305,7 @@ public class SubmissionValidationServiceTest {
       when(submissionValidationContext.hasErrors(claimId.toString())).thenReturn(true);
 
       // When
-      submissionValidationService.validateSubmission(submission);
+      submissionValidationService.validateSubmission(submissionId);
 
       // Then
       verify(dataClaimsRestClient, times(1))
@@ -327,9 +339,12 @@ public class SubmissionValidationServiceTest {
               .claims(null)
               .build();
 
+      when(dataClaimsRestClient.getSubmission(submissionId.toString()))
+          .thenReturn(ResponseEntity.of(Optional.of(submission)));
+
       // When
       ThrowingCallable throwingCallable =
-          () -> submissionValidationService.validateSubmission(submission);
+          () -> submissionValidationService.validateSubmission(submissionId);
 
       // Then
       assertThatThrownBy(throwingCallable)
@@ -363,9 +378,12 @@ public class SubmissionValidationServiceTest {
               .claims(null)
               .build();
 
+      when(dataClaimsRestClient.getSubmission(submissionId.toString()))
+          .thenReturn(ResponseEntity.of(Optional.of(submission)));
+
       // When
       ThrowingCallable throwingCallable =
-          () -> submissionValidationService.validateSubmission(submission);
+          () -> submissionValidationService.validateSubmission(submissionId);
 
       // Then
       assertThatThrownBy(throwingCallable)
