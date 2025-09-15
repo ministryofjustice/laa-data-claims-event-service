@@ -75,7 +75,7 @@ public class ClaimValidationService {
     List<ValidationMessagePatch> schemaMessages = jsonSchemaValidator.validate("claim", claim);
     submissionValidationContext.addClaimMessages(claim.getId(), schemaMessages);
 
-//    checkMandatoryFields(claim, areaOfLaw);
+    //    checkMandatoryFields(claim, areaOfLaw);
     validateUniqueFileNumber(claim);
     validateStageReachedCode(claim, areaOfLaw);
     validateDisbursementsVatAmount(claim, areaOfLaw);
@@ -95,8 +95,9 @@ public class ClaimValidationService {
   }
 
   /**
-   * Checks if all mandatory fields for a given area of law are populated in the provided ClaimResponse object.
-   * If a mandatory field is missing or invalid, an error is added to the submission validation context.
+   * Checks if all mandatory fields for a given area of law are populated in the provided
+   * ClaimResponse object. If a mandatory field is missing or invalid, an error is added to the
+   * submission validation context.
    *
    * @param claim the ClaimResponse object containing data that needs to be validated
    * @param areaOfLaw the area of law for which mandatory fields need to be checked
@@ -148,7 +149,8 @@ public class ClaimValidationService {
           default -> null;
         };
 
-    validateFieldWithRegex(claim, areaOfLaw, claim.getStageReachedCode(), "stage_reached_code", regex);
+    validateFieldWithRegex(
+        claim, areaOfLaw, claim.getStageReachedCode(), "stage_reached_code", regex);
   }
 
   private void validateMatterType(ClaimResponse claim, String areaOfLaw) {
@@ -176,7 +178,9 @@ public class ClaimValidationService {
     if (maxAllowed != null && disbursementsVatAmount.compareTo(maxAllowed) > 0) {
       submissionValidationContext.addClaimError(
           claim.getId(),
-          String.format("disbursementsVatAmount (%s): must have a maximum value of %s (provided value: %s)", areaOfLaw, maxAllowed, disbursementsVatAmount));
+          String.format(
+              "disbursementsVatAmount (%s): must have a maximum value of %s (provided value: %s)",
+              areaOfLaw, maxAllowed, disbursementsVatAmount));
     }
   }
 

@@ -184,7 +184,8 @@ public class SubmissionValidationServiceTest {
               .id(claimId.toString())
               .status(ClaimStatus.INVALID)
               .validationErrors(
-                  List.of(ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER.getDisplayMessage()));
+                  List.of(
+                      ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER.getDisplayMessage()));
       when(dataClaimsRestClient.updateClaim(submissionId, claimId, claimPatch))
           .thenReturn(ResponseEntity.ok().build());
 
