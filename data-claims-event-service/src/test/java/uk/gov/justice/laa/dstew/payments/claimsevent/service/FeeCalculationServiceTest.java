@@ -3,6 +3,7 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
@@ -55,6 +56,8 @@ class FeeCalculationServiceTest {
       feeCalculationService.validateFeeCalculation(claim);
 
       verify(feeSchemePlatformRestClient, times(1)).calculateFee(feeCalculationRequest);
+      verify(validationContext, times(1)).isFlaggedForRetry("claimId");
+      verifyNoMoreInteractions(validationContext);
     }
 
     @Test

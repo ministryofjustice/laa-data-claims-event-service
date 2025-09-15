@@ -67,9 +67,9 @@ public class SubmissionValidationServiceTest {
       String categoryOfLaw = "categoryOfLaw";
       String officeAccountNumber = "officeAccountNumber";
 
-      SubmissionClaim claim = new SubmissionClaim();
-      claim.setClaimId(claimId);
-      claim.setStatus(ClaimStatus.READY_TO_PROCESS);
+      SubmissionClaim submissionClaim = new SubmissionClaim();
+      submissionClaim.setClaimId(claimId);
+      submissionClaim.setStatus(ClaimStatus.READY_TO_PROCESS);
 
       SubmissionResponse submission =
           SubmissionResponse.builder()
@@ -77,7 +77,7 @@ public class SubmissionValidationServiceTest {
               .areaOfLaw(areaOfLaw)
               .officeAccountNumber(officeAccountNumber)
               .status(SubmissionStatus.READY_FOR_VALIDATION)
-              .claims(List.of(claim))
+              .claims(List.of(submissionClaim))
               .build();
 
       when(dataClaimsRestClient.getSubmission(submissionId.toString()))
@@ -86,9 +86,6 @@ public class SubmissionValidationServiceTest {
       ClaimResponse claimResponse = new ClaimResponse();
       claimResponse.id(claimId.toString());
       claimResponse.feeCode("feeCode");
-
-      when(dataClaimsRestClient.getClaim(submissionId, claimId))
-          .thenReturn(ResponseEntity.of(Optional.of(claimResponse)));
 
       FirmOfficeContractAndScheduleLine scheduleLine = new FirmOfficeContractAndScheduleLine();
       scheduleLine.setCategoryOfLaw(categoryOfLaw);
@@ -127,8 +124,7 @@ public class SubmissionValidationServiceTest {
       verify(dataClaimsRestClient, times(1)).getClaim(submissionId, claimId);
       verify(providerDetailsRestClient, times(1))
           .getProviderFirmSchedules(officeAccountNumber, areaOfLaw);
-      verify(claimValidationService, times(1))
-          .validateClaims(List.of(claimResponse), List.of(categoryOfLaw));
+      verify(claimValidationService, times(1)).validateClaims(submission, List.of(categoryOfLaw));
       verify(dataClaimsRestClient, times(1)).updateClaim(submissionId, claimId, claimPatch);
     }
 
@@ -138,7 +134,11 @@ public class SubmissionValidationServiceTest {
       // Given
       UUID submissionId = new UUID(0, 0);
       UUID claimId = new UUID(1, 1);
-      String areaOfLaw = "areaOfLaw";
+
+      ClaimResponse claim = new ClaimResponse();
+      claim.id(claimId.toString());
+      claim.feeCode("feeCode");
+
       String categoryOfLaw = "categoryOfLaw";
       String officeAccountNumber = "officeAccountNumber";
 
@@ -176,6 +176,9 @@ public class SubmissionValidationServiceTest {
           new ProviderFirmOfficeContractAndScheduleDto();
       providerFirmResponse.addSchedulesItem(schedule);
 
+      String areaOfLaw = "areaOfLaw";
+      String officeAccountNumber = "officeAccountNumber";
+
       when(providerDetailsRestClient.getProviderFirmSchedules(officeAccountNumber, areaOfLaw))
           .thenReturn(Mono.just(providerFirmResponse));
 
@@ -194,6 +197,19 @@ public class SubmissionValidationServiceTest {
 
       when(submissionValidationContext.hasErrors(claimId.toString())).thenReturn(true);
 
+      SubmissionClaim submissionClaim =
+          new SubmissionClaim().claimId(claimId).status(ClaimStatus.READY_TO_PROCESS);
+
+      SubmissionResponse submission =
+          SubmissionResponse.builder()
+              .submissionId(submissionId)
+              .areaOfLaw(areaOfLaw)
+              .officeAccountNumber(officeAccountNumber)
+              .status(SubmissionStatus.READY_FOR_VALIDATION)
+              .isNilSubmission(true)
+              .claims(List.of(submissionClaim))
+              .build();
+
       // When
       submissionValidationService.validateSubmission(submissionId);
 
@@ -205,8 +221,7 @@ public class SubmissionValidationServiceTest {
       verify(dataClaimsRestClient, times(1)).getClaim(submissionId, claimId);
       verify(providerDetailsRestClient, times(1))
           .getProviderFirmSchedules(officeAccountNumber, areaOfLaw);
-      verify(claimValidationService, times(1))
-          .validateClaims(List.of(claimResponse), List.of(categoryOfLaw));
+      verify(claimValidationService, times(1)).validateClaims(submission, List.of(categoryOfLaw));
       verify(dataClaimsRestClient, times(1)).updateClaim(submissionId, claimId, claimPatch);
     }
 
@@ -254,6 +269,7 @@ public class SubmissionValidationServiceTest {
       SubmissionClaim claim = new SubmissionClaim();
       claim.setClaimId(claimId);
       claim.setStatus(ClaimStatus.READY_TO_PROCESS);
+      claim.feeCode("feeCode");
 
       SubmissionResponse submission =
           SubmissionResponse.builder()
@@ -304,6 +320,19 @@ public class SubmissionValidationServiceTest {
 
       when(submissionValidationContext.hasErrors(claimId.toString())).thenReturn(true);
 
+      SubmissionClaim submissionClaim = new SubmissionClaim();
+      submissionClaim.setClaimId(claimId);
+      submissionClaim.setStatus(ClaimStatus.READY_TO_PROCESS);
+
+      SubmissionResponse submission =
+          SubmissionResponse.builder()
+              .submissionId(submissionId)
+              .areaOfLaw(areaOfLaw)
+              .officeAccountNumber(officeAccountNumber)
+              .status(SubmissionStatus.READY_FOR_VALIDATION)
+              .claims(List.of(submissionClaim))
+              .build();
+
       // When
       submissionValidationService.validateSubmission(submissionId);
 
@@ -315,8 +344,7 @@ public class SubmissionValidationServiceTest {
       verify(dataClaimsRestClient, times(1)).getClaim(submissionId, claimId);
       verify(providerDetailsRestClient, times(1))
           .getProviderFirmSchedules(officeAccountNumber, areaOfLaw);
-      verify(claimValidationService, times(1))
-          .validateClaims(List.of(claimResponse), Collections.emptyList());
+      verify(claimValidationService, times(1)).validateClaims(submission, Collections.emptyList());
       verify(dataClaimsRestClient, times(1)).updateClaim(submissionId, claimId, claimPatch);
     }
 
