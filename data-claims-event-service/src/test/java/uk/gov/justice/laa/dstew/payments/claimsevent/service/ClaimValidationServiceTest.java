@@ -8,6 +8,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -53,7 +54,7 @@ class ClaimValidationServiceTest {
       Map<String, List<String>> civilMandatoryFields =
           Map.of(
               "CIVIL", List.of("uniqueFileNumber"),
-              "CRIME", List.of("uniqueFileNumber"),
+              "CRIME", List.of("stageReachedCode"),
               "MEDIATION", List.of("uniqueFileNumber"));
 
       when(mandatoryFieldsRegistry.getMandatoryFieldsByAreaOfLaw())
@@ -183,9 +184,13 @@ class ClaimValidationServiceTest {
               .id("claim1")
               .feeCode("feeCode1")
               .uniqueFileNumber("uniqueFileNumber1")
-              .matterTypeCode("AB:CD");
+              .matterTypeCode("AB:CD")
+              .stageReachedCode("AA");
       ClaimResponse claim2 =
-          new ClaimResponse().id("claim2").feeCode("feeCode2").matterTypeCode("123:456");
+          new ClaimResponse()
+              .id("claim2")
+              .feeCode("feeCode2")
+              .matterTypeCode("123:456");
       List<ClaimResponse> claims = List.of(claim1, claim2);
 
       List<String> providerCategoriesOfLaw = List.of("categoryOfLaw1");
@@ -195,26 +200,31 @@ class ClaimValidationServiceTest {
           .thenReturn(categoryOfLawLookup);
 
       claimValidationService.validateClaims(claims, providerCategoriesOfLaw, "CIVIL");
+      claimValidationService.validateClaims(claims, providerCategoriesOfLaw, "CRIME");
 
       // Then
       verify(submissionValidationContext, times(0))
           .addClaimError("claim1", "uniqueFileNumber is required for area of law: CIVIL");
       verify(submissionValidationContext, times(1))
           .addClaimError("claim2", "uniqueFileNumber is required for area of law: CIVIL");
+      verify(submissionValidationContext, times(0))
+          .addClaimError("claim1", "stageReachedCode is required for area of law: CRIME");
+      verify(submissionValidationContext, times(1))
+          .addClaimError("claim2", "stageReachedCode is required for area of law: CRIME");
     }
 
     @ParameterizedTest(
-        name = "{index} => claimId={0}, matterType={1}, areaOfLaw={2}, expectedError={3}")
+        name = "{index} => claimId={0}, matterType={1}, areaOfLaw={2}, regex={3}, expectError={4}")
     @CsvSource({
-      "claim1, BadMatterType, CIVIL, true",
-      "claim2, ab12:bc24, CIVIL, false",
-      "claim3, AB-CD, CIVIL, false",
-      "claim4, ABCD:EFGH, MEDIATION, false",
-      "claim5, AB12:CD34, MEDIATION, true",
-      "claim3, AB-CD, MEDIATION, true",
+      "claim1, BadMatterType, CIVIL, '^[a-zA-Z0-9]{1,4}[-:][a-zA-Z0-9]{1,4}$', true",
+      "claim2, ab12:bc24, CIVIL, '^[a-zA-Z0-9]{1,4}[-:][a-zA-Z0-9]{1,4}$', false",
+      "claim3, AB-CD, CIVIL, '^[a-zA-Z0-9]{1,4}[-:][a-zA-Z0-9]{1,4}$', false",
+      "claim4, ABCD:EFGH, MEDIATION, '^[A-Z]{4}[-:][A-Z]{4}$', false",
+      "claim5, AB12:CD34, MEDIATION, '^[A-Z]{4}[-:][A-Z]{4}$', true",
+      "claim6, AB-CD, MEDIATION, '^[A-Z]{4}[-:][A-Z]{4}$', true",
     })
     void checkMatterType(
-        String claimId, String matterTypeCode, String areaOfLaw, boolean expectError) {
+        String claimId, String matterTypeCode, String areaOfLaw, String regex, boolean expectError) {
       ClaimResponse claim =
           new ClaimResponse().id(claimId).feeCode("feeCode1").matterTypeCode(matterTypeCode);
 
@@ -231,18 +241,104 @@ class ClaimValidationServiceTest {
       if (expectError) {
         String expectedMessage =
             String.format(
-                "Invalid Matter Type [%s] for Area of Law: %s", matterTypeCode, areaOfLaw);
+                "matter_type_code (%s): does not match the regex pattern %s (provided value: %s)", areaOfLaw, regex, matterTypeCode);
         verify(submissionValidationContext).addClaimError(claimId, expectedMessage);
       } else {
         verify(submissionValidationContext, never())
             .addClaimError(
                 eq(claimId),
                 (String)
-                    argThat(msg -> msg != null && ((String) msg).contains("Invalid Matter Type")));
+                    argThat(msg -> msg != null && ((String) msg).contains("matter_type_code")));
       }
 
       // Reset mocks for next iteration
       reset(submissionValidationContext);
     }
+
+    @ParameterizedTest(
+        name = "{index} => claimId={0}, stageReachedCode={1}, areaOfLaw={2}, regex={3}, expectError={4}")
+    @CsvSource({
+        "claim1, AABB, CIVIL, '^[a-zA-Z0-9]{2}$', true",
+        "claim2, AZ, CIVIL, '^[a-zA-Z0-9]{2}$', false",
+        "claim3, C9, CIVIL, '^[a-zA-Z0-9]{2}$', false",
+        "claim4, A!, CIVIL, '^[a-zA-Z0-9]{2}$', true",
+        "claim5, ABCD, CRIME, '^[A-Z]{4}$', false",
+        "claim6, A1, CRIME, '^[A-Z]{4}$', true",
+        "claim7, A-CD, CRIME, '^[A-Z]{4}$', true",
+    })
+    void checkStageReachedCode(
+        String claimId, String stageReachedCode, String areaOfLaw, String regex, boolean expectError) {
+      ClaimResponse claim =
+          new ClaimResponse().id(claimId).feeCode("feeCode1").matterTypeCode(stageReachedCode);
+
+      List<ClaimResponse> claims = List.of(claim);
+      List<String> providerCategoriesOfLaw = List.of("categoryOfLaw1");
+      Map<String, CategoryOfLawResult> categoryOfLawLookup = Collections.emptyMap();
+
+      when(categoryOfLawValidationService.getCategoryOfLawLookup(claims))
+          .thenReturn(categoryOfLawLookup);
+
+      // Run validation
+      claimValidationService.validateClaims(claims, providerCategoriesOfLaw, areaOfLaw);
+
+      if (expectError) {
+        String expectedMessage =
+            String.format(
+                "stage_reached_code (%s): does not match the regex pattern %s (provided value: %s)", areaOfLaw, regex, stageReachedCode);
+        verify(submissionValidationContext).addClaimError(claimId, expectedMessage);
+      } else {
+        verify(submissionValidationContext, never())
+            .addClaimError(
+                eq(claimId),
+                (String)
+                    argThat(msg -> msg != null && ((String) msg).contains("stage_reached_code")));
+      }
+
+      // Reset mocks for next iteration
+      reset(submissionValidationContext);
+    }
+
+    @ParameterizedTest(
+        name = "{index} => claimId={0}, disbursementVatAmount={1}, areaOfLaw={2}, maxAllowed={3}, expectError={4}")
+    @CsvSource({
+        "claim1, 99999.99, CIVIL, 99999.99, false",
+        "claim2, 999999.99, CRIME, 999999.99, false",
+        "claim3, 999999999.99, MEDIATION, 999999999.99, false",
+        "claim4, 100000.0, CIVIL, 99999.99, true",
+        "claim5, 1000000.0, CRIME, 999999.99, true",
+        "claim6, 1000000000.0, MEDIATION, 999999999.99, true",
+    })
+    void checkDisbursementsVatAmount(
+        String claimId, BigDecimal disbursementsVatAmount, String areaOfLaw, BigDecimal maxAllowed, boolean expectError) {
+      ClaimResponse claim =
+          new ClaimResponse().id(claimId).feeCode("feeCode1").disbursementsVatAmount(disbursementsVatAmount);
+
+      List<ClaimResponse> claims = List.of(claim);
+      List<String> providerCategoriesOfLaw = List.of("categoryOfLaw1");
+      Map<String, CategoryOfLawResult> categoryOfLawLookup = Collections.emptyMap();
+
+      when(categoryOfLawValidationService.getCategoryOfLawLookup(claims))
+          .thenReturn(categoryOfLawLookup);
+
+      // Run validation
+      claimValidationService.validateClaims(claims, providerCategoriesOfLaw, areaOfLaw);
+
+      if (expectError) {
+        String expectedMessage =
+            String.format(
+                "disbursementsVatAmount (%s): must have a maximum value of %s (provided value: %s)", areaOfLaw, maxAllowed, disbursementsVatAmount);
+        verify(submissionValidationContext).addClaimError(claimId, expectedMessage);
+      } else {
+        verify(submissionValidationContext, never())
+            .addClaimError(
+                eq(claimId),
+                (String)
+                    argThat(msg -> msg != null && ((String) msg).contains("disbursements_vat_amount")));
+      }
+
+      // Reset mocks for next iteration
+      reset(submissionValidationContext);
+    }
+
   }
 }

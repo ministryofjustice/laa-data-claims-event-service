@@ -670,7 +670,6 @@ class JsonSchemaValidatorTest {
       "scheduleReference, '0U733A/2018/02'",
       "caseReferenceNumber, 'CASE123'",
       "caseReferenceNumber, 'SJ/4558/2018/275877'",
-      "uniqueFileNumber, '/'",
       "uniqueFileNumber, '010123/001'",
       "crimeMatterTypeCode, '87'",
       "accessPointCode, 'AP12345'",

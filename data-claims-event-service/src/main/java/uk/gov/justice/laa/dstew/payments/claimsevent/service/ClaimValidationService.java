@@ -4,6 +4,7 @@ import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -75,6 +76,8 @@ public class ClaimValidationService {
 
     checkMandatoryFields(claim, areaOfLaw);
     validateUniqueFileNumber(claim);
+    validateStageReachedCode(claim, areaOfLaw);
+    validateDisbursementsVatAmount(claim, areaOfLaw);
     checkDateInPast(claim, "Case Start Date", claim.getCaseStartDate(), OLDEST_DATE_ALLOWED_1);
     checkDateInPast(
         claim, "Case Concluded Date", claim.getCaseConcludedDate(), OLDEST_DATE_ALLOWED_1);
@@ -83,13 +86,20 @@ public class ClaimValidationService {
         claim, "Representation Order Date", claim.getRepresentationOrderDate(), MIN_REP_ORDER_DATE);
     checkDateInPast(claim, "Client Date of Birth", claim.getClientDateOfBirth(), MIN_BIRTH_DATE);
     checkDateInPast(claim, "Client2 Date of Birth", claim.getClient2DateOfBirth(), MIN_BIRTH_DATE);
-    checkMatterType(claim, areaOfLaw);
+    validateMatterType(claim, areaOfLaw);
     categoryOfLawValidationService.validateCategoryOfLaw(
         claim, categoryOfLawLookup, providerCategoriesOfLaw);
     duplicateClaimValidationService.validateDuplicateClaims(claim);
     feeCalculationService.validateFeeCalculation(claim);
   }
 
+  /**
+   * Checks if all mandatory fields for a given area of law are populated in the provided ClaimResponse object.
+   * If a mandatory field is missing or invalid, an error is added to the submission validation context.
+   *
+   * @param claim the ClaimResponse object containing data that needs to be validated
+   * @param areaOfLaw the area of law for which mandatory fields need to be checked
+   */
   private void checkMandatoryFields(ClaimResponse claim, String areaOfLaw) {
     List<String> mandatoryFields =
         mandatoryFieldsRegistry.getMandatoryFieldsByAreaOfLaw().get(areaOfLaw);
@@ -118,9 +128,29 @@ public class ClaimValidationService {
     }
   }
 
-  private void checkMatterType(ClaimResponse claim, String areaOfLaw) {
-    String matterType = claim.getMatterTypeCode();
+  private void validateFieldWithRegex(
+      ClaimResponse claim, String areaOfLaw, String fieldValue, String fieldName, String regex) {
+    if (regex != null && fieldValue != null && !fieldValue.matches(regex)) {
+      submissionValidationContext.addClaimError(
+          claim.getId(),
+          String.format(
+              "%s (%s): does not match the regex pattern %s (provided value: %s)",
+              fieldName, areaOfLaw, regex, fieldValue));
+    }
+  }
 
+  private void validateStageReachedCode(ClaimResponse claim, String areaOfLaw) {
+    String regex =
+        switch (areaOfLaw) {
+          case "CIVIL" -> "^[a-zA-Z0-9]{2}$";
+          case "CRIME" -> "^[A-Z]{4}$";
+          default -> null;
+        };
+
+    validateFieldWithRegex(claim, areaOfLaw, claim.getStageReachedCode(), "stage_reached_code", regex);
+  }
+
+  private void validateMatterType(ClaimResponse claim, String areaOfLaw) {
     String regex =
         switch (areaOfLaw) {
           case "CIVIL" -> "^[a-zA-Z0-9]{1,4}[-:][a-zA-Z0-9]{1,4}$";
@@ -128,10 +158,24 @@ public class ClaimValidationService {
           default -> null;
         };
 
-    if (regex != null && !matterType.matches(regex)) {
+    validateFieldWithRegex(claim, areaOfLaw, claim.getMatterTypeCode(), "matter_type_code", regex);
+  }
+
+  private void validateDisbursementsVatAmount(ClaimResponse claim, String areaOfLaw) {
+    var disbursementsVatAmount = claim.getDisbursementsVatAmount();
+
+    BigDecimal maxAllowed =
+        switch (areaOfLaw) {
+          case "CIVIL" -> BigDecimal.valueOf(99999.99);
+          case "CRIME" -> BigDecimal.valueOf(999999.99);
+          case "MEDIATION" -> BigDecimal.valueOf(999999999.99);
+          default -> null;
+        };
+
+    if (maxAllowed != null && disbursementsVatAmount.compareTo(maxAllowed) > 0) {
       submissionValidationContext.addClaimError(
           claim.getId(),
-          String.format("Invalid Matter Type [%s] for Area of Law: %s", matterType, areaOfLaw));
+          String.format("disbursementsVatAmount (%s): must have a maximum value of %s (provided value: %s)", areaOfLaw, maxAllowed, disbursementsVatAmount));
     }
   }
 

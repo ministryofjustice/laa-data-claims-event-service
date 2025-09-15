@@ -22,15 +22,7 @@
     },
     "unique_file_number": {
       "type": "string",
-      "anyOf": [
-        { "const": "/" },
-        {
-          "type": "string",
-          "pattern": "^[0-9]{6}/[0-9]{3}$",
-          "minLength": 10,
-          "maxLength": 10
-        }
-      ]
+      "pattern": "^[0-9]{6}/[0-9]{3}$"
     },
     "case_start_date": {
       "type": "string",
@@ -46,8 +38,7 @@
     },
     "crime_matter_type_code": {
       "type": "string",
-      "pattern": "^[0-9][0-9]$",
-      "maxLength": 10
+      "pattern": "^[0-9][0-9]$"
     },
     "fee_scheme_code": {
       "type": "string"
@@ -246,7 +237,7 @@
       "type": "string",
       "pattern": "^[a-zA-Z0-9]+$",
       "minLength": 2,
-      "maxLength": 2
+      "maxLength": 4
     },
     "standard_fee_category_code": {
       "type": "string",
