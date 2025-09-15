@@ -53,7 +53,7 @@ class DuplicateClaimValidationServiceTest {
 
       List<ClaimResponse> submissionClaims = List.of(claim1, claim2);
 
-      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any()))
+      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
 
       SubmissionValidationContext context = new SubmissionValidationContext();
@@ -91,7 +91,7 @@ class DuplicateClaimValidationServiceTest {
 
       List<ClaimResponse> submissionClaims = List.of(claim1, claim2);
 
-      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any()))
+      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
 
       SubmissionValidationContext context = new SubmissionValidationContext();
@@ -129,7 +129,7 @@ class DuplicateClaimValidationServiceTest {
 
       List<ClaimResponse> submissionClaims = List.of(claim1, claim2);
 
-      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any()))
+      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
 
       SubmissionValidationContext context = new SubmissionValidationContext();
@@ -171,7 +171,7 @@ class DuplicateClaimValidationServiceTest {
       ClaimResultSet claimResultSet = new ClaimResultSet();
       claimResultSet.content(submissionClaims);
 
-      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any()))
+      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
 
       SubmissionValidationContext context = new SubmissionValidationContext();
@@ -215,7 +215,7 @@ class DuplicateClaimValidationServiceTest {
       ClaimResultSet claimResultSet = new ClaimResultSet();
       claimResultSet.content(submissionClaims);
 
-      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any()))
+      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(claimResultSet)));
 
       SubmissionValidationContext context = new SubmissionValidationContext();
@@ -258,7 +258,7 @@ class DuplicateClaimValidationServiceTest {
       ClaimResultSet claimResultSet = new ClaimResultSet();
       claimResultSet.content(List.of(otherClaim));
 
-      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any()))
+      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(claimResultSet)));
 
       SubmissionValidationContext context = new SubmissionValidationContext();
@@ -307,7 +307,7 @@ class DuplicateClaimValidationServiceTest {
       ClaimResultSet claimResultSet = new ClaimResultSet();
       claimResultSet.content(List.of(otherClaim));
 
-      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any()))
+      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(claimResultSet)));
 
       SubmissionValidationContext context = new SubmissionValidationContext();

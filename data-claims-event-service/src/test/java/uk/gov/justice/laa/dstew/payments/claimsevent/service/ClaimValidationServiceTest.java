@@ -68,6 +68,7 @@ class ClaimValidationServiceTest {
               null,
               null,
               null,
+              null,
               null))
           .thenReturn(ResponseEntity.ok(claimResultSet));
 

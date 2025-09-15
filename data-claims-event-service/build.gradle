@@ -57,6 +57,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
+    implementation 'org.springframework.data:spring-data-commons'
+
     // Import spring-cloud-aws BOM (Bill Of Materials) for dependency management
     implementation platform('io.awspring.cloud:spring-cloud-aws:3.4.0')
     implementation 'io.awspring.cloud:spring-cloud-aws-starter'

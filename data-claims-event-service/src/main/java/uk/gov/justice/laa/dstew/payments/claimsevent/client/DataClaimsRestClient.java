@@ -2,6 +2,7 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.client;
 
 import java.util.List;
 import java.util.UUID;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -103,7 +104,8 @@ public interface DataClaimsRestClient {
       @RequestParam(required = false) String feeCode,
       @RequestParam(required = false) String uniqueFileNumber,
       @RequestParam(required = false) String uniqueClientNumber,
-      @RequestParam(required = false) List<ClaimStatus> claimStatuses);
+      @RequestParam(required = false) List<ClaimStatus> claimStatuses,
+      Pageable pageable);
 
   /**
    * Get a specific claim for a submission.

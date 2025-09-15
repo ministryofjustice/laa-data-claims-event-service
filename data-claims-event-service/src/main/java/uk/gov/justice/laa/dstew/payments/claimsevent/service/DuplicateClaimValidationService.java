@@ -117,7 +117,8 @@ public class DuplicateClaimValidationService {
             feeCode,
             uniqueFileNumber,
             null,
-            List.of(ClaimStatus.VALID, ClaimStatus.READY_TO_PROCESS))
+            List.of(ClaimStatus.VALID, ClaimStatus.READY_TO_PROCESS),
+            null)
         .getBody()
         .getContent()
         .stream()

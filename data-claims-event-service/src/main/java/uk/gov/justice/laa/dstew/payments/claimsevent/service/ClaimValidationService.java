@@ -42,6 +42,7 @@ public class ClaimValidationService {
                 null,
                 null,
                 null,
+                null,
                 null)
             .getBody()
             .getContent();
