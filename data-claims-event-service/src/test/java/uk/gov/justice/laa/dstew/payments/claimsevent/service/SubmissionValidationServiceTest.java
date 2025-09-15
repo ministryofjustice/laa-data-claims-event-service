@@ -109,10 +109,10 @@ public class SubmissionValidationServiceTest {
         String errorDescription;
         if (isNilSubmission) {
           errorDescription =
-              ClaimValidationError.INVALID_NIL_SUBMISSION_CONTAINS_CLAIMS.getDescription();
+              ClaimValidationError.INVALID_NIL_SUBMISSION_CONTAINS_CLAIMS.getDisplayMessage();
         } else {
           errorDescription =
-              ClaimValidationError.NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS.getDescription();
+              ClaimValidationError.NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS.getDisplayMessage();
         }
         verify(submissionValidationContext, times(1))
             .addSubmissionValidationError(errorDescription);
@@ -146,7 +146,7 @@ public class SubmissionValidationServiceTest {
       // Then
       verify(submissionValidationContext, times(1))
           .addSubmissionValidationError(
-              ClaimValidationError.NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS.getDescription());
+              ClaimValidationError.NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS.getDisplayMessage());
     }
 
     @Test
@@ -184,7 +184,7 @@ public class SubmissionValidationServiceTest {
               .id(claimId.toString())
               .status(ClaimStatus.INVALID)
               .validationErrors(
-                  List.of(ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER.getDescription()));
+                  List.of(ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER.getDisplayMessage()));
       when(dataClaimsRestClient.updateClaim(submissionId, claimId, claimPatch))
           .thenReturn(ResponseEntity.ok().build());
 
@@ -198,7 +198,7 @@ public class SubmissionValidationServiceTest {
           .updateSubmission(submissionId.toString(), submissionPatch);
       verify(submissionValidationContext, times(1))
           .addSubmissionValidationError(
-              ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER.getDescription());
+              ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER.getDisplayMessage());
       verify(dataClaimsRestClient, times(1)).getClaim(submissionId, claimId);
       verify(providerDetailsRestClient, times(1))
           .getProviderFirmSchedules(officeAccountNumber, areaOfLaw);
@@ -228,7 +228,7 @@ public class SubmissionValidationServiceTest {
       // Then
       verify(submissionValidationContext, times(1))
           .addSubmissionValidationError(
-              ClaimValidationError.NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS.getDescription());
+              ClaimValidationError.NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS.getDisplayMessage());
     }
 
     static Stream<Arguments> invalidSubmissionStatusArguments() {

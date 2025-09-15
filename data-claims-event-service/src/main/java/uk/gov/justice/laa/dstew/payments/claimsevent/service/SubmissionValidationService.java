@@ -1,5 +1,8 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
+import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError.SUBMISSION_STATE_IS_NULL;
+
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -14,6 +17,8 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionClaim;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessageType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
@@ -91,7 +96,7 @@ public class SubmissionValidationService {
       }
       case null -> {
         log.debug("Submission {} state is null", submissionId);
-        submissionValidationContext.addSubmissionValidationError("Submission state is null");
+        submissionValidationContext.addSubmissionValidationError(SUBMISSION_STATE_IS_NULL);
       }
       default -> {
         log.debug(
@@ -115,19 +120,19 @@ public class SubmissionValidationService {
     if (Boolean.TRUE.equals(submission.getIsNilSubmission())) {
       if (submission.getClaims() != null && !submission.getClaims().isEmpty()) {
         submissionValidationContext.addSubmissionValidationError(
-            ClaimValidationError.INVALID_NIL_SUBMISSION_CONTAINS_CLAIMS.getDescription());
+            ClaimValidationError.INVALID_NIL_SUBMISSION_CONTAINS_CLAIMS);
       }
     } else if (Boolean.FALSE.equals(submission.getIsNilSubmission())
         && (submission.getClaims() == null || submission.getClaims().isEmpty())) {
       submissionValidationContext.addSubmissionValidationError(
-          ClaimValidationError.NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS.getDescription());
+          ClaimValidationError.NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS);
     }
     log.debug("Nil submission completed for submission {}", submission.getSubmissionId());
   }
 
   private List<String> getProviderCategoriesOfLaw(String officeCode, String areaOfLaw) {
     return providerDetailsRestClient
-        .getProviderFirmSchedules(officeCode, areaOfLaw)
+        .getProviderFirmSchedules(officeCode, areaOfLaw, LocalDate.of(2020, 1, 1))
         .blockOptional()
         .stream()
         .map(ProviderFirmOfficeContractAndScheduleDto::getSchedules)
@@ -142,7 +147,7 @@ public class SubmissionValidationService {
     log.debug("Validating provider contract for submission {}", submissionId);
     if (providerCategoriesOfLaw.isEmpty()) {
       submissionValidationContext.addSubmissionValidationError(
-          ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER.getDescription());
+          ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER);
     }
   }
 
@@ -177,12 +182,12 @@ public class SubmissionValidationService {
         .forEach(
             claim -> {
               ClaimStatus claimStatus = getClaimStatus(claim.getId());
-              List<String> claimErrors = getClaimErrors(claim.getId());
+              List<ValidationMessagePatch> claimMessages = getClaimMessages(claim.getId());
               ClaimPatch claimPatch =
                   ClaimPatch.builder()
                       .id(claim.getId())
                       .status(claimStatus)
-                      .validationErrors(claimErrors)
+                      .validationMessages(claimMessages)
                       .build();
               dataClaimsRestClient.updateClaim(
                   submissionId, UUID.fromString(claim.getId()), claimPatch);
@@ -205,9 +210,9 @@ public class SubmissionValidationService {
     }
   }
 
-  private List<String> getClaimErrors(String claimId) {
+  private List<ValidationMessagePatch> getClaimMessages(String claimId) {
     return submissionValidationContext.getClaimReport(claimId).stream()
-        .map(ClaimValidationReport::getErrors)
+        .map(ClaimValidationReport::getMessages)
         .flatMap(List::stream)
         .toList();
   }

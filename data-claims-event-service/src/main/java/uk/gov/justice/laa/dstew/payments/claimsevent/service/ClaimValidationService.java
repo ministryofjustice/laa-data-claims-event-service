@@ -13,6 +13,7 @@ import java.util.Map;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.MandatoryFieldsRegistry;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.JsonSchemaValidator;
@@ -71,10 +72,10 @@ public class ClaimValidationService {
       Map<String, CategoryOfLawResult> categoryOfLawLookup,
       List<String> providerCategoriesOfLaw,
       String areaOfLaw) {
-    submissionValidationContext.addClaimErrors(
-        claim.getId(), jsonSchemaValidator.validate("claim", claim));
+    List<ValidationMessagePatch> schemaMessages = jsonSchemaValidator.validate("claim", claim);
+    submissionValidationContext.addClaimMessages(claim.getId(), schemaMessages);
 
-    checkMandatoryFields(claim, areaOfLaw);
+//    checkMandatoryFields(claim, areaOfLaw);
     validateUniqueFileNumber(claim);
     validateStageReachedCode(claim, areaOfLaw);
     validateDisbursementsVatAmount(claim, areaOfLaw);
