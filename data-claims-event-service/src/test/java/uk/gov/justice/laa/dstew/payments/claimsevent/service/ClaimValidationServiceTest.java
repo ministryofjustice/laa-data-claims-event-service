@@ -269,7 +269,7 @@ class ClaimValidationServiceTest {
     void checkStageReachedCode(
         String claimId, String stageReachedCode, String areaOfLaw, String regex, boolean expectError) {
       ClaimResponse claim =
-          new ClaimResponse().id(claimId).feeCode("feeCode1").matterTypeCode(stageReachedCode);
+          new ClaimResponse().id(claimId).feeCode("feeCode1").stageReachedCode(stageReachedCode);
 
       List<ClaimResponse> claims = List.of(claim);
       List<String> providerCategoriesOfLaw = List.of("categoryOfLaw1");

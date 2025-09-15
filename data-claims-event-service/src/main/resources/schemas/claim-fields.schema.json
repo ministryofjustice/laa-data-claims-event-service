@@ -8,7 +8,7 @@
     },
     "schedule_reference": {
       "type": "string",
-      "pattern": "^[a-zA-Z0-9/]+$",
+      "pattern": "^[a-zA-Z0-9/.\\-]+$",
       "maxLength": 20
     },
     "line_number": {
@@ -17,7 +17,7 @@
     },
     "case_reference_number": {
       "type": "string",
-      "pattern": "^[a-zA-Z0-9/]+$",
+      "pattern": "^[a-zA-Z0-9/.\\-]+$",
       "maxLength": 30
     },
     "unique_file_number": {
@@ -76,7 +76,7 @@
     },
     "police_station_court_prison_id": {
       "type": "string",
-      "pattern": "^[a-zA-Z0-9]{1,6}$"
+      "pattern": "^(?=.*[A-Za-z])[A-Za-z0-9]{1,6}$"
     },
     "dscc_number": {
       "type": "string",
@@ -140,7 +140,7 @@
     },
     "client_postcode": {
       "type": "string",
-      "pattern": "^NFA|GIR 0AA|[A-Z]{1,2}[0-9][0-9A-Z]?\\s?[0-9][A-Z]{2}$"
+      "pattern": "^NFA|[A-Z]{1,2}[0-9][0-9A-Z]?\\s?[0-9][A-Z]{2}$"
     },
     "gender_code": {
       "type": "string",
@@ -198,7 +198,7 @@
     },
     "client_2_postcode": {
       "type": "string",
-      "pattern": "^NFA|GIR 0AA|[A-Z]{1,2}[0-9][0-9A-Z]?\\s?[0-9][A-Z]{2}$"
+      "pattern": "^NFA|[A-Z]{1,2}[0-9][0-9A-Z]?\\s?[0-9][A-Z]{2}$"
     },
     "client_2_gender_code": {
       "type": "string",
@@ -304,32 +304,37 @@
     "net_profit_costs_amount": {
       "type": "number",
       "minimum": 0.0,
-      "maximum": 999999999.99
+      "maximum": 999999999.99,
+      "multipleOf": 0.01
     },
     "net_disbursement_amount": {
       "type": "number",
       "minimum": 0.0,
-      "maximum": 999999999.99
+      "maximum": 999999999.99,
+      "multipleOf": 0.01
     },
     "net_counsel_costs_amount": {
       "type": "number",
       "minimum": 0.0,
-      "maximum": 99999.99
+      "maximum": 99999.99,
+      "multipleOf": 0.01
     },
     "disbursements_vat_amount": {
       "type": "number",
       "minimum": 0.0,
-      "maximum": 99999.99
+      "multipleOf": 0.01
     },
     "travel_waiting_costs_amount": {
       "type": "number",
       "minimum": 0.0,
-      "maximum": 9999.99
+      "maximum": 9999.99,
+      "multipleOf": 0.01
     },
     "net_waiting_costs_amount": {
       "type": "number",
       "minimum": 0.0,
-      "maximum": 999999.99
+      "maximum": 999999.99,
+      "multipleOf": 0.01
     },
     "is_vat_applicable": {
       "type": "boolean"
@@ -357,7 +362,8 @@
     "costs_damages_recovered_amount": {
       "type": "number",
       "minimum": 0.0,
-      "maximum": 99999.99
+      "maximum": 99999.99,
+      "multipleOf": 0.01
     },
     "meetings_attended_code": {
       "type": "string",
@@ -366,12 +372,14 @@
     "detention_travel_waiting_costs_amount": {
       "type": "number",
       "minimum": 0.0,
-      "maximum": 99999999.99
+      "maximum": 99999999.99,
+      "multipleOf": 0.01
     },
     "jr_form_filling_amount": {
       "type": "number",
       "minimum": 0.0,
-      "maximum": 9999.99
+      "maximum": 9999.99,
+      "multipleOf": 0.01
     },
     "is_eligible_client": {
       "type": "boolean"
