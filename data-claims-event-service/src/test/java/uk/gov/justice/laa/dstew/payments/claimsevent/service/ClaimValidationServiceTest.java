@@ -17,9 +17,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResultSet;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
 @ExtendWith(MockitoExtension.class)
 class ClaimValidationServiceTest {
@@ -55,6 +58,9 @@ class ClaimValidationServiceTest {
               .areaOfLaw("areaOfLaw")
               .officeAccountNumber("officeAccountNumber");
 
+      ClaimResultSet claimResultSet = new ClaimResultSet();
+      claimResultSet.content(claims);
+
       when(dataClaimsRestClient.getClaims(
               submissionResponse.getOfficeAccountNumber(),
               submissionResponse.getSubmissionId().toString(),
@@ -63,25 +69,31 @@ class ClaimValidationServiceTest {
               null,
               null,
               null))
-          .thenReturn(ResponseEntity.ok(claims));
+          .thenReturn(ResponseEntity.ok(claimResultSet));
 
       when(categoryOfLawValidationService.getCategoryOfLawLookup(claims))
           .thenReturn(categoryOfLawLookup);
 
-      claimValidationService.validateClaims(submissionResponse, providerCategoriesOfLaw);
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(
+          List.of(
+              new ClaimValidationReport(claim1.getId()),
+              new ClaimValidationReport(claim2.getId())));
+
+      claimValidationService.validateClaims(submissionResponse, providerCategoriesOfLaw, context);
 
       verify(categoryOfLawValidationService, times(1))
-          .validateCategoryOfLaw(claim1, categoryOfLawLookup, providerCategoriesOfLaw);
+          .validateCategoryOfLaw(claim1, categoryOfLawLookup, providerCategoriesOfLaw, context);
       verify(categoryOfLawValidationService, times(1))
-          .validateCategoryOfLaw(claim2, categoryOfLawLookup, providerCategoriesOfLaw);
+          .validateCategoryOfLaw(claim2, categoryOfLawLookup, providerCategoriesOfLaw, context);
 
       verify(duplicateClaimValidationService, times(1))
-          .validateDuplicateClaims(claim1, claims, "areaOfLaw", "officeAccountNumber");
+          .validateDuplicateClaims(claim1, claims, "areaOfLaw", "officeAccountNumber", context);
       verify(duplicateClaimValidationService, times(1))
-          .validateDuplicateClaims(claim2, claims, "areaOfLaw", "officeAccountNumber");
+          .validateDuplicateClaims(claim2, claims, "areaOfLaw", "officeAccountNumber", context);
 
-      verify(feeCalculationService, times(1)).validateFeeCalculation(claim1);
-      verify(feeCalculationService, times(1)).validateFeeCalculation(claim2);
+      verify(feeCalculationService, times(1)).validateFeeCalculation(claim1, context);
+      verify(feeCalculationService, times(1)).validateFeeCalculation(claim2, context);
     }
   }
 }

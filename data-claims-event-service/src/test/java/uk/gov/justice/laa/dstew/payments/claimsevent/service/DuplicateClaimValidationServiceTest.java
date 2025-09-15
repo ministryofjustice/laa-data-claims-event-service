@@ -1,12 +1,10 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import static uk.gov.justice.laa.dstew.payments.claimsevent.service.ValidationServiceTestUtils.assertContextClaimError;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -18,17 +16,17 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResultSet;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
 @ExtendWith(MockitoExtension.class)
 class DuplicateClaimValidationServiceTest {
 
   @Mock DataClaimsRestClient dataClaimsRestClient;
-
-  @Mock SubmissionValidationContext submissionValidationContext;
 
   @InjectMocks DuplicateClaimValidationService duplicateClaimValidationService;
 
@@ -55,17 +53,22 @@ class DuplicateClaimValidationServiceTest {
 
       List<ClaimResponse> submissionClaims = List.of(claim1, claim2);
 
-      when(submissionValidationContext.isFlaggedForRetry("claimId1")).thenReturn(false);
       when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any()))
-          .thenReturn(ResponseEntity.of(Optional.of(Collections.emptyList())));
+          .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
+
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(
+          List.of(
+              new ClaimValidationReport(claim1.getId()),
+              new ClaimValidationReport(claim1.getId()),
+              new ClaimValidationReport(claim2.getId())));
 
       // When
       duplicateClaimValidationService.validateDuplicateClaims(
-          claim1, submissionClaims, "CRIME_LOWER", "officeCode");
+          claim1, submissionClaims, "CRIME_LOWER", "officeCode", context);
 
       // Then
-      verify(submissionValidationContext, times(1)).isFlaggedForRetry("claimId1");
-      verifyNoMoreInteractions(submissionValidationContext);
+      assertThat(context.hasErrors()).isFalse();
     }
 
     @Test
@@ -88,17 +91,22 @@ class DuplicateClaimValidationServiceTest {
 
       List<ClaimResponse> submissionClaims = List.of(claim1, claim2);
 
-      when(submissionValidationContext.isFlaggedForRetry("claimId1")).thenReturn(false);
       when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any()))
-          .thenReturn(ResponseEntity.of(Optional.of(Collections.emptyList())));
+          .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
+
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(
+          List.of(
+              new ClaimValidationReport(claim1.getId()),
+              new ClaimValidationReport(claim1.getId()),
+              new ClaimValidationReport(claim2.getId())));
 
       // When
       duplicateClaimValidationService.validateDuplicateClaims(
-          claim1, submissionClaims, "CRIME_LOWER", "officeCode");
+          claim1, submissionClaims, "CRIME_LOWER", "officeCode", context);
 
       // Then
-      verify(submissionValidationContext, times(1)).isFlaggedForRetry("claimId1");
-      verifyNoMoreInteractions(submissionValidationContext);
+      assertThat(context.hasErrors()).isFalse();
     }
 
     @Test
@@ -121,17 +129,22 @@ class DuplicateClaimValidationServiceTest {
 
       List<ClaimResponse> submissionClaims = List.of(claim1, claim2);
 
-      when(submissionValidationContext.isFlaggedForRetry("claimId1")).thenReturn(false);
       when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any()))
-          .thenReturn(ResponseEntity.of(Optional.of(Collections.emptyList())));
+          .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
+
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(
+          List.of(
+              new ClaimValidationReport(claim1.getId()),
+              new ClaimValidationReport(claim1.getId()),
+              new ClaimValidationReport(claim2.getId())));
 
       // When
       duplicateClaimValidationService.validateDuplicateClaims(
-          claim1, submissionClaims, "CRIME_LOWER", "officeCode");
+          claim1, submissionClaims, "CRIME_LOWER", "officeCode", context);
 
       // Then
-      verify(submissionValidationContext, times(1)).isFlaggedForRetry("claimId1");
-      verifyNoMoreInteractions(submissionValidationContext);
+      assertThat(context.hasErrors()).isFalse();
     }
 
     @Test
@@ -155,18 +168,27 @@ class DuplicateClaimValidationServiceTest {
 
       List<ClaimResponse> submissionClaims = List.of(claim1, claim2);
 
-      when(submissionValidationContext.isFlaggedForRetry("claimId1")).thenReturn(false);
+      ClaimResultSet claimResultSet = new ClaimResultSet();
+      claimResultSet.content(submissionClaims);
+
       when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any()))
-          .thenReturn(ResponseEntity.of(Optional.of(Collections.emptyList())));
+          .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
+
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(
+          List.of(
+              new ClaimValidationReport(claim1.getId()),
+              new ClaimValidationReport(claim1.getId()),
+              new ClaimValidationReport(claim2.getId())));
 
       // When
       duplicateClaimValidationService.validateDuplicateClaims(
-          claim1, submissionClaims, "CRIME_LOWER", "officeCode");
+          claim1, submissionClaims, "CRIME_LOWER", "officeCode", context);
 
       // Then
-      verify(submissionValidationContext, times(1))
-          .addClaimError(
-              "claimId1", ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_SUBMISSION);
+      assertThat(context.hasErrors(claim1.getId())).isTrue();
+      assertContextClaimError(
+          context, claim1.getId(), ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_SUBMISSION);
     }
 
     @Test
@@ -188,17 +210,25 @@ class DuplicateClaimValidationServiceTest {
 
       List<ClaimResponse> submissionClaims = List.of(claim1, claim2);
 
-      when(submissionValidationContext.isFlaggedForRetry("claimId1")).thenReturn(false);
+      ClaimResultSet claimResultSet = new ClaimResultSet();
+      claimResultSet.content(submissionClaims);
+
       when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any()))
-          .thenReturn(ResponseEntity.of(Optional.of(Collections.emptyList())));
+          .thenReturn(ResponseEntity.of(Optional.of(claimResultSet)));
+
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(
+          List.of(
+              new ClaimValidationReport(claim1.getId()),
+              new ClaimValidationReport(claim1.getId()),
+              new ClaimValidationReport(claim2.getId())));
 
       // When
       duplicateClaimValidationService.validateDuplicateClaims(
-          claim1, submissionClaims, "CRIME_LOWER", "officeCode");
+          claim1, submissionClaims, "CRIME_LOWER", "officeCode", context);
 
       // Then
-      verify(submissionValidationContext, times(1)).isFlaggedForRetry("claimId1");
-      verifyNoMoreInteractions(submissionValidationContext);
+      assertThat(context.hasErrors()).isFalse();
     }
 
     @Test
@@ -223,18 +253,28 @@ class DuplicateClaimValidationServiceTest {
 
       List<ClaimResponse> submissionClaims = List.of(claim1);
 
-      when(submissionValidationContext.isFlaggedForRetry("claimId1")).thenReturn(false);
+      ClaimResultSet claimResultSet = new ClaimResultSet();
+      claimResultSet.content(List.of(otherClaim));
+
       when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any()))
-          .thenReturn(ResponseEntity.of(Optional.of(List.of(otherClaim))));
+          .thenReturn(ResponseEntity.of(Optional.of(claimResultSet)));
+
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(
+          List.of(
+              new ClaimValidationReport(claim1.getId()),
+              new ClaimValidationReport(claim1.getId())));
 
       // When
       duplicateClaimValidationService.validateDuplicateClaims(
-          claim1, submissionClaims, "CRIME_LOWER", "officeCode");
+          claim1, submissionClaims, "CRIME_LOWER", "officeCode", context);
 
       // Then
-      verify(submissionValidationContext, times(1))
-          .addClaimError(
-              "claimId1", ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_ANOTHER_SUBMISSION);
+      assertThat(context.hasErrors(claim1.getId())).isTrue();
+      assertContextClaimError(
+          context,
+          claim1.getId(),
+          ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_ANOTHER_SUBMISSION);
     }
 
     @Test
@@ -262,19 +302,26 @@ class DuplicateClaimValidationServiceTest {
 
       List<ClaimResponse> submissionClaims = List.of(claim1, claim2);
 
-      when(submissionValidationContext.isFlaggedForRetry("claimId1")).thenReturn(false);
+      ClaimResultSet claimResultSet = new ClaimResultSet();
+      claimResultSet.content(List.of(otherClaim));
+
       when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any()))
-          .thenReturn(ResponseEntity.of(Optional.of(List.of(otherClaim))));
+          .thenReturn(ResponseEntity.of(Optional.of(claimResultSet)));
+
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(
+          List.of(
+              new ClaimValidationReport(claim1.getId()),
+              new ClaimValidationReport(claim2.getId())));
 
       // When
       duplicateClaimValidationService.validateDuplicateClaims(
-          claim1, submissionClaims, "CRIME_LOWER", "officeCode");
+          claim1, submissionClaims, "CRIME_LOWER", "officeCode", context);
 
       // Then
-      verify(submissionValidationContext, times(1))
-          .addClaimError(
-              "claimId1", ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_SUBMISSION);
-      verifyNoMoreInteractions(submissionValidationContext);
+      assertContextClaimError(
+          context, claim1.getId(), ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_SUBMISSION);
+      assertThat(context.hasErrors(claim2.getId())).isFalse();
     }
   }
 }

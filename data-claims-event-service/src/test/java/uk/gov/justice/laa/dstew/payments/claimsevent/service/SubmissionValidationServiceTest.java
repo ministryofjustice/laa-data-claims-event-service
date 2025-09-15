@@ -1,6 +1,8 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -34,7 +36,6 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.SubmissionValidationException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
-import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.provider.model.FirmOfficeContractAndScheduleDetails;
 import uk.gov.justice.laa.provider.model.FirmOfficeContractAndScheduleLine;
@@ -48,8 +49,6 @@ public class SubmissionValidationServiceTest {
   @Mock private DataClaimsRestClient dataClaimsRestClient;
 
   @Mock private ProviderDetailsRestClient providerDetailsRestClient;
-
-  @Mock private SubmissionValidationContext submissionValidationContext;
 
   @InjectMocks private SubmissionValidationService submissionValidationService;
 
@@ -110,8 +109,6 @@ public class SubmissionValidationServiceTest {
 
       ClaimPatch claimPatch = new ClaimPatch().id(claimId.toString()).status(ClaimStatus.VALID);
 
-      when(submissionValidationContext.hasErrors(claimId.toString())).thenReturn(false);
-
       when(dataClaimsRestClient.updateClaim(submissionId, claimId, claimPatch))
           .thenReturn(ResponseEntity.ok().build());
 
@@ -124,7 +121,9 @@ public class SubmissionValidationServiceTest {
           .updateSubmission(submissionId.toString(), submissionPatch);
       verify(providerDetailsRestClient, times(1))
           .getProviderFirmSchedules(officeAccountNumber, areaOfLaw);
-      verify(claimValidationService, times(1)).validateClaims(submission, List.of(categoryOfLaw));
+      verify(claimValidationService, times(1))
+          .validateClaims(
+              eq(submission), eq(List.of(categoryOfLaw)), any(SubmissionValidationContext.class));
       verify(dataClaimsRestClient, times(1)).updateClaim(submissionId, claimId, claimPatch);
     }
 
@@ -161,11 +160,11 @@ public class SubmissionValidationServiceTest {
           .thenReturn(ResponseEntity.ok().build());
 
       ClaimPatch claimPatch = new ClaimPatch().id(claimId.toString()).status(ClaimStatus.INVALID);
+      claimPatch.validationErrors(
+          List.of(ClaimValidationError.INVALID_NIL_SUBMISSION_CONTAINS_CLAIMS.getDescription()));
 
       when(dataClaimsRestClient.updateClaim(submissionId, claimId, claimPatch))
           .thenReturn(ResponseEntity.ok().build());
-
-      when(submissionValidationContext.hasErrors(claimId.toString())).thenReturn(true);
 
       SubmissionClaim submissionClaim =
           new SubmissionClaim().claimId(claimId).status(ClaimStatus.READY_TO_PROCESS);
@@ -190,11 +189,11 @@ public class SubmissionValidationServiceTest {
       verify(dataClaimsRestClient, times(1)).getSubmission(submissionId.toString());
       verify(dataClaimsRestClient, times(1))
           .updateSubmission(submissionId.toString(), submissionPatch);
-      verify(submissionValidationContext, times(1))
-          .addToAllClaimReports(ClaimValidationError.INVALID_NIL_SUBMISSION_CONTAINS_CLAIMS);
       verify(providerDetailsRestClient, times(1))
           .getProviderFirmSchedules(officeAccountNumber, areaOfLaw);
-      verify(claimValidationService, times(1)).validateClaims(submission, List.of(categoryOfLaw));
+      verify(claimValidationService, times(1))
+          .validateClaims(
+              eq(submission), eq(List.of(categoryOfLaw)), any(SubmissionValidationContext.class));
       verify(dataClaimsRestClient, times(1)).updateClaim(submissionId, claimId, claimPatch);
     }
 
@@ -250,14 +249,6 @@ public class SubmissionValidationServiceTest {
       when(dataClaimsRestClient.updateSubmission(submissionId.toString(), submissionPatch))
           .thenReturn(ResponseEntity.ok().build());
 
-      when(submissionValidationContext.hasErrors(claimId.toString())).thenReturn(false);
-
-      ClaimValidationReport claimValidationReport =
-          new ClaimValidationReport(
-              claimId.toString(), List.of(ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER));
-      when(submissionValidationContext.getClaimReport(claimId.toString()))
-          .thenReturn(Optional.of(claimValidationReport));
-
       ClaimPatch claimPatch =
           new ClaimPatch()
               .id(claimId.toString())
@@ -266,8 +257,6 @@ public class SubmissionValidationServiceTest {
                   List.of(ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER.getDescription()));
       when(dataClaimsRestClient.updateClaim(submissionId, claimId, claimPatch))
           .thenReturn(ResponseEntity.ok().build());
-
-      when(submissionValidationContext.hasErrors(claimId.toString())).thenReturn(true);
 
       SubmissionClaim submissionClaim = new SubmissionClaim();
       submissionClaim.setClaimId(claimId);
@@ -292,11 +281,11 @@ public class SubmissionValidationServiceTest {
       verify(dataClaimsRestClient, times(1)).getSubmission(submissionId.toString());
       verify(dataClaimsRestClient, times(1))
           .updateSubmission(submissionId.toString(), submissionPatch);
-      verify(submissionValidationContext, times(1))
-          .addToAllClaimReports(ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER);
       verify(providerDetailsRestClient, times(1))
           .getProviderFirmSchedules(officeAccountNumber, areaOfLaw);
-      verify(claimValidationService, times(1)).validateClaims(submission, Collections.emptyList());
+      verify(claimValidationService, times(1))
+          .validateClaims(
+              eq(submission), eq(Collections.emptyList()), any(SubmissionValidationContext.class));
       verify(dataClaimsRestClient, times(1)).updateClaim(submissionId, claimId, claimPatch);
     }
 

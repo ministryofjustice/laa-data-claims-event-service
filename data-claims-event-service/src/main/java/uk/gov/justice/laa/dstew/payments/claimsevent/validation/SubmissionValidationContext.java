@@ -3,17 +3,15 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.validation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 /**
  * Class responsible for holding the validation context for a submission within the scope of a
  * request. This will contain all claim errors reported during the request.
  */
 @Getter
-@RequestScope
-@Component
+@EqualsAndHashCode
 public class SubmissionValidationContext {
 
   private final List<ClaimValidationReport> claimReports;

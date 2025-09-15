@@ -8,6 +8,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
 /**
  * A service for validating submitted claims that are ready to process. Validation errors will
@@ -28,7 +29,10 @@ public class ClaimValidationService {
    *
    * @param submission the claim submission
    */
-  public void validateClaims(SubmissionResponse submission, List<String> providerCategoriesOfLaw) {
+  public void validateClaims(
+      SubmissionResponse submission,
+      List<String> providerCategoriesOfLaw,
+      SubmissionValidationContext context) {
     List<ClaimResponse> submissionClaims =
         dataClaimsRestClient
             .getClaims(
@@ -39,7 +43,8 @@ public class ClaimValidationService {
                 null,
                 null,
                 null)
-            .getBody();
+            .getBody()
+            .getContent();
     Map<String, CategoryOfLawResult> categoryOfLawLookup =
         categoryOfLawValidationService.getCategoryOfLawLookup(submissionClaims);
     submissionClaims.stream()
@@ -52,7 +57,8 @@ public class ClaimValidationService {
                     categoryOfLawLookup,
                     providerCategoriesOfLaw,
                     submission.getAreaOfLaw(),
-                    submission.getOfficeAccountNumber()));
+                    submission.getOfficeAccountNumber(),
+                    context));
   }
 
   /**
@@ -75,11 +81,12 @@ public class ClaimValidationService {
       Map<String, CategoryOfLawResult> categoryOfLawLookup,
       List<String> providerCategoriesOfLaw,
       String areaOfLaw,
-      String officeCode) {
+      String officeCode,
+      SubmissionValidationContext context) {
     categoryOfLawValidationService.validateCategoryOfLaw(
-        claim, categoryOfLawLookup, providerCategoriesOfLaw);
+        claim, categoryOfLawLookup, providerCategoriesOfLaw, context);
     duplicateClaimValidationService.validateDuplicateClaims(
-        claim, submissionClaims, areaOfLaw, officeCode);
-    feeCalculationService.validateFeeCalculation(claim);
+        claim, submissionClaims, areaOfLaw, officeCode, context);
+    feeCalculationService.validateFeeCalculation(claim, context);
   }
 }

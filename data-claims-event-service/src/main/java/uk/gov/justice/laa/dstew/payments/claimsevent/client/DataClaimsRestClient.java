@@ -14,6 +14,7 @@ import org.springframework.web.service.annotation.PostExchange;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResultSet;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.CreateMatterStart201Response;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetBulkSubmission200Response;
@@ -87,22 +88,22 @@ public interface DataClaimsRestClient {
   /**
    * Get claims in an office, filtering on certain criteria.
    *
-   * @param submissionStatus the status of the parent submission
+   * @param submissionStatuses the statuses of the parent submissions
    * @param feeCode the fee code of the claim
    * @param uniqueFileNumber the unique file number of the claim
    * @param uniqueClientNumber the unique client number of the claim
-   * @param claimStatus the claim status
+   * @param claimStatuses the claim statuses
    * @return 200 OK with JSON body containing the list of matched claims
    */
-  @PostExchange("/claims")
-  ResponseEntity<List<ClaimResponse>> getClaims(
+  @GetExchange("/claims")
+  ResponseEntity<ClaimResultSet> getClaims(
       @RequestParam String officeCode,
       @RequestParam(required = false) String submissionId,
-      @RequestParam(required = false) List<SubmissionStatus> submissionStatus,
+      @RequestParam(required = false) List<SubmissionStatus> submissionStatuses,
       @RequestParam(required = false) String feeCode,
       @RequestParam(required = false) String uniqueFileNumber,
       @RequestParam(required = false) String uniqueClientNumber,
-      @RequestParam(required = false) List<ClaimStatus> claimStatus);
+      @RequestParam(required = false) List<ClaimStatus> claimStatuses);
 
   /**
    * Get a specific claim for a submission.

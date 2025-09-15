@@ -20,7 +20,6 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 public class DuplicateClaimValidationService {
 
   private final DataClaimsRestClient dataClaimsRestClient;
-  private final SubmissionValidationContext submissionValidationContext;
 
   /**
    * Validates whether a claim has been previously submitted, and is therefore a duplicate.
@@ -31,9 +30,10 @@ public class DuplicateClaimValidationService {
       ClaimResponse claim,
       List<ClaimResponse> submissionClaims,
       String areaOfLaw,
-      String officeCode) {
+      String officeCode,
+      SubmissionValidationContext context) {
     log.debug("Validating duplicates for claim {}", claim.getId());
-    if (!submissionValidationContext.isFlaggedForRetry(claim.getId())) {
+    if (!context.isFlaggedForRetry(claim.getId())) {
       List<ClaimResponse> claimsToCompare = getOtherClaimsInSubmission(claim, submissionClaims);
 
       List<ClaimResponse> submissionDuplicateClaims = new ArrayList<>();
@@ -59,13 +59,13 @@ public class DuplicateClaimValidationService {
       if (!submissionDuplicateClaims.isEmpty()) {
         log.debug("Duplicate claims found in submission");
         logDuplicates(claim, submissionDuplicateClaims);
-        submissionValidationContext.addClaimError(
+        context.addClaimError(
             claim.getId(), ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_SUBMISSION);
       }
       if (officeDuplicateClaims != null && !officeDuplicateClaims.isEmpty()) {
         log.debug("Duplicate claims found in another submission for this office");
         logDuplicates(claim, officeDuplicateClaims);
-        submissionValidationContext.addClaimError(
+        context.addClaimError(
             claim.getId(), ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_ANOTHER_SUBMISSION);
       }
     }
@@ -117,6 +117,7 @@ public class DuplicateClaimValidationService {
             null,
             List.of(ClaimStatus.VALID, ClaimStatus.READY_TO_PROCESS))
         .getBody()
+        .getContent()
         .stream()
         .filter(otherClaim -> !submissionClaimIds.contains(otherClaim.getId()))
         .toList();
