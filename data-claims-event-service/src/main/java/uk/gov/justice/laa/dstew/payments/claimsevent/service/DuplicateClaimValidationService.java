@@ -3,6 +3,7 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -22,7 +23,8 @@ public class DuplicateClaimValidationService {
   private final DataClaimsRestClient dataClaimsRestClient;
 
   /**
-   * Validates whether a claim has been previously submitted, and is therefore a duplicate.
+   * Validates whether a claim has been previously submitted or has been submitted with the same
+   * details within the same submission, and is therefore a duplicate.
    *
    * @param claim the submitted claim
    */
@@ -60,7 +62,7 @@ public class DuplicateClaimValidationService {
         log.debug("Duplicate claims found in submission");
         logDuplicates(claim, submissionDuplicateClaims);
         context.addClaimError(
-            claim.getId(), ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_SUBMISSION);
+            claim.getId(), ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_EXISTING_SUBMISSION);
       }
       if (officeDuplicateClaims != null && !officeDuplicateClaims.isEmpty()) {
         log.debug("Duplicate claims found in another submission for this office");
@@ -124,12 +126,13 @@ public class DuplicateClaimValidationService {
   }
 
   private void logDuplicates(ClaimResponse claim, List<ClaimResponse> duplicateClaims) {
-    List<String> duplicateClaimIds = duplicateClaims.stream().map(ClaimResponse::getId).toList();
+    String csvDuplicateClaimIds =
+        duplicateClaims.stream().map(ClaimResponse::getId).collect(Collectors.joining(","));
     log.debug(
         "{} duplicate claims found matching claim {}. Duplicates: {}",
         duplicateClaims.size(),
         claim.getId(),
-        duplicateClaimIds);
+        csvDuplicateClaimIds);
   }
 
   /**

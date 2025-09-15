@@ -188,7 +188,9 @@ class DuplicateClaimValidationServiceTest {
       // Then
       assertThat(context.hasErrors(claim1.getId())).isTrue();
       assertContextClaimError(
-          context, claim1.getId(), ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_SUBMISSION);
+          context,
+          claim1.getId(),
+          ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_EXISTING_SUBMISSION);
     }
 
     @Test
@@ -320,7 +322,9 @@ class DuplicateClaimValidationServiceTest {
 
       // Then
       assertContextClaimError(
-          context, claim1.getId(), ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_SUBMISSION);
+          context,
+          claim1.getId(),
+          ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_EXISTING_SUBMISSION);
       assertThat(context.hasErrors(claim2.getId())).isFalse();
     }
   }
