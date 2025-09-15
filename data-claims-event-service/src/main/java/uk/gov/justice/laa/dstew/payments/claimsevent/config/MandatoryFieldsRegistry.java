@@ -5,6 +5,11 @@ import java.util.Map;
 import lombok.Getter;
 import org.springframework.stereotype.Component;
 
+/**
+ * Registry holding mappings of mandatory field names grouped by area of law.
+ *
+ * <p>Used to validate presence of required fields depending on the specified area of law.
+ */
 @Component
 @Getter
 public class MandatoryFieldsRegistry {
