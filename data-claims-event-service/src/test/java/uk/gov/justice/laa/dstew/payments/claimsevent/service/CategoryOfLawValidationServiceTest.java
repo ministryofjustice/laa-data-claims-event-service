@@ -1,6 +1,6 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -22,7 +22,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
-import uk.gov.justice.laa.fee.scheme.model.CategoryOfLawResponse;
+import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponse;
 
 @ExtendWith(MockitoExtension.class)
 class CategoryOfLawValidationServiceTest {
@@ -114,22 +114,22 @@ class CategoryOfLawValidationServiceTest {
 
       ClaimResponse claim4 = new ClaimResponse().id("claimId4").feeCode("feeCode4");
 
-      CategoryOfLawResponse categoryOfLawResponse1 =
-          new CategoryOfLawResponse().categoryOfLawCode("categoryOfLaw1");
+      FeeDetailsResponse categoryOfLawResponse1 =
+          new FeeDetailsResponse().categoryOfLawCode("categoryOfLaw1");
 
-      CategoryOfLawResponse categoryOfLawResponse2 =
-          new CategoryOfLawResponse().categoryOfLawCode("categoryOfLaw2");
+      FeeDetailsResponse categoryOfLawResponse2 =
+          new FeeDetailsResponse().categoryOfLawCode("categoryOfLaw2");
 
-      when(feeSchemePlatformRestClient.getCategoryOfLaw("feeCode1"))
+      when(feeSchemePlatformRestClient.getFeeDetails("feeCode1"))
           .thenReturn(ResponseEntity.ok(categoryOfLawResponse1));
 
-      when(feeSchemePlatformRestClient.getCategoryOfLaw("feeCode2"))
+      when(feeSchemePlatformRestClient.getFeeDetails("feeCode2"))
           .thenReturn(ResponseEntity.ok(categoryOfLawResponse2));
 
-      when(feeSchemePlatformRestClient.getCategoryOfLaw("feeCode3"))
+      when(feeSchemePlatformRestClient.getFeeDetails("feeCode3"))
           .thenReturn(ResponseEntity.notFound().build());
 
-      when(feeSchemePlatformRestClient.getCategoryOfLaw("feeCode4"))
+      when(feeSchemePlatformRestClient.getFeeDetails("feeCode4"))
           .thenReturn(ResponseEntity.internalServerError().build());
 
       Map<String, CategoryOfLawResult> actual =

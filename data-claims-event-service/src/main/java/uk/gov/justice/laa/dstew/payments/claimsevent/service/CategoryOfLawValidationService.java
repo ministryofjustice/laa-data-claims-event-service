@@ -14,7 +14,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
-import uk.gov.justice.laa.fee.scheme.model.CategoryOfLawResponse;
+import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponse;
 
 /** A service responsible for validating data items related to category of law. */
 @Slf4j
@@ -77,8 +77,8 @@ public class CategoryOfLawValidationService {
 
     uniqueFeeCodes.forEach(
         feeCode -> {
-          ResponseEntity<CategoryOfLawResponse> categoryOfLawResponse =
-              feeSchemePlatformRestClient.getCategoryOfLaw(feeCode);
+          ResponseEntity<FeeDetailsResponse> categoryOfLawResponse =
+              feeSchemePlatformRestClient.getFeeDetails(feeCode);
           if (categoryOfLawResponse.getStatusCode().is2xxSuccessful()) {
             categoryOfLawLookup.put(
                 feeCode,
