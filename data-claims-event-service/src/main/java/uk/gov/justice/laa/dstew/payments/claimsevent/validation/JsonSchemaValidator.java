@@ -44,8 +44,8 @@ public class JsonSchemaValidator {
     return new ValidationMessagePatch()
         .type(ValidationMessageType.ERROR)
         .source(DCES)
-        .displayMessage(vm.getMessage())
-        .technicalMessage(vm.getMessage());
+        .displayMessage(enrichValidationMessage(data, vm))
+        .technicalMessage(enrichValidationMessage(data, vm));
   }
 
   private String enrichValidationMessage(JsonNode data, ValidationMessage vm) {

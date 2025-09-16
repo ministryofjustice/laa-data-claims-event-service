@@ -92,7 +92,12 @@ public class WebClientConfiguration {
    */
   public static WebClient createWebClient(final ApiProperties apiProperties) {
     final ExchangeStrategies strategies =
-        ExchangeStrategies.builder().codecs(ClientCodecConfigurer::defaultCodecs).build();
+        ExchangeStrategies.builder()
+            .codecs(configurer ->
+                configurer.defaultCodecs().maxInMemorySize(16 * 1024 * 1024) // raise from 256 KB
+            )
+            .build();
+
     return WebClient.builder()
         .baseUrl(apiProperties.getUrl())
         .defaultHeader(apiProperties.getAuthHeader(), apiProperties.getAccessToken())

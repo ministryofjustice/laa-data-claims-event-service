@@ -3,6 +3,9 @@
   "title": "ClaimResponse",
   "type": "object",
   "properties": {
+    "id": {
+      "type": "string"
+    },
     "status": {
       "type": "string"
     },
@@ -33,8 +36,7 @@
         "pattern": "^(19\\d{2}|20\\d{2}|2100)-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$"
     },
     "matter_type_code": {
-      "type": "string",
-      "pattern": "^[a-zA-Z0-9]+$"
+      "type": "string"
     },
     "crime_matter_type_code": {
       "type": "string",

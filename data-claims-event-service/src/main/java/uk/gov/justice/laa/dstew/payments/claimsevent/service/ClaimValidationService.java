@@ -75,7 +75,8 @@ public class ClaimValidationService {
     List<ValidationMessagePatch> schemaMessages = jsonSchemaValidator.validate("claim", claim);
     submissionValidationContext.addClaimMessages(claim.getId(), schemaMessages);
 
-    //    checkMandatoryFields(claim, areaOfLaw);
+    // schema validation
+    checkMandatoryFields(claim, areaOfLaw);
     validateUniqueFileNumber(claim);
     validateStageReachedCode(claim, areaOfLaw);
     validateDisbursementsVatAmount(claim, areaOfLaw);
@@ -88,9 +89,15 @@ public class ClaimValidationService {
     checkDateInPast(claim, "Client Date of Birth", claim.getClientDateOfBirth(), MIN_BIRTH_DATE);
     checkDateInPast(claim, "Client2 Date of Birth", claim.getClient2DateOfBirth(), MIN_BIRTH_DATE);
     validateMatterType(claim, areaOfLaw);
+
+    //category of law validation
     categoryOfLawValidationService.validateCategoryOfLaw(
         claim, categoryOfLawLookup, providerCategoriesOfLaw);
+
+    //duplicates
     duplicateClaimValidationService.validateDuplicateClaims(claim);
+
+    //fee calculation validation
     feeCalculationService.validateFeeCalculation(claim);
   }
 

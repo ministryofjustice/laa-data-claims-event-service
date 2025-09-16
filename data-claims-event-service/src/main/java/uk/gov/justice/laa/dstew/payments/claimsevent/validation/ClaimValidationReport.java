@@ -36,16 +36,6 @@ public class ClaimValidationReport {
     messages.add(error.toPatch());
   }
 
-  /** Add an error directly. */
-  public void addError(String message, String source, String technicalMessage) {
-    messages.add(buildPatch(message, source, technicalMessage, ValidationMessageType.ERROR));
-  }
-
-  /** Add a warning directly. */
-  public void addWarning(String message, String source, String technicalMessage) {
-    messages.add(buildPatch(message, source, technicalMessage, ValidationMessageType.WARNING));
-  }
-
   /** Bulk add errors from enums. */
   public void addErrors(List<ClaimValidationError> errorList) {
     errorList.forEach(e -> messages.add(e.toPatch()));
@@ -63,14 +53,5 @@ public class ClaimValidationReport {
   public void flagForRetry() {
     log.debug("Flagging claim {} for retry", this.claimId);
     this.flaggedForRetry = true;
-  }
-
-  private ValidationMessagePatch buildPatch(
-      String message, String source, String technicalMessage, ValidationMessageType type) {
-    return new ValidationMessagePatch()
-        .displayMessage(message)
-        .technicalMessage(technicalMessage)
-        .source(source)
-        .type(type);
   }
 }
