@@ -61,7 +61,7 @@ dependencies {
     implementation platform('io.awspring.cloud:spring-cloud-aws:3.4.0')
     implementation 'io.awspring.cloud:spring-cloud-aws-starter'
     implementation 'io.awspring.cloud:spring-cloud-aws-starter-sqs'
-    implementation 'software.amazon.awssdk:sts:2.33.4'
+    implementation 'software.amazon.awssdk:sts:2.33.7'
 
     implementation 'io.micrometer:micrometer-tracing-bridge-brave'
     implementation 'jakarta.validation:jakarta.validation-api:3.1.1'

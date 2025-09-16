@@ -17,7 +17,7 @@
     },
     "case_reference_number": {
       "type": "string",
-      "pattern": "^[a-zA-Z0-9/.\\-]+$",
+      "pattern": "^[a-zA-Z0-9/.\\-\\s]+$",
       "maxLength": 30
     },
     "unique_file_number": {

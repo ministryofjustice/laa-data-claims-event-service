@@ -45,7 +45,8 @@ enabled.
 To aid with pushing test messages to the SQS queue, the following scripts are provided:
 - `docker-scripts/view-messages-in-queue.sh`
 - `docker-scripts/clear-queue.sh`
-- `docker-scripts/submit-bulk-submission.sh`
+- `docker-scripts/publish-bulk-submission-event.sh`
+- `docker-scripts/publish-submission-validation-event.sh`
 
 ### Run application
 

@@ -74,12 +74,16 @@ public class SubmissionValidationServiceTest {
 
       SubmissionResponse submission = buildSubmission(submissionId, claimId, isNilSubmission);
 
+      when(dataClaimsRestClient.getSubmission(submissionId))
+          .thenReturn(ResponseEntity.of(Optional.of(submission)));
+
+      SubmissionPatch submissionPatch = buildSubmissionPatch(submissionId);
+
       if (claimId != null) {
         ClaimResponse claimResponse = buildClaimResponse(claimId);
         mockClaimRetrieval(submissionId, claimId, claimResponse);
         mockProviderSchedules(officeAccountNumber, areaOfLaw, categoryOfLaw);
 
-        SubmissionPatch submissionPatch = buildSubmissionPatch(submissionId);
         mockSubmissionUpdate(submissionId, submissionPatch);
 
         ClaimPatch claimPatch = new ClaimPatch().id(claimId.toString()).status(claimStatus);
@@ -87,7 +91,7 @@ public class SubmissionValidationServiceTest {
         mockClaimUpdate(submissionId, claimId, claimPatch);
 
         // When
-        submissionValidationService.validateSubmission(submission);
+        submissionValidationService.validateSubmission(submissionId);
 
         // Then
         verifyCommonInteractions(
@@ -101,7 +105,7 @@ public class SubmissionValidationServiceTest {
             claimPatch);
       } else {
         // When
-        submissionValidationService.validateSubmission(submission);
+        submissionValidationService.validateSubmission(submission.getSubmissionId());
       }
 
       if (expectsValidationError) {
@@ -140,8 +144,11 @@ public class SubmissionValidationServiceTest {
 
       mockProviderSchedules(officeAccountNumber, areaOfLaw, categoryOfLaw);
 
+      when(dataClaimsRestClient.getSubmission(submissionId))
+          .thenReturn(ResponseEntity.of(Optional.of(submission)));
+
       // When
-      submissionValidationService.validateSubmission(submission);
+      submissionValidationService.validateSubmission(submission.getSubmissionId());
 
       // Then
       verify(submissionValidationContext, times(1))
@@ -159,6 +166,9 @@ public class SubmissionValidationServiceTest {
       String officeAccountNumber = "officeAccountNumber";
 
       SubmissionResponse submission = buildSubmission(submissionId, claimId, false);
+
+      when(dataClaimsRestClient.getSubmission(submissionId))
+          .thenReturn(ResponseEntity.of(Optional.of(submission)));
 
       ClaimResponse claimResponse = buildClaimResponse(claimId);
 
@@ -192,7 +202,7 @@ public class SubmissionValidationServiceTest {
       when(submissionValidationContext.hasErrors(claimId.toString())).thenReturn(true);
 
       // When
-      submissionValidationService.validateSubmission(submission);
+      submissionValidationService.validateSubmission(submissionId);
 
       // Then
       verify(dataClaimsRestClient, times(1))
@@ -223,8 +233,11 @@ public class SubmissionValidationServiceTest {
 
       mockProviderSchedules(officeAccountNumber, areaOfLaw, "categoryOfLaw");
 
+      when(dataClaimsRestClient.getSubmission(submissionId))
+          .thenReturn(ResponseEntity.of(Optional.of(submission)));
+
       // When
-      submissionValidationService.validateSubmission(submission);
+      submissionValidationService.validateSubmission(submission.getSubmissionId());
 
       // Then
       verify(submissionValidationContext, times(1))
@@ -251,10 +264,13 @@ public class SubmissionValidationServiceTest {
       SubmissionResponse submission =
           getSubmission(null, submissionId, areaOfLaw, officeAccountNumber, false, null);
 
+      when(dataClaimsRestClient.getSubmission(submissionId))
+          .thenReturn(ResponseEntity.of(Optional.of(submission)));
+
       mockProviderSchedules(officeAccountNumber, areaOfLaw, "categoryOfLaw");
 
       // When
-      submissionValidationService.validateSubmission(submission);
+      submissionValidationService.validateSubmission(submission.getSubmissionId());
 
       // Then
       verify(submissionValidationContext, times(1))
