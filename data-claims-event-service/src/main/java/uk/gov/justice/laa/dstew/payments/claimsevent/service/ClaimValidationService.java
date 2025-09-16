@@ -175,7 +175,7 @@ public class ClaimValidationService {
           default -> null;
         };
 
-    if (maxAllowed != null && disbursementsVatAmount.compareTo(maxAllowed) > 0) {
+    if (maxAllowed != null && disbursementsVatAmount != null && disbursementsVatAmount.compareTo(maxAllowed) > 0) {
       submissionValidationContext.addClaimError(
           claim.getId(),
           String.format(
