@@ -1,6 +1,7 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.validation;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -16,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ClaimValidationReport {
 
   private final String claimId;
-  private final List<ClaimValidationError> errors;
+  private final List<String> errors;
 
   private boolean flaggedForRetry;
 
@@ -38,6 +39,19 @@ public class ClaimValidationReport {
    */
   public ClaimValidationReport(String claimId, List<ClaimValidationError> errors) {
     this.claimId = claimId;
+    this.errors = new ArrayList<>();
+    errors.forEach(e -> this.errors.add(e.getDescription()));
+  }
+
+  /**
+   * Constructs a new instance of {@code ClaimValidationReport} with the specified claim ID and a
+   * collection of validation error messages.
+   *
+   * @param claimId the unique identifier for the claim
+   * @param errors a collection of validation error messages associated with the claim
+   */
+  public ClaimValidationReport(String claimId, Collection<String> errors) {
+    this.claimId = claimId;
     this.errors = new ArrayList<>(errors);
     this.flaggedForRetry = false;
   }
@@ -48,18 +62,19 @@ public class ClaimValidationReport {
    * @param error the error to add
    */
   public void addError(ClaimValidationError error) {
-    log.debug("Adding error to claim {}: {}", this.claimId, error);
-    this.errors.add(error);
+    errors.add(error.getDescription());
   }
 
-  /**
-   * Add multiple errors to the claim validation report.
-   *
-   * @param errors the errors to add
-   */
-  public void addErrors(List<ClaimValidationError> errors) {
-    log.debug("Adding errors to claim {}: {}", this.claimId, errors.toString());
-    this.errors.addAll(errors);
+  public void addError(String error) {
+    errors.add(error);
+  }
+
+  public void addErrors(List<ClaimValidationError> errorList) {
+    errorList.forEach(e -> errors.add(e.getDescription()));
+  }
+
+  public void addErrorsStrings(List<String> errorList) {
+    errors.addAll(errorList);
   }
 
   /**

@@ -1,6 +1,7 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.http.HttpHeaders;
 
 /**
  * Configuration properties specific to the Provider Details API.
@@ -11,6 +12,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class DataClaimsApiProperties extends ApiProperties {
 
   public DataClaimsApiProperties(String url, String host, int port, String accessToken) {
-    super(url, host, port, accessToken);
+    super(url, host, port, accessToken, HttpHeaders.AUTHORIZATION);
   }
 }

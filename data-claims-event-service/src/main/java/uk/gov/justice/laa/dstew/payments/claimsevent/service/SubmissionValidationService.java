@@ -16,9 +16,9 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
-import uk.gov.justice.laa.dstew.payments.claimsevent.exception.SubmissionValidationException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.JsonSchemaValidator;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.provider.model.FirmOfficeContractAndScheduleDetails;
 import uk.gov.justice.laa.provider.model.FirmOfficeContractAndScheduleLine;
@@ -38,19 +38,22 @@ public class SubmissionValidationService {
   private final DataClaimsRestClient dataClaimsRestClient;
   private final ProviderDetailsRestClient providerDetailsRestClient;
   private final SubmissionValidationContext submissionValidationContext;
+  private final JsonSchemaValidator jsonSchemaValidator;
 
   /**
-   * Validates a claim submission.
+   * Validates a claim submission inside the provided submissionResponse.
    *
    * @param submissionId the ID of the submission to validate
    */
   public void validateSubmission(UUID submissionId) {
-    SubmissionResponse submission =
-        dataClaimsRestClient.getSubmission(submissionId.toString()).getBody();
+    SubmissionResponse submission = dataClaimsRestClient.getSubmission(submissionId).getBody();
 
     log.debug("Validating submission {}", submissionId);
 
     verifySubmissionStatus(submissionId, submission.getStatus());
+
+    submissionValidationContext.addSubmissionValidationErrors(
+        jsonSchemaValidator.validate("submission", submission));
 
     List<ClaimResponse> claims = getReadyToProcessClaims(submission);
 
@@ -63,7 +66,7 @@ public class SubmissionValidationService {
     List<String> providerCategoriesOfLaw = getProviderCategoriesOfLaw(officeCode, areaOfLaw);
     validateProviderContract(submissionId.toString(), providerCategoriesOfLaw);
 
-    claimValidationService.validateClaims(claims, providerCategoriesOfLaw);
+    claimValidationService.validateClaims(claims, providerCategoriesOfLaw, areaOfLaw);
 
     // TODO: Send through all claim errors in the patch request.
     updateClaims(submissionId, claims);
@@ -88,14 +91,14 @@ public class SubmissionValidationService {
       }
       case null -> {
         log.debug("Submission {} state is null", submissionId);
-        throw new SubmissionValidationException("Submission state is null");
+        submissionValidationContext.addSubmissionValidationError("Submission state is null");
       }
       default -> {
         log.debug(
             "Submission {} cannot be validated in its current state: {}",
             submissionId,
             currentStatus);
-        throw new SubmissionValidationException(
+        submissionValidationContext.addSubmissionValidationError(
             "Submission cannot be validated in state " + currentStatus);
       }
     }
@@ -111,14 +114,13 @@ public class SubmissionValidationService {
     log.debug("Validating nil submission for submission {}", submission.getSubmissionId());
     if (Boolean.TRUE.equals(submission.getIsNilSubmission())) {
       if (submission.getClaims() != null && !submission.getClaims().isEmpty()) {
-        submissionValidationContext.addToAllClaimReports(
-            ClaimValidationError.INVALID_NIL_SUBMISSION_CONTAINS_CLAIMS);
+        submissionValidationContext.addSubmissionValidationError(
+            ClaimValidationError.INVALID_NIL_SUBMISSION_CONTAINS_CLAIMS.getDescription());
       }
-    } else if (Boolean.FALSE.equals(submission.getIsNilSubmission())) {
-      if (submission.getClaims() == null || submission.getClaims().isEmpty()) {
-        throw new SubmissionValidationException(
-            "Submission is not marked as nil submission, but does not contain any claims");
-      }
+    } else if (Boolean.FALSE.equals(submission.getIsNilSubmission())
+        && (submission.getClaims() == null || submission.getClaims().isEmpty())) {
+      submissionValidationContext.addSubmissionValidationError(
+          ClaimValidationError.NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS.getDescription());
     }
     log.debug("Nil submission completed for submission {}", submission.getSubmissionId());
   }
@@ -139,8 +141,8 @@ public class SubmissionValidationService {
   private void validateProviderContract(String submissionId, List<String> providerCategoriesOfLaw) {
     log.debug("Validating provider contract for submission {}", submissionId);
     if (providerCategoriesOfLaw.isEmpty()) {
-      submissionValidationContext.addToAllClaimReports(
-          ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER);
+      submissionValidationContext.addSubmissionValidationError(
+          ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER.getDescription());
     }
   }
 
@@ -207,7 +209,6 @@ public class SubmissionValidationService {
     return submissionValidationContext.getClaimReport(claimId).stream()
         .map(ClaimValidationReport::getErrors)
         .flatMap(List::stream)
-        .map(ClaimValidationError::getDescription)
         .toList();
   }
 
