@@ -3,7 +3,6 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -12,6 +11,7 @@ import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -22,13 +22,21 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.ResponseEntity;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResultSet;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
+import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.MandatoryFieldsRegistry;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.JsonSchemaValidator;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
 @ExtendWith(MockitoExtension.class)
 class ClaimValidationServiceTest {
+
+  @Mock private DataClaimsRestClient dataClaimsRestClient;
 
   @Mock private CategoryOfLawValidationService categoryOfLawValidationService;
 
@@ -36,13 +44,11 @@ class ClaimValidationServiceTest {
 
   @Mock private FeeCalculationService feeCalculationService;
 
-  @Mock private SubmissionValidationContext submissionValidationContext;
-
   @Mock private JsonSchemaValidator jsonSchemaValidator;
 
-  @InjectMocks private ClaimValidationService claimValidationService;
-
   @Mock private MandatoryFieldsRegistry mandatoryFieldsRegistry;
+
+  @InjectMocks private ClaimValidationService claimValidationService;
 
   @Nested
   @DisplayName("validateClaims")
@@ -65,28 +71,64 @@ class ClaimValidationServiceTest {
     @DisplayName("Validates category of law, duplicates and fee calculation for all claims")
     void validateCategoryOfLawAndDuplicatesAndFeeCalculation() {
       ClaimResponse claim1 =
-          new ClaimResponse().id("claim1").feeCode("feeCode1").matterTypeCode("ab:cd");
+          new ClaimResponse()
+              .id("claim1")
+              .feeCode("feeCode1")
+              .status(ClaimStatus.READY_TO_PROCESS)
+              .matterTypeCode("ab:cd");
       ClaimResponse claim2 =
-          new ClaimResponse().id("claim2").feeCode("feeCode2").matterTypeCode("1:2");
+          new ClaimResponse()
+              .id("claim2")
+              .feeCode("feeCode2")
+              .status(ClaimStatus.READY_TO_PROCESS)
+              .matterTypeCode("1:2");
       List<ClaimResponse> claims = List.of(claim1, claim2);
       List<String> providerCategoriesOfLaw = List.of("categoryOfLaw1");
       Map<String, CategoryOfLawResult> categoryOfLawLookup = Collections.emptyMap();
 
+      SubmissionResponse submissionResponse =
+          new SubmissionResponse()
+              .submissionId(new UUID(1, 1))
+              .areaOfLaw("CIVIL")
+              .officeAccountNumber("officeAccountNumber");
+
+      ClaimResultSet claimResultSet = new ClaimResultSet();
+      claimResultSet.content(claims);
+
+      when(dataClaimsRestClient.getClaims(
+              submissionResponse.getOfficeAccountNumber(),
+              submissionResponse.getSubmissionId().toString(),
+              null,
+              null,
+              null,
+              null,
+              null,
+              null))
+          .thenReturn(ResponseEntity.ok(claimResultSet));
+
       when(categoryOfLawValidationService.getCategoryOfLawLookup(claims))
           .thenReturn(categoryOfLawLookup);
 
-      claimValidationService.validateClaims(claims, providerCategoriesOfLaw, "CIVIL");
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(
+          List.of(
+              new ClaimValidationReport(claim1.getId()),
+              new ClaimValidationReport(claim2.getId())));
+
+      claimValidationService.validateClaims(submissionResponse, providerCategoriesOfLaw, context);
 
       verify(categoryOfLawValidationService, times(1))
-          .validateCategoryOfLaw(claim1, categoryOfLawLookup, providerCategoriesOfLaw);
+          .validateCategoryOfLaw(claim1, categoryOfLawLookup, providerCategoriesOfLaw, context);
       verify(categoryOfLawValidationService, times(1))
-          .validateCategoryOfLaw(claim2, categoryOfLawLookup, providerCategoriesOfLaw);
+          .validateCategoryOfLaw(claim2, categoryOfLawLookup, providerCategoriesOfLaw, context);
 
-      verify(duplicateClaimValidationService, times(1)).validateDuplicateClaims(claim1);
-      verify(duplicateClaimValidationService, times(1)).validateDuplicateClaims(claim2);
+      verify(duplicateClaimValidationService, times(1))
+          .validateDuplicateClaims(claim1, claims, "areaOfLaw", "officeAccountNumber", context);
+      verify(duplicateClaimValidationService, times(1))
+          .validateDuplicateClaims(claim2, claims, "areaOfLaw", "officeAccountNumber", context);
 
-      verify(feeCalculationService, times(1)).validateFeeCalculation(claim1);
-      verify(feeCalculationService, times(1)).validateFeeCalculation(claim2);
+      verify(feeCalculationService, times(1)).validateFeeCalculation(claim1, context);
+      verify(feeCalculationService, times(1)).validateFeeCalculation(claim2, context);
     }
 
     @Test
@@ -121,57 +163,83 @@ class ClaimValidationServiceTest {
       when(categoryOfLawValidationService.getCategoryOfLawLookup(claims))
           .thenReturn(categoryOfLawLookup);
 
-      claimValidationService.validateClaims(claims, providerCategoriesOfLaw, "CIVIL");
+      SubmissionResponse submissionResponse =
+          new SubmissionResponse()
+              .submissionId(new UUID(1, 1))
+              .areaOfLaw("CIVIL")
+              .officeAccountNumber("officeAccountNumber");
+
+      ClaimResultSet claimResultSet = new ClaimResultSet();
+      claimResultSet.content(claims);
+
+      when(dataClaimsRestClient.getClaims(
+              submissionResponse.getOfficeAccountNumber(),
+              submissionResponse.getSubmissionId().toString(),
+              null,
+              null,
+              null,
+              null,
+              null,
+              null))
+          .thenReturn(ResponseEntity.ok(claimResultSet));
+
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(
+          List.of(
+              new ClaimValidationReport(claim1.getId()),
+              new ClaimValidationReport(claim2.getId())));
+
+      claimValidationService.validateClaims(submissionResponse, providerCategoriesOfLaw, context);
 
       // Then
-      verify(submissionValidationContext, times(1))
+      verify(context, times(1))
           .addClaimError("claim1", "Invalid date value provided for Case Start Date: 2003-13-34");
-      verify(submissionValidationContext, times(1))
+      verify(context, times(1))
           .addClaimError(
               "claim1",
               "Invalid date value for Transfer Date (Must be between 1995-01-01 and today): 2090-12-02");
-      verify(submissionValidationContext, times(1))
+      verify(context, times(1))
           .addClaimError(
               "claim1",
               "Invalid date value for Case Concluded Date (Must be between 1995-01-01 and today): 2090-01-01");
-      verify(submissionValidationContext, times(1))
+      verify(context, times(1))
           .addClaimError(
               "claim1",
               "Invalid date value for Representation Order Date (Must be between 2016-04-01 and today): 2090-01-01");
-      verify(submissionValidationContext, times(1))
+      verify(context, times(1))
           .addClaimError(
               "claim1",
               "Invalid date value for Client Date of Birth (Must be between 1900-01-01 and today): 2099-12-31");
-      verify(submissionValidationContext, times(1))
+      verify(context, times(1))
           .addClaimError(
               "claim1",
               "Invalid date value for Client2 Date of Birth (Must be between 1900-01-01 and today): 2099-12-31");
 
-      verify(submissionValidationContext, times(1))
+      verify(context, times(1))
           .addClaimError(
               "claim2",
               "Invalid date value for Case Start Date (Must be between 1995-01-01 and today): 1993-01-03");
-      verify(submissionValidationContext, times(1))
+      verify(context, times(1))
           .addClaimError(
               "claim2",
               "Invalid date value for Transfer Date (Must be between 1995-01-01 and today): 1990-12-02");
-      verify(submissionValidationContext, times(1))
+      verify(context, times(1))
           .addClaimError(
               "claim2",
               "Invalid date value for Case Concluded Date (Must be between 1995-01-01 and today): 1993-01-01");
-      verify(submissionValidationContext, times(1))
+      verify(context, times(1))
           .addClaimError(
               "claim2",
               "Invalid date value for Representation Order Date (Must be between 2016-04-01 and today): 2016-03-30");
-      verify(submissionValidationContext, times(1))
+      verify(context, times(1))
           .addClaimError(
               "claim2",
               "Invalid date value for Client Date of Birth (Must be between 1900-01-01 and today): 1899-12-31");
-      verify(submissionValidationContext, times(1))
+      verify(context, times(1))
           .addClaimError(
               "claim2",
               "Invalid date value for Client Date of Birth (Must be between 1900-01-01 and today): 1899-12-31");
-      verify(submissionValidationContext, times(1))
+      verify(context, times(1))
           .addClaimError(
               "claim2",
               "Invalid date value for Client2 Date of Birth (Must be between 1900-01-01 and today): 1899-12-31");
@@ -196,17 +264,67 @@ class ClaimValidationServiceTest {
       when(categoryOfLawValidationService.getCategoryOfLawLookup(claims))
           .thenReturn(categoryOfLawLookup);
 
-      claimValidationService.validateClaims(claims, providerCategoriesOfLaw, "CIVIL");
-      claimValidationService.validateClaims(claims, providerCategoriesOfLaw, "CRIME");
+      SubmissionResponse submissionResponse1 =
+          new SubmissionResponse()
+              .submissionId(new UUID(1, 1))
+              .areaOfLaw("CIVIL")
+              .officeAccountNumber("officeAccountNumber");
 
-      // Then
-      verify(submissionValidationContext, times(0))
+      ClaimResultSet claimResultSet = new ClaimResultSet();
+      claimResultSet.content(claims);
+
+      when(dataClaimsRestClient.getClaims(
+              submissionResponse1.getOfficeAccountNumber(),
+              submissionResponse1.getSubmissionId().toString(),
+              null,
+              null,
+              null,
+              null,
+              null,
+              null))
+          .thenReturn(ResponseEntity.ok(claimResultSet));
+
+      SubmissionValidationContext context1 = new SubmissionValidationContext();
+      context1.addClaimReports(
+          List.of(
+              new ClaimValidationReport(claim1.getId()),
+              new ClaimValidationReport(claim2.getId())));
+
+      claimValidationService.validateClaims(submissionResponse1, providerCategoriesOfLaw, context1);
+
+      verify(context1, times(0))
           .addClaimError("claim1", "uniqueFileNumber is required for area of law: CIVIL");
-      verify(submissionValidationContext, times(1))
+      verify(context1, times(1))
           .addClaimError("claim2", "uniqueFileNumber is required for area of law: CIVIL");
-      verify(submissionValidationContext, times(0))
+
+      SubmissionResponse submissionResponse2 =
+          new SubmissionResponse()
+              .submissionId(new UUID(1, 1))
+              .areaOfLaw("CRIME")
+              .officeAccountNumber("officeAccountNumber");
+
+      when(dataClaimsRestClient.getClaims(
+              submissionResponse2.getOfficeAccountNumber(),
+              submissionResponse2.getSubmissionId().toString(),
+              null,
+              null,
+              null,
+              null,
+              null,
+              null))
+          .thenReturn(ResponseEntity.ok(claimResultSet));
+
+      SubmissionValidationContext context2 = new SubmissionValidationContext();
+      context1.addClaimReports(
+          List.of(
+              new ClaimValidationReport(claim1.getId()),
+              new ClaimValidationReport(claim2.getId())));
+
+      claimValidationService.validateClaims(submissionResponse2, providerCategoriesOfLaw, context2);
+
+      verify(context2, times(0))
           .addClaimError("claim1", "stageReachedCode is required for area of law: CRIME");
-      verify(submissionValidationContext, times(1))
+      verify(context2, times(1))
           .addClaimError("claim2", "stageReachedCode is required for area of law: CRIME");
     }
 
@@ -236,25 +354,45 @@ class ClaimValidationServiceTest {
       when(categoryOfLawValidationService.getCategoryOfLawLookup(claims))
           .thenReturn(categoryOfLawLookup);
 
+      SubmissionResponse submissionResponse =
+          new SubmissionResponse()
+              .submissionId(new UUID(1, 1))
+              .areaOfLaw(areaOfLaw)
+              .officeAccountNumber("officeAccountNumber");
+
+      ClaimResultSet claimResultSet = new ClaimResultSet();
+      claimResultSet.content(claims);
+
+      when(dataClaimsRestClient.getClaims(
+              submissionResponse.getOfficeAccountNumber(),
+              submissionResponse.getSubmissionId().toString(),
+              null,
+              null,
+              null,
+              null,
+              null,
+              null))
+          .thenReturn(ResponseEntity.ok(claimResultSet));
+
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
+
       // Run validation
-      claimValidationService.validateClaims(claims, providerCategoriesOfLaw, areaOfLaw);
+      claimValidationService.validateClaims(submissionResponse, providerCategoriesOfLaw, context);
 
       if (expectError) {
         String expectedMessage =
             String.format(
                 "matter_type_code (%s): does not match the regex pattern %s (provided value: %s)",
                 areaOfLaw, regex, matterTypeCode);
-        verify(submissionValidationContext).addClaimError(claimId, expectedMessage);
+        verify(context).addClaimError(claimId, expectedMessage);
       } else {
-        verify(submissionValidationContext, never())
+        verify(context, never())
             .addClaimError(
                 eq(claimId),
                 (String)
                     argThat(msg -> msg != null && ((String) msg).contains("matter_type_code")));
       }
-
-      // Reset mocks for next iteration
-      reset(submissionValidationContext);
     }
 
     @ParameterizedTest(
@@ -285,25 +423,45 @@ class ClaimValidationServiceTest {
       when(categoryOfLawValidationService.getCategoryOfLawLookup(claims))
           .thenReturn(categoryOfLawLookup);
 
+      SubmissionResponse submissionResponse =
+          new SubmissionResponse()
+              .submissionId(new UUID(1, 1))
+              .areaOfLaw(areaOfLaw)
+              .officeAccountNumber("officeAccountNumber");
+
+      ClaimResultSet claimResultSet = new ClaimResultSet();
+      claimResultSet.content(claims);
+
+      when(dataClaimsRestClient.getClaims(
+              submissionResponse.getOfficeAccountNumber(),
+              submissionResponse.getSubmissionId().toString(),
+              null,
+              null,
+              null,
+              null,
+              null,
+              null))
+          .thenReturn(ResponseEntity.ok(claimResultSet));
+
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
+
       // Run validation
-      claimValidationService.validateClaims(claims, providerCategoriesOfLaw, areaOfLaw);
+      claimValidationService.validateClaims(submissionResponse, providerCategoriesOfLaw, context);
 
       if (expectError) {
         String expectedMessage =
             String.format(
                 "stage_reached_code (%s): does not match the regex pattern %s (provided value: %s)",
                 areaOfLaw, regex, stageReachedCode);
-        verify(submissionValidationContext).addClaimError(claimId, expectedMessage);
+        verify(context).addClaimError(claimId, expectedMessage);
       } else {
-        verify(submissionValidationContext, never())
+        verify(context, never())
             .addClaimError(
                 eq(claimId),
                 (String)
                     argThat(msg -> msg != null && ((String) msg).contains("stage_reached_code")));
       }
-
-      // Reset mocks for next iteration
-      reset(submissionValidationContext);
     }
 
     @ParameterizedTest(
@@ -336,26 +494,46 @@ class ClaimValidationServiceTest {
       when(categoryOfLawValidationService.getCategoryOfLawLookup(claims))
           .thenReturn(categoryOfLawLookup);
 
+      SubmissionResponse submissionResponse =
+          new SubmissionResponse()
+              .submissionId(new UUID(1, 1))
+              .areaOfLaw(areaOfLaw)
+              .officeAccountNumber("officeAccountNumber");
+
+      ClaimResultSet claimResultSet = new ClaimResultSet();
+      claimResultSet.content(claims);
+
+      when(dataClaimsRestClient.getClaims(
+              submissionResponse.getOfficeAccountNumber(),
+              submissionResponse.getSubmissionId().toString(),
+              null,
+              null,
+              null,
+              null,
+              null,
+              null))
+          .thenReturn(ResponseEntity.ok(claimResultSet));
+
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
+
       // Run validation
-      claimValidationService.validateClaims(claims, providerCategoriesOfLaw, areaOfLaw);
+      claimValidationService.validateClaims(submissionResponse, providerCategoriesOfLaw, context);
 
       if (expectError) {
         String expectedMessage =
             String.format(
                 "disbursementsVatAmount (%s): must have a maximum value of %s (provided value: %s)",
                 areaOfLaw, maxAllowed, disbursementsVatAmount);
-        verify(submissionValidationContext).addClaimError(claimId, expectedMessage);
+        verify(context).addClaimError(claimId, expectedMessage);
       } else {
-        verify(submissionValidationContext, never())
+        verify(context, never())
             .addClaimError(
                 eq(claimId),
                 (String)
                     argThat(
                         msg -> msg != null && ((String) msg).contains("disbursements_vat_amount")));
       }
-
-      // Reset mocks for next iteration
-      reset(submissionValidationContext);
     }
   }
 }

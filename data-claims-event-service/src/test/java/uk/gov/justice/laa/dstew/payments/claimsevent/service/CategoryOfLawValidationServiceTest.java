@@ -1,10 +1,8 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static uk.gov.justice.laa.dstew.payments.claimsevent.service.ValidationServiceTestUtils.assertContextClaimError;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -21,13 +19,12 @@ import org.springframework.http.ResponseEntity;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.fee.scheme.model.CategoryOfLawResponse;
 
 @ExtendWith(MockitoExtension.class)
 class CategoryOfLawValidationServiceTest {
-
-  @Mock SubmissionValidationContext submissionValidationContext;
 
   @Mock FeeSchemePlatformRestClient feeSchemePlatformRestClient;
 
@@ -45,10 +42,13 @@ class CategoryOfLawValidationServiceTest {
           Map.of("feeCode", CategoryOfLawResult.withCategoryOfLaw("categoryOfLaw"));
       List<String> providerCategoriesOfLaw = List.of("categoryOfLaw");
 
-      categoryOfLawValidationService.validateCategoryOfLaw(
-          claim, categoryOfLawLookup, providerCategoriesOfLaw);
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
 
-      verifyNoInteractions(submissionValidationContext);
+      categoryOfLawValidationService.validateCategoryOfLaw(
+          claim, categoryOfLawLookup, providerCategoriesOfLaw, context);
+
+      assertThat(context.hasErrors()).isFalse();
     }
 
     @Test
@@ -61,11 +61,14 @@ class CategoryOfLawValidationServiceTest {
       categoryOfLawLookup.put("feeCode", CategoryOfLawResult.withCategoryOfLaw(null));
       List<String> providerCategoriesOfLaw = List.of("categoryOfLaw");
 
-      categoryOfLawValidationService.validateCategoryOfLaw(
-          claim, categoryOfLawLookup, providerCategoriesOfLaw);
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
 
-      verify(submissionValidationContext, times(1))
-          .addClaimError("claimId", ClaimValidationError.INVALID_CATEGORY_OF_LAW_AND_FEE_CODE);
+      categoryOfLawValidationService.validateCategoryOfLaw(
+          claim, categoryOfLawLookup, providerCategoriesOfLaw, context);
+
+      assertContextClaimError(
+          context, claim.getId(), ClaimValidationError.INVALID_CATEGORY_OF_LAW_AND_FEE_CODE);
     }
 
     @Test
@@ -76,12 +79,16 @@ class CategoryOfLawValidationServiceTest {
       categoryOfLawLookup.put("feeCode", CategoryOfLawResult.withCategoryOfLaw("categoryOfLaw"));
       List<String> providerCategoriesOfLaw = Collections.emptyList();
 
-      categoryOfLawValidationService.validateCategoryOfLaw(
-          claim, categoryOfLawLookup, providerCategoriesOfLaw);
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
 
-      verify(submissionValidationContext, times(1))
-          .addClaimError(
-              "claimId", ClaimValidationError.INVALID_CATEGORY_OF_LAW_NOT_AUTHORISED_FOR_PROVIDER);
+      categoryOfLawValidationService.validateCategoryOfLaw(
+          claim, categoryOfLawLookup, providerCategoriesOfLaw, context);
+
+      assertContextClaimError(
+          context,
+          claim.getId(),
+          ClaimValidationError.INVALID_CATEGORY_OF_LAW_NOT_AUTHORISED_FOR_PROVIDER);
     }
 
     @Test
@@ -92,10 +99,13 @@ class CategoryOfLawValidationServiceTest {
       categoryOfLawLookup.put("feeCode", CategoryOfLawResult.error());
       List<String> providerCategoriesOfLaw = List.of("categoryOfLaw");
 
-      categoryOfLawValidationService.validateCategoryOfLaw(
-          claim, categoryOfLawLookup, providerCategoriesOfLaw);
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
 
-      verify(submissionValidationContext, times(1)).flagForRetry("claimId");
+      categoryOfLawValidationService.validateCategoryOfLaw(
+          claim, categoryOfLawLookup, providerCategoriesOfLaw, context);
+
+      assertThat(context.isFlaggedForRetry(claim.getId())).isTrue();
     }
   }
 

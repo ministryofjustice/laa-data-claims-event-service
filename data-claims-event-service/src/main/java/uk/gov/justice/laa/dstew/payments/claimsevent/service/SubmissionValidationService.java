@@ -2,7 +2,6 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
 import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError.SUBMISSION_STATE_IS_NULL;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -10,7 +9,6 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPatch;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionClaim;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
@@ -40,7 +38,6 @@ public class SubmissionValidationService {
   private final ClaimValidationService claimValidationService;
   private final DataClaimsRestClient dataClaimsRestClient;
   private final ProviderDetailsRestClient providerDetailsRestClient;
-  private final SubmissionValidationContext submissionValidationContext;
   private final JsonSchemaValidator jsonSchemaValidator;
 
   /**
@@ -53,26 +50,23 @@ public class SubmissionValidationService {
 
     log.debug("Validating submission {}", submissionId);
 
-    verifySubmissionStatus(submissionId, submission.getStatus());
+    SubmissionValidationContext context = initialiseValidationContext(submission);
 
-    submissionValidationContext.addSubmissionValidationErrors(
-        jsonSchemaValidator.validate("submission", submission));
+    verifySubmissionStatus(submission, context);
 
-    List<ClaimResponse> claims = getReadyToProcessClaims(submission);
+    context.addSubmissionValidationErrors(jsonSchemaValidator.validate("submission", submission));
 
-    initialiseValidationContext(claims);
-
-    validateNilSubmission(submission);
+    validateNilSubmission(submission, context);
 
     String officeCode = submission.getOfficeAccountNumber();
     String areaOfLaw = submission.getAreaOfLaw();
     List<String> providerCategoriesOfLaw = getProviderCategoriesOfLaw(officeCode, areaOfLaw);
-    validateProviderContract(submissionId.toString(), providerCategoriesOfLaw);
+    validateProviderContract(submissionId.toString(), providerCategoriesOfLaw, context);
 
-    claimValidationService.validateClaims(claims, providerCategoriesOfLaw, areaOfLaw);
+    claimValidationService.validateClaims(submission, providerCategoriesOfLaw, context);
 
     // TODO: Send through all claim errors in the patch request.
-    updateClaims(submissionId, claims);
+    updateClaims(submission, context);
 
     // TODO: Verify all claims have been validated, and update submission status to
     //  VALIDATION_SUCCEEDED or VALIDATION_FAILED
@@ -80,7 +74,10 @@ public class SubmissionValidationService {
     log.debug("Validation completed for submission {}", submissionId);
   }
 
-  private void verifySubmissionStatus(UUID submissionId, SubmissionStatus currentStatus) {
+  private void verifySubmissionStatus(
+      SubmissionResponse submission, SubmissionValidationContext context) {
+    SubmissionStatus currentStatus = submission.getStatus();
+    UUID submissionId = submission.getSubmissionId();
     switch (currentStatus) {
       case VALIDATION_IN_PROGRESS ->
           log.debug(
@@ -94,14 +91,14 @@ public class SubmissionValidationService {
       }
       case null -> {
         log.debug("Submission {} state is null", submissionId);
-        submissionValidationContext.addSubmissionValidationError(SUBMISSION_STATE_IS_NULL);
+        context.addSubmissionValidationError(SUBMISSION_STATE_IS_NULL);
       }
       default -> {
         log.debug(
             "Submission {} cannot be validated in its current state: {}",
             submissionId,
             currentStatus);
-        submissionValidationContext.addSubmissionValidationError(
+        context.addSubmissionValidationError(
             "Submission cannot be validated in state " + currentStatus);
       }
     }
@@ -113,16 +110,17 @@ public class SubmissionValidationService {
     dataClaimsRestClient.updateSubmission(submissionId.toString(), submissionPatch);
   }
 
-  private void validateNilSubmission(SubmissionResponse submission) {
+  private void validateNilSubmission(
+      SubmissionResponse submission, SubmissionValidationContext context) {
     log.debug("Validating nil submission for submission {}", submission.getSubmissionId());
     if (Boolean.TRUE.equals(submission.getIsNilSubmission())) {
       if (submission.getClaims() != null && !submission.getClaims().isEmpty()) {
-        submissionValidationContext.addSubmissionValidationError(
+        context.addSubmissionValidationError(
             ClaimValidationError.INVALID_NIL_SUBMISSION_CONTAINS_CLAIMS);
       }
     } else if (Boolean.FALSE.equals(submission.getIsNilSubmission())
         && (submission.getClaims() == null || submission.getClaims().isEmpty())) {
-      submissionValidationContext.addSubmissionValidationError(
+      context.addSubmissionValidationError(
           ClaimValidationError.NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS);
     }
     log.debug("Nil submission completed for submission {}", submission.getSubmissionId());
@@ -141,11 +139,13 @@ public class SubmissionValidationService {
         .toList();
   }
 
-  private void validateProviderContract(String submissionId, List<String> providerCategoriesOfLaw) {
+  private void validateProviderContract(
+      String submissionId,
+      List<String> providerCategoriesOfLaw,
+      SubmissionValidationContext context) {
     log.debug("Validating provider contract for submission {}", submissionId);
     if (providerCategoriesOfLaw.isEmpty()) {
-      submissionValidationContext.addSubmissionValidationError(
-          ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER);
+      context.addSubmissionValidationError(ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER);
     }
   }
 
@@ -161,82 +161,76 @@ public class SubmissionValidationService {
    *       skip the update for this claim.
    * </ul>
    *
-   * @param submissionId the ID of the submission
-   * @param claims the claims in the submission
+   * @param submission the claim submission
+   * @param context the submission validation context
    */
-  private void updateClaims(UUID submissionId, List<ClaimResponse> claims) {
-    log.debug("Updating claims for submission {}", submissionId.toString());
+  private void updateClaims(SubmissionResponse submission, SubmissionValidationContext context) {
+    log.debug("Updating claims for submission {}", submission.getSubmissionId().toString());
     AtomicInteger claimsUpdated = new AtomicInteger();
     AtomicInteger claimsFlaggedForRetry = new AtomicInteger();
-    claims.stream()
+    submission.getClaims().stream()
+        .filter(claim -> ClaimStatus.READY_TO_PROCESS.equals(claim.getStatus()))
         .peek(
             claim -> {
-              if (submissionValidationContext.isFlaggedForRetry(claim.getId())) {
-                log.debug("Claim {} is flagged for retry. Skipping update.", claim.getId());
+              if (context.isFlaggedForRetry(claim.getClaimId().toString())) {
+                log.debug("Claim {} is flagged for retry. Skipping update.", claim.getClaimId());
                 claimsFlaggedForRetry.incrementAndGet();
               }
             })
-        .filter(claim -> !submissionValidationContext.isFlaggedForRetry(claim.getId()))
+        .filter(claim -> !context.isFlaggedForRetry(claim.getClaimId().toString()))
         .forEach(
             claim -> {
-              ClaimStatus claimStatus = getClaimStatus(claim.getId());
-              List<ValidationMessagePatch> claimMessages = getClaimMessages(claim.getId());
+              String claimId = claim.getClaimId().toString();
+              ClaimStatus claimStatus = getClaimStatus(claimId, context);
+              List<ValidationMessagePatch> claimMessages = getClaimMessages(claimId, context);
               ClaimPatch claimPatch =
                   ClaimPatch.builder()
-                      .id(claim.getId())
+                      .id(claimId)
                       .status(claimStatus)
                       .validationMessages(claimMessages)
                       .build();
               dataClaimsRestClient.updateClaim(
-                  submissionId, UUID.fromString(claim.getId()), claimPatch);
-              log.debug("Claim {} status updated to {}", claim.getId(), claimStatus);
+                  submission.getSubmissionId(), claim.getClaimId(), claimPatch);
+              log.debug("Claim {} status updated to {}", claimId, claimStatus);
               claimsUpdated.getAndIncrement();
             });
     log.debug(
         "Claim updates completed for submission {}. Claims updated: {}. "
             + "Claim updates skipped: {}",
-        submissionId,
+        submission.getSubmissionId(),
         claimsUpdated.get(),
         claimsFlaggedForRetry.get());
   }
 
-  private ClaimStatus getClaimStatus(String claimId) {
-    if (submissionValidationContext.hasErrors(claimId)) {
+  private ClaimStatus getClaimStatus(String claimId, SubmissionValidationContext context) {
+    if (context.hasErrors(claimId)) {
       return ClaimStatus.INVALID;
     } else {
       return ClaimStatus.VALID;
     }
   }
 
-  private List<ValidationMessagePatch> getClaimMessages(String claimId) {
-    return submissionValidationContext.getClaimReport(claimId).stream()
+  private List<ValidationMessagePatch> getClaimMessages(
+      String claimId, SubmissionValidationContext context) {
+    return context.getClaimReport(claimId).stream()
         .map(ClaimValidationReport::getMessages)
         .flatMap(List::stream)
         .toList();
   }
 
-  private void initialiseValidationContext(List<ClaimResponse> claims) {
-    List<ClaimValidationReport> claimValidationErrors =
-        claims.stream().map(ClaimResponse::getId).map(ClaimValidationReport::new).toList();
-    submissionValidationContext.addClaimReports(claimValidationErrors);
-  }
-
-  /**
-   * Get data for all claims with READY_TO_PROCESS status in a submission.
-   *
-   * @param submission the submission
-   * @return a list of claims in the submission that are ready for processing.
-   */
-  private List<ClaimResponse> getReadyToProcessClaims(SubmissionResponse submission) {
+  private SubmissionValidationContext initialiseValidationContext(SubmissionResponse submission) {
+    SubmissionValidationContext submissionValidationContext = new SubmissionValidationContext();
     if (submission.getClaims() == null) {
-      return Collections.emptyList();
+      return submissionValidationContext;
     }
-    return submission.getClaims().stream()
-        .filter(claim -> ClaimStatus.READY_TO_PROCESS.equals(claim.getStatus()))
-        .map(SubmissionClaim::getClaimId)
-        .map(
-            claimId ->
-                dataClaimsRestClient.getClaim(submission.getSubmissionId(), claimId).getBody())
-        .toList();
+    List<ClaimValidationReport> claimReports =
+        submission.getClaims().stream()
+            .filter(claim -> ClaimStatus.READY_TO_PROCESS.equals(claim.getStatus()))
+            .map(SubmissionClaim::getClaimId)
+            .map(UUID::toString)
+            .map(ClaimValidationReport::new)
+            .toList();
+    submissionValidationContext.addClaimReports(claimReports);
+    return submissionValidationContext;
   }
 }

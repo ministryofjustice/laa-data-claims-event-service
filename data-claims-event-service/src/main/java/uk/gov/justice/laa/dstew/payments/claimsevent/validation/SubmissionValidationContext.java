@@ -5,9 +5,9 @@ import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimVali
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessageType;
 
@@ -16,8 +16,8 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessageType;
  * claim-level messages.
  */
 @Getter
-@RequestScope
-@Component
+@AllArgsConstructor
+@EqualsAndHashCode
 public class SubmissionValidationContext {
 
   private final List<ClaimValidationReport> claimReports = new ArrayList<>();

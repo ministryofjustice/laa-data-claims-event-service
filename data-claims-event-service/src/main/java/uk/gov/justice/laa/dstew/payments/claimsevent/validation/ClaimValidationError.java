@@ -48,6 +48,16 @@ public enum ClaimValidationError {
       "A validation error occurred when attempting to calculate the fee for this claim",
       null,
       FEE_SERVICE,
+      ValidationMessageType.ERROR),
+  INVALID_CLAIM_HAS_DUPLICATE_IN_EXISTING_SUBMISSION(
+      "A duplicate claim was found within the same submission",
+      null,
+      EVENT_SERVICE,
+      ValidationMessageType.ERROR),
+  INVALID_CLAIM_HAS_DUPLICATE_IN_ANOTHER_SUBMISSION(
+      "A duplicate claim was found in another submission",
+      null,
+      EVENT_SERVICE,
       ValidationMessageType.ERROR);
 
   final String displayMessage;
