@@ -1,8 +1,10 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -15,19 +17,24 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.ResponseEntity;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
+import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponse;
 
 @ExtendWith(MockitoExtension.class)
 class CategoryOfLawValidationServiceTest {
 
-  @Mock SubmissionValidationContext submissionValidationContext;
+  @Mock
+  SubmissionValidationContext submissionValidationContext;
 
-  @Mock FeeSchemePlatformRestClient feeSchemePlatformRestClient;
+  @Mock
+  FeeSchemePlatformRestClient feeSchemePlatformRestClient;
 
-  @InjectMocks CategoryOfLawValidationService categoryOfLawValidationService;
+  @InjectMocks
+  CategoryOfLawValidationService categoryOfLawValidationService;
 
   @Nested
   @DisplayName("validateCategoryOfLaw")
@@ -95,8 +102,7 @@ class CategoryOfLawValidationServiceTest {
     }
   }
 
-  // TODO: CCMSPUI-840 ~ Change to fee details API endpoint
-  /*@Nested
+  @Nested
   @DisplayName("getCategoryOfLawLookup")
   class GetCategoryOfLawLookupTests {
 
@@ -111,11 +117,11 @@ class CategoryOfLawValidationServiceTest {
 
       ClaimResponse claim4 = new ClaimResponse().id("claimId4").feeCode("feeCode4");
 
-      CategoryOfLawResponse categoryOfLawResponse1 =
-          new CategoryOfLawResponse().categoryOfLawCode("categoryOfLaw1");
+      FeeDetailsResponse categoryOfLawResponse1 =
+          new FeeDetailsResponse().categoryOfLawCode("categoryOfLaw1");
 
-      CategoryOfLawResponse categoryOfLawResponse2 =
-          new CategoryOfLawResponse().categoryOfLawCode("categoryOfLaw2");
+      FeeDetailsResponse categoryOfLawResponse2 =
+          new FeeDetailsResponse().categoryOfLawCode("categoryOfLaw2");
 
       when(feeSchemePlatformRestClient.getFeeDetails("feeCode1"))
           .thenReturn(ResponseEntity.ok(categoryOfLawResponse1));
@@ -141,5 +147,5 @@ class CategoryOfLawValidationServiceTest {
 
       assertThat(actual).isEqualTo(expected);
     }
-  }*/
+  }
 }
