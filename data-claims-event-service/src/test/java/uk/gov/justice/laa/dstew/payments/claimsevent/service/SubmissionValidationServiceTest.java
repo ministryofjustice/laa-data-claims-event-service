@@ -90,8 +90,8 @@ public class SubmissionValidationServiceTest {
         when(submissionValidationContext.hasErrors(claimId.toString())).thenReturn(hasErrors);
         mockClaimUpdate(submissionId, claimId, claimPatch);
 
-      // When
-      submissionValidationService.validateSubmission(submissionId);
+        // When
+        submissionValidationService.validateSubmission(submissionId);
 
         // Then
         verifyCommonInteractions(
@@ -167,10 +167,10 @@ public class SubmissionValidationServiceTest {
 
       SubmissionResponse submission = buildSubmission(submissionId, claimId, false);
 
-        when(dataClaimsRestClient.getSubmission(submissionId))
-            .thenReturn(ResponseEntity.of(Optional.of(submission)));
+      when(dataClaimsRestClient.getSubmission(submissionId))
+          .thenReturn(ResponseEntity.of(Optional.of(submission)));
 
-        ClaimResponse claimResponse = buildClaimResponse(claimId);
+      ClaimResponse claimResponse = buildClaimResponse(claimId);
 
       when(dataClaimsRestClient.getClaim(submissionId, claimId))
           .thenReturn(ResponseEntity.of(Optional.of(claimResponse)));

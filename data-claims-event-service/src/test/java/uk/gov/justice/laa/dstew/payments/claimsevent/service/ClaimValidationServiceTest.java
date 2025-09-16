@@ -187,10 +187,7 @@ class ClaimValidationServiceTest {
               .matterTypeCode("AB:CD")
               .stageReachedCode("AA");
       ClaimResponse claim2 =
-          new ClaimResponse()
-              .id("claim2")
-              .feeCode("feeCode2")
-              .matterTypeCode("123:456");
+          new ClaimResponse().id("claim2").feeCode("feeCode2").matterTypeCode("123:456");
       List<ClaimResponse> claims = List.of(claim1, claim2);
 
       List<String> providerCategoriesOfLaw = List.of("categoryOfLaw1");
@@ -224,7 +221,11 @@ class ClaimValidationServiceTest {
       "claim6, AB-CD, MEDIATION, '^[A-Z]{4}[-:][A-Z]{4}$', true",
     })
     void checkMatterType(
-        String claimId, String matterTypeCode, String areaOfLaw, String regex, boolean expectError) {
+        String claimId,
+        String matterTypeCode,
+        String areaOfLaw,
+        String regex,
+        boolean expectError) {
       ClaimResponse claim =
           new ClaimResponse().id(claimId).feeCode("feeCode1").matterTypeCode(matterTypeCode);
 
@@ -241,7 +242,8 @@ class ClaimValidationServiceTest {
       if (expectError) {
         String expectedMessage =
             String.format(
-                "matter_type_code (%s): does not match the regex pattern %s (provided value: %s)", areaOfLaw, regex, matterTypeCode);
+                "matter_type_code (%s): does not match the regex pattern %s (provided value: %s)",
+                areaOfLaw, regex, matterTypeCode);
         verify(submissionValidationContext).addClaimError(claimId, expectedMessage);
       } else {
         verify(submissionValidationContext, never())
@@ -256,18 +258,23 @@ class ClaimValidationServiceTest {
     }
 
     @ParameterizedTest(
-        name = "{index} => claimId={0}, stageReachedCode={1}, areaOfLaw={2}, regex={3}, expectError={4}")
+        name =
+            "{index} => claimId={0}, stageReachedCode={1}, areaOfLaw={2}, regex={3}, expectError={4}")
     @CsvSource({
-        "claim1, AABB, CIVIL, '^[a-zA-Z0-9]{2}$', true",
-        "claim2, AZ, CIVIL, '^[a-zA-Z0-9]{2}$', false",
-        "claim3, C9, CIVIL, '^[a-zA-Z0-9]{2}$', false",
-        "claim4, A!, CIVIL, '^[a-zA-Z0-9]{2}$', true",
-        "claim5, ABCD, CRIME, '^[A-Z]{4}$', false",
-        "claim6, A1, CRIME, '^[A-Z]{4}$', true",
-        "claim7, A-CD, CRIME, '^[A-Z]{4}$', true",
+      "claim1, AABB, CIVIL, '^[a-zA-Z0-9]{2}$', true",
+      "claim2, AZ, CIVIL, '^[a-zA-Z0-9]{2}$', false",
+      "claim3, C9, CIVIL, '^[a-zA-Z0-9]{2}$', false",
+      "claim4, A!, CIVIL, '^[a-zA-Z0-9]{2}$', true",
+      "claim5, ABCD, CRIME, '^[A-Z]{4}$', false",
+      "claim6, A1, CRIME, '^[A-Z]{4}$', true",
+      "claim7, A-CD, CRIME, '^[A-Z]{4}$', true",
     })
     void checkStageReachedCode(
-        String claimId, String stageReachedCode, String areaOfLaw, String regex, boolean expectError) {
+        String claimId,
+        String stageReachedCode,
+        String areaOfLaw,
+        String regex,
+        boolean expectError) {
       ClaimResponse claim =
           new ClaimResponse().id(claimId).feeCode("feeCode1").stageReachedCode(stageReachedCode);
 
@@ -284,7 +291,8 @@ class ClaimValidationServiceTest {
       if (expectError) {
         String expectedMessage =
             String.format(
-                "stage_reached_code (%s): does not match the regex pattern %s (provided value: %s)", areaOfLaw, regex, stageReachedCode);
+                "stage_reached_code (%s): does not match the regex pattern %s (provided value: %s)",
+                areaOfLaw, regex, stageReachedCode);
         verify(submissionValidationContext).addClaimError(claimId, expectedMessage);
       } else {
         verify(submissionValidationContext, never())
@@ -299,19 +307,27 @@ class ClaimValidationServiceTest {
     }
 
     @ParameterizedTest(
-        name = "{index} => claimId={0}, disbursementVatAmount={1}, areaOfLaw={2}, maxAllowed={3}, expectError={4}")
+        name =
+            "{index} => claimId={0}, disbursementVatAmount={1}, areaOfLaw={2}, maxAllowed={3}, expectError={4}")
     @CsvSource({
-        "claim1, 99999.99, CIVIL, 99999.99, false",
-        "claim2, 999999.99, CRIME, 999999.99, false",
-        "claim3, 999999999.99, MEDIATION, 999999999.99, false",
-        "claim4, 100000.0, CIVIL, 99999.99, true",
-        "claim5, 1000000.0, CRIME, 999999.99, true",
-        "claim6, 1000000000.0, MEDIATION, 999999999.99, true",
+      "claim1, 99999.99, CIVIL, 99999.99, false",
+      "claim2, 999999.99, CRIME, 999999.99, false",
+      "claim3, 999999999.99, MEDIATION, 999999999.99, false",
+      "claim4, 100000.0, CIVIL, 99999.99, true",
+      "claim5, 1000000.0, CRIME, 999999.99, true",
+      "claim6, 1000000000.0, MEDIATION, 999999999.99, true",
     })
     void checkDisbursementsVatAmount(
-        String claimId, BigDecimal disbursementsVatAmount, String areaOfLaw, BigDecimal maxAllowed, boolean expectError) {
+        String claimId,
+        BigDecimal disbursementsVatAmount,
+        String areaOfLaw,
+        BigDecimal maxAllowed,
+        boolean expectError) {
       ClaimResponse claim =
-          new ClaimResponse().id(claimId).feeCode("feeCode1").disbursementsVatAmount(disbursementsVatAmount);
+          new ClaimResponse()
+              .id(claimId)
+              .feeCode("feeCode1")
+              .disbursementsVatAmount(disbursementsVatAmount);
 
       List<ClaimResponse> claims = List.of(claim);
       List<String> providerCategoriesOfLaw = List.of("categoryOfLaw1");
@@ -326,19 +342,20 @@ class ClaimValidationServiceTest {
       if (expectError) {
         String expectedMessage =
             String.format(
-                "disbursementsVatAmount (%s): must have a maximum value of %s (provided value: %s)", areaOfLaw, maxAllowed, disbursementsVatAmount);
+                "disbursementsVatAmount (%s): must have a maximum value of %s (provided value: %s)",
+                areaOfLaw, maxAllowed, disbursementsVatAmount);
         verify(submissionValidationContext).addClaimError(claimId, expectedMessage);
       } else {
         verify(submissionValidationContext, never())
             .addClaimError(
                 eq(claimId),
                 (String)
-                    argThat(msg -> msg != null && ((String) msg).contains("disbursements_vat_amount")));
+                    argThat(
+                        msg -> msg != null && ((String) msg).contains("disbursements_vat_amount")));
       }
 
       // Reset mocks for next iteration
       reset(submissionValidationContext);
     }
-
   }
 }
