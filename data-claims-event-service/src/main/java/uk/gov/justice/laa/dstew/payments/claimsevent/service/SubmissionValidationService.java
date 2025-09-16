@@ -47,7 +47,7 @@ public class SubmissionValidationService {
    */
   public void validateSubmission(UUID submissionId) {
     SubmissionResponse submission =
-        dataClaimsRestClient.getSubmission(submissionId.toString()).getBody();
+        dataClaimsRestClient.getSubmission(submissionId).getBody();
 
     log.debug("Validating submission {}", submissionId);
 

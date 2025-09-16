@@ -77,12 +77,13 @@ public class SubmissionValidationServiceTest {
       when(dataClaimsRestClient.getSubmission(submissionId))
           .thenReturn(ResponseEntity.of(Optional.of(submission)));
 
+      SubmissionPatch submissionPatch = buildSubmissionPatch(submissionId);
+
       if (claimId != null) {
         ClaimResponse claimResponse = buildClaimResponse(claimId);
         mockClaimRetrieval(submissionId, claimId, claimResponse);
         mockProviderSchedules(officeAccountNumber, areaOfLaw, categoryOfLaw);
 
-        SubmissionPatch submissionPatch = buildSubmissionPatch(submissionId);
         mockSubmissionUpdate(submissionId, submissionPatch);
 
         ClaimPatch claimPatch = new ClaimPatch().id(claimId.toString()).status(claimStatus);
@@ -91,9 +92,6 @@ public class SubmissionValidationServiceTest {
 
       // When
       submissionValidationService.validateSubmission(submissionId);
-
-        when(dataClaimsRestClient.getSubmission(submissionId.toString()))
-            .thenReturn(ResponseEntity.of(Optional.of(submission)));
 
         // Then
         verifyCommonInteractions(
@@ -107,83 +105,8 @@ public class SubmissionValidationServiceTest {
             claimPatch);
       } else {
         // When
-        submissionValidationService.validateSubmission(submission);
+        submissionValidationService.validateSubmission(submission.getSubmissionId());
       }
-      // Then
-      verify(dataClaimsRestClient, times(1))
-          .updateSubmission(submissionId.toString(), submissionPatch);
-      verify(dataClaimsRestClient, times(1)).getClaim(submissionId, claimId);
-      verify(providerDetailsRestClient, times(1))
-          .getProviderFirmSchedules(officeAccountNumber, areaOfLaw);
-      verify(claimValidationService, times(1))
-          .validateClaims(List.of(claimResponse), List.of(categoryOfLaw));
-      verify(dataClaimsRestClient, times(1)).updateClaim(submissionId, claimId, claimPatch);
-    }
-
-    @Test
-    @DisplayName("Marks claims as invalid if nil submission contains claims")
-    void marksClaimsAsInvalidIfNilSubmissionContainsClaims() {
-      // Given
-      UUID submissionId = new UUID(0, 0);
-      UUID claimId = new UUID(1, 1);
-      String areaOfLaw = "areaOfLaw";
-      String categoryOfLaw = "categoryOfLaw";
-      String officeAccountNumber = "officeAccountNumber";
-
-      SubmissionClaim claim = new SubmissionClaim();
-      claim.setClaimId(claimId);
-      claim.setStatus(ClaimStatus.READY_TO_PROCESS);
-
-      SubmissionResponse submission =
-          SubmissionResponse.builder()
-              .submissionId(submissionId)
-              .areaOfLaw(areaOfLaw)
-              .officeAccountNumber(officeAccountNumber)
-              .status(SubmissionStatus.READY_FOR_VALIDATION)
-              .isNilSubmission(true)
-              .claims(List.of(claim))
-              .build();
-
-      when(dataClaimsRestClient.getSubmission(submissionId.toString()))
-          .thenReturn(ResponseEntity.of(Optional.of(submission)));
-
-      ClaimResponse claimResponse = new ClaimResponse();
-      claimResponse.id(claimId.toString());
-      claimResponse.feeCode("feeCode");
-
-      when(dataClaimsRestClient.getClaim(submissionId, claimId))
-          .thenReturn(ResponseEntity.of(Optional.of(claimResponse)));
-
-      FirmOfficeContractAndScheduleLine scheduleLine = new FirmOfficeContractAndScheduleLine();
-      scheduleLine.setCategoryOfLaw(categoryOfLaw);
-
-      FirmOfficeContractAndScheduleDetails schedule = new FirmOfficeContractAndScheduleDetails();
-      schedule.scheduleLines(List.of(scheduleLine));
-
-      ProviderFirmOfficeContractAndScheduleDto providerFirmResponse =
-          new ProviderFirmOfficeContractAndScheduleDto();
-      providerFirmResponse.addSchedulesItem(schedule);
-
-      when(providerDetailsRestClient.getProviderFirmSchedules(officeAccountNumber, areaOfLaw))
-          .thenReturn(Mono.just(providerFirmResponse));
-
-      SubmissionPatch submissionPatch =
-          new SubmissionPatch()
-              .submissionId(submissionId)
-              .status(SubmissionStatus.VALIDATION_IN_PROGRESS);
-
-      when(dataClaimsRestClient.updateSubmission(submissionId.toString(), submissionPatch))
-          .thenReturn(ResponseEntity.ok().build());
-
-      ClaimPatch claimPatch = new ClaimPatch().id(claimId.toString()).status(ClaimStatus.INVALID);
-
-      when(dataClaimsRestClient.updateClaim(submissionId, claimId, claimPatch))
-          .thenReturn(ResponseEntity.ok().build());
-
-      when(submissionValidationContext.hasErrors(claimId.toString())).thenReturn(true);
-
-      // When
-      submissionValidationService.validateSubmission(submissionId);
 
       if (expectsValidationError) {
         // Determine which error to verify
@@ -221,11 +144,11 @@ public class SubmissionValidationServiceTest {
 
       mockProviderSchedules(officeAccountNumber, areaOfLaw, categoryOfLaw);
 
-      when(dataClaimsRestClient.getSubmission(submissionId.toString()))
+      when(dataClaimsRestClient.getSubmission(submissionId))
           .thenReturn(ResponseEntity.of(Optional.of(submission)));
 
       // When
-      submissionValidationService.validateSubmission(submission);
+      submissionValidationService.validateSubmission(submission.getSubmissionId());
 
       // Then
       verify(submissionValidationContext, times(1))
@@ -244,7 +167,7 @@ public class SubmissionValidationServiceTest {
 
       SubmissionResponse submission = buildSubmission(submissionId, claimId, false);
 
-        when(dataClaimsRestClient.getSubmission(submissionId.toString()))
+        when(dataClaimsRestClient.getSubmission(submissionId))
             .thenReturn(ResponseEntity.of(Optional.of(submission)));
 
         ClaimResponse claimResponse = buildClaimResponse(claimId);
@@ -309,11 +232,11 @@ public class SubmissionValidationServiceTest {
 
       mockProviderSchedules(officeAccountNumber, areaOfLaw, "categoryOfLaw");
 
-      when(dataClaimsRestClient.getSubmission(submissionId.toString()))
+      when(dataClaimsRestClient.getSubmission(submissionId))
           .thenReturn(ResponseEntity.of(Optional.of(submission)));
 
       // When
-      submissionValidationService.validateSubmission(submission);
+      submissionValidationService.validateSubmission(submission.getSubmissionId());
 
       // Then
       verify(submissionValidationContext, times(1))
@@ -346,7 +269,7 @@ public class SubmissionValidationServiceTest {
       mockProviderSchedules(officeAccountNumber, areaOfLaw, "categoryOfLaw");
 
       // When
-      submissionValidationService.validateSubmission(submission);
+      submissionValidationService.validateSubmission(submission.getSubmissionId());
 
       // Then
       verify(submissionValidationContext, times(1))
