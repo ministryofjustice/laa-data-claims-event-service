@@ -50,10 +50,7 @@ class FeeSchemePlatformRestClientIntegrationTest extends MockServerIntegrationTe
       String expectedBody = readJsonFromFile("fee-scheme/get-fee-details-200.json");
 
       mockServerClient
-          .when(
-              HttpRequest.request()
-                  .withMethod("GET")
-                  .withPath("/api/v0/fee-details/" + feeCode))
+          .when(HttpRequest.request().withMethod("GET").withPath("/api/v0/fee-details/" + feeCode))
           .respond(
               HttpResponse.response()
                   .withStatusCode(200)
@@ -82,10 +79,7 @@ class FeeSchemePlatformRestClientIntegrationTest extends MockServerIntegrationTe
       String expectedBody = readJsonFromFile("fee-scheme/get-fee-details-200.json");
 
       mockServerClient
-          .when(
-              HttpRequest.request()
-                  .withMethod("GET")
-                  .withPath("/api/v0/fee-details/" + feeCode))
+          .when(HttpRequest.request().withMethod("GET").withPath("/api/v0/fee-details/" + feeCode))
           .respond(
               HttpResponse.response()
                   .withStatusCode(statusCode)

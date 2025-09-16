@@ -28,7 +28,7 @@ checkstyleMain.exclude "*"
 
 openApiGenerate {
     generatorName = "spring"
-    inputSpec = "$rootDir/reference-provider-details-api/open-api-specification.json".toString()
+    inputSpec = "$rootDir/reference-provider-details-api/open-api-specification.yml".toString()
     outputDir = "$rootDir/reference-provider-details-api/generated".toString()
     apiPackage = "uk.gov.justice.laa.provider.api"
     invokerPackage = "uk.gov.justice.laa.provider.invoker"

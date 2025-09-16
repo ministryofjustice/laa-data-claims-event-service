@@ -60,10 +60,11 @@ public class SubmissionValidationService {
 
     String officeCode = submission.getOfficeAccountNumber();
     String areaOfLaw = submission.getAreaOfLaw();
+
     List<String> providerCategoriesOfLaw = getProviderCategoriesOfLaw(officeCode, areaOfLaw);
     validateProviderContract(submissionId.toString(), providerCategoriesOfLaw);
 
-    claimValidationService.validateClaims(claims, providerCategoriesOfLaw);
+    claimValidationService.validateClaims(claims, officeCode, areaOfLaw);
 
     // TODO: Send through all claim errors in the patch request.
     updateClaims(submissionId, claims);
