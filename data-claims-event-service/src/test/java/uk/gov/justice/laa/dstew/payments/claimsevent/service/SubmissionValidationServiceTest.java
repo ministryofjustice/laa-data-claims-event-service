@@ -4,6 +4,8 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -62,7 +64,7 @@ public class SubmissionValidationServiceTest {
 
     @Test
     @DisplayName("Should have no validation errors")
-    void testNoValidationErrrors() {
+    void testNoValidationErrors() {
       boolean isNilSubmission = false;
       ClaimStatus claimStatus = ClaimStatus.VALID;
       boolean expectsValidationError = false;
