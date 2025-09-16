@@ -27,14 +27,11 @@ import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponse;
 @ExtendWith(MockitoExtension.class)
 class CategoryOfLawValidationServiceTest {
 
-  @Mock
-  SubmissionValidationContext submissionValidationContext;
+  @Mock SubmissionValidationContext submissionValidationContext;
 
-  @Mock
-  FeeSchemePlatformRestClient feeSchemePlatformRestClient;
+  @Mock FeeSchemePlatformRestClient feeSchemePlatformRestClient;
 
-  @InjectMocks
-  CategoryOfLawValidationService categoryOfLawValidationService;
+  @InjectMocks CategoryOfLawValidationService categoryOfLawValidationService;
 
   @Nested
   @DisplayName("validateCategoryOfLaw")

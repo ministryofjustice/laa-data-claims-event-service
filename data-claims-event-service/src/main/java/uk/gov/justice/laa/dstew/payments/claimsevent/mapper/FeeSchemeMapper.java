@@ -16,6 +16,7 @@ public interface FeeSchemeMapper {
    * @param claim the claim to map
    * @return a {@code FeeCalculationRequest} representing the claim
    */
+  @Mapping(target = "claimId", source = "id")
   @Mapping(target = "feeCode", source = "feeCode")
   @Mapping(target = "startDate", source = "caseStartDate")
   @Mapping(target = "netProfitCosts", source = "netProfitCostsAmount")
@@ -23,8 +24,14 @@ public interface FeeSchemeMapper {
   @Mapping(target = "netCostOfCounsel", source = "netCounselCostsAmount")
   @Mapping(target = "disbursementVatAmount", source = "disbursementsVatAmount")
   @Mapping(target = "vatIndicator", source = "isVatApplicable")
-  // TODO: CCMSPUI-840 ~ disbursementPriorAuthority missing from FeeCalculationRequest?
-  // @Mapping(target = "disbursementPriorAuthority", source = "priorAuthorityReference")
+  @Mapping(target = "immigrationPriorAuthorityNumber", source = "priorAuthorityReference")
+  @Mapping(
+      target = "policeStationId",
+      ignore = true) // TODO: policeStationId missing from ClaimResponse?
+  @Mapping(
+      target = "policeStationSchemeId",
+      ignore = true) // TODO: policeStationSchemeId missing from ClaimResponse?
+  @Mapping(target = "policeCourtOrPrisonId", source = "policeStationCourtPrisonId")
   @Mapping(target = "boltOns", source = "claim")
   @Mapping(
       target = "netTravelCosts",
@@ -33,7 +40,6 @@ public interface FeeSchemeMapper {
   @Mapping(target = "travelAndWaitingCosts", source = "travelWaitingCostsAmount")
   @Mapping(target = "detentionAndWaitingCosts", source = "detentionTravelWaitingCostsAmount")
   @Mapping(target = "caseConcludedDate", source = "caseConcludedDate")
-  @Mapping(target = "policeCourtOrPrisonId", source = "policeStationCourtPrisonId")
   @Mapping(
       target = "dutySolicitor",
       source = "isDutySolicitor") // TODO: Mismatch in types String <-> Boolean

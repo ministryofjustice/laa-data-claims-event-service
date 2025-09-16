@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -23,8 +24,10 @@ class FeeSchemeMapperTest {
     @DisplayName("Maps to fee calculation request")
     void mapsToFeeCalculationRequest() {
 
+      String claimId = UUID.randomUUID().toString();
       ClaimResponse claim =
           new ClaimResponse()
+              .id(claimId)
               .feeCode("feeCode")
               .caseStartDate("2025-01-01")
               .netProfitCostsAmount(BigDecimal.valueOf(1.00))
@@ -43,6 +46,7 @@ class FeeSchemeMapperTest {
               .travelWaitingCostsAmount(BigDecimal.valueOf(1.06))
               .detentionTravelWaitingCostsAmount(BigDecimal.valueOf(1.07))
               .caseConcludedDate("2025-01-02")
+              // TODO: Add police station ID
               .policeStationCourtPrisonId("policeCourtOrPrisonId")
               .isDutySolicitor(true)
               .schemeId("schemeId")
@@ -61,6 +65,7 @@ class FeeSchemeMapperTest {
 
       FeeCalculationRequest expected =
           FeeCalculationRequest.builder()
+              .claimId(claimId)
               .feeCode("feeCode")
               .startDate(LocalDate.parse("2025-01-01"))
               .netProfitCosts(1.00)
@@ -68,8 +73,7 @@ class FeeSchemeMapperTest {
               .netCostOfCounsel(1.02)
               .disbursementVatAmount(1.03)
               .vatIndicator(true)
-              // TODO: CCMSPUI-840 ~ Add disbursment prior authority
-              // .disbursementPriorAuthority("disbursementPriorAuthority")
+              .immigrationPriorAuthorityNumber("disbursementPriorAuthority")
               .boltOns(boltOnType)
               // TODO: add net travel costs property
               .netTravelCosts(null)
@@ -77,6 +81,11 @@ class FeeSchemeMapperTest {
               .travelAndWaitingCosts(1.06)
               .detentionAndWaitingCosts(1.07)
               .caseConcludedDate(LocalDate.parse("2025-01-02"))
+              .policeStationId("policeStationCourtPrisonId")
+              // TODO: Add police station id property
+              .policeStationId(null)
+              // TODO: Add police station scheme id property
+              .policeStationSchemeId(null)
               .policeCourtOrPrisonId("policeCourtOrPrisonId")
               .dutySolicitor("true") // TODO: Fix type
               .schemeId("schemeId")
