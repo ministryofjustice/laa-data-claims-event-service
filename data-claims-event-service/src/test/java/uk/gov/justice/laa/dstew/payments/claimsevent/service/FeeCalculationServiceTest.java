@@ -5,6 +5,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.Collections;
 import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -21,7 +22,6 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationE
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationRequest;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationResponse;
-import uk.gov.justice.laa.fee.scheme.model.Warning;
 
 @ExtendWith(MockitoExtension.class)
 class FeeCalculationServiceTest {
@@ -65,9 +65,9 @@ class FeeCalculationServiceTest {
 
       FeeCalculationRequest feeCalculationRequest = new FeeCalculationRequest().feeCode("feeCode");
 
-      Warning warning = new Warning();
-      warning.setWarningDescription("warningDescription");
-      FeeCalculationResponse feeCalculationResponse = new FeeCalculationResponse().warning(warning);
+      String warning = "warningDescription";
+      FeeCalculationResponse feeCalculationResponse =
+          new FeeCalculationResponse().warnings(Collections.singletonList(warning));
 
       when(feeSchemeMapper.mapToFeeCalculationRequest(claim)).thenReturn(feeCalculationRequest);
       when(feeSchemePlatformRestClient.calculateFee(feeCalculationRequest))

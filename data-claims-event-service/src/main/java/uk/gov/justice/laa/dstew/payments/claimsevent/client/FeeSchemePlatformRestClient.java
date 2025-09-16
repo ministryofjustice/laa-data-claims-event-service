@@ -7,9 +7,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.service.annotation.GetExchange;
 import org.springframework.web.service.annotation.HttpExchange;
 import org.springframework.web.service.annotation.PostExchange;
-import uk.gov.justice.laa.fee.scheme.model.CategoryOfLawResponse;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationRequest;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationResponse;
+import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponse;
 
 /**
  * REST service interface for verifying category of law against a fee code and calculating fee
@@ -34,8 +34,8 @@ public interface FeeSchemePlatformRestClient {
    * @param feeCode The fee code
    * @return The corresponding category of law
    */
-  @GetExchange("/category-of-law/{feeCode}")
-  ResponseEntity<CategoryOfLawResponse> getCategoryOfLaw(final @PathVariable String feeCode);
+  @GetExchange("/fee-details/{feeCode}")
+  ResponseEntity<FeeDetailsResponse> getFeeDetails(final @PathVariable String feeCode);
 
   /**
    * Get the category of law corresponding to the provided fee code. Can return the following HTTP

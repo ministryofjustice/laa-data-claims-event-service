@@ -23,7 +23,8 @@ public interface FeeSchemeMapper {
   @Mapping(target = "netCostOfCounsel", source = "netCounselCostsAmount")
   @Mapping(target = "disbursementVatAmount", source = "disbursementsVatAmount")
   @Mapping(target = "vatIndicator", source = "isVatApplicable")
-  @Mapping(target = "disbursementPriorAuthority", source = "priorAuthorityReference")
+  // TODO: CCMSPUI-840 ~ disbursementPriorAuthority missing from FeeCalculationRequest?
+  // @Mapping(target = "disbursementPriorAuthority", source = "priorAuthorityReference")
   @Mapping(target = "boltOns", source = "claim")
   @Mapping(
       target = "netTravelCosts",
@@ -37,7 +38,7 @@ public interface FeeSchemeMapper {
       target = "dutySolicitor",
       source = "isDutySolicitor") // TODO: Mismatch in types String <-> Boolean
   @Mapping(target = "schemeId", source = "schemeId")
-  @Mapping(target = "ufn", source = "uniqueFileNumber")
+  @Mapping(target = "uniqueFileNumber", source = "uniqueFileNumber")
   @Mapping(target = "numberOfMediationSessions", source = "mediationSessionsCount")
   @Mapping(target = "jrFormFilling", source = "jrFormFillingAmount")
   FeeCalculationRequest mapToFeeCalculationRequest(ClaimResponse claim);
@@ -52,7 +53,7 @@ public interface FeeSchemeMapper {
       target = "boltOnAdjournedHearing",
       source = "adjournedHearingFeeAmount") // TODO: Mismatch in types Integer <-> BigDecimal
   @Mapping(target = "boltOnCmrhOral", source = "cmrhOralCount")
-  @Mapping(target = "boltOnCrmhTelephone", source = "cmrhTelephoneCount")
+  @Mapping(target = "boltOnCmrhTelephone", source = "cmrhTelephoneCount")
   @Mapping(target = "boltOnAdditionalTravel", ignore = true) // TODO: Missing from ClaimResponse?
   @Mapping(target = "boltOnHomeOfficeInterview", source = "hoInterview")
   BoltOnType mapToBoltOnType(ClaimResponse claim);

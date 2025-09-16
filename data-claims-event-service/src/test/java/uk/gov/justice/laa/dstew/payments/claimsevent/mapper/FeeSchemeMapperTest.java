@@ -54,7 +54,7 @@ class FeeSchemeMapperTest {
           new BoltOnType()
               .boltOnAdjournedHearing(1)
               .boltOnCmrhOral(2)
-              .boltOnCrmhTelephone(3)
+              .boltOnCmrhTelephone(3)
               // TODO: add additional travel property
               .boltOnAdditionalTravel(null)
               .boltOnHomeOfficeInterview(5);
@@ -68,7 +68,8 @@ class FeeSchemeMapperTest {
               .netCostOfCounsel(1.02)
               .disbursementVatAmount(1.03)
               .vatIndicator(true)
-              .disbursementPriorAuthority("disbursementPriorAuthority")
+              // TODO: CCMSPUI-840 ~ Add disbursment prior authority
+              // .disbursementPriorAuthority("disbursementPriorAuthority")
               .boltOns(boltOnType)
               // TODO: add net travel costs property
               .netTravelCosts(null)
@@ -79,7 +80,7 @@ class FeeSchemeMapperTest {
               .policeCourtOrPrisonId("policeCourtOrPrisonId")
               .dutySolicitor("true") // TODO: Fix type
               .schemeId("schemeId")
-              .ufn("ufn")
+              .uniqueFileNumber("ufn")
               .numberOfMediationSessions(1)
               .jrFormFilling(1.08)
               .build();
@@ -110,7 +111,7 @@ class FeeSchemeMapperTest {
           new BoltOnType()
               .boltOnAdjournedHearing(1)
               .boltOnCmrhOral(2)
-              .boltOnCrmhTelephone(3)
+              .boltOnCmrhTelephone(3)
               // TODO: add additional travel property
               .boltOnAdditionalTravel(null)
               .boltOnHomeOfficeInterview(5);

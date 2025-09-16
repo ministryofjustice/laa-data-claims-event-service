@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -11,7 +12,6 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationE
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationRequest;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationResponse;
-import uk.gov.justice.laa.fee.scheme.model.Warning;
 
 /**
  * Service responsible for validating the fee calculation response from the Fee Scheme Platform API.
@@ -47,9 +47,9 @@ public class FeeCalculationService {
           log.debug("Fee calculation returned an empty response");
           validationContext.flagForRetry(claim.getId());
         }
-        // TODO: Get all individual errors from Fee Scheme Platform API?
-        Warning warning = feeCalculationResponse.getWarning();
-        if (warning != null && warning.getWarningDescription() != null) {
+
+        List<String> warnings = feeCalculationResponse.getWarnings();
+        if (warnings != null && !warnings.isEmpty()) {
           validationContext.addClaimError(
               claim.getId(), ClaimValidationError.INVALID_FEE_CALCULATION_VALIDATION_FAILED);
         }
