@@ -29,6 +29,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class JsonSchemaValidatorTest {
@@ -65,7 +66,8 @@ class JsonSchemaValidatorTest {
 
     @Test
     void validateNoErrorsForMinimumSubmission() {
-      List<String> errors = jsonSchemaValidator.validate("submission", getMinimumValidSubmission());
+      final List<ValidationMessagePatch> errors =
+          jsonSchemaValidator.validate("submission", getMinimumValidSubmission());
       assertThat(errors).isEmpty();
     }
 
@@ -83,8 +85,10 @@ class JsonSchemaValidatorTest {
       Object submission = getMinimumValidSubmission();
       String fieldName = toCamelCase(jsonField);
       setField(submission, fieldName, null);
-      List<String> errors = jsonSchemaValidator.validate("submission", submission);
+      final List<ValidationMessagePatch> errors =
+          jsonSchemaValidator.validate("submission", submission);
       assertThat(errors)
+          .extracting(ValidationMessagePatch::getDisplayMessage)
           .containsExactlyInAnyOrder(
               "$: required property '" + jsonField + "' not found (provided value: null)");
     }
@@ -99,9 +103,11 @@ class JsonSchemaValidatorTest {
       submission.setScheduleNumber("SCHEDULE");
       submission.setIsNilSubmission(false);
       submission.setStatus(SubmissionStatus.CREATED);
-      List<String> errors = jsonSchemaValidator.validate("submission", submission);
+      final List<ValidationMessagePatch> errors =
+          jsonSchemaValidator.validate("submission", submission);
 
       assertThat(errors)
+          .extracting(ValidationMessagePatch::getDisplayMessage)
           .containsExactlyInAnyOrder(
               "office_account_number: does not match the regex pattern ^[A-Z0-9]{6}$ (provided value: abc123)",
               "submission_period: does not match the regex pattern ^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-[0-9]{4}$ (provided value: OCTOBER-2024)",
@@ -130,10 +136,12 @@ class JsonSchemaValidatorTest {
     })
     void validateSubmissionForInvalidDataTypes(
         String fieldName, String badJsonValue, String expectedError) throws Exception {
-      List<String> errors =
+      List<ValidationMessagePatch> errors =
           validateForInvalidDataTypes(
               "submission", getMinimumValidSubmission(), fieldName, badJsonValue);
-      assertThat(errors).contains(expectedError);
+      assertThat(errors)
+          .extracting(ValidationMessagePatch::getDisplayMessage)
+          .contains(expectedError);
     }
 
     @ParameterizedTest(name = "Invalid value for {0} should return error")
@@ -154,8 +162,11 @@ class JsonSchemaValidatorTest {
         String fieldName, String badValue, String expectedError) {
       SubmissionResponse submission = getMinimumValidSubmission();
       setField(submission, fieldName, badValue);
-      List<String> errors = jsonSchemaValidator.validate("submission", submission);
-      assertThat(errors).contains(expectedError);
+      final List<ValidationMessagePatch> errors =
+          jsonSchemaValidator.validate("submission", submission);
+      assertThat(errors)
+          .extracting(ValidationMessagePatch::getDisplayMessage)
+          .contains(expectedError);
     }
 
     @Test
@@ -171,7 +182,8 @@ class JsonSchemaValidatorTest {
       submission.isNilSubmission(false);
       submission.setNumberOfClaims(3);
 
-      List<String> errors = jsonSchemaValidator.validate("submission", submission);
+      final List<ValidationMessagePatch> errors =
+          jsonSchemaValidator.validate("submission", submission);
 
       assertThat(errors).isEmpty();
     }
@@ -184,7 +196,7 @@ class JsonSchemaValidatorTest {
     @Test
     void validateNoErrorsForClaimWithRequiredFields() {
       ClaimResponse claim = getMinimumValidClaim();
-      List<String> errors = jsonSchemaValidator.validate(CLAIM_SCHEMA, claim);
+      final List<ValidationMessagePatch> errors = jsonSchemaValidator.validate("claim", claim);
       assertThat(errors).isEmpty();
     }
 
@@ -203,8 +215,9 @@ class JsonSchemaValidatorTest {
       Object claim = getMinimumValidClaim();
       String fieldName = toCamelCase(jsonField);
       setField(claim, fieldName, null);
-      List<String> errors = jsonSchemaValidator.validate("claim", claim);
+      final List<ValidationMessagePatch> errors = jsonSchemaValidator.validate("claim", claim);
       assertThat(errors)
+          .extracting(ValidationMessagePatch::getDisplayMessage)
           .containsExactlyInAnyOrder(
               "$: required property '" + jsonField + "' not found (provided value: null)");
     }
@@ -423,9 +436,11 @@ class JsonSchemaValidatorTest {
     })
     void validateClaimForInvalidDataTypes(
         String fieldName, String badJsonValue, String expectedError) throws Exception {
-      List<String> errors =
+      List<ValidationMessagePatch> errors =
           validateForInvalidDataTypes("claim", getMinimumValidClaim(), fieldName, badJsonValue);
-      assertThat(errors).contains(expectedError);
+      assertThat(errors)
+          .extracting(ValidationMessagePatch::getDisplayMessage)
+          .contains(expectedError);
     }
 
     /**
@@ -653,8 +668,10 @@ class JsonSchemaValidatorTest {
         String fieldName, String badValue, String expectedError) {
       ClaimResponse claim = getMinimumValidClaim();
       setField(claim, fieldName, badValue);
-      List<String> errors = jsonSchemaValidator.validate("claim", claim);
-      assertThat(errors).contains(expectedError);
+      final List<ValidationMessagePatch> errors = jsonSchemaValidator.validate("claim", claim);
+      assertThat(errors)
+          .extracting(ValidationMessagePatch::getDisplayMessage)
+          .contains(expectedError);
     }
 
     /**
@@ -752,7 +769,7 @@ class JsonSchemaValidatorTest {
     void validateClaimIndividualValidField(String fieldName, String badValue) {
       ClaimResponse claim = getMinimumValidClaim();
       setField(claim, fieldName, badValue);
-      List<String> errors = jsonSchemaValidator.validate("claim", claim);
+      final List<ValidationMessagePatch> errors = jsonSchemaValidator.validate("claim", claim);
       assertThat(errors).isEmpty();
     }
   }
@@ -816,7 +833,7 @@ class JsonSchemaValidatorTest {
     }
   }
 
-  private List<String> validateForInvalidDataTypes(
+  private List<ValidationMessagePatch> validateForInvalidDataTypes(
       String schemaName, Object baseValidObject, String fieldName, String badJsonValue)
       throws Exception {
 
