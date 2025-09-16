@@ -25,6 +25,8 @@ ingress:
     hostname:
       enabled: false
 
+serviceAccountName: claims-event-service-prod-irsa-serviceaccount
+
 probe:
   enabled: true
 

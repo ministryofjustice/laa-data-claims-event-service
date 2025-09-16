@@ -8,3 +8,5 @@ ingress:
     includeProdAwsWorkspace: false
     includeLondonProdNatGatewayWorkspaces: false
     includePrismaAccess: true
+
+serviceAccountName: claims-event-service-uat-irsa-serviceaccount
