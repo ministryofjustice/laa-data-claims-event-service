@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.codec.ClientCodecConfigurer;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.support.WebClientAdapter;
@@ -92,7 +91,15 @@ public class WebClientConfiguration {
    */
   public static WebClient createWebClient(final ApiProperties apiProperties) {
     final ExchangeStrategies strategies =
-        ExchangeStrategies.builder().codecs(ClientCodecConfigurer::defaultCodecs).build();
+        ExchangeStrategies.builder()
+            .codecs(
+                configurer ->
+                    configurer
+                        .defaultCodecs()
+                        .maxInMemorySize(16 * 1024 * 1024) // raise from 256 KB
+                )
+            .build();
+
     return WebClient.builder()
         .baseUrl(apiProperties.getUrl())
         .defaultHeader(apiProperties.getAuthHeader(), apiProperties.getAccessToken())

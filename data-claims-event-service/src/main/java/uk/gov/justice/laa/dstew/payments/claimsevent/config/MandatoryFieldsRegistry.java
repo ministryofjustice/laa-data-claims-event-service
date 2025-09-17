@@ -24,7 +24,7 @@ public class MandatoryFieldsRegistry {
           "clientSurname",
           "clientDateOfBirth",
           "uniqueClientNumber",
-          "clientPostCode",
+          "clientPostcode",
           "genderCode",
           "ethnicityCode",
           "disabilityCode",

@@ -13,6 +13,7 @@ import java.util.Map;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.MandatoryFieldsRegistry;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.JsonSchemaValidator;
@@ -71,9 +72,10 @@ public class ClaimValidationService {
       Map<String, CategoryOfLawResult> categoryOfLawLookup,
       List<String> providerCategoriesOfLaw,
       String areaOfLaw) {
-    submissionValidationContext.addClaimErrors(
-        claim.getId(), jsonSchemaValidator.validate("claim", claim));
+    List<ValidationMessagePatch> schemaMessages = jsonSchemaValidator.validate("claim", claim);
+    submissionValidationContext.addClaimMessages(claim.getId(), schemaMessages);
 
+    // schema validation
     checkMandatoryFields(claim, areaOfLaw);
     validateUniqueFileNumber(claim);
     validateStageReachedCode(claim, areaOfLaw);
@@ -87,9 +89,15 @@ public class ClaimValidationService {
     checkDateInPast(claim, "Client Date of Birth", claim.getClientDateOfBirth(), MIN_BIRTH_DATE);
     checkDateInPast(claim, "Client2 Date of Birth", claim.getClient2DateOfBirth(), MIN_BIRTH_DATE);
     validateMatterType(claim, areaOfLaw);
+
+    // category of law validation
     categoryOfLawValidationService.validateCategoryOfLaw(
         claim, categoryOfLawLookup, providerCategoriesOfLaw);
+
+    // duplicates
     duplicateClaimValidationService.validateDuplicateClaims(claim);
+
+    // fee calculation validation
     feeCalculationService.validateFeeCalculation(claim);
   }
 

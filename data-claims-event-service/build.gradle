@@ -45,12 +45,14 @@ dependencies {
     // Upgrade to fix vulnerabilities in tomcat-embed-core
     implementation 'org.apache.tomcat.embed:tomcat-embed-core:11.0.10'
     // Upgrade to fix vulnerabilities in spring-webmvc
-    implementation 'org.springframework:spring-webmvc:6.2.10'
+    implementation 'org.springframework:spring-webmvc:6.2.11'
+    // Upgrade to fix vulnerabilities in spring-core
+    implementation 'org.springframework:spring-core:6.2.11'
 
     implementation project(':reference-provider-details-api')
     implementation project(':reference-fee-scheme-platform-api')
 
-    implementation 'uk.gov.justice.laa.datastewardship.payments:data-claims-api-models:1589f7f'
+    implementation 'uk.gov.justice.laa.datastewardship.payments:data-claims-api-models:d0ea514'
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
