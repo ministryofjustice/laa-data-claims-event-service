@@ -185,7 +185,8 @@ public class SubmissionValidationServiceTest {
 
       ClaimValidationReport claimValidationReport =
           new ClaimValidationReport(
-              claimId.toString(), List.of(ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER));
+              claimId.toString(),
+              List.of(ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER.toPatch()));
       when(submissionValidationContext.getClaimReport(claimId.toString()))
           .thenReturn(Optional.of(claimValidationReport));
 
@@ -193,9 +194,8 @@ public class SubmissionValidationServiceTest {
           new ClaimPatch()
               .id(claimId.toString())
               .status(ClaimStatus.INVALID)
-              .validationErrors(
-                  List.of(
-                      ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER.getDisplayMessage()));
+              .validationMessages(
+                  List.of(ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER.toPatch()));
       when(dataClaimsRestClient.updateClaim(submissionId, claimId, claimPatch))
           .thenReturn(ResponseEntity.ok().build());
 

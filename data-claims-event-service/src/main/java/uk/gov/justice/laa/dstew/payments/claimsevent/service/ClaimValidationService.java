@@ -90,14 +90,14 @@ public class ClaimValidationService {
     checkDateInPast(claim, "Client2 Date of Birth", claim.getClient2DateOfBirth(), MIN_BIRTH_DATE);
     validateMatterType(claim, areaOfLaw);
 
-    //category of law validation
+    // category of law validation
     categoryOfLawValidationService.validateCategoryOfLaw(
         claim, categoryOfLawLookup, providerCategoriesOfLaw);
 
-    //duplicates
+    // duplicates
     duplicateClaimValidationService.validateDuplicateClaims(claim);
 
-    //fee calculation validation
+    // fee calculation validation
     feeCalculationService.validateFeeCalculation(claim);
   }
 
