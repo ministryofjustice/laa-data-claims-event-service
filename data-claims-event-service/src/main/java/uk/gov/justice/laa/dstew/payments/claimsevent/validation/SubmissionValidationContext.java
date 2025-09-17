@@ -142,4 +142,14 @@ public class SubmissionValidationContext {
   public boolean hasErrors(String claimId) {
     return getClaimReport(claimId).map(ClaimValidationReport::hasErrors).orElse(false);
   }
+
+  /**
+   * Checks if there are any submission-level or claim-level errors.
+   *
+   * @return true if there are any errors, false otherwise
+   */
+  public boolean hasErrors() {
+    return !submissionValidationErrors.isEmpty()
+        || claimReports.stream().anyMatch(ClaimValidationReport::hasErrors);
+  }
 }

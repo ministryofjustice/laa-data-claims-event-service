@@ -2,7 +2,6 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
 import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError.SUBMISSION_STATE_IS_NULL;
 
-import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -131,7 +130,7 @@ public class SubmissionValidationService {
 
   private List<String> getProviderCategoriesOfLaw(String officeCode, String areaOfLaw) {
     return providerDetailsRestClient
-        .getProviderFirmSchedules(officeCode, areaOfLaw, LocalDate.of(2020, 1, 1))
+        .getProviderFirmSchedules(officeCode, areaOfLaw)
         .blockOptional()
         .stream()
         .map(ProviderFirmOfficeContractAndScheduleDto::getSchedules)

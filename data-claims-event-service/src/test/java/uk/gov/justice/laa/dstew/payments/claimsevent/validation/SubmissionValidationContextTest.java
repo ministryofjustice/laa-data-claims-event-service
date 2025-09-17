@@ -1,12 +1,14 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.validation;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER;
 
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 
 class SubmissionValidationContextTest {
 
@@ -25,13 +27,11 @@ class SubmissionValidationContextTest {
       assertThat(submissionValidationContext.getClaimReports()).isEmpty();
 
       // When
-      submissionValidationContext.addClaimError(
-          "claimId", ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER);
+      submissionValidationContext.addClaimError("claimId", INVALID_AREA_OF_LAW_FOR_PROVIDER);
 
       // Then
       ClaimValidationReport expected =
-          new ClaimValidationReport(
-              "claimId", List.of(ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER));
+          new ClaimValidationReport("claimId", List.of(INVALID_AREA_OF_LAW_FOR_PROVIDER.toPatch()));
 
       assertThat(submissionValidationContext.getClaimReports()).hasSize(1);
       assertThat(submissionValidationContext.getClaimReports().getFirst()).isEqualTo(expected);
@@ -45,8 +45,7 @@ class SubmissionValidationContextTest {
 
       assertThat(submissionValidationContext.getClaimReports()).isEmpty();
 
-      submissionValidationContext.addClaimError(
-          "claimId", ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER);
+      submissionValidationContext.addClaimError("claimId", INVALID_AREA_OF_LAW_FOR_PROVIDER);
 
       assertThat(submissionValidationContext.getClaimReports()).hasSize(1);
 
@@ -59,8 +58,9 @@ class SubmissionValidationContextTest {
           new ClaimValidationReport(
               "claimId",
               List.of(
-                  ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER,
-                  ClaimValidationError.INVALID_CATEGORY_OF_LAW_NOT_AUTHORISED_FOR_PROVIDER));
+                  INVALID_AREA_OF_LAW_FOR_PROVIDER.toPatch(),
+                  ClaimValidationError.INVALID_CATEGORY_OF_LAW_NOT_AUTHORISED_FOR_PROVIDER
+                      .toPatch()));
 
       assertThat(submissionValidationContext.getClaimReports()).hasSize(1);
       assertThat(submissionValidationContext.getClaimReports().getFirst()).isEqualTo(expected);
@@ -113,14 +113,16 @@ class SubmissionValidationContextTest {
 
       // When
       submissionValidationContext.addSubmissionValidationError(
-          ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER.getDisplayMessage());
+          INVALID_AREA_OF_LAW_FOR_PROVIDER.getDisplayMessage());
 
       // Then
       List<ClaimValidationReport> expectedClaimReports =
           List.of(new ClaimValidationReport("claimId1"), new ClaimValidationReport("claimId2"));
-      List<String> expectedSubmissionErrors =
+      List<ValidationMessagePatch> expectedSubmissionErrors =
           List.of(
-              "A contract schedule with the provided area of law could not be found for this provider");
+              INVALID_AREA_OF_LAW_FOR_PROVIDER
+                  .toPatch()
+                  .technicalMessage(INVALID_AREA_OF_LAW_FOR_PROVIDER.getDisplayMessage()));
 
       assertThat(submissionValidationContext.getClaimReports()).hasSize(2);
       assertThat(submissionValidationContext.getClaimReports()).isEqualTo(expectedClaimReports);
@@ -142,10 +144,11 @@ class SubmissionValidationContextTest {
 
       ClaimValidationReport claimValidationReport1 =
           new ClaimValidationReport(
-              "claimId1", List.of(ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER));
+              "claimId1", List.of(INVALID_AREA_OF_LAW_FOR_PROVIDER.toPatch()));
       ClaimValidationReport claimValidationReport2 =
           new ClaimValidationReport(
-              "claimId2", List.of(ClaimValidationError.INVALID_CATEGORY_OF_LAW_AND_FEE_CODE));
+              "claimId2",
+              List.of(ClaimValidationError.INVALID_CATEGORY_OF_LAW_AND_FEE_CODE.toPatch()));
       submissionValidationContext.addClaimReports(
           List.of(claimValidationReport1, claimValidationReport2));
 
@@ -170,12 +173,13 @@ class SubmissionValidationContextTest {
 
       ClaimValidationReport claimValidationReport1 =
           new ClaimValidationReport(
-              "claimId1", List.of(ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER));
+              "claimId1", List.of(INVALID_AREA_OF_LAW_FOR_PROVIDER.toPatch()));
       claimValidationReport1.flagForRetry();
 
       ClaimValidationReport claimValidationReport2 =
           new ClaimValidationReport(
-              "claimId2", List.of(ClaimValidationError.INVALID_CATEGORY_OF_LAW_AND_FEE_CODE));
+              "claimId2",
+              List.of(ClaimValidationError.INVALID_CATEGORY_OF_LAW_AND_FEE_CODE.toPatch()));
       submissionValidationContext.addClaimReports(
           List.of(claimValidationReport1, claimValidationReport2));
 
@@ -201,7 +205,7 @@ class SubmissionValidationContextTest {
       submissionValidationContext.addClaimReports(
           List.of(
               new ClaimValidationReport(
-                  "claimId", List.of(ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER))));
+                  "claimId", List.of(INVALID_AREA_OF_LAW_FOR_PROVIDER.toPatch()))));
 
       // Then
       assertThat(submissionValidationContext.getClaimReports()).hasSize(1);
@@ -253,7 +257,7 @@ class SubmissionValidationContextTest {
 
       ClaimValidationReport claimValidationReport1 =
           new ClaimValidationReport(
-              "claimId1", List.of(ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER));
+              "claimId1", List.of(INVALID_AREA_OF_LAW_FOR_PROVIDER.toPatch()));
       ClaimValidationReport claimValidationReport2 = new ClaimValidationReport("claimId2");
       submissionValidationContext.addClaimReports(
           List.of(claimValidationReport1, claimValidationReport2));

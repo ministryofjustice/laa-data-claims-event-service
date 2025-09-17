@@ -110,16 +110,13 @@ public class SubmissionValidationServiceTest {
 
       if (expectsValidationError) {
         // Determine which error to verify
-        String errorDescription;
+        ClaimValidationError error;
         if (isNilSubmission) {
-          errorDescription =
-              ClaimValidationError.INVALID_NIL_SUBMISSION_CONTAINS_CLAIMS.getDisplayMessage();
+          error = ClaimValidationError.INVALID_NIL_SUBMISSION_CONTAINS_CLAIMS;
         } else {
-          errorDescription =
-              ClaimValidationError.NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS.getDisplayMessage();
+          error = ClaimValidationError.NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS;
         }
-        verify(submissionValidationContext, times(1))
-            .addSubmissionValidationError(errorDescription);
+        verify(submissionValidationContext, times(1)).addSubmissionValidationError(error);
       }
     }
 
@@ -152,8 +149,7 @@ public class SubmissionValidationServiceTest {
 
       // Then
       verify(submissionValidationContext, times(1))
-          .addSubmissionValidationError(
-              ClaimValidationError.NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS.getDisplayMessage());
+          .addSubmissionValidationError(ClaimValidationError.NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS);
     }
 
     @Test
@@ -208,8 +204,7 @@ public class SubmissionValidationServiceTest {
       verify(dataClaimsRestClient, times(1))
           .updateSubmission(submissionId.toString(), submissionPatch);
       verify(submissionValidationContext, times(1))
-          .addSubmissionValidationError(
-              ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER.getDisplayMessage());
+          .addSubmissionValidationError(ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER);
       verify(dataClaimsRestClient, times(1)).getClaim(submissionId, claimId);
       verify(providerDetailsRestClient, times(1))
           .getProviderFirmSchedules(officeAccountNumber, areaOfLaw);
@@ -242,7 +237,7 @@ public class SubmissionValidationServiceTest {
       // Then
       verify(submissionValidationContext, times(1))
           .addSubmissionValidationError(
-              ClaimValidationError.NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS.getDisplayMessage());
+              "Submission cannot be validated in state " + submissionStatus);
     }
 
     static Stream<Arguments> invalidSubmissionStatusArguments() {
@@ -274,7 +269,7 @@ public class SubmissionValidationServiceTest {
 
       // Then
       verify(submissionValidationContext, times(1))
-          .addSubmissionValidationError("Submission state is null");
+          .addSubmissionValidationError(ClaimValidationError.SUBMISSION_STATE_IS_NULL);
     }
 
     private static Stream<Arguments> submissionValidationArguments() {
