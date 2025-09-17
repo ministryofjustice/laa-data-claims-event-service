@@ -3,6 +3,7 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError.SUBMISSION_STATE_IS_NULL;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.AllArgsConstructor;
@@ -45,7 +46,7 @@ public class SubmissionValidationService {
    *
    * @param submissionId the ID of the submission to validate
    */
-  public void validateSubmission(UUID submissionId) {
+  public SubmissionValidationContext validateSubmission(UUID submissionId) {
     SubmissionResponse submission = dataClaimsRestClient.getSubmission(submissionId).getBody();
 
     log.debug("Validating submission {}", submissionId);
@@ -72,6 +73,8 @@ public class SubmissionValidationService {
     //  VALIDATION_SUCCEEDED or VALIDATION_FAILED
     //  If unvalidated claims remain, re-queue message.
     log.debug("Validation completed for submission {}", submissionId);
+
+    return context;
   }
 
   private void verifySubmissionStatus(
@@ -168,7 +171,9 @@ public class SubmissionValidationService {
     log.debug("Updating claims for submission {}", submission.getSubmissionId().toString());
     AtomicInteger claimsUpdated = new AtomicInteger();
     AtomicInteger claimsFlaggedForRetry = new AtomicInteger();
-    submission.getClaims().stream()
+    // Get submission claims in a null safe way
+    Optional.ofNullable(submission.getClaims()).stream()
+        .flatMap(List::stream)
         .filter(claim -> ClaimStatus.READY_TO_PROCESS.equals(claim.getStatus()))
         .peek(
             claim -> {

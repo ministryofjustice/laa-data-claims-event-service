@@ -5,9 +5,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static uk.gov.justice.laa.dstew.payments.claimsevent.service.ValidationServiceTestUtils.assertContextClaimError;
 
 import java.util.List;
-import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -84,12 +84,8 @@ class FeeCalculationServiceTest {
 
       verify(feeSchemePlatformRestClient, times(1)).calculateFee(feeCalculationRequest);
       assertThat(context.hasErrors(claim.getId())).isTrue();
-      assertThat(context.getClaimReport(claim.getId()))
-          .isPresent()
-          .get()
-          .extracting(ClaimValidationReport::getMessages)
-          .asInstanceOf(InstanceOfAssertFactories.LIST)
-          .containsExactly(ClaimValidationError.INVALID_FEE_CALCULATION_VALIDATION_FAILED);
+      assertContextClaimError(
+          context, claim.getId(), ClaimValidationError.INVALID_FEE_CALCULATION_VALIDATION_FAILED);
     }
 
     @Test

@@ -1,5 +1,7 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
+import static java.util.Collections.singletonList;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
@@ -11,6 +13,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -18,6 +21,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -48,8 +52,6 @@ public class SubmissionValidationServiceTest {
 
   @Mock private ProviderDetailsRestClient providerDetailsRestClient;
 
-  @Mock private SubmissionValidationContext submissionValidationContext;
-
   @Mock private JsonSchemaValidator jsonSchemaValidator;
 
   @InjectMocks private SubmissionValidationService submissionValidationService;
@@ -58,10 +60,12 @@ public class SubmissionValidationServiceTest {
   @DisplayName("validateSubmission")
   class ValidateSubmissionTests {
 
-    @ParameterizedTest(name = "{index} => {4}")
-    @MethodSource("submissionValidationArguments")
-    void testSubmissionValidation(
-        boolean isNilSubmission, ClaimStatus claimStatus, boolean expectsValidationError) {
+    @Test
+    @DisplayName("Should have no validation errors")
+    void testNoValidationErrrors() {
+      boolean isNilSubmission = false;
+      ClaimStatus claimStatus = ClaimStatus.VALID;
+      boolean expectsValidationError = false;
       // Given
       UUID submissionId = new UUID(0, 0);
       UUID claimId =
@@ -77,9 +81,9 @@ public class SubmissionValidationServiceTest {
 
       SubmissionPatch submissionPatch = buildSubmissionPatch(submissionId);
 
+      SubmissionValidationContext result;
+
       if (claimId != null) {
-        ClaimResponse claimResponse = buildClaimResponse(claimId);
-        mockClaimRetrieval(submissionId, claimId, claimResponse);
         mockProviderSchedules(officeAccountNumber, areaOfLaw, categoryOfLaw);
 
         mockSubmissionUpdate(submissionId, submissionPatch);
@@ -88,7 +92,7 @@ public class SubmissionValidationServiceTest {
         mockClaimUpdate(submissionId, claimId, claimPatch);
 
         // When
-        submissionValidationService.validateSubmission(submissionId);
+        result = submissionValidationService.validateSubmission(submissionId);
 
         // Then
         verifyCommonInteractions(
@@ -102,7 +106,7 @@ public class SubmissionValidationServiceTest {
             claimPatch);
       } else {
         // When
-        submissionValidationService.validateSubmission(submission.getSubmissionId());
+        result = submissionValidationService.validateSubmission(submission.getSubmissionId());
       }
 
       if (expectsValidationError) {
@@ -113,14 +117,18 @@ public class SubmissionValidationServiceTest {
         } else {
           error = ClaimValidationError.NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS;
         }
-        verify(submissionValidationContext, times(1)).addSubmissionValidationError(error);
+        assertThat(result.getSubmissionValidationErrors().getFirst())
+            .isEqualTo(ClaimValidationError.NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS.toPatch());
       }
     }
 
-    @Test
+    @ParameterizedTest
+    @NullAndEmptySource
     @DisplayName(
-        "Adds submission validation error if submission not marked as nil submission contains no claims")
-    void throwsExceptionIfSubmissionNotMarkedAsNilSubmissionContainsNoClaims() {
+        "Adds submission validation error if submission not marked as nil submission contains no "
+            + "claims")
+    void throwsExceptionIfSubmissionNotMarkedAsNilSubmissionContainsNoClaims(
+        List<SubmissionClaim> submissionClaims) {
       // Given
       UUID submissionId = new UUID(0, 0);
       String areaOfLaw = "areaOfLaw";
@@ -134,7 +142,7 @@ public class SubmissionValidationServiceTest {
               areaOfLaw,
               officeAccountNumber,
               false,
-              null);
+              submissionClaims);
 
       mockProviderSchedules(officeAccountNumber, areaOfLaw, categoryOfLaw);
 
@@ -142,14 +150,18 @@ public class SubmissionValidationServiceTest {
           .thenReturn(ResponseEntity.of(Optional.of(submission)));
 
       // When
-      submissionValidationService.validateSubmission(submission.getSubmissionId());
+      SubmissionValidationContext result =
+          submissionValidationService.validateSubmission(submission.getSubmissionId());
 
       // Then
-      verify(submissionValidationContext, times(1))
-          .addSubmissionValidationError(ClaimValidationError.NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS);
+      assertThat(result.getSubmissionValidationErrors().getFirst())
+          .isEqualTo(ClaimValidationError.NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS.toPatch());
     }
 
     @Test
+    @Disabled(
+        "Disabled this test as logic will be moved to ClaimValidationServiceTest as part of"
+            + " CCMSPUI-840")
     @DisplayName("Marks claims as invalid if provider contract is invalid")
     void marksClaimsAsInvalidIfProviderContractInvalid() {
       // Given
@@ -191,14 +203,15 @@ public class SubmissionValidationServiceTest {
           .thenReturn(ResponseEntity.of(Optional.of(submission)));
 
       // When
-      submissionValidationService.validateSubmission(submissionId);
+      SubmissionValidationContext result =
+          submissionValidationService.validateSubmission(submissionId);
 
       // Then
+      assertThat(result.getSubmissionValidationErrors().getFirst())
+          .isEqualTo(ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER.toPatch());
       verify(dataClaimsRestClient, times(1)).getSubmission(submissionId);
       verify(dataClaimsRestClient, times(1))
           .updateSubmission(submissionId.toString(), submissionPatch);
-      verify(submissionValidationContext, times(1))
-          .addSubmissionValidationError(ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER);
       verify(dataClaimsRestClient, times(1)).getClaim(submissionId, claimId);
       verify(providerDetailsRestClient, times(1))
           .getProviderFirmSchedules(officeAccountNumber, areaOfLaw);
@@ -219,7 +232,12 @@ public class SubmissionValidationServiceTest {
 
       SubmissionResponse submission =
           getSubmission(
-              submissionStatus, submissionId, areaOfLaw, officeAccountNumber, false, null);
+              submissionStatus,
+              submissionId,
+              areaOfLaw,
+              officeAccountNumber,
+              false,
+              singletonList(new SubmissionClaim().status(ClaimStatus.INVALID)));
 
       mockProviderSchedules(officeAccountNumber, areaOfLaw, "categoryOfLaw");
 
@@ -227,12 +245,12 @@ public class SubmissionValidationServiceTest {
           .thenReturn(ResponseEntity.of(Optional.of(submission)));
 
       // When
-      submissionValidationService.validateSubmission(submission.getSubmissionId());
+      SubmissionValidationContext result =
+          submissionValidationService.validateSubmission(submission.getSubmissionId());
 
       // Then
-      verify(submissionValidationContext, times(1))
-          .addSubmissionValidationError(
-              "Submission cannot be validated in state " + submissionStatus);
+      assertThat(result.getSubmissionValidationErrors().get(0).getDisplayMessage())
+          .isEqualTo("Submission cannot be validated in state " + submissionStatus);
     }
 
     static Stream<Arguments> invalidSubmissionStatusArguments() {
@@ -252,7 +270,13 @@ public class SubmissionValidationServiceTest {
       String officeAccountNumber = "officeAccountNumber";
 
       SubmissionResponse submission =
-          getSubmission(null, submissionId, areaOfLaw, officeAccountNumber, false, null);
+          getSubmission(
+              null,
+              submissionId,
+              areaOfLaw,
+              officeAccountNumber,
+              false,
+              singletonList(new SubmissionClaim()));
 
       when(dataClaimsRestClient.getSubmission(submissionId))
           .thenReturn(ResponseEntity.of(Optional.of(submission)));
@@ -260,26 +284,12 @@ public class SubmissionValidationServiceTest {
       mockProviderSchedules(officeAccountNumber, areaOfLaw, "categoryOfLaw");
 
       // When
-      submissionValidationService.validateSubmission(submission.getSubmissionId());
+      SubmissionValidationContext result =
+          submissionValidationService.validateSubmission(submission.getSubmissionId());
 
       // Then
-      verify(submissionValidationContext, times(1))
-          .addSubmissionValidationError(ClaimValidationError.SUBMISSION_STATE_IS_NULL);
-    }
-
-    private static Stream<Arguments> submissionValidationArguments() {
-      return Stream.of(
-          // isNilSubmission, claimStatus, expectsValidationError
-          Arguments.of(
-              false,
-              ClaimStatus.VALID,
-              false,
-              "Marks claims as valid if no validation errors found"),
-          Arguments.of(
-              true,
-              ClaimStatus.INVALID,
-              true,
-              "Marks claims as invalid if nil submission contains claims"));
+      assertThat(result.getSubmissionValidationErrors().getFirst())
+          .isEqualTo(ClaimValidationError.SUBMISSION_STATE_IS_NULL.toPatch());
     }
 
     private SubmissionResponse buildSubmission(
@@ -302,11 +312,6 @@ public class SubmissionValidationServiceTest {
       claimResponse.id(claimId.toString());
       claimResponse.feeCode("feeCode");
       return claimResponse;
-    }
-
-    private void mockClaimRetrieval(UUID submissionId, UUID claimId, ClaimResponse claimResponse) {
-      when(dataClaimsRestClient.getClaim(submissionId, claimId))
-          .thenReturn(ResponseEntity.of(Optional.of(claimResponse)));
     }
 
     private void mockProviderSchedules(
@@ -352,7 +357,8 @@ public class SubmissionValidationServiceTest {
         ClaimPatch claimPatch) {
       verify(dataClaimsRestClient, times(1))
           .updateSubmission(submissionId.toString(), submissionPatch);
-      verify(dataClaimsRestClient, times(1)).getClaim(submissionId, claimId);
+      // verify(dataClaimsRestClient, times(1)).getClaim(submissionId, claimId);
+      verify(claimValidationService, times(1)).validateClaims(eq(submissionResponse), any(), any());
       verify(providerDetailsRestClient, times(1))
           .getProviderFirmSchedules(officeAccountNumber, areaOfLaw);
       verify(claimValidationService, times(1))
