@@ -5,7 +5,6 @@ import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimVali
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessageType;
 
 /** Enum holding claim validation errors. */
@@ -31,16 +30,14 @@ public enum ClaimValidationError {
   INVALID_NIL_SUBMISSION_CONTAINS_CLAIMS(
       "Submission is marked as nil submission, but contains claims",
       null,
-      DCES,
-      ValidationMessageType.ERROR),
+  DCES,
+  ValidationMessageType.ERROR),
   NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS(
-      "Submission is marked as nil submission, but contains claims",
-      null,
+      "Submission is marked as nil submission, but contains claims",null,
       DCES,
       ValidationMessageType.ERROR),
   INVALID_DATE_IN_UNIQUE_FILE_NUMBER(
-      "Unique file ID must be in the format DDMMYY/NNN with a date in the past",
-      null,
+      "Unique file ID must be in the format DDMMYY/NNN with a date in the past",null,
       DCES,
       ValidationMessageType.ERROR),
   INVALID_FEE_CALCULATION_VALIDATION_FAILED(
