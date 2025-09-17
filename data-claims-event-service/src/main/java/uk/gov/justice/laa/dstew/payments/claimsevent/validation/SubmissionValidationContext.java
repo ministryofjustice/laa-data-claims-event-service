@@ -1,6 +1,6 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.validation;
 
-import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationSource.DCES;
+import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationSource.EVENT_SERVICE;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,7 +42,7 @@ public class SubmissionValidationContext {
         new ValidationMessagePatch()
             .displayMessage(message)
             .technicalMessage(message)
-            .source(DCES)
+            .source(EVENT_SERVICE)
             .type(ValidationMessageType.ERROR));
   }
 
@@ -78,7 +78,7 @@ public class SubmissionValidationContext {
             new ValidationMessagePatch()
                 .displayMessage(message)
                 .technicalMessage(message)
-                .source(DCES)
+                .source(EVENT_SERVICE)
                 .type(ValidationMessageType.ERROR)));
   }
 

@@ -1,6 +1,6 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.validation;
 
-import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationSource.DCES;
+import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationSource.EVENT_SERVICE;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -43,7 +43,7 @@ public class JsonSchemaValidator {
   private ValidationMessagePatch toValidationMessagePatch(ValidationMessage vm, JsonNode data) {
     return new ValidationMessagePatch()
         .type(ValidationMessageType.ERROR)
-        .source(DCES)
+        .source(EVENT_SERVICE)
         .displayMessage(enrichValidationMessage(data, vm))
         .technicalMessage(enrichValidationMessage(data, vm));
   }
