@@ -12,7 +12,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -105,7 +104,6 @@ public class SubmissionValidationServiceTest {
             officeAccountNumber,
             areaOfLaw,
             submission,
-            categoryOfLaw,
             submissionPatch,
             claimPatch);
       } else {
@@ -220,8 +218,7 @@ public class SubmissionValidationServiceTest {
       verify(providerDetailsRestClient, times(1))
           .getProviderFirmSchedules(officeAccountNumber, areaOfLaw);
       verify(claimValidationService, times(1))
-          .validateClaims(
-              eq(submission), eq(Collections.emptyList()), any(SubmissionValidationContext.class));
+          .validateClaims(eq(submission), any(SubmissionValidationContext.class));
       verify(dataClaimsRestClient, times(1)).updateClaim(submissionId, claimId, claimPatch);
     }
 
@@ -356,20 +353,16 @@ public class SubmissionValidationServiceTest {
         String officeAccountNumber,
         String areaOfLaw,
         SubmissionResponse submissionResponse,
-        String categoryOfLaw,
         SubmissionPatch submissionPatch,
         ClaimPatch claimPatch) {
       verify(dataClaimsRestClient, times(1))
           .updateSubmission(submissionId.toString(), submissionPatch);
       // verify(dataClaimsRestClient, times(1)).getClaim(submissionId, claimId);
-      verify(claimValidationService, times(1)).validateClaims(eq(submissionResponse), any(), any());
+      verify(claimValidationService, times(1)).validateClaims(eq(submissionResponse), any());
       verify(providerDetailsRestClient, times(1))
           .getProviderFirmSchedules(officeAccountNumber, areaOfLaw);
       verify(claimValidationService, times(1))
-          .validateClaims(
-              eq(submissionResponse),
-              eq(List.of(categoryOfLaw)),
-              any(SubmissionValidationContext.class));
+          .validateClaims(eq(submissionResponse), any(SubmissionValidationContext.class));
       verify(dataClaimsRestClient, times(1)).updateClaim(submissionId, claimId, claimPatch);
     }
   }

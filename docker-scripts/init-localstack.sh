@@ -2,4 +2,4 @@
 
 echo "Initializing localstack SQS"
 
-awslocal sqs create-queue --queue-name bulk-claims-queue
+awslocal sqs create-queue --queue-name claims-api-queue

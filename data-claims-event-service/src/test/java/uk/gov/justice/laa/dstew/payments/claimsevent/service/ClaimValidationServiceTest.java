@@ -3,12 +3,15 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.Mockito.lenient;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +27,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
+import reactor.core.publisher.Mono;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResultSet;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
@@ -35,10 +39,14 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
+import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.MandatoryFieldsRegistry;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.JsonSchemaValidator;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
+import uk.gov.justice.laa.provider.model.FirmOfficeContractAndScheduleDetails;
+import uk.gov.justice.laa.provider.model.FirmOfficeContractAndScheduleLine;
+import uk.gov.justice.laa.provider.model.ProviderFirmOfficeContractAndScheduleDto;
 
 @ExtendWith(MockitoExtension.class)
 class ClaimValidationServiceTest {
@@ -50,6 +58,8 @@ class ClaimValidationServiceTest {
   @Mock private DuplicateClaimValidationService duplicateClaimValidationService;
 
   @Mock private FeeCalculationService feeCalculationService;
+
+  @Mock private ProviderDetailsRestClient providerDetailsRestClient;
 
   @Mock private JsonSchemaValidator jsonSchemaValidator;
 
@@ -82,17 +92,25 @@ class ClaimValidationServiceTest {
           new ClaimResponse()
               .id("claim1")
               .feeCode("feeCode1")
+              .caseStartDate("2025-08-14")
               .status(ClaimStatus.READY_TO_PROCESS)
               .matterTypeCode("ab:cd");
       ClaimResponse claim2 =
           new ClaimResponse()
               .id("claim2")
               .feeCode("feeCode2")
+              .caseStartDate("2025-05-25")
               .status(ClaimStatus.READY_TO_PROCESS)
               .matterTypeCode("1:2");
       List<ClaimResponse> claims = List.of(claim1, claim2);
       List<String> providerCategoriesOfLaw = List.of("categoryOfLaw1");
       Map<String, CategoryOfLawResult> categoryOfLawLookup = Collections.emptyMap();
+      ProviderFirmOfficeContractAndScheduleDto data =
+          new ProviderFirmOfficeContractAndScheduleDto()
+              .addSchedulesItem(
+                  new FirmOfficeContractAndScheduleDetails()
+                      .addScheduleLinesItem(
+                          new FirmOfficeContractAndScheduleLine().categoryOfLaw("categoryOfLaw1")));
 
       SubmissionResponse submissionResponse =
           new SubmissionResponse()
@@ -117,13 +135,22 @@ class ClaimValidationServiceTest {
       when(categoryOfLawValidationService.getCategoryOfLawLookup(claims))
           .thenReturn(categoryOfLawLookup);
 
+      when(providerDetailsRestClient.getProviderFirmSchedules(
+              eq("officeAccountNumber"), eq("CIVIL"), any(LocalDate.class)))
+          .thenReturn(Mono.just(data));
+
       SubmissionValidationContext context = new SubmissionValidationContext();
       context.addClaimReports(
           List.of(
               new ClaimValidationReport(claim1.getId()),
               new ClaimValidationReport(claim2.getId())));
 
-      claimValidationService.validateClaims(submissionResponse, providerCategoriesOfLaw, context);
+      claimValidationService.validateClaims(submissionResponse, context);
+
+      verify(providerDetailsRestClient, times(1))
+          .getProviderFirmSchedules("officeAccountNumber", "CIVIL", LocalDate.parse("2025-08-14"));
+      verify(providerDetailsRestClient, times(1))
+          .getProviderFirmSchedules("officeAccountNumber", "CIVIL", LocalDate.parse("2025-05-25"));
 
       verify(categoryOfLawValidationService, times(1))
           .validateCategoryOfLaw(claim1, categoryOfLawLookup, providerCategoriesOfLaw, context);
@@ -146,6 +173,7 @@ class ClaimValidationServiceTest {
               .id("claim1")
               .status(ClaimStatus.READY_TO_PROCESS)
               .feeCode("feeCode1")
+              .caseStartDate("2025-08-14")
               .caseStartDate("2003-13-34")
               .transferDate("2090-12-02")
               .caseConcludedDate("2090-01-01")
@@ -158,6 +186,7 @@ class ClaimValidationServiceTest {
               .id("claim2")
               .status(ClaimStatus.READY_TO_PROCESS)
               .feeCode("feeCode2")
+              .caseStartDate("2025-05-25")
               .caseStartDate("1993-01-03")
               .transferDate("1990-12-02")
               .caseConcludedDate("1993-01-01")
@@ -167,11 +196,20 @@ class ClaimValidationServiceTest {
               .matterTypeCode("1:2");
       List<ClaimResponse> claims = List.of(claim1, claim2);
 
-      List<String> providerCategoriesOfLaw = List.of("categoryOfLaw1");
       Map<String, CategoryOfLawResult> categoryOfLawLookup = Collections.emptyMap();
 
       when(categoryOfLawValidationService.getCategoryOfLawLookup(claims))
           .thenReturn(categoryOfLawLookup);
+
+      ProviderFirmOfficeContractAndScheduleDto data =
+          new ProviderFirmOfficeContractAndScheduleDto()
+              .addSchedulesItem(
+                  new FirmOfficeContractAndScheduleDetails()
+                      .addScheduleLinesItem(
+                          new FirmOfficeContractAndScheduleLine().categoryOfLaw("categoryOfLaw1")));
+      when(providerDetailsRestClient.getProviderFirmSchedules(
+              eq("officeAccountNumber"), eq("CIVIL"), any(LocalDate.class)))
+          .thenReturn(Mono.just(data));
 
       SubmissionResponse submissionResponse =
           new SubmissionResponse()
@@ -199,7 +237,7 @@ class ClaimValidationServiceTest {
               new ClaimValidationReport(claim1.getId()),
               new ClaimValidationReport(claim2.getId())));
 
-      claimValidationService.validateClaims(submissionResponse, providerCategoriesOfLaw, context);
+      claimValidationService.validateClaims(submissionResponse, context);
 
       // Then
       assertThat(
@@ -216,7 +254,8 @@ class ClaimValidationServiceTest {
                       x ->
                           x.getDisplayMessage()
                               .equals(
-                                  "Invalid date value for Transfer Date (Must be between 1995-01-01 and today): "
+                                  "Invalid date value for Transfer Date (Must be between 1995-01-01 "
+                                      + "and today): "
                                       + "2090-12-02")))
           .isTrue();
       assertThat(
@@ -225,7 +264,8 @@ class ClaimValidationServiceTest {
                       x ->
                           x.getDisplayMessage()
                               .equals(
-                                  "Invalid date value for Case Concluded Date (Must be between 1995-01-01 and "
+                                  "Invalid date value for Case Concluded Date (Must be between "
+                                      + "1995-01-01 and "
                                       + "today): 2090-01-01")))
           .isTrue();
       assertThat(
@@ -234,7 +274,8 @@ class ClaimValidationServiceTest {
                       x ->
                           x.getDisplayMessage()
                               .equals(
-                                  "Invalid date value for Representation Order Date (Must be between 2016-04-01 "
+                                  "Invalid date value for Representation Order Date (Must be between "
+                                      + "2016-04-01 "
                                       + "and today): 2090-01-01")))
           .isTrue();
       assertThat(
@@ -243,7 +284,8 @@ class ClaimValidationServiceTest {
                       x ->
                           x.getDisplayMessage()
                               .equals(
-                                  "Invalid date value for Client Date of Birth (Must be between 1900-01-01 and "
+                                  "Invalid date value for Client Date of Birth (Must be between "
+                                      + "1900-01-01 and "
                                       + "today): 2099-12-31")))
           .isTrue();
       assertThat(
@@ -252,7 +294,8 @@ class ClaimValidationServiceTest {
                       x ->
                           x.getDisplayMessage()
                               .equals(
-                                  "Invalid date value for Client2 Date of Birth (Must be between 1900-01-01 and "
+                                  "Invalid date value for Client2 Date of Birth (Must be between "
+                                      + "1900-01-01 and "
                                       + "today): 2099-12-31")))
           .isTrue();
       assertThat(
@@ -261,7 +304,8 @@ class ClaimValidationServiceTest {
                       x ->
                           x.getDisplayMessage()
                               .equals(
-                                  "Invalid date value for Case Start Date (Must be between 1995-01-01 and today):"
+                                  "Invalid date value for Case Start Date (Must be between 1995-01-01"
+                                      + " and today):"
                                       + " 1993-01-03")))
           .isTrue();
       assertThat(
@@ -270,7 +314,8 @@ class ClaimValidationServiceTest {
                       x ->
                           x.getDisplayMessage()
                               .equals(
-                                  "Invalid date value for Transfer Date (Must be between 1995-01-01 and today): "
+                                  "Invalid date value for Transfer Date (Must be between 1995-01-01 "
+                                      + "and today): "
                                       + "1990-12-02")))
           .isTrue();
       assertThat(
@@ -279,7 +324,8 @@ class ClaimValidationServiceTest {
                       x ->
                           x.getDisplayMessage()
                               .equals(
-                                  "Invalid date value for Case Concluded Date (Must be between 1995-01-01 and "
+                                  "Invalid date value for Case Concluded Date (Must be between "
+                                      + "1995-01-01 and "
                                       + "today): 1993-01-01")))
           .isTrue();
       assertThat(
@@ -288,7 +334,8 @@ class ClaimValidationServiceTest {
                       x ->
                           x.getDisplayMessage()
                               .equals(
-                                  "Invalid date value for Representation Order Date (Must be between 2016-04-01 "
+                                  "Invalid date value for Representation Order Date (Must be between "
+                                      + "2016-04-01 "
                                       + "and today): 2016-03-30")))
           .isTrue();
       assertThat(
@@ -297,7 +344,8 @@ class ClaimValidationServiceTest {
                       x ->
                           x.getDisplayMessage()
                               .equals(
-                                  "Invalid date value for Client Date of Birth (Must be between 1900-01-01 and "
+                                  "Invalid date value for Client Date of Birth (Must be between "
+                                      + "1900-01-01 and "
                                       + "today): 1899-12-31")))
           .isTrue();
       assertThat(
@@ -306,7 +354,8 @@ class ClaimValidationServiceTest {
                       x ->
                           x.getDisplayMessage()
                               .equals(
-                                  "Invalid date value for Client Date of Birth (Must be between 1900-01-01 and "
+                                  "Invalid date value for Client Date of Birth (Must be between "
+                                      + "1900-01-01 and "
                                       + "today): 1899-12-31")))
           .isTrue();
       assertThat(
@@ -315,7 +364,8 @@ class ClaimValidationServiceTest {
                       x ->
                           x.getDisplayMessage()
                               .equals(
-                                  "Invalid date value for Client2 Date of Birth (Must be between 1900-01-01 and "
+                                  "Invalid date value for Client2 Date of Birth (Must be between "
+                                      + "1900-01-01 and "
                                       + "today): 1899-12-31")))
           .isTrue();
     }
@@ -327,6 +377,7 @@ class ClaimValidationServiceTest {
               .id("claim1")
               .status(ClaimStatus.READY_TO_PROCESS)
               .feeCode("feeCode1")
+              .caseStartDate("2025-08-14")
               .uniqueFileNumber("010101/123")
               .matterTypeCode("AB:CD")
               .stageReachedCode("AA");
@@ -336,14 +387,22 @@ class ClaimValidationServiceTest {
               .uniqueFileNumber("010101/123")
               .status(ClaimStatus.READY_TO_PROCESS)
               .feeCode("feeCode2")
+              .caseStartDate("2025-05-25")
               .matterTypeCode("123:456");
       List<ClaimResponse> claims = List.of(claim1, claim2);
 
-      List<String> providerCategoriesOfLaw = List.of("categoryOfLaw1");
       Map<String, CategoryOfLawResult> categoryOfLawLookup = Collections.emptyMap();
-
       when(categoryOfLawValidationService.getCategoryOfLawLookup(claims))
           .thenReturn(categoryOfLawLookup);
+
+      ProviderFirmOfficeContractAndScheduleDto data =
+          new ProviderFirmOfficeContractAndScheduleDto()
+              .addSchedulesItem(
+                  new FirmOfficeContractAndScheduleDetails()
+                      .addScheduleLinesItem(
+                          new FirmOfficeContractAndScheduleLine().categoryOfLaw("categoryOfLaw1")));
+      when(providerDetailsRestClient.getProviderFirmSchedules(any(), any(), any()))
+          .thenReturn(Mono.just(data));
 
       SubmissionResponse submissionResponse1 =
           new SubmissionResponse()
@@ -371,7 +430,7 @@ class ClaimValidationServiceTest {
               new ClaimValidationReport(claim1.getId()),
               new ClaimValidationReport(claim2.getId())));
 
-      claimValidationService.validateClaims(submissionResponse1, providerCategoriesOfLaw, context1);
+      claimValidationService.validateClaims(submissionResponse1, context1);
 
       assertThat(getClaimMessages(context1, "claim1").isEmpty()).isTrue();
       assertThat(getClaimMessages(context1, "claim2").isEmpty()).isTrue();
@@ -399,7 +458,7 @@ class ClaimValidationServiceTest {
               new ClaimValidationReport(claim1.getId()),
               new ClaimValidationReport(claim2.getId())));
 
-      claimValidationService.validateClaims(submissionResponse2, providerCategoriesOfLaw, context2);
+      claimValidationService.validateClaims(submissionResponse2, context2);
 
       assertThat(getClaimMessages(context2, "claim1").getFirst().getDisplayMessage())
           .isEqualTo(
@@ -429,6 +488,7 @@ class ClaimValidationServiceTest {
           new ClaimResponse()
               .id(claimId)
               .feeCode("feeCode1")
+              .caseStartDate("2025-08-14")
               .status(ClaimStatus.READY_TO_PROCESS)
               .uniqueFileNumber("010101/123")
               .matterTypeCode(matterTypeCode);
@@ -460,11 +520,20 @@ class ClaimValidationServiceTest {
               null))
           .thenReturn(ResponseEntity.ok(claimResultSet));
 
+      ProviderFirmOfficeContractAndScheduleDto data =
+          new ProviderFirmOfficeContractAndScheduleDto()
+              .addSchedulesItem(
+                  new FirmOfficeContractAndScheduleDetails()
+                      .addScheduleLinesItem(
+                          new FirmOfficeContractAndScheduleLine().categoryOfLaw("categoryOfLaw1")));
+      when(providerDetailsRestClient.getProviderFirmSchedules(any(), any(), any()))
+          .thenReturn(Mono.just(data));
+
       SubmissionValidationContext context = new SubmissionValidationContext();
       context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
 
       // Run validation
-      claimValidationService.validateClaims(submissionResponse, providerCategoriesOfLaw, context);
+      claimValidationService.validateClaims(submissionResponse, context);
 
       if (expectError) {
         String expectedMessage =
@@ -501,12 +570,12 @@ class ClaimValidationServiceTest {
           new ClaimResponse()
               .id(claimId)
               .feeCode("feeCode1")
+              .caseStartDate("2025-08-14")
               .status(ClaimStatus.READY_TO_PROCESS)
               .uniqueFileNumber("010101/123")
               .stageReachedCode(stageReachedCode);
 
       List<ClaimResponse> claims = List.of(claim);
-      List<String> providerCategoriesOfLaw = List.of("categoryOfLaw1");
       Map<String, CategoryOfLawResult> categoryOfLawLookup = Collections.emptyMap();
 
       when(categoryOfLawValidationService.getCategoryOfLawLookup(claims))
@@ -532,11 +601,21 @@ class ClaimValidationServiceTest {
               null))
           .thenReturn(ResponseEntity.ok(claimResultSet));
 
+      ProviderFirmOfficeContractAndScheduleDto data =
+          new ProviderFirmOfficeContractAndScheduleDto()
+              .addSchedulesItem(
+                  new FirmOfficeContractAndScheduleDetails()
+                      .addScheduleLinesItem(
+                          new FirmOfficeContractAndScheduleLine().categoryOfLaw("categoryOfLaw1")));
+      when(providerDetailsRestClient.getProviderFirmSchedules(
+              eq("officeAccountNumber"), eq(areaOfLaw), any(LocalDate.class)))
+          .thenReturn(Mono.just(data));
+
       SubmissionValidationContext context = new SubmissionValidationContext();
       context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
 
       // Run validation
-      claimValidationService.validateClaims(submissionResponse, providerCategoriesOfLaw, context);
+      claimValidationService.validateClaims(submissionResponse, context);
 
       if (expectError) {
         String expectedMessage =
@@ -572,6 +651,7 @@ class ClaimValidationServiceTest {
           new ClaimResponse()
               .id(claimId)
               .feeCode("feeCode1")
+              .caseStartDate("2025-08-14")
               .uniqueFileNumber("010101/123")
               .status(ClaimStatus.READY_TO_PROCESS)
               .disbursementsVatAmount(disbursementsVatAmount);
@@ -580,7 +660,6 @@ class ClaimValidationServiceTest {
       }
 
       List<ClaimResponse> claims = List.of(claim);
-      List<String> providerCategoriesOfLaw = List.of("categoryOfLaw1");
       Map<String, CategoryOfLawResult> categoryOfLawLookup = Collections.emptyMap();
 
       when(categoryOfLawValidationService.getCategoryOfLawLookup(claims))
@@ -606,11 +685,21 @@ class ClaimValidationServiceTest {
               null))
           .thenReturn(ResponseEntity.ok(claimResultSet));
 
+      ProviderFirmOfficeContractAndScheduleDto data =
+          new ProviderFirmOfficeContractAndScheduleDto()
+              .addSchedulesItem(
+                  new FirmOfficeContractAndScheduleDetails()
+                      .addScheduleLinesItem(
+                          new FirmOfficeContractAndScheduleLine().categoryOfLaw("categoryOfLaw1")));
+      when(providerDetailsRestClient.getProviderFirmSchedules(
+              eq("officeAccountNumber"), eq(areaOfLaw), any(LocalDate.class)))
+          .thenReturn(Mono.just(data));
+
       SubmissionValidationContext context = new SubmissionValidationContext();
       context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
 
       // Run validation
-      claimValidationService.validateClaims(submissionResponse, providerCategoriesOfLaw, context);
+      claimValidationService.validateClaims(submissionResponse, context);
 
       if (expectError) {
         String expectedMessage =
