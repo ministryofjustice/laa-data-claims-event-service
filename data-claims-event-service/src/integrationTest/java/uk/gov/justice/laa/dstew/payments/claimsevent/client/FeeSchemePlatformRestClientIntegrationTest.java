@@ -17,9 +17,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MockServerIntegrationTest;
-import uk.gov.justice.laa.fee.scheme.model.CategoryOfLawResponse;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationRequest;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationResponse;
+import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponse;
 
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -47,7 +47,7 @@ class FeeSchemePlatformRestClientIntegrationTest extends MockServerIntegrationTe
       // Given
       String feeCode = "AB12";
 
-      String expectedBody = readJsonFromFile("fee-scheme/get-category-of-law-200.json");
+      String expectedBody = readJsonFromFile("fee-scheme/get-fee-details-200.json");
 
       mockServerClient
           .when(
@@ -61,14 +61,14 @@ class FeeSchemePlatformRestClientIntegrationTest extends MockServerIntegrationTe
                   .withBody(expectedBody));
 
       // When
-      ResponseEntity<CategoryOfLawResponse> result =
-          feeSchemePlatformRestClient.getCategoryOfLaw(feeCode);
+      ResponseEntity<FeeDetailsResponse> result =
+          feeSchemePlatformRestClient.getFeeDetails(feeCode);
 
       // Then
-      CategoryOfLawResponse categoryOfLawResponse = result.getBody();
-      assertThat(categoryOfLawResponse).isNotNull();
+      FeeDetailsResponse feeDetailsResponse = result.getBody();
+      assertThat(feeDetailsResponse).isNotNull();
       // Check all fields mapped correctly by serializing the result and comparing to expected JSON
-      String resultJson = objectMapper.writeValueAsString(categoryOfLawResponse);
+      String resultJson = objectMapper.writeValueAsString(feeDetailsResponse);
       assertThatJsonMatches(expectedBody, resultJson);
     }
 
@@ -79,7 +79,7 @@ class FeeSchemePlatformRestClientIntegrationTest extends MockServerIntegrationTe
       // Given
       String feeCode = "AB12";
 
-      String expectedBody = readJsonFromFile("fee-scheme/get-category-of-law-200.json");
+      String expectedBody = readJsonFromFile("fee-scheme/get-fee-details-200.json");
 
       mockServerClient
           .when(
@@ -93,7 +93,7 @@ class FeeSchemePlatformRestClientIntegrationTest extends MockServerIntegrationTe
                   .withBody(expectedBody));
 
       // When
-      ThrowingCallable result = () -> feeSchemePlatformRestClient.getCategoryOfLaw(feeCode);
+      ThrowingCallable result = () -> feeSchemePlatformRestClient.getFeeDetails(feeCode);
 
       // Then
       HttpStatusCode httpStatusCode = HttpStatusCode.code(statusCode);
