@@ -41,6 +41,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.MandatoryFieldsRegistry;
+import uk.gov.justice.laa.dstew.payments.claimsevent.util.ClaimEffectiveDateUtil;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.JsonSchemaValidator;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
@@ -64,6 +65,8 @@ class ClaimValidationServiceTest {
   @Mock private JsonSchemaValidator jsonSchemaValidator;
 
   @Mock private MandatoryFieldsRegistry mandatoryFieldsRegistry;
+
+  @Mock private ClaimEffectiveDateUtil claimEffectiveDateUtil;
 
   @InjectMocks private ClaimValidationService claimValidationService;
 
@@ -139,6 +142,11 @@ class ClaimValidationServiceTest {
               eq("officeAccountNumber"), eq("CIVIL"), any(LocalDate.class)))
           .thenReturn(Mono.just(data));
 
+      // Two claims make two separate calls to claimEffectiveDateUtil
+      when(claimEffectiveDateUtil.getEffectiveDate(any(), any()))
+          .thenReturn(LocalDate.of(2025, 8, 14))
+          .thenReturn(LocalDate.of(2025, 5, 25));
+
       SubmissionValidationContext context = new SubmissionValidationContext();
       context.addClaimReports(
           List.of(
@@ -210,6 +218,9 @@ class ClaimValidationServiceTest {
       when(providerDetailsRestClient.getProviderFirmSchedules(
               eq("officeAccountNumber"), eq("CIVIL"), any(LocalDate.class)))
           .thenReturn(Mono.just(data));
+
+      when(claimEffectiveDateUtil.getEffectiveDate(any(), any()))
+          .thenReturn(LocalDate.of(2025, 8, 14));
 
       SubmissionResponse submissionResponse =
           new SubmissionResponse()
@@ -404,6 +415,9 @@ class ClaimValidationServiceTest {
       when(providerDetailsRestClient.getProviderFirmSchedules(any(), any(), any()))
           .thenReturn(Mono.just(data));
 
+      when(claimEffectiveDateUtil.getEffectiveDate(any(), any()))
+          .thenReturn(LocalDate.of(2025, 8, 14));
+
       SubmissionResponse submissionResponse1 =
           new SubmissionResponse()
               .submissionId(new UUID(1, 1))
@@ -494,11 +508,13 @@ class ClaimValidationServiceTest {
               .matterTypeCode(matterTypeCode);
 
       List<ClaimResponse> claims = List.of(claim);
-      List<String> providerCategoriesOfLaw = List.of("categoryOfLaw1");
       Map<String, CategoryOfLawResult> categoryOfLawLookup = Collections.emptyMap();
 
       when(categoryOfLawValidationService.getCategoryOfLawLookup(claims))
           .thenReturn(categoryOfLawLookup);
+
+      when(claimEffectiveDateUtil.getEffectiveDate(any(), any()))
+          .thenReturn(LocalDate.of(2025, 8, 14));
 
       SubmissionResponse submissionResponse =
           new SubmissionResponse()
@@ -580,6 +596,9 @@ class ClaimValidationServiceTest {
 
       when(categoryOfLawValidationService.getCategoryOfLawLookup(claims))
           .thenReturn(categoryOfLawLookup);
+
+      when(claimEffectiveDateUtil.getEffectiveDate(any(), any()))
+          .thenReturn(LocalDate.of(2025, 8, 14));
 
       SubmissionResponse submissionResponse =
           new SubmissionResponse()
@@ -664,6 +683,9 @@ class ClaimValidationServiceTest {
 
       when(categoryOfLawValidationService.getCategoryOfLawLookup(claims))
           .thenReturn(categoryOfLawLookup);
+
+      when(claimEffectiveDateUtil.getEffectiveDate(any(), any()))
+          .thenReturn(LocalDate.of(2025, 8, 14));
 
       SubmissionResponse submissionResponse =
           new SubmissionResponse()

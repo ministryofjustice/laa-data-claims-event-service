@@ -20,6 +20,8 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.MandatoryFieldsRegistry;
+import uk.gov.justice.laa.dstew.payments.claimsevent.exception.EventServiceIllegalArgumentException;
+import uk.gov.justice.laa.dstew.payments.claimsevent.util.ClaimEffectiveDateUtil;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.JsonSchemaValidator;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
@@ -47,6 +49,7 @@ public class ClaimValidationService {
   private final DataClaimsRestClient dataClaimsRestClient;
   private final JsonSchemaValidator jsonSchemaValidator;
   private final MandatoryFieldsRegistry mandatoryFieldsRegistry;
+  private final ClaimEffectiveDateUtil claimEffectiveDateUtil;
 
   /**
    * Validate a list of claims in a submission.
@@ -128,13 +131,17 @@ public class ClaimValidationService {
     validateMatterType(claim, areaOfLaw, context);
 
     try {
+      LocalDate effectiveDate = claimEffectiveDateUtil.getEffectiveDate(claim, areaOfLaw);
       List<String> effectiveCategoriesOfLaw =
-          getEffectiveCategoriesOfLaw(officeCode, areaOfLaw, LocalDate.parse(caseStartDate));
+          getEffectiveCategoriesOfLaw(officeCode, areaOfLaw, effectiveDate);
       // Get effective category of law lookup
       categoryOfLawValidationService.validateCategoryOfLaw(
           claim, categoryOfLawLookup, effectiveCategoriesOfLaw, context);
-    } catch (DateTimeParseException e) {
-      log.debug("Invalid date format for case start date: {}", caseStartDate);
+    } catch (EventServiceIllegalArgumentException e) {
+      log.debug(
+          "Error getting effective date for category of law validation: {}. Continuing with claim"
+              + " validation",
+          e.getMessage());
     }
 
     // duplicates
