@@ -38,7 +38,7 @@ class FeeSchemePlatformRestClientIntegrationTest extends MockServerIntegrationTe
   }
 
   @Nested
-  @DisplayName("GET: /category-of-law/{feeCode} tests")
+  @DisplayName("GET: /fee-details/{feeCode} tests")
   class GetCategoryOfLawTests {
 
     @Test
@@ -50,10 +50,7 @@ class FeeSchemePlatformRestClientIntegrationTest extends MockServerIntegrationTe
       String expectedBody = readJsonFromFile("fee-scheme/get-fee-details-200.json");
 
       mockServerClient
-          .when(
-              HttpRequest.request()
-                  .withMethod("GET")
-                  .withPath("/api/v1/category-of-law/" + feeCode))
+          .when(HttpRequest.request().withMethod("GET").withPath("/api/v1/fee-details/" + feeCode))
           .respond(
               HttpResponse.response()
                   .withStatusCode(200)
@@ -82,10 +79,7 @@ class FeeSchemePlatformRestClientIntegrationTest extends MockServerIntegrationTe
       String expectedBody = readJsonFromFile("fee-scheme/get-fee-details-200.json");
 
       mockServerClient
-          .when(
-              HttpRequest.request()
-                  .withMethod("GET")
-                  .withPath("/api/v1/category-of-law/" + feeCode))
+          .when(HttpRequest.request().withMethod("GET").withPath("/api/v1/fee-details/" + feeCode))
           .respond(
               HttpResponse.response()
                   .withStatusCode(statusCode)
@@ -100,7 +94,7 @@ class FeeSchemePlatformRestClientIntegrationTest extends MockServerIntegrationTe
       assertThatThrownBy(result)
           .isInstanceOf(WebClientResponseException.class)
           .hasMessageContaining(
-              "%s %s from GET %s/api/v1/category-of-law/%s"
+              "%s %s from GET %s/api/v1/fee-details/%s"
                   .formatted(
                       httpStatusCode.code(),
                       httpStatusCode.reasonPhrase(),
