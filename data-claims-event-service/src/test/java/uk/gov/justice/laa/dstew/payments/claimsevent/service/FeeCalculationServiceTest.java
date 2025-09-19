@@ -1,11 +1,13 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static uk.gov.justice.laa.dstew.payments.claimsevent.service.ValidationServiceTestUtils.assertContextClaimError;
 
-import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -18,6 +20,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.mapper.FeeSchemeMapper;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationRequest;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationResponse;
@@ -25,8 +28,6 @@ import uk.gov.justice.laa.fee.scheme.model.Warning;
 
 @ExtendWith(MockitoExtension.class)
 class FeeCalculationServiceTest {
-
-  @Mock private SubmissionValidationContext validationContext;
 
   @Mock private FeeSchemePlatformRestClient feeSchemePlatformRestClient;
 
@@ -50,11 +51,14 @@ class FeeCalculationServiceTest {
       when(feeSchemeMapper.mapToFeeCalculationRequest(claim)).thenReturn(feeCalculationRequest);
       when(feeSchemePlatformRestClient.calculateFee(feeCalculationRequest))
           .thenReturn(ResponseEntity.ok(feeCalculationResponse));
-      when(validationContext.isFlaggedForRetry("claimId")).thenReturn(false);
 
-      feeCalculationService.validateFeeCalculation(claim);
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
+
+      feeCalculationService.validateFeeCalculation(claim, context);
 
       verify(feeSchemePlatformRestClient, times(1)).calculateFee(feeCalculationRequest);
+      assertThat(context.hasErrors()).isFalse();
     }
 
     @Test
@@ -72,13 +76,16 @@ class FeeCalculationServiceTest {
       when(feeSchemeMapper.mapToFeeCalculationRequest(claim)).thenReturn(feeCalculationRequest);
       when(feeSchemePlatformRestClient.calculateFee(feeCalculationRequest))
           .thenReturn(ResponseEntity.ok(feeCalculationResponse));
-      when(validationContext.isFlaggedForRetry("claimId")).thenReturn(false);
 
-      feeCalculationService.validateFeeCalculation(claim);
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
+
+      feeCalculationService.validateFeeCalculation(claim, context);
 
       verify(feeSchemePlatformRestClient, times(1)).calculateFee(feeCalculationRequest);
-      verify(validationContext, times(1))
-          .addClaimError("claimId", ClaimValidationError.INVALID_FEE_CALCULATION_VALIDATION_FAILED);
+      assertThat(context.hasErrors(claim.getId())).isTrue();
+      assertContextClaimError(
+          context, claim.getId(), ClaimValidationError.INVALID_FEE_CALCULATION_VALIDATION_FAILED);
     }
 
     @Test
@@ -92,15 +99,15 @@ class FeeCalculationServiceTest {
       when(feeSchemeMapper.mapToFeeCalculationRequest(claim)).thenReturn(feeCalculationRequest);
       when(feeSchemePlatformRestClient.calculateFee(feeCalculationRequest))
           .thenReturn(ResponseEntity.notFound().build());
-      when(validationContext.isFlaggedForRetry("claimId")).thenReturn(false);
 
-      ThrowingCallable result = () -> feeCalculationService.validateFeeCalculation(claim);
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
 
-      feeCalculationService.validateFeeCalculation(claim);
+      feeCalculationService.validateFeeCalculation(claim, context);
 
       verify(feeSchemePlatformRestClient, times(1)).calculateFee(feeCalculationRequest);
 
-      verify(validationContext, times(1)).flagForRetry(claim.getId());
+      assertThat(context.isFlaggedForRetry(claim.getId())).isTrue();
     }
 
     @Test
@@ -114,13 +121,15 @@ class FeeCalculationServiceTest {
       when(feeSchemeMapper.mapToFeeCalculationRequest(claim)).thenReturn(feeCalculationRequest);
       when(feeSchemePlatformRestClient.calculateFee(feeCalculationRequest))
           .thenReturn(ResponseEntity.internalServerError().build());
-      when(validationContext.isFlaggedForRetry("claimId")).thenReturn(false);
 
-      feeCalculationService.validateFeeCalculation(claim);
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
+
+      feeCalculationService.validateFeeCalculation(claim, context);
 
       verify(feeSchemePlatformRestClient, times(1)).calculateFee(feeCalculationRequest);
 
-      verify(validationContext, times(1)).flagForRetry(claim.getId());
+      assertThat(context.isFlaggedForRetry(claim.getId())).isTrue();
     }
 
     @Test
@@ -129,12 +138,18 @@ class FeeCalculationServiceTest {
 
       ClaimResponse claim = new ClaimResponse().id("claimId").feeCode("feeCode");
 
-      when(validationContext.isFlaggedForRetry("claimId")).thenReturn(true);
+      ClaimValidationReport validationReport = new ClaimValidationReport(claim.getId());
+      validationReport.flagForRetry();
 
-      feeCalculationService.validateFeeCalculation(claim);
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
+      context.flagForRetry(claim.getId());
+
+      feeCalculationService.validateFeeCalculation(claim, context);
 
       verifyNoInteractions(feeSchemeMapper);
       verifyNoInteractions(feeSchemePlatformRestClient);
+      assertThat(context.isFlaggedForRetry(claim.getId())).isTrue();
     }
   }
 }

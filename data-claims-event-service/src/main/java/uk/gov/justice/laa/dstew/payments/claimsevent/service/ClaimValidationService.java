@@ -13,7 +13,10 @@ import java.util.Map;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
+import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.MandatoryFieldsRegistry;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.JsonSchemaValidator;
@@ -34,23 +37,47 @@ public class ClaimValidationService {
   private final CategoryOfLawValidationService categoryOfLawValidationService;
   private final DuplicateClaimValidationService duplicateClaimValidationService;
   private final FeeCalculationService feeCalculationService;
-  private final SubmissionValidationContext submissionValidationContext;
+  private final DataClaimsRestClient dataClaimsRestClient;
   private final JsonSchemaValidator jsonSchemaValidator;
   private final MandatoryFieldsRegistry mandatoryFieldsRegistry;
 
   /**
    * Validate a list of claims in a submission.
    *
-   * @param claims the claims in a submission
-   * @param areaOfLaw the Area of Law that this submission belongs to: used to apply conditional
-   *     validations
+   * @param submission the submission
+   * @param providerCategoriesOfLaw the categories of law that the provider is contracted for
    */
   public void validateClaims(
-      List<ClaimResponse> claims, List<String> providerCategoriesOfLaw, String areaOfLaw) {
+      SubmissionResponse submission,
+      List<String> providerCategoriesOfLaw,
+      SubmissionValidationContext context) {
+    List<ClaimResponse> submissionClaims =
+        dataClaimsRestClient
+            .getClaims(
+                submission.getOfficeAccountNumber(),
+                submission.getSubmissionId().toString(),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null)
+            .getBody()
+            .getContent();
     Map<String, CategoryOfLawResult> categoryOfLawLookup =
-        categoryOfLawValidationService.getCategoryOfLawLookup(claims);
-    claims.forEach(
-        claim -> validateClaim(claim, categoryOfLawLookup, providerCategoriesOfLaw, areaOfLaw));
+        categoryOfLawValidationService.getCategoryOfLawLookup(submissionClaims);
+    submissionClaims.stream()
+        .filter(claim -> ClaimStatus.READY_TO_PROCESS.equals(claim.getStatus()))
+        .forEach(
+            claim ->
+                validateClaim(
+                    claim,
+                    submissionClaims,
+                    categoryOfLawLookup,
+                    providerCategoriesOfLaw,
+                    submission.getAreaOfLaw(),
+                    submission.getOfficeAccountNumber(),
+                    context));
   }
 
   /**
@@ -69,36 +96,47 @@ public class ClaimValidationService {
    */
   private void validateClaim(
       ClaimResponse claim,
+      List<ClaimResponse> submissionClaims,
       Map<String, CategoryOfLawResult> categoryOfLawLookup,
       List<String> providerCategoriesOfLaw,
-      String areaOfLaw) {
+      String areaOfLaw,
+      String officeCode,
+      SubmissionValidationContext context) {
     List<ValidationMessagePatch> schemaMessages = jsonSchemaValidator.validate("claim", claim);
-    submissionValidationContext.addClaimMessages(claim.getId(), schemaMessages);
+    context.addClaimMessages(claim.getId(), schemaMessages);
 
-    // schema validation
-    checkMandatoryFields(claim, areaOfLaw);
-    validateUniqueFileNumber(claim);
-    validateStageReachedCode(claim, areaOfLaw);
-    validateDisbursementsVatAmount(claim, areaOfLaw);
-    checkDateInPast(claim, "Case Start Date", claim.getCaseStartDate(), OLDEST_DATE_ALLOWED_1);
+    checkMandatoryFields(claim, areaOfLaw, context);
+    validateUniqueFileNumber(claim, context);
+    validateStageReachedCode(claim, areaOfLaw, context);
+    validateDisbursementsVatAmount(claim, areaOfLaw, context);
     checkDateInPast(
-        claim, "Case Concluded Date", claim.getCaseConcludedDate(), OLDEST_DATE_ALLOWED_1);
-    checkDateInPast(claim, "Transfer Date", claim.getTransferDate(), OLDEST_DATE_ALLOWED_1);
+        claim, "Case Start Date", claim.getCaseStartDate(), OLDEST_DATE_ALLOWED_1, context);
     checkDateInPast(
-        claim, "Representation Order Date", claim.getRepresentationOrderDate(), MIN_REP_ORDER_DATE);
-    checkDateInPast(claim, "Client Date of Birth", claim.getClientDateOfBirth(), MIN_BIRTH_DATE);
-    checkDateInPast(claim, "Client2 Date of Birth", claim.getClient2DateOfBirth(), MIN_BIRTH_DATE);
-    validateMatterType(claim, areaOfLaw);
+        claim, "Case Concluded Date", claim.getCaseConcludedDate(), OLDEST_DATE_ALLOWED_1, context);
+    checkDateInPast(
+        claim, "Transfer Date", claim.getTransferDate(), OLDEST_DATE_ALLOWED_1, context);
+    checkDateInPast(
+        claim,
+        "Representation Order Date",
+        claim.getRepresentationOrderDate(),
+        MIN_REP_ORDER_DATE,
+        context);
+    checkDateInPast(
+        claim, "Client Date of Birth", claim.getClientDateOfBirth(), MIN_BIRTH_DATE, context);
+    checkDateInPast(
+        claim, "Client2 Date of Birth", claim.getClient2DateOfBirth(), MIN_BIRTH_DATE, context);
+    validateMatterType(claim, areaOfLaw, context);
 
     // category of law validation
     categoryOfLawValidationService.validateCategoryOfLaw(
-        claim, categoryOfLawLookup, providerCategoriesOfLaw);
+        claim, categoryOfLawLookup, providerCategoriesOfLaw, context);
 
     // duplicates
-    duplicateClaimValidationService.validateDuplicateClaims(claim);
+    duplicateClaimValidationService.validateDuplicateClaims(
+        claim, submissionClaims, areaOfLaw, officeCode, context);
 
     // fee calculation validation
-    feeCalculationService.validateFeeCalculation(claim);
+    feeCalculationService.validateFeeCalculation(claim, context);
   }
 
   /**
@@ -109,7 +147,8 @@ public class ClaimValidationService {
    * @param claim the ClaimResponse object containing data that needs to be validated
    * @param areaOfLaw the area of law for which mandatory fields need to be checked
    */
-  private void checkMandatoryFields(ClaimResponse claim, String areaOfLaw) {
+  private void checkMandatoryFields(
+      ClaimResponse claim, String areaOfLaw, SubmissionValidationContext context) {
     List<String> mandatoryFields =
         mandatoryFieldsRegistry.getMandatoryFieldsByAreaOfLaw().get(areaOfLaw);
     for (String fieldName : mandatoryFields) {
@@ -125,7 +164,7 @@ public class ClaimValidationService {
         Object value = getter.invoke(claim);
 
         if (value == null || (value instanceof String s && s.trim().isEmpty())) {
-          submissionValidationContext.addClaimError(
+          context.addClaimError(
               claim.getId(),
               String.format("%s is required for area of law: %s", fieldName, areaOfLaw));
         }
@@ -138,9 +177,14 @@ public class ClaimValidationService {
   }
 
   private void validateFieldWithRegex(
-      ClaimResponse claim, String areaOfLaw, String fieldValue, String fieldName, String regex) {
+      ClaimResponse claim,
+      String areaOfLaw,
+      String fieldValue,
+      String fieldName,
+      String regex,
+      SubmissionValidationContext context) {
     if (regex != null && fieldValue != null && !fieldValue.matches(regex)) {
-      submissionValidationContext.addClaimError(
+      context.addClaimError(
           claim.getId(),
           String.format(
               "%s (%s): does not match the regex pattern %s (provided value: %s)",
@@ -148,7 +192,8 @@ public class ClaimValidationService {
     }
   }
 
-  private void validateStageReachedCode(ClaimResponse claim, String areaOfLaw) {
+  private void validateStageReachedCode(
+      ClaimResponse claim, String areaOfLaw, SubmissionValidationContext context) {
     String regex =
         switch (areaOfLaw) {
           case "CIVIL" -> "^[a-zA-Z0-9]{2}$";
@@ -157,10 +202,11 @@ public class ClaimValidationService {
         };
 
     validateFieldWithRegex(
-        claim, areaOfLaw, claim.getStageReachedCode(), "stage_reached_code", regex);
+        claim, areaOfLaw, claim.getStageReachedCode(), "stage_reached_code", regex, context);
   }
 
-  private void validateMatterType(ClaimResponse claim, String areaOfLaw) {
+  private void validateMatterType(
+      ClaimResponse claim, String areaOfLaw, SubmissionValidationContext context) {
     String regex =
         switch (areaOfLaw) {
           case "CIVIL" -> "^[a-zA-Z0-9]{1,4}[-:][a-zA-Z0-9]{1,4}$";
@@ -168,10 +214,12 @@ public class ClaimValidationService {
           default -> null;
         };
 
-    validateFieldWithRegex(claim, areaOfLaw, claim.getMatterTypeCode(), "matter_type_code", regex);
+    validateFieldWithRegex(
+        claim, areaOfLaw, claim.getMatterTypeCode(), "matter_type_code", regex, context);
   }
 
-  private void validateDisbursementsVatAmount(ClaimResponse claim, String areaOfLaw) {
+  private void validateDisbursementsVatAmount(
+      ClaimResponse claim, String areaOfLaw, SubmissionValidationContext context) {
     var disbursementsVatAmount = claim.getDisbursementsVatAmount();
 
     BigDecimal maxAllowed =
@@ -185,7 +233,7 @@ public class ClaimValidationService {
     if (maxAllowed != null
         && disbursementsVatAmount != null
         && disbursementsVatAmount.compareTo(maxAllowed) > 0) {
-      submissionValidationContext.addClaimError(
+      context.addClaimError(
           claim.getId(),
           String.format(
               "disbursementsVatAmount (%s): must have a maximum value of %s (provided value: %s)",
@@ -200,7 +248,7 @@ public class ClaimValidationService {
    *
    * @param claim the claim object containing the unique file number to be validated
    */
-  private void validateUniqueFileNumber(ClaimResponse claim) {
+  private void validateUniqueFileNumber(ClaimResponse claim, SubmissionValidationContext context) {
     String uniqueFileNumber = claim.getUniqueFileNumber();
     if (uniqueFileNumber != null && uniqueFileNumber.length() > 1) {
       String datePart = uniqueFileNumber.substring(0, 6); // DDMMYY
@@ -208,11 +256,11 @@ public class ClaimValidationService {
       try {
         LocalDate date = LocalDate.parse(datePart, formatter);
         if (!date.isBefore(LocalDate.now())) {
-          submissionValidationContext.addClaimError(
+          context.addClaimError(
               claim.getId(), ClaimValidationError.INVALID_DATE_IN_UNIQUE_FILE_NUMBER);
         }
       } catch (DateTimeParseException e) {
-        submissionValidationContext.addClaimError(
+        context.addClaimError(
             claim.getId(), ClaimValidationError.INVALID_DATE_IN_UNIQUE_FILE_NUMBER);
       }
     }
@@ -228,21 +276,25 @@ public class ClaimValidationService {
    * @param dateValueToCheck The date value to validate in the format "yyyy-MM-dd".
    */
   private void checkDateInPast(
-      ClaimResponse claim, String fieldName, String dateValueToCheck, String oldestDateAllowedStr) {
+      ClaimResponse claim,
+      String fieldName,
+      String dateValueToCheck,
+      String oldestDateAllowedStr,
+      SubmissionValidationContext context) {
     if (dateValueToCheck != null) {
       DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
       try {
         LocalDate oldestDateAllowed = LocalDate.parse(oldestDateAllowedStr, formatter);
         LocalDate date = LocalDate.parse(dateValueToCheck, formatter);
         if (date.isBefore(oldestDateAllowed) || date.isAfter(LocalDate.now())) {
-          submissionValidationContext.addClaimError(
+          context.addClaimError(
               claim.getId(),
               String.format(
                   "Invalid date value for %s (Must be between %s and today): %s",
                   fieldName, oldestDateAllowedStr, dateValueToCheck));
         }
       } catch (DateTimeParseException e) {
-        submissionValidationContext.addClaimError(
+        context.addClaimError(
             claim.getId(),
             String.format("Invalid date value provided for %s: %s", fieldName, dateValueToCheck));
       }

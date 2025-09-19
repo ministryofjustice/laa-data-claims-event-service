@@ -22,8 +22,6 @@ import uk.gov.justice.laa.fee.scheme.model.CategoryOfLawResponse;
 @AllArgsConstructor
 public class CategoryOfLawValidationService {
 
-  private final SubmissionValidationContext submissionValidationContext;
-
   private final FeeSchemePlatformRestClient feeSchemePlatformRestClient;
 
   /**
@@ -36,22 +34,23 @@ public class CategoryOfLawValidationService {
   public void validateCategoryOfLaw(
       ClaimResponse claim,
       Map<String, CategoryOfLawResult> categoryOfLawLookup,
-      List<String> providerCategoriesOfLaw) {
+      List<String> providerCategoriesOfLaw,
+      SubmissionValidationContext context) {
 
     log.debug("Validating category of law for claim {}", claim.getId());
 
     CategoryOfLawResult categoryOfLawResult = categoryOfLawLookup.get(claim.getFeeCode());
 
     if (categoryOfLawResult.isError()) {
-      submissionValidationContext.flagForRetry(claim.getId());
+      context.flagForRetry(claim.getId());
     } else {
       String categoryOfLaw = categoryOfLawResult.getCategoryOfLaw();
 
       if (categoryOfLaw == null) {
-        submissionValidationContext.addClaimError(
+        context.addClaimError(
             claim.getId(), ClaimValidationError.INVALID_CATEGORY_OF_LAW_AND_FEE_CODE);
       } else if (!providerCategoriesOfLaw.contains(categoryOfLaw)) {
-        submissionValidationContext.addClaimError(
+        context.addClaimError(
             claim.getId(),
             ClaimValidationError.INVALID_CATEGORY_OF_LAW_NOT_AUTHORISED_FOR_PROVIDER);
       }

@@ -21,10 +21,8 @@ import uk.gov.justice.laa.fee.scheme.model.Warning;
 @RequiredArgsConstructor
 public class FeeCalculationService {
 
-  private final SubmissionValidationContext validationContext;
   private final FeeSchemePlatformRestClient feeSchemePlatformRestClient;
   private final FeeSchemeMapper feeSchemeMapper;
-  private final SubmissionValidationContext submissionValidationContext;
 
   /**
    * Calculates the fee for the claim using the Fee Scheme Platform API, and handles any returned
@@ -32,9 +30,9 @@ public class FeeCalculationService {
    *
    * @param claim the submitted claim
    */
-  public void validateFeeCalculation(ClaimResponse claim) {
+  public void validateFeeCalculation(ClaimResponse claim, SubmissionValidationContext context) {
     log.debug("Validating fee calculation for claim {}", claim.getId());
-    if (!submissionValidationContext.isFlaggedForRetry(claim.getId())) {
+    if (!context.isFlaggedForRetry(claim.getId())) {
       FeeCalculationRequest feeCalculationRequest =
           feeSchemeMapper.mapToFeeCalculationRequest(claim);
 
@@ -45,19 +43,19 @@ public class FeeCalculationService {
         FeeCalculationResponse feeCalculationResponse = response.getBody();
         if (feeCalculationResponse == null) {
           log.debug("Fee calculation returned an empty response");
-          validationContext.flagForRetry(claim.getId());
+          context.flagForRetry(claim.getId());
         }
         // TODO: Get all individual errors from Fee Scheme Platform API?
         Warning warning = feeCalculationResponse.getWarning();
         if (warning != null && warning.getWarningDescription() != null) {
-          validationContext.addClaimError(
+          context.addClaimError(
               claim.getId(), ClaimValidationError.INVALID_FEE_CALCULATION_VALIDATION_FAILED);
         }
       } else {
         log.debug(
             "Fee calculation returned unsuccessful response with status: {}",
             response.getStatusCode());
-        validationContext.flagForRetry(claim.getId());
+        context.flagForRetry(claim.getId());
       }
     }
     log.debug("Fee calculation validation completed for claim {}", claim.getId());

@@ -1,10 +1,13 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.client;
 
+import java.util.List;
 import java.util.UUID;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.service.annotation.GetExchange;
 import org.springframework.web.service.annotation.HttpExchange;
 import org.springframework.web.service.annotation.PatchExchange;
@@ -12,12 +15,15 @@ import org.springframework.web.service.annotation.PostExchange;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResultSet;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.CreateMatterStart201Response;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetBulkSubmission200Response;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.MatterStartPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
 
 /**
  * REST client interface for fetching claims data. This interface communicates with the Data Claims
@@ -79,6 +85,27 @@ public interface DataClaimsRestClient {
   @PostExchange("/submissions/{id}/claims")
   ResponseEntity<Void> createClaim(
       @PathVariable("id") String submissionId, @RequestBody ClaimPost claim);
+
+  /**
+   * Get claims in an office, filtering on certain criteria.
+   *
+   * @param submissionStatuses the statuses of the parent submissions
+   * @param feeCode the fee code of the claim
+   * @param uniqueFileNumber the unique file number of the claim
+   * @param uniqueClientNumber the unique client number of the claim
+   * @param claimStatuses the claim statuses
+   * @return 200 OK with JSON body containing the list of matched claims
+   */
+  @GetExchange("/claims")
+  ResponseEntity<ClaimResultSet> getClaims(
+      @RequestParam String officeCode,
+      @RequestParam(required = false) String submissionId,
+      @RequestParam(required = false) List<SubmissionStatus> submissionStatuses,
+      @RequestParam(required = false) String feeCode,
+      @RequestParam(required = false) String uniqueFileNumber,
+      @RequestParam(required = false) String uniqueClientNumber,
+      @RequestParam(required = false) List<ClaimStatus> claimStatuses,
+      Pageable pageable);
 
   /**
    * Get a specific claim for a submission.
