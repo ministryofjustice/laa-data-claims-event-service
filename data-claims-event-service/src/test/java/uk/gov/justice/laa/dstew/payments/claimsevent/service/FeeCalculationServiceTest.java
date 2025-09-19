@@ -9,7 +9,6 @@ import static uk.gov.justice.laa.dstew.payments.claimsevent.service.ValidationSe
 
 import java.util.Collections;
 import java.util.List;
-import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
