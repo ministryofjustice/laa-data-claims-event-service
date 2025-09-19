@@ -16,7 +16,6 @@ class ClaimEffectiveDateUtilTest {
 
   ClaimEffectiveDateUtil claimEffectiveDateUtil = new ClaimEffectiveDateUtil();
 
-
   @Test
   @DisplayName("Should return case start date when case start date exists")
   void shouldReturnCaseStartDate() {

@@ -212,8 +212,7 @@ class ClaimValidationServiceTest {
               eq("officeAccountNumber"), eq("CIVIL"), any(LocalDate.class)))
           .thenReturn(Mono.just(data));
 
-      when(claimEffectiveDateUtil.getEffectiveDate(any()))
-          .thenReturn(LocalDate.of(2025, 8, 14));
+      when(claimEffectiveDateUtil.getEffectiveDate(any())).thenReturn(LocalDate.of(2025, 8, 14));
 
       SubmissionResponse submissionResponse =
           new SubmissionResponse()
@@ -408,8 +407,7 @@ class ClaimValidationServiceTest {
       when(providerDetailsRestClient.getProviderFirmSchedules(any(), any(), any()))
           .thenReturn(Mono.just(data));
 
-      when(claimEffectiveDateUtil.getEffectiveDate(any()))
-          .thenReturn(LocalDate.of(2025, 8, 14));
+      when(claimEffectiveDateUtil.getEffectiveDate(any())).thenReturn(LocalDate.of(2025, 8, 14));
 
       SubmissionResponse submissionResponse1 =
           new SubmissionResponse()
@@ -506,8 +504,7 @@ class ClaimValidationServiceTest {
       when(categoryOfLawValidationService.getCategoryOfLawLookup(claims))
           .thenReturn(categoryOfLawLookup);
 
-      when(claimEffectiveDateUtil.getEffectiveDate(any()))
-          .thenReturn(LocalDate.of(2025, 8, 14));
+      when(claimEffectiveDateUtil.getEffectiveDate(any())).thenReturn(LocalDate.of(2025, 8, 14));
 
       SubmissionResponse submissionResponse =
           new SubmissionResponse()
@@ -590,8 +587,7 @@ class ClaimValidationServiceTest {
       when(categoryOfLawValidationService.getCategoryOfLawLookup(claims))
           .thenReturn(categoryOfLawLookup);
 
-      when(claimEffectiveDateUtil.getEffectiveDate(any()))
-          .thenReturn(LocalDate.of(2025, 8, 14));
+      when(claimEffectiveDateUtil.getEffectiveDate(any())).thenReturn(LocalDate.of(2025, 8, 14));
 
       SubmissionResponse submissionResponse =
           new SubmissionResponse()
@@ -677,8 +673,7 @@ class ClaimValidationServiceTest {
       when(categoryOfLawValidationService.getCategoryOfLawLookup(claims))
           .thenReturn(categoryOfLawLookup);
 
-      when(claimEffectiveDateUtil.getEffectiveDate(any()))
-          .thenReturn(LocalDate.of(2025, 8, 14));
+      when(claimEffectiveDateUtil.getEffectiveDate(any())).thenReturn(LocalDate.of(2025, 8, 14));
 
       SubmissionResponse submissionResponse =
           new SubmissionResponse()

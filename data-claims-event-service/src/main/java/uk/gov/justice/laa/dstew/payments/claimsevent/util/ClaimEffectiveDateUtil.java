@@ -17,11 +17,14 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.exception.EventServiceIlleg
 public final class ClaimEffectiveDateUtil {
 
   /**
-   * Gets the effective date for a claim based on what fields are available:
+   * Gets the effective date for a claim based on what fields are available.
+   *
+   * <p>The effective date is calculated in the following order:
+   *
    * <ul>
-   *   <li>Use case start date if available.</li>
-   *   <li>Fall back to representation order date if available.</li>
-   *   <li>Otherwise, use unique file number.</li>
+   *   <li>Use case start date if available.
+   *   <li>Fall back to representation order date if available.
+   *   <li>Otherwise, use unique file number.
    * </ul>
    *
    * @param claimResponse the claim to calculate the effective date for
