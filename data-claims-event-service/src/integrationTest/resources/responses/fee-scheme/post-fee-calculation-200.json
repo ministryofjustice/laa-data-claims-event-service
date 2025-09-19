@@ -2,27 +2,28 @@
   "feeCode": "string",
   "schemeId": "string",
   "claimId": "string",
-  "warning": {
-    "warningDescription": "string"
-  },
+  "warnings": [
+    "string"
+  ],
   "escapeCaseFlag": true,
   "feeCalculation": {
     "totalAmount": 0.0,
     "vatIndicator": true,
-    "VatRateApplied": 0.0,
+    "vatRateApplied": 0.0,
     "calculatedVatAmount": 0.0,
     "disbursementAmount": 0.0,
+    "requestedNetDisbursementAmount": 0.0,
     "disbursementVatAmount": 0.0,
     "hourlyTotalAmount": 0.0,
-    "hourlyVatAmount": 0.0,
     "fixedFeeAmount": 0.0,
     "netProfitCostsAmount": 0.0,
+    "requestedNetProfitCostsAmount": null,
     "netCostOfCounselAmount": 0.0,
     "netTravelCostsAmount": 0.0,
     "netWaitingCosts": 0.0,
     "detentionAndWaitingCostsAmount": 0.0,
     "jrFormFillingAmount": 0.0,
     "travelAndWaitingCostAmount": 0.0,
-    "boltOnFeeAmount": 0.0
+    "boltOnFeeDetails": null
   }
 }
