@@ -17,28 +17,19 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.exception.EventServiceIlleg
 public final class ClaimEffectiveDateUtil {
 
   /**
-   * Gets the effective date for a claim based on whether the area of law is CIVIL or CRIME.
-   *
-   * <p>Civil uploads → Uses case start date as it is mandatory for CIVIL claims.
-   *
-   * <p>Crime uploads → Case start is optional for CRIME claims, so when unavailable:
-   *
+   * Gets the effective date for a claim based on what fields are available:
    * <ul>
-   *   <li>Use representation order date if available.
-   *   <li>Otherwise, use unique file number
+   *   <li>Use case start date if available.</li>
+   *   <li>Fall back to representation order date if available.</li>
+   *   <li>Otherwise, use unique file number.</li>
    * </ul>
    *
    * @param claimResponse the claim to calculate the effective date for
-   * @param areaOfLaw the area of law for the claim
    * @return the effective date for the claim
    * @throws EventServiceIllegalArgumentException if dates are unavailable or invalid
    */
-  public LocalDate getEffectiveDate(final ClaimResponse claimResponse, final String areaOfLaw)
+  public LocalDate getEffectiveDate(final ClaimResponse claimResponse)
       throws EventServiceIllegalArgumentException {
-
-    if ("CIVIL".equals(areaOfLaw) && !StringUtils.isNotEmpty(claimResponse.getCaseStartDate())) {
-      throw new EventServiceIllegalArgumentException("Case start date is required");
-    }
 
     if (StringUtils.isNotEmpty(claimResponse.getCaseStartDate())) {
       return parseDate(claimResponse.getCaseStartDate(), "case start date");

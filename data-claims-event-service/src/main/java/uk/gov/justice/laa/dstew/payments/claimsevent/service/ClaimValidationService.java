@@ -131,7 +131,7 @@ public class ClaimValidationService {
     validateMatterType(claim, areaOfLaw, context);
 
     try {
-      LocalDate effectiveDate = claimEffectiveDateUtil.getEffectiveDate(claim, areaOfLaw);
+      LocalDate effectiveDate = claimEffectiveDateUtil.getEffectiveDate(claim);
       List<String> effectiveCategoriesOfLaw =
           getEffectiveCategoriesOfLaw(officeCode, areaOfLaw, effectiveDate);
       // Get effective category of law lookup

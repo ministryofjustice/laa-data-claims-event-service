@@ -136,7 +136,7 @@ class ClaimValidationServiceTest {
           .thenReturn(Mono.just(data));
 
       // Two claims make two separate calls to claimEffectiveDateUtil
-      when(claimEffectiveDateUtil.getEffectiveDate(any(), any()))
+      when(claimEffectiveDateUtil.getEffectiveDate(any()))
           .thenReturn(LocalDate.of(2025, 8, 14))
           .thenReturn(LocalDate.of(2025, 5, 25));
 
@@ -212,7 +212,7 @@ class ClaimValidationServiceTest {
               eq("officeAccountNumber"), eq("CIVIL"), any(LocalDate.class)))
           .thenReturn(Mono.just(data));
 
-      when(claimEffectiveDateUtil.getEffectiveDate(any(), any()))
+      when(claimEffectiveDateUtil.getEffectiveDate(any()))
           .thenReturn(LocalDate.of(2025, 8, 14));
 
       SubmissionResponse submissionResponse =
@@ -408,7 +408,7 @@ class ClaimValidationServiceTest {
       when(providerDetailsRestClient.getProviderFirmSchedules(any(), any(), any()))
           .thenReturn(Mono.just(data));
 
-      when(claimEffectiveDateUtil.getEffectiveDate(any(), any()))
+      when(claimEffectiveDateUtil.getEffectiveDate(any()))
           .thenReturn(LocalDate.of(2025, 8, 14));
 
       SubmissionResponse submissionResponse1 =
@@ -506,7 +506,7 @@ class ClaimValidationServiceTest {
       when(categoryOfLawValidationService.getCategoryOfLawLookup(claims))
           .thenReturn(categoryOfLawLookup);
 
-      when(claimEffectiveDateUtil.getEffectiveDate(any(), any()))
+      when(claimEffectiveDateUtil.getEffectiveDate(any()))
           .thenReturn(LocalDate.of(2025, 8, 14));
 
       SubmissionResponse submissionResponse =
@@ -590,7 +590,7 @@ class ClaimValidationServiceTest {
       when(categoryOfLawValidationService.getCategoryOfLawLookup(claims))
           .thenReturn(categoryOfLawLookup);
 
-      when(claimEffectiveDateUtil.getEffectiveDate(any(), any()))
+      when(claimEffectiveDateUtil.getEffectiveDate(any()))
           .thenReturn(LocalDate.of(2025, 8, 14));
 
       SubmissionResponse submissionResponse =
@@ -677,7 +677,7 @@ class ClaimValidationServiceTest {
       when(categoryOfLawValidationService.getCategoryOfLawLookup(claims))
           .thenReturn(categoryOfLawLookup);
 
-      when(claimEffectiveDateUtil.getEffectiveDate(any(), any()))
+      when(claimEffectiveDateUtil.getEffectiveDate(any()))
           .thenReturn(LocalDate.of(2025, 8, 14));
 
       SubmissionResponse submissionResponse =
