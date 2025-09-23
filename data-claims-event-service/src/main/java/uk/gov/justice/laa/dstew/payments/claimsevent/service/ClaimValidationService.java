@@ -22,6 +22,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestC
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.MandatoryFieldsRegistry;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.EventServiceIllegalArgumentException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.util.ClaimEffectiveDateUtil;
+import uk.gov.justice.laa.dstew.payments.claimsevent.util.UniqueFileNumberUtil;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.JsonSchemaValidator;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
@@ -264,10 +265,8 @@ public class ClaimValidationService {
   private void validateUniqueFileNumber(ClaimResponse claim, SubmissionValidationContext context) {
     String uniqueFileNumber = claim.getUniqueFileNumber();
     if (uniqueFileNumber != null && uniqueFileNumber.length() > 1) {
-      String datePart = uniqueFileNumber.substring(0, 6); // DDMMYY
-      DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyy");
       try {
-        LocalDate date = LocalDate.parse(datePart, formatter);
+        LocalDate date = UniqueFileNumberUtil.parse(uniqueFileNumber);
         if (!date.isBefore(LocalDate.now())) {
           context.addClaimError(
               claim.getId(), ClaimValidationError.INVALID_DATE_IN_UNIQUE_FILE_NUMBER);

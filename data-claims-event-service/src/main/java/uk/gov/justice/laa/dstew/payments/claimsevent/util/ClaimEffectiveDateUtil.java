@@ -1,7 +1,6 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.util;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
@@ -43,31 +42,19 @@ public final class ClaimEffectiveDateUtil {
     }
 
     if (StringUtils.isNotEmpty(claimResponse.getUniqueFileNumber())) {
-      return parseUniqueFileNumber(claimResponse.getUniqueFileNumber());
+      return UniqueFileNumberUtil.parse(claimResponse.getUniqueFileNumber());
     }
 
     throw new EventServiceIllegalArgumentException(
         "No fields available to determine effective date");
   }
 
-  private static LocalDate parseDate(final String dateStr, final String fieldName) {
+  private LocalDate parseDate(final String dateStr, final String fieldName) {
     try {
       return LocalDate.parse(dateStr);
     } catch (DateTimeParseException e) {
       throw new EventServiceIllegalArgumentException(
           String.format("Invalid date format for %s: %s", fieldName, dateStr));
     }
-  }
-
-  private static LocalDate parseUniqueFileNumber(final String uniqueFileNumber) {
-    if (uniqueFileNumber == null || !uniqueFileNumber.matches("\\d{6}/\\d{3}")) {
-      throw new EventServiceIllegalArgumentException(
-          String.format(
-              "Invalid format for unique file number: %s. Expected format: DDMMYY/NNN",
-              uniqueFileNumber));
-    }
-
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyy/NNN");
-    return LocalDate.parse(uniqueFileNumber, formatter);
   }
 }

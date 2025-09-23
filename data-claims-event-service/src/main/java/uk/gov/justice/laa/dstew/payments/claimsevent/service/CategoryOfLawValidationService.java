@@ -78,20 +78,24 @@ public class CategoryOfLawValidationService {
         feeCode -> {
           ResponseEntity<FeeDetailsResponse> feeDetailsResponse =
               feeSchemePlatformRestClient.getFeeDetails(feeCode);
-          if (feeDetailsResponse.getStatusCode().is2xxSuccessful()) {
-            categoryOfLawLookup.put(
-                feeCode,
-                CategoryOfLawResult.withCategoryOfLaw(
-                    feeDetailsResponse.getBody().getCategoryOfLawCode()));
-          } else if (feeDetailsResponse.getStatusCode().isSameCodeAs(HttpStatus.NOT_FOUND)) {
-            log.debug("Get category of law returned 404 for fee code: {}", feeCode);
-            categoryOfLawLookup.put(feeCode, CategoryOfLawResult.withCategoryOfLaw(null));
-          } else {
-            log.debug(
-                "Get category of law resulted in error for fee code {} with status: {}",
-                feeCode,
-                feeDetailsResponse.getStatusCode());
-            categoryOfLawLookup.put(feeCode, CategoryOfLawResult.error());
+
+          switch (feeDetailsResponse.getStatusCode()) {
+            case HttpStatus status when status.is2xxSuccessful() ->
+                categoryOfLawLookup.put(
+                    feeCode,
+                    CategoryOfLawResult.withCategoryOfLaw(
+                        feeDetailsResponse.getBody().getCategoryOfLawCode()));
+            case HttpStatus.NOT_FOUND -> {
+              log.debug("Get category of law returned 404 for fee code: {}", feeCode);
+              categoryOfLawLookup.put(feeCode, CategoryOfLawResult.withCategoryOfLaw(null));
+            }
+            default -> {
+              log.debug(
+                  "Get category of law resulted in error for fee code {} with status: {}",
+                  feeCode,
+                  feeDetailsResponse.getStatusCode());
+              categoryOfLawLookup.put(feeCode, CategoryOfLawResult.error());
+            }
           }
         });
 
