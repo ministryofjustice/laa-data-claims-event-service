@@ -12,7 +12,7 @@ laa:
     url: ${laa.claims-api.hostname}
     accessToken: 123
   bulk-claim-queue:
-    name: bulk-claims-queue
+    name: claims-api-queue
 
 spring:
   cloud:
