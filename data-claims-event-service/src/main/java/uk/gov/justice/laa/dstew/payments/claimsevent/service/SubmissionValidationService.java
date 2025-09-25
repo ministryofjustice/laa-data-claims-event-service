@@ -1,7 +1,6 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
-import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError.SUBMISSION_STATE_IS_NULL;
-
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -12,19 +11,12 @@ import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionClaim;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
-import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
-import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
-import uk.gov.justice.laa.dstew.payments.claimsevent.validation.JsonSchemaValidator;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
-import uk.gov.justice.laa.provider.model.FirmOfficeContractAndScheduleDetails;
-import uk.gov.justice.laa.provider.model.FirmOfficeContractAndScheduleLine;
-import uk.gov.justice.laa.provider.model.ProviderFirmOfficeContractAndScheduleDto;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.submission.SubmissionValidator;
 
 /**
  * A service responsible for validating claim submissions. Any errors found during validation will
@@ -38,8 +30,7 @@ public class SubmissionValidationService {
 
   private final ClaimValidationService claimValidationService;
   private final DataClaimsRestClient dataClaimsRestClient;
-  private final ProviderDetailsRestClient providerDetailsRestClient;
-  private final JsonSchemaValidator jsonSchemaValidator;
+  private final List<SubmissionValidator> submissionValidatorList;
 
   /**
    * Validates a claim submission inside the provided submissionResponse.
@@ -53,16 +44,14 @@ public class SubmissionValidationService {
 
     SubmissionValidationContext context = initialiseValidationContext(submission);
 
-    verifySubmissionStatus(submission, context);
-
-    context.addSubmissionValidationErrors(jsonSchemaValidator.validate("submission", submission));
-
-    validateNilSubmission(submission, context);
-
-    String officeCode = submission.getOfficeAccountNumber();
-    String areaOfLaw = submission.getAreaOfLaw();
-    List<String> providerCategoriesOfLaw = getProviderCategoriesOfLaw(officeCode, areaOfLaw);
-    validateProviderContract(submissionId.toString(), providerCategoriesOfLaw, context);
+    // Currently validating:
+    // - Submission Status (Has highest priority to update the submission status if required)
+    // - Submission Schema
+    // - Nil submissions
+    // - Provider Contract
+    submissionValidatorList
+        .stream().sorted(Comparator.comparingInt(SubmissionValidator::priority))
+        .forEach(validator -> validator.validate(submission, context));
 
     claimValidationService.validateClaims(submission, context);
 
@@ -75,81 +64,6 @@ public class SubmissionValidationService {
     log.debug("Validation completed for submission {}", submissionId);
 
     return context;
-  }
-
-  private void verifySubmissionStatus(
-      SubmissionResponse submission, SubmissionValidationContext context) {
-    SubmissionStatus currentStatus = submission.getStatus();
-    UUID submissionId = submission.getSubmissionId();
-    switch (currentStatus) {
-      case VALIDATION_IN_PROGRESS ->
-          log.debug(
-              "Submission {} already under validation. Attempting to complete validation.",
-              submissionId);
-      case READY_FOR_VALIDATION -> {
-        log.debug(
-            "Submission {} ready for validation. Updating status to VALIDATION_IN_PROGRESS.",
-            submissionId);
-        updateSubmissionStatus(submissionId, SubmissionStatus.VALIDATION_IN_PROGRESS);
-      }
-      case null -> {
-        log.debug("Submission {} state is null", submissionId);
-        context.addSubmissionValidationError(SUBMISSION_STATE_IS_NULL);
-      }
-      default -> {
-        log.debug(
-            "Submission {} cannot be validated in its current state: {}",
-            submissionId,
-            currentStatus);
-        context.addSubmissionValidationError(
-            "Submission cannot be validated in state " + currentStatus);
-      }
-    }
-  }
-
-  private void updateSubmissionStatus(UUID submissionId, SubmissionStatus submissionStatus) {
-    SubmissionPatch submissionPatch =
-        new SubmissionPatch().submissionId(submissionId).status(submissionStatus);
-    dataClaimsRestClient.updateSubmission(submissionId.toString(), submissionPatch);
-  }
-
-  private void validateNilSubmission(
-      SubmissionResponse submission, SubmissionValidationContext context) {
-    log.debug("Validating nil submission for submission {}", submission.getSubmissionId());
-    if (Boolean.TRUE.equals(submission.getIsNilSubmission())) {
-      if (submission.getClaims() != null && !submission.getClaims().isEmpty()) {
-        context.addSubmissionValidationError(
-            ClaimValidationError.INVALID_NIL_SUBMISSION_CONTAINS_CLAIMS);
-      }
-    } else if (Boolean.FALSE.equals(submission.getIsNilSubmission())
-        && (submission.getClaims() == null || submission.getClaims().isEmpty())) {
-      context.addSubmissionValidationError(
-          ClaimValidationError.NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS);
-    }
-    log.debug("Nil submission completed for submission {}", submission.getSubmissionId());
-  }
-
-  private List<String> getProviderCategoriesOfLaw(String officeCode, String areaOfLaw) {
-    return providerDetailsRestClient
-        .getProviderFirmSchedules(officeCode, areaOfLaw)
-        .blockOptional()
-        .stream()
-        .map(ProviderFirmOfficeContractAndScheduleDto::getSchedules)
-        .flatMap(List::stream)
-        .map(FirmOfficeContractAndScheduleDetails::getScheduleLines)
-        .flatMap(List::stream)
-        .map(FirmOfficeContractAndScheduleLine::getCategoryOfLaw)
-        .toList();
-  }
-
-  private void validateProviderContract(
-      String submissionId,
-      List<String> providerCategoriesOfLaw,
-      SubmissionValidationContext context) {
-    log.debug("Validating provider contract for submission {}", submissionId);
-    if (providerCategoriesOfLaw.isEmpty()) {
-      context.addSubmissionValidationError(ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER);
-    }
   }
 
   /**
@@ -165,7 +79,7 @@ public class SubmissionValidationService {
    * </ul>
    *
    * @param submission the claim submission
-   * @param context the submission validation context
+   * @param context    the submission validation context
    */
   private void updateClaims(SubmissionResponse submission, SubmissionValidationContext context) {
     log.debug("Updating claims for submission {}", submission.getSubmissionId().toString());
