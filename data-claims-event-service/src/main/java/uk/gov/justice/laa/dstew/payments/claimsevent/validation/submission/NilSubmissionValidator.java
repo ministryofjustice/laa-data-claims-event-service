@@ -9,17 +9,18 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 /**
  * Validates that a submission's nil flag is set correctly.
  *
- * <p>Validation on this component includes:</p>
+ * <p>Validation on this component includes:
+ *
  * <ul>
- *   <li>If the submission is nil, it must not contain any claims</li>
- *   <li>If the submission is not nil, it must contain at least one claim</li>
+ *   <li>If the submission is nil, it must not contain any claims
+ *   <li>If the submission is not nil, it must contain at least one claim
  * </ul>
  *
  * @author Jamie Briggs
  */
 @Component
 @Slf4j
-public class NilSubmissionValidator implements SubmissionValidator{
+public class NilSubmissionValidator implements SubmissionValidator {
 
   @Override
   public void validate(final SubmissionResponse submission, SubmissionValidationContext context) {

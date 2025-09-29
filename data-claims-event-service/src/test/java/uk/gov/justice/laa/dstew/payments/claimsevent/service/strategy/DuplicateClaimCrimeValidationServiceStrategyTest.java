@@ -3,7 +3,7 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.service.strategy;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static uk.gov.justice.laa.dstew.payments.claimsevent.service.ValidationServiceTestUtils.assertContextClaimError;
+import static uk.gov.justice.laa.dstew.payments.claimsevent.ValidationServiceTestUtils.assertContextClaimError;
 
 import java.util.List;
 import java.util.Optional;

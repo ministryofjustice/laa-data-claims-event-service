@@ -19,7 +19,6 @@ public class SubmissionSchemaValidator implements SubmissionValidator {
 
   private final JsonSchemaValidator jsonSchemaValidator;
 
-
   @Override
   public void validate(final SubmissionResponse submission, SubmissionValidationContext context) {
     context.addSubmissionValidationErrors(jsonSchemaValidator.validate("submission", submission));
@@ -29,5 +28,4 @@ public class SubmissionSchemaValidator implements SubmissionValidator {
   public int priority() {
     return 10;
   }
-
 }

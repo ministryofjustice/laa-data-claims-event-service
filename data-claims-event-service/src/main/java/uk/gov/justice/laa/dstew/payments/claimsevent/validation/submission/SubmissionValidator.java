@@ -5,5 +5,6 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 
 public interface SubmissionValidator {
   void validate(final SubmissionResponse submission, SubmissionValidationContext context);
+
   int priority();
 }

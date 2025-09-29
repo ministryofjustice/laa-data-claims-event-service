@@ -49,8 +49,8 @@ public class SubmissionValidationService {
     // - Submission Schema
     // - Nil submissions
     // - Provider Contract
-    submissionValidatorList
-        .stream().sorted(Comparator.comparingInt(SubmissionValidator::priority))
+    submissionValidatorList.stream()
+        .sorted(Comparator.comparingInt(SubmissionValidator::priority))
         .forEach(validator -> validator.validate(submission, context));
 
     claimValidationService.validateClaims(submission, context);
@@ -79,7 +79,7 @@ public class SubmissionValidationService {
    * </ul>
    *
    * @param submission the claim submission
-   * @param context    the submission validation context
+   * @param context the submission validation context
    */
   private void updateClaims(SubmissionResponse submission, SubmissionValidationContext context) {
     log.debug("Updating claims for submission {}", submission.getSubmissionId().toString());

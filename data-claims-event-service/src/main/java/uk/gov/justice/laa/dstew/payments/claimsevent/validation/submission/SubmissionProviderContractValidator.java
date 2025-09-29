@@ -55,6 +55,4 @@ public class SubmissionProviderContractValidator implements SubmissionValidator 
         .map(FirmOfficeContractAndScheduleLine::getCategoryOfLaw)
         .toList();
   }
-
-
 }
