@@ -1,12 +1,8 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -34,6 +30,10 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.MandatoryFieldsRegistry;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.strategy.DuplicateClaimCivilValidationServiceStrategy;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.strategy.DuplicateClaimCrimeValidationServiceStrategy;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.strategy.DuplicateClaimValidationStrategy;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.strategy.StrategyTypes;
 import uk.gov.justice.laa.dstew.payments.claimsevent.util.ClaimEffectiveDateUtil;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.JsonSchemaValidator;
@@ -49,7 +49,7 @@ class ClaimValidationServiceTest {
 
   @Mock private CategoryOfLawValidationService categoryOfLawValidationService;
 
-  @Mock private DuplicateClaimValidationService duplicateClaimValidationService;
+  @Mock private DuplicateClaimCrimeValidationServiceStrategy duplicateClaimCrimeValidationService;
 
   @Mock private FeeCalculationService feeCalculationService;
 
@@ -61,6 +61,12 @@ class ClaimValidationServiceTest {
 
   @Mock private ClaimEffectiveDateUtil claimEffectiveDateUtil;
 
+  @Mock
+  private DuplicateClaimCivilValidationServiceStrategy
+      mockDuplicateClaimCivilValidationServiceStrategy;
+
+  @Mock private Map<String, DuplicateClaimValidationStrategy> strategies;
+
   @InjectMocks private ClaimValidationService claimValidationService;
 
   @Nested
@@ -69,12 +75,24 @@ class ClaimValidationServiceTest {
 
     @BeforeEach
     void setup() {
+      lenient()
+          .when(strategies.get(StrategyTypes.CRIME))
+          .thenReturn(duplicateClaimCrimeValidationService);
+      lenient()
+          .when(strategies.get(StrategyTypes.CIVIL))
+          .thenReturn(mockDuplicateClaimCivilValidationServiceStrategy);
+
       // Define the map for the test
       Map<String, List<String>> civilMandatoryFields =
           Map.of(
-              "CIVIL", List.of("uniqueFileNumber"),
-              "CRIME", List.of("stageReachedCode"),
-              "MEDIATION", List.of("uniqueFileNumber"));
+              "CIVIL",
+              List.of("uniqueFileNumber"),
+              "CRIME",
+              List.of("stageReachedCode"),
+              "MEDIATION",
+              List.of("uniqueFileNumber"),
+              "CRIME_LOWER",
+              List.of("stageReachedCode"));
 
       lenient()
           .when(mandatoryFieldsRegistry.getMandatoryFieldsByAreaOfLaw())
@@ -158,10 +176,10 @@ class ClaimValidationServiceTest {
       verify(categoryOfLawValidationService, times(1))
           .validateCategoryOfLaw(claim2, categoryOfLawLookup, providerCategoriesOfLaw, context);
 
-      verify(duplicateClaimValidationService, times(1))
-          .validateDuplicateClaims(claim1, claims, "CIVIL", "officeAccountNumber", context);
-      verify(duplicateClaimValidationService, times(1))
-          .validateDuplicateClaims(claim2, claims, "CIVIL", "officeAccountNumber", context);
+      verify(mockDuplicateClaimCivilValidationServiceStrategy, times(1))
+          .validateDuplicateClaims(claim1, claims, "officeAccountNumber", context);
+      verify(mockDuplicateClaimCivilValidationServiceStrategy, times(1))
+          .validateDuplicateClaims(claim2, claims, "officeAccountNumber", context);
 
       verify(feeCalculationService, times(1)).validateFeeCalculation(claim1, context);
       verify(feeCalculationService, times(1)).validateFeeCalculation(claim2, context);
@@ -722,6 +740,106 @@ class ClaimValidationServiceTest {
         for (var claimReport : context.getClaimReports()) {
           assertThat(claimReport.hasErrors()).isFalse();
         }
+      }
+    }
+
+    @Nested
+    class DuplicateClaimsValidation {
+
+      @DisplayName("Area of Code CIVIL: should call civil validation strategy")
+      @Test
+      void callCivilValidationStrategy() {
+        SubmissionResponse submissionResponse =
+            new SubmissionResponse()
+                .submissionId(new UUID(1, 1))
+                .areaOfLaw("CIVIL")
+                .officeAccountNumber("officeAccountNumber");
+        when(dataClaimsRestClient.getClaims(
+                submissionResponse.getOfficeAccountNumber(),
+                submissionResponse.getSubmissionId().toString(),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null))
+            .thenReturn(ResponseEntity.ok(claimResultSet));
+        when(categoryOfLawValidationService.getCategoryOfLawLookup(claims))
+            .thenReturn(Collections.emptyMap());
+
+        when(claimEffectiveDateUtil.getEffectiveDate(any())).thenReturn(LocalDate.of(2025, 8, 14));
+        when(providerDetailsRestClient.getProviderFirmSchedules(
+                eq("officeAccountNumber"), eq("CIVIL"), any(LocalDate.class)))
+            .thenReturn(Mono.just(data));
+
+        SubmissionValidationContext context = createSubmissionValidationContext();
+        claimValidationService.validateClaims(submissionResponse, context);
+
+        verify(mockDuplicateClaimCivilValidationServiceStrategy)
+            .validateDuplicateClaims(claim, claims, "officeAccountNumber", context);
+        verify(duplicateClaimCrimeValidationService, times(0))
+            .validateDuplicateClaims(any(), any(), any(), any());
+      }
+
+      @DisplayName("Area of Code CRIME_LOWER: should call crime validation strategy")
+      @Test
+      void crimeValidationStrategy() {
+        SubmissionResponse submissionResponse =
+            new SubmissionResponse()
+                .submissionId(new UUID(1, 1))
+                .areaOfLaw("CRIME_LOWER")
+                .officeAccountNumber("officeAccountNumber");
+
+        when(dataClaimsRestClient.getClaims(
+                submissionResponse.getOfficeAccountNumber(),
+                submissionResponse.getSubmissionId().toString(),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null))
+            .thenReturn(ResponseEntity.ok(claimResultSet));
+        when(categoryOfLawValidationService.getCategoryOfLawLookup(claims))
+            .thenReturn(Collections.emptyMap());
+
+        when(claimEffectiveDateUtil.getEffectiveDate(any())).thenReturn(LocalDate.of(2025, 8, 14));
+        when(providerDetailsRestClient.getProviderFirmSchedules(
+                eq("officeAccountNumber"), eq("CRIME_LOWER"), any(LocalDate.class)))
+            .thenReturn(Mono.just(data));
+        SubmissionValidationContext context = createSubmissionValidationContext();
+
+        claimValidationService.validateClaims(submissionResponse, context);
+
+        verify(duplicateClaimCrimeValidationService)
+            .validateDuplicateClaims(claim, claims, "officeAccountNumber", context);
+        verify(mockDuplicateClaimCivilValidationServiceStrategy, times(0))
+            .validateDuplicateClaims(any(), any(), any(), any());
+      }
+
+      private final ClaimResponse claim =
+          new ClaimResponse()
+              .id("claimId")
+              .feeCode("feeCode1")
+              .caseStartDate("2025-08-14")
+              .uniqueFileNumber("010101/123")
+              .status(ClaimStatus.READY_TO_PROCESS);
+
+      private final List<ClaimResponse> claims = List.of(claim);
+
+      ClaimResultSet claimResultSet = new ClaimResultSet().content(claims);
+
+      ProviderFirmOfficeContractAndScheduleDto data =
+          new ProviderFirmOfficeContractAndScheduleDto()
+              .addSchedulesItem(
+                  new FirmOfficeContractAndScheduleDetails()
+                      .addScheduleLinesItem(
+                          new FirmOfficeContractAndScheduleLine().categoryOfLaw("categoryOfLaw1")));
+
+      private SubmissionValidationContext createSubmissionValidationContext() {
+        SubmissionValidationContext context = new SubmissionValidationContext();
+        context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
+        return context;
       }
     }
   }

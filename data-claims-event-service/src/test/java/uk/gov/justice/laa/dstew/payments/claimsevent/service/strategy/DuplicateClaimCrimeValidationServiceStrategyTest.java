@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.dstew.payments.claimsevent.service;
+package uk.gov.justice.laa.dstew.payments.claimsevent.service.strategy;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -24,11 +24,11 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationR
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
 @ExtendWith(MockitoExtension.class)
-class DuplicateClaimValidationServiceTest {
+class DuplicateClaimCrimeValidationServiceStrategyTest {
 
   @Mock DataClaimsRestClient dataClaimsRestClient;
 
-  @InjectMocks DuplicateClaimValidationService duplicateClaimValidationService;
+  @InjectMocks DuplicateClaimCrimeValidationServiceStrategy duplicateClaimValidationService;
 
   @Nested
   @DisplayName("validateDuplicateClaims")
@@ -65,7 +65,7 @@ class DuplicateClaimValidationServiceTest {
 
       // When
       duplicateClaimValidationService.validateDuplicateClaims(
-          claim1, submissionClaims, "CRIME_LOWER", "officeCode", context);
+          claim1, submissionClaims, "officeCode", context);
 
       // Then
       assertThat(context.hasErrors()).isFalse();
@@ -103,7 +103,7 @@ class DuplicateClaimValidationServiceTest {
 
       // When
       duplicateClaimValidationService.validateDuplicateClaims(
-          claim1, submissionClaims, "CRIME_LOWER", "officeCode", context);
+          claim1, submissionClaims, "officeCode", context);
 
       // Then
       assertThat(context.hasErrors()).isFalse();
@@ -141,7 +141,7 @@ class DuplicateClaimValidationServiceTest {
 
       // When
       duplicateClaimValidationService.validateDuplicateClaims(
-          claim1, submissionClaims, "CRIME_LOWER", "officeCode", context);
+          claim1, submissionClaims, "officeCode", context);
 
       // Then
       assertThat(context.hasErrors()).isFalse();
@@ -183,7 +183,7 @@ class DuplicateClaimValidationServiceTest {
 
       // When
       duplicateClaimValidationService.validateDuplicateClaims(
-          claim1, submissionClaims, "CRIME_LOWER", "officeCode", context);
+          claim1, submissionClaims, "officeCode", context);
 
       // Then
       assertThat(context.hasErrors(claim1.getId())).isTrue();
@@ -227,7 +227,7 @@ class DuplicateClaimValidationServiceTest {
 
       // When
       duplicateClaimValidationService.validateDuplicateClaims(
-          claim1, submissionClaims, "CRIME_LOWER", "officeCode", context);
+          claim1, submissionClaims, "officeCode", context);
 
       // Then
       assertThat(context.hasErrors()).isFalse();
@@ -269,7 +269,7 @@ class DuplicateClaimValidationServiceTest {
 
       // When
       duplicateClaimValidationService.validateDuplicateClaims(
-          claim1, submissionClaims, "CRIME_LOWER", "officeCode", context);
+          claim1, submissionClaims, "officeCode", context);
 
       // Then
       assertThat(context.hasErrors(claim1.getId())).isTrue();
@@ -318,7 +318,7 @@ class DuplicateClaimValidationServiceTest {
 
       // When
       duplicateClaimValidationService.validateDuplicateClaims(
-          claim1, submissionClaims, "CRIME_LOWER", "officeCode", context);
+          claim1, submissionClaims, "officeCode", context);
 
       // Then
       assertContextClaimError(
