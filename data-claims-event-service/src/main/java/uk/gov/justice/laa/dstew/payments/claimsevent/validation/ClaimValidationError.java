@@ -58,6 +58,11 @@ public enum ClaimValidationError {
       "A duplicate claim was found in another submission",
       null,
       EVENT_SERVICE,
+      ValidationMessageType.ERROR),
+  INVALID_SUBMISSION_PERIOD_SAME_AS_CURRENT_MONTH(
+      "A duplicate claim was found in another submission",
+      null,
+      EVENT_SERVICE,
       ValidationMessageType.ERROR);
 
   final String displayMessage;

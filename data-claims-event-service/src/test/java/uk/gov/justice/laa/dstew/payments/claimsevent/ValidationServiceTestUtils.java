@@ -9,6 +9,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessageType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationError;
 
 public class ValidationServiceTestUtils {
 
@@ -30,6 +31,15 @@ public class ValidationServiceTestUtils {
     assertThat(context.getSubmissionValidationErrors())
         .isNotEmpty()
         .contains(claimValidationError.toPatch());
+  }
+
+  public static void assertContextClaimError(
+      SubmissionValidationContext context,
+      SubmissionValidationError submissionValidationError,
+      Object... args) {
+    assertThat(context.getSubmissionValidationErrors())
+        .isNotEmpty()
+        .contains(submissionValidationError.toPatch(args));
   }
 
   public static void assertContextClaimError(SubmissionValidationContext context, String message) {

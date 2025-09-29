@@ -53,12 +53,14 @@ public class SubmissionValidationService {
         .sorted(Comparator.comparingInt(SubmissionValidator::priority))
         .forEach(validator -> validator.validate(submission, context));
 
-    claimValidationService.validateClaims(submission, context);
+    // Only validate claims if no validation errors have been recorded.
+    if (!context.hasErrors()) {
+      claimValidationService.validateClaims(submission, context);
 
-    // TODO: Send through all claim errors in the patch request.
-    updateClaims(submission, context);
-
-    // TODO: Verify all claims have been validated, and update submission status to
+      // TODO: Send through all claim errors in the patch request.
+      // TODO: Verify all claims have been validated, and update submission status to
+      updateClaims(submission, context);
+    }
     //  VALIDATION_SUCCEEDED or VALIDATION_FAILED
     //  If unvalidated claims remain, re-queue message.
     log.debug("Validation completed for submission {}", submissionId);
