@@ -203,9 +203,7 @@ class JsonSchemaValidatorTest {
     @ParameterizedTest(name = "Missing required field: {0}")
     @CsvSource({
       "status",
-      "schedule_reference",
       "line_number",
-      "case_reference_number",
       "disbursements_vat_amount",
       "net_disbursement_amount",
       "is_vat_applicable",
@@ -514,9 +512,6 @@ class JsonSchemaValidatorTest {
       "jrFormFillingAmount, 10.011, 'jr_form_filling_amount: must be multiple of 0.01 (provided value: 10.011)'",
       "jrFormFillingAmount, 10000, 'jr_form_filling_amount: must have a maximum value of 9999.99 (provided value: 1E+4)'",
       // -------- String maxLength / pattern --------
-      "scheduleReference, 'ABCDEFGHIJKLMNOPQRSTU', 'schedule_reference: must be at most 20 characters long (provided value: ABCDEFGHIJKLMNOPQRSTU)'",
-      "scheduleReference, 'Schedule Ref', 'schedule_reference: does not match the regex pattern ^[a-zA-Z0-9/.\\-]+$ (provided value: Schedule Ref)'",
-      "scheduleReference, 'Schedule:Ref', 'schedule_reference: does not match the regex pattern ^[a-zA-Z0-9/.\\-]+$ (provided value: Schedule:Ref)'",
       "caseReferenceNumber, \"ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890X\", 'case_reference_number: must be at most 30 characters long (provided value: \"ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890X\")'",
       "caseReferenceNumber, 'Case:Ref:123', 'case_reference_number: does not match the regex pattern ^[a-zA-Z0-9/.\\-\\s]+$ (provided value: Case:Ref:123)'",
       "procurementAreaCode, 'Area/Code/123', 'procurement_area_code: does not match the regex pattern ^[A-Z]{2}[0-9]{5}$ (provided value: Area/Code/123)'",
@@ -596,21 +591,19 @@ class JsonSchemaValidatorTest {
       "caseId, '12', 'case_id: does not match the regex pattern ^[0-9]{3}$ (provided value: 12)'",
       "caseId, '1234', 'case_id: does not match the regex pattern ^[0-9]{3}$ (provided value: 1234)'",
       "uniqueCaseId, '   ', 'unique_case_id: does not match the regex pattern ^\\s*\\S.*$ (provided value:    )'",
-      "caseStageCode, 'ABCDE', 'case_stage_code: does not match the regex pattern ^(FPL(0[1-9]|1[0-9]|20|21)|FPC0[1-3]|MHL0[1-9])$ (provided value: ABCDE)'",
+      "caseStageCode, 'ABCDE', 'case_stage_code: does not match the regex pattern ^(FPL(0[1-9]|1[0-9]|20|21)|FPC0[1-3]|MHL(0[1-9]|10))$ (provided value: ABCDE)'",
       "stageReachedCode, 'A$', 'stage_reached_code: does not match the regex pattern ^[a-zA-Z0-9]+$ (provided value: A$)'",
       "standardFeeCategoryCode, 'XYZ', 'standard_fee_category_code: does not match the regex pattern ^(1A|2A|1B|2B|1A-HSF|1B-HSF|1A-LSF|1B-LSF|1EW|1SO|2|3|ULF|UHF|CLF|CHF|Sending Hearing Fixed Fee)$ (provided value: XYZ)'",
       "outcomeCode, 'X$', 'outcome_code: does not match the regex pattern ^[a-zA-Z0-9]+$ (provided value: X$)'",
       "designatedAccreditedRepresentativeCode, '6', 'designated_accredited_representative_code: does not match the regex pattern ^[1-5]$ (provided value: 6)'",
       "mentalHealthTribunalReference, 'AB1234', 'mental_health_tribunal_reference: does not match the regex pattern ^([A-Z]{2}/[0-9]{4}/[0-9]{4}|[A-Z]{2}[0-9]{6})$ (provided value: AB1234)'",
       "mentalHealthTribunalReference, 'AB/123/1234', 'mental_health_tribunal_reference: does not match the regex pattern ^([A-Z]{2}/[0-9]{4}/[0-9]{4}|[A-Z]{2}[0-9]{6})$ (provided value: AB/123/1234)'",
-      "exemptionCriteriaSatisfied, 'ZZ999', 'exemption_criteria_satisfied: does not match the regex pattern ^(DV0(0[1-9]|1[0-9]|19)|CA00[1-8]|TR001|CN001|UA001)$ (provided value: ZZ999)'",
+      "exemptionCriteriaSatisfied, 'ZZ9999', 'exemption_criteria_satisfied: does not match the regex pattern ^[A-Z]{2}[0-9]{3}$ (provided value: ZZ9999)'",
       "exceptionalCaseFundingReference, '1234567ABX', 'exceptional_case_funding_reference: does not match the regex pattern ^[0-9]{7}[A-Z]{2}$ (provided value: 1234567ABX)'",
       "exceptionalCaseFundingReference, '12345AB', 'exceptional_case_funding_reference: does not match the regex pattern ^[0-9]{7}[A-Z]{2}$ (provided value: 12345AB)'",
       "priorAuthorityReference, 'ABC$123', 'prior_authority_reference: does not match the regex pattern ^[a-zA-Z0-9]+$ (provided value: ABC$123)'",
-      "meetingsAttendedCode, 'MTGA00', 'meetings_attended_code: does not match the regex pattern ^MTGA(0[1-9]|1[0-2])$ (provided value: MTGA00)'",
-      "meetingsAttendedCode, 'MTGA13', 'meetings_attended_code: does not match the regex pattern ^MTGA(0[1-9]|1[0-2])$ (provided value: MTGA13)'",
-      "courtLocationCode, 'HPCDC001', 'court_location_code: does not match the regex pattern ^HPCDS(00[1-9]|0[1-9][0-9]|1[0-9]{2}|20[0-9]|21[0-5])$ (provided value: HPCDC001)'",
-      "courtLocationCode, 'HPCDS999', 'court_location_code: does not match the regex pattern ^HPCDS(00[1-9]|0[1-9][0-9]|1[0-9]{2}|20[0-9]|21[0-5])$ (provided value: HPCDS999)'",
+      "meetingsAttendedCode, 'MTGA00', 'meetings_attended_code: does not match the regex pattern ^MTGA(0[1-9]|1[0-9]|2[0-4])$ (provided value: MTGA00)'",
+      "meetingsAttendedCode, 'MTGA25', 'meetings_attended_code: does not match the regex pattern ^MTGA(0[1-9]|1[0-9]|2[0-4])$ (provided value: MTGA25)'",
       "homeOfficeClientNumber, 'ABCDEFGHIJKLMNOPQ', 'home_office_client_number: must be at most 16 characters long (provided value: ABCDEFGHIJKLMNOPQ)'",
       "claExemptionCode, 'ABC', 'cla_exemption_code: must be at least 4 characters long (provided value: ABC)'",
       "claExemptionCode, 'ABCDE', 'cla_exemption_code: must be at most 4 characters long (provided value: ABCDE)'",
@@ -793,14 +786,17 @@ class JsonSchemaValidatorTest {
     ClaimResponse claim = new ClaimResponse();
     claim
         .lineNumber(1)
-        .caseReferenceNumber("CaseReferenceNumber")
         .status(ClaimStatus.READY_TO_PROCESS)
         .scheduleReference("ScheduleReference")
         .caseStartDate("2020-04-10")
         .netDisbursementAmount(BigDecimal.valueOf(20.10))
         .disbursementsVatAmount(BigDecimal.valueOf(10.20))
         .isVatApplicable(true)
-        .feeCode("FeeCode");
+        .feeCode("FeeCode")
+        .caseStageCode("MHL10")
+        .courtLocationCode("ABCDE")
+        .exemptionCriteriaSatisfied("CM001")
+        .meetingsAttendedCode("MTGA24");
     return claim;
   }
 

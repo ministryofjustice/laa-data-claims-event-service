@@ -33,6 +33,8 @@ public class MandatoryFieldsRegistry {
           "waitingTime",
           "netCounselCostsAmount",
           "caseId",
+          "caseReferenceNumber",
+          "scheduleReference",
           "matterTypeCode",
           "netProfitCostsAmount");
 
@@ -57,6 +59,8 @@ public class MandatoryFieldsRegistry {
           "disabilityCode",
           "isLegallyAided",
           "caseId",
+          "caseReferenceNumber",
+          "scheduleReference",
           "matterTypeCode",
           "uniqueCaseId");
 
