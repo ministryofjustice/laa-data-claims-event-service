@@ -95,15 +95,15 @@ public interface DataClaimsRestClient {
    * around this limitation until it has been implemented. <a
    * href="https://github.com/spring-projects/spring-data-commons/issues/3046">Issue #25899</a>
    *
-   * @param officeCode
-   * @param submissionId
-   * @param submissionStatuses
-   * @param feeCode
-   * @param uniqueFileNumber
-   * @param uniqueClientNumber
-   * @param claimStatuses
-   * @param pageable
-   * @return
+   * @param officeCode the office code of the claims to be retrieved
+   * @param submissionId the submission id of the claims to be retrieved
+   * @param submissionStatuses the statuses of the parent submissions
+   * @param feeCode the fee code of the claims to be retrieved
+   * @param uniqueFileNumber the unique file number of the claims to be retrieved
+   * @param uniqueClientNumber the unique client number of the claims to be retrieved
+   * @param claimStatuses the claim statuses
+   * @param pageable the pageable object containing the page number and page size
+   * @return 200 OK with JSON body containing the list of matched claims
    */
   default ResponseEntity<ClaimResultSet> getClaims(
       String officeCode,
@@ -133,11 +133,16 @@ public interface DataClaimsRestClient {
   /**
    * Get claims in an office, filtering on certain criteria.
    *
+   * @param officeCode the office code of the claims to be retrieved
+   * @param submissionId the submission id of the claims to be retrieved
    * @param submissionStatuses the statuses of the parent submissions
-   * @param feeCode the fee code of the claim
-   * @param uniqueFileNumber the unique file number of the claim
-   * @param uniqueClientNumber the unique client number of the claim
+   * @param feeCode the fee code of the claims to be retrieved
+   * @param uniqueFileNumber the unique file number of the claims to be retrieved
+   * @param uniqueClientNumber the unique client number of the claims to be retrieved
    * @param claimStatuses the claim statuses
+   * @param page the page number
+   * @param size the page size
+   * @param sort the sort order
    * @return 200 OK with JSON body containing the list of matched claims
    */
   @GetExchange("/claims")
