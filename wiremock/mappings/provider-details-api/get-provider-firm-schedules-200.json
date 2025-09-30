@@ -1,7 +1,7 @@
 {
   "request": {
     "method": "GET",
-    "urlPathPattern": "/provider-offices/[a-f0-9\\-]+/schedules"
+    "urlPathPattern": "/api/v2/provider-offices/[a-zA-Z0-9\\-]+/schedules"
   },
   "scenarioName": "get schedules",
   "requiredScenarioState": "Started",
