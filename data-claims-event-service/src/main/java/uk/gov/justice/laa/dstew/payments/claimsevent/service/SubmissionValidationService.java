@@ -2,6 +2,7 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -30,6 +31,9 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.submission.Submi
 @AllArgsConstructor
 public class SubmissionValidationService {
 
+  private static final String SUBMISSION_PERIOD_CANNOT_BE_NULL = "Submission period cannot be null";
+  private static final String SUBMISSION_PERIOD_PATTERN = "MMM-yyyy";
+  private static final String SUBMISSION_PERIOD_VALIDATION_DATE = "APR-2025";
   private final ClaimValidationService claimValidationService;
   private final DataClaimsRestClient dataClaimsRestClient;
   private final List<SubmissionValidator> submissionValidatorList;
