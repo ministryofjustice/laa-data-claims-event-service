@@ -44,10 +44,7 @@ public class ValidationServiceTestUtils {
 
   public static void assertContextClaimError(SubmissionValidationContext context, String message) {
     ValidationMessagePatch messagePatch = new ValidationMessagePatch();
-    messagePatch
-        .displayMessage(message)
-        .source(EVENT_SERVICE)
-        .type(ValidationMessageType.ERROR);
+    messagePatch.displayMessage(message).source(EVENT_SERVICE).type(ValidationMessageType.ERROR);
     assertThat(context.getSubmissionValidationErrors()).isNotEmpty().contains(messagePatch);
   }
 }
