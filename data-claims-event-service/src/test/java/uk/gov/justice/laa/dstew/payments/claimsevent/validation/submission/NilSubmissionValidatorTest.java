@@ -9,8 +9,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionClaim;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
-import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationError;
 
 @DisplayName("NIL Submission Validator Test")
 class NilSubmissionValidatorTest {
@@ -77,7 +77,8 @@ class NilSubmissionValidatorTest {
     // Then
     assertTrue(submissionValidationContext.hasErrors());
     assertContextClaimError(
-        submissionValidationContext, ClaimValidationError.INVALID_NIL_SUBMISSION_CONTAINS_CLAIMS);
+        submissionValidationContext,
+        SubmissionValidationError.INVALID_NIL_SUBMISSION_CONTAINS_CLAIMS);
   }
 
   @Test
@@ -92,6 +93,7 @@ class NilSubmissionValidatorTest {
     // Then
     assertTrue(submissionValidationContext.hasErrors());
     assertContextClaimError(
-        submissionValidationContext, ClaimValidationError.NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS);
+        submissionValidationContext,
+        SubmissionValidationError.NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS);
   }
 }

@@ -46,7 +46,6 @@ public class ValidationServiceTestUtils {
     ValidationMessagePatch messagePatch = new ValidationMessagePatch();
     messagePatch
         .displayMessage(message)
-        .technicalMessage(message)
         .source(EVENT_SERVICE)
         .type(ValidationMessageType.ERROR);
     assertThat(context.getSubmissionValidationErrors()).isNotEmpty().contains(messagePatch);

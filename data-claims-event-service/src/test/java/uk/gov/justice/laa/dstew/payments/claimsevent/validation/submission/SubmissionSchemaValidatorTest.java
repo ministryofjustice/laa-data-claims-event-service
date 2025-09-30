@@ -14,9 +14,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
-import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.JsonSchemaValidator;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationError;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Submission Schema Validator Test")
@@ -54,7 +54,7 @@ class SubmissionSchemaValidatorTest {
     // whatever
     //  the schema validator returns so this is fine.
     List<ValidationMessagePatch> emptyErrorsList =
-        List.of(ClaimValidationError.SUBMISSION_STATE_IS_NULL.toPatch());
+        List.of(SubmissionValidationError.SUBMISSION_STATUS_IS_NULL.toPatch());
     SubmissionResponse submissionResponse = SubmissionResponse.builder().build();
     SubmissionValidationContext submissionValidationContext = new SubmissionValidationContext();
     when(jsonSchemaValidator.validate("submission", submissionResponse))
@@ -64,6 +64,6 @@ class SubmissionSchemaValidatorTest {
     // Then
     assertTrue(submissionValidationContext.hasErrors());
     assertContextClaimError(
-        submissionValidationContext, ClaimValidationError.SUBMISSION_STATE_IS_NULL);
+        submissionValidationContext, SubmissionValidationError.SUBMISSION_STATUS_IS_NULL);
   }
 }

@@ -1,7 +1,5 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.validation.submission;
 
-import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError.SUBMISSION_STATE_IS_NULL;
-
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +9,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationError;
 
 /**
  * Validates that a submission's status is valid for the given action. Also updates a submission
@@ -42,7 +41,7 @@ public class SubmissionStatusValidator implements SubmissionValidator {
       }
       case null -> {
         log.debug("Submission {} state is null", submissionId);
-        context.addSubmissionValidationError(SUBMISSION_STATE_IS_NULL);
+        context.addSubmissionValidationError(SubmissionValidationError.SUBMISSION_STATUS_IS_NULL);
       }
       default -> {
         log.debug(
@@ -50,7 +49,7 @@ public class SubmissionStatusValidator implements SubmissionValidator {
             submissionId,
             currentStatus);
         context.addSubmissionValidationError(
-            "Submission cannot be validated in state " + currentStatus);
+            SubmissionValidationError.INCORRECT_SUBMISSION_STATUS_FOR_VALIDATION, currentStatus);
       }
     }
   }

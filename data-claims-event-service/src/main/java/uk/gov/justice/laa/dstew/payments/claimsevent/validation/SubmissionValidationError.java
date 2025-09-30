@@ -11,6 +11,21 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessageType;
 @RequiredArgsConstructor
 @Getter
 public enum SubmissionValidationError {
+  INCORRECT_SUBMISSION_STATUS_FOR_VALIDATION(
+      "Submission cannot be validated in state %s",
+      null, EVENT_SERVICE, ValidationMessageType.ERROR),
+  SUBMISSION_STATUS_IS_NULL(
+      "The submission state is null", null, EVENT_SERVICE, ValidationMessageType.ERROR),
+  INVALID_NIL_SUBMISSION_CONTAINS_CLAIMS(
+      "Submission is marked as nil submission, but contains claims",
+      null,
+      EVENT_SERVICE,
+      ValidationMessageType.ERROR),
+  NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS(
+      "Submission is marked as nil submission, but contains claims",
+      null,
+      EVENT_SERVICE,
+      ValidationMessageType.ERROR),
   SUBMISSION_PERIOD_MISSING(
       "Submission period is required. Please provide a submission period in the format MMM-YYYY",
       null,

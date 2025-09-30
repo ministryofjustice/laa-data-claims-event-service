@@ -21,8 +21,8 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
-import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationError;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Submission status validator test")
@@ -86,7 +86,7 @@ class SubmissionStatusValidatorTest {
     // Then
     assertTrue(submissionValidationContext.hasErrors());
     assertContextClaimError(
-        submissionValidationContext, ClaimValidationError.SUBMISSION_STATE_IS_NULL);
+        submissionValidationContext, SubmissionValidationError.SUBMISSION_STATUS_IS_NULL);
     verify(dataClaimsRestClient, times(0)).updateSubmission(any(), any());
   }
 
