@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,6 +21,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.service.TempService;
 @RestController
 @AllArgsConstructor
 @RequestMapping("/api/v1")
+@Profile("!test")
 public class TempController {
 
   private final TempService bulkParsingService;

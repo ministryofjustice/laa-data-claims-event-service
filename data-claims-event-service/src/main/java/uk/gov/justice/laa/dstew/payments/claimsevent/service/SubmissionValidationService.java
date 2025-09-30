@@ -48,7 +48,6 @@ public class SubmissionValidationService {
     // - Submission Status (Has highest priority to update the submission status if required)
     // - Submission Schema
     // - Nil submissions
-    // - Provider Contract
     submissionValidatorList.stream()
         .sorted(Comparator.comparingInt(SubmissionValidator::priority))
         .forEach(validator -> validator.validate(submission, context));

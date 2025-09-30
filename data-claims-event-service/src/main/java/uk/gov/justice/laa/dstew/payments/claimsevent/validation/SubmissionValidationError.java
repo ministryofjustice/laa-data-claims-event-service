@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessageType;
 
-/** Enum holding claim validation errors. */
+/** Enum holding submission validation errors. */
 @RequiredArgsConstructor
 @Getter
 public enum SubmissionValidationError {

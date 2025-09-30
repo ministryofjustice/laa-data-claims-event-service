@@ -1,8 +1,10 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.client;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -89,6 +91,48 @@ public interface DataClaimsRestClient {
   /**
    * Get claims in an office, filtering on certain criteria.
    *
+   * <p>Currently using Pageable within HttpExchange is not supported. This method aims to work
+   * around this limitation until it has been implemented. <a
+   * href="https://github.com/spring-projects/spring-data-commons/issues/3046">Issue #25899</a>
+   *
+   * @param officeCode
+   * @param submissionId
+   * @param submissionStatuses
+   * @param feeCode
+   * @param uniqueFileNumber
+   * @param uniqueClientNumber
+   * @param claimStatuses
+   * @param pageable
+   * @return
+   */
+  default ResponseEntity<ClaimResultSet> getClaims(
+      String officeCode,
+      String submissionId,
+      List<SubmissionStatus> submissionStatuses,
+      String feeCode,
+      String uniqueFileNumber,
+      String uniqueClientNumber,
+      List<ClaimStatus> claimStatuses,
+      Pageable pageable) {
+    Integer pageNumber = Objects.nonNull(pageable) ? pageable.getPageNumber() : null;
+    Integer pageSize = Objects.nonNull(pageable) ? pageable.getPageSize() : null;
+    Sort sort = Objects.nonNull(pageable) ? pageable.getSort() : null;
+    return this.getClaims(
+        officeCode,
+        submissionId,
+        submissionStatuses,
+        feeCode,
+        uniqueFileNumber,
+        uniqueClientNumber,
+        claimStatuses,
+        pageNumber,
+        pageSize,
+        sort);
+  }
+
+  /**
+   * Get claims in an office, filtering on certain criteria.
+   *
    * @param submissionStatuses the statuses of the parent submissions
    * @param feeCode the fee code of the claim
    * @param uniqueFileNumber the unique file number of the claim
@@ -105,7 +149,9 @@ public interface DataClaimsRestClient {
       @RequestParam(required = false) String uniqueFileNumber,
       @RequestParam(required = false) String uniqueClientNumber,
       @RequestParam(required = false) List<ClaimStatus> claimStatuses,
-      @RequestParam(required = false) Pageable pageable);
+      @RequestParam(required = false) Integer page,
+      @RequestParam(required = false) Integer size,
+      @RequestParam(required = false) Sort sort);
 
   /**
    * Get a specific claim for a submission.

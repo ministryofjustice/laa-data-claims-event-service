@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
@@ -52,22 +53,25 @@ public abstract class MockServerIntegrationTest {
   private static final String FEE_CALCULATION = API_VERSION_1 + "fee-calculation";
   private static final String CLAIMS_ENDPOINT = "/claims/";
 
+  private static final Integer MOCK_SERVER_PORT = 1080;
   protected static final DockerImageName MOCKSERVER_IMAGE =
       DockerImageName.parse("mockserver/mockserver")
           .withTag("mockserver-" + MockServerClient.class.getPackage().getImplementationVersion());
 
   private static final MockServerContainer MOCK_SERVER_CONTAINER = createContainer();
 
-  protected MockServerContainer mockServerContainer;
+  protected static MockServerContainer mockServerContainer;
   protected MockServerClient mockServerClient;
   protected static MockServerContainer mockStaticServerContainer = MOCK_SERVER_CONTAINER;
 
   protected ObjectMapper objectMapper = new ObjectMapper();
 
   private static MockServerContainer createContainer() {
+    List<String> portBinding = Arrays.asList("30000:1080");
     MockServerContainer container =
         new MockServerContainer(MOCKSERVER_IMAGE)
             .waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofSeconds(30)));
+    container.setPortBindings(portBinding);
     container.start();
     log.info("Started MockServer container on port: {}", container.getFirstMappedPort());
     return container;
@@ -97,14 +101,14 @@ public abstract class MockServerIntegrationTest {
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
   }
 
-  protected <T> T createClient(Class<T> serviceClass) {
+  protected static <T> T createClient(Class<T> serviceClass) {
     WebClient webClient = createWebClient();
     HttpServiceProxyFactory factory =
         HttpServiceProxyFactory.builderFor(WebClientAdapter.create(webClient)).build();
     return factory.createClient(serviceClass);
   }
 
-  protected @NotNull WebClient createWebClient() {
+  protected static @NotNull WebClient createWebClient() {
     ApiProperties apiProperties =
         new ApiProperties(
             mockServerContainer.getEndpoint(),
