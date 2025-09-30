@@ -118,6 +118,7 @@ public class ClaimValidationService {
     checkMandatoryFields(claim, areaOfLaw, context);
     validateUniqueFileNumber(claim, context);
     validateStageReachedCode(claim, areaOfLaw, context);
+    validateScheduleReference(claim, areaOfLaw, context);
     validateDisbursementsVatAmount(claim, areaOfLaw, context);
     String caseStartDate = claim.getCaseStartDate();
     checkDateInPast(claim, "Case Start Date", caseStartDate, OLDEST_DATE_ALLOWED_1, context);
@@ -224,6 +225,16 @@ public class ClaimValidationService {
 
     validateFieldWithRegex(
         claim, areaOfLaw, claim.getStageReachedCode(), "stage_reached_code", regex, context);
+  }
+
+  private void validateScheduleReference(
+      ClaimResponse claim, String areaOfLaw, SubmissionValidationContext context) {
+    String regex = null;
+    if (areaOfLaw.equals("CIVIL")) {
+      regex = "^[a-zA-Z0-9/.\\-]{1,20}$";
+    }
+    validateFieldWithRegex(
+        claim, areaOfLaw, claim.getScheduleReference(), "schedule_reference", regex, context);
   }
 
   private void validateMatterType(
