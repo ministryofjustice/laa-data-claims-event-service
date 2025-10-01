@@ -21,6 +21,8 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.MandatoryFieldsRegistry;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.EventServiceIllegalArgumentException;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.strategy.DuplicateClaimValidationStrategy;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.strategy.StrategyTypes;
 import uk.gov.justice.laa.dstew.payments.claimsevent.util.ClaimEffectiveDateUtil;
 import uk.gov.justice.laa.dstew.payments.claimsevent.util.UniqueFileNumberUtil;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
@@ -44,13 +46,13 @@ public class ClaimValidationService {
   public static final String MIN_REP_ORDER_DATE = "2016-04-01";
   public static final String MIN_BIRTH_DATE = "1900-01-01";
   private final CategoryOfLawValidationService categoryOfLawValidationService;
-  private final DuplicateClaimValidationService duplicateClaimValidationService;
   private final ProviderDetailsRestClient providerDetailsRestClient;
   private final FeeCalculationService feeCalculationService;
   private final DataClaimsRestClient dataClaimsRestClient;
   private final JsonSchemaValidator jsonSchemaValidator;
   private final MandatoryFieldsRegistry mandatoryFieldsRegistry;
   private final ClaimEffectiveDateUtil claimEffectiveDateUtil;
+  private final Map<String, DuplicateClaimValidationStrategy> strategies;
 
   /**
    * Validate a list of claims in a submission.
@@ -145,9 +147,8 @@ public class ClaimValidationService {
           e.getMessage());
     }
 
-    // duplicates
-    duplicateClaimValidationService.validateDuplicateClaims(
-        claim, submissionClaims, areaOfLaw, officeCode, context);
+    // duplicates bases on area of law
+    validateDuplicateClaims(claim, submissionClaims, areaOfLaw, officeCode, context);
 
     // fee calculation validation
     feeCalculationService.validateFeeCalculation(claim, context);
@@ -325,5 +326,25 @@ public class ClaimValidationService {
         .flatMap(List::stream)
         .map(FirmOfficeContractAndScheduleLine::getCategoryOfLaw)
         .toList();
+  }
+
+  private void validateDuplicateClaims(
+      final ClaimResponse claim,
+      final List<ClaimResponse> submissionClaims,
+      final String areaOfLaw,
+      final String officeCode,
+      final SubmissionValidationContext context) {
+    switch (areaOfLaw) {
+      case StrategyTypes.CRIME ->
+          strategies
+              .get(StrategyTypes.CRIME)
+              .validateDuplicateClaims(claim, submissionClaims, officeCode, context);
+      case StrategyTypes.CIVIL ->
+          strategies
+              .get(StrategyTypes.CIVIL)
+              .validateDuplicateClaims(claim, submissionClaims, officeCode, context);
+      default ->
+          log.debug("No duplicate claim validation strategy found for area of law: {}", areaOfLaw);
+    }
   }
 }

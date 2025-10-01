@@ -105,7 +105,7 @@ public interface DataClaimsRestClient {
       @RequestParam(required = false) String uniqueFileNumber,
       @RequestParam(required = false) String uniqueClientNumber,
       @RequestParam(required = false) List<ClaimStatus> claimStatuses,
-      Pageable pageable);
+      @RequestParam(required = false) Pageable pageable);
 
   /**
    * Get a specific claim for a submission.
