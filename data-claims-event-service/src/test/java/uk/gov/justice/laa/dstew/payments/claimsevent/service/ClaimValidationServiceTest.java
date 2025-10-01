@@ -568,7 +568,7 @@ class ClaimValidationServiceTest {
     }
 
     /*
-    Schedule Reference should have format validation for CIVIL, but it's no formation is needed for MEDIATION.
+    Schedule Reference should have format validation for CIVIL, but no format validation is needed for MEDIATION.
     This field is optional for CRIME.
     Ref: https://dsdmoj.atlassian.net/browse/DSTEW-430
      */
@@ -586,7 +586,7 @@ class ClaimValidationServiceTest {
       "8, ABCD:EFGH, MEDIATION, 123, ABCDEFGHIJKLMNOPQRST123, AB, '^[a-zA-Z0-9/.\\-]{1,20}$', false",
       "9, ABCD:EFGH, MEDIATION, 123, ABCD?!, AB, '^[a-zA-Z0-9/.\\-]{1,20}$', false"
     })
-    void checkScheduleReference(
+    void validateFormatForScheduleReference(
         int claimIdBit,
         String matterTypeCode,
         String areaOfLaw,
