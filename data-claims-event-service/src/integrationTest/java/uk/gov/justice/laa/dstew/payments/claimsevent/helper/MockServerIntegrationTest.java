@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
+import java.time.YearMonth;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -25,6 +26,9 @@ import org.mockserver.client.MockServerClient;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.Parameter;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
@@ -37,7 +41,11 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 import software.amazon.awssdk.http.HttpStatusCode;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.ApiProperties;
+import uk.gov.justice.laa.dstew.payments.claimsevent.config.DataClaimsApiProperties;
+import uk.gov.justice.laa.dstew.payments.claimsevent.config.FeeSchemePlatformApiProperties;
+import uk.gov.justice.laa.dstew.payments.claimsevent.config.ProviderDetailsApiProperties;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.WebClientConfiguration;
+import uk.gov.justice.laa.dstew.payments.claimsevent.util.DateUtil;
 
 @Slf4j
 @TestInstance(Lifecycle.PER_CLASS)
@@ -47,6 +55,8 @@ public abstract class MockServerIntegrationTest {
   private static final String API_VERSION_2 = "/api/v2/";
   private static final String DATA_SUBMISSION_API_PATH = API_VERSION_0 + "submissions/";
   private static final String DATA_CLAIMS_API_PATH = API_VERSION_0 + "claims";
+  private static final String DATA_GET_CLAIM_API_PATH =
+      API_VERSION_0 + "submissions/{submission-id}/claims/{claim-id}";
   private static final String PROVIDER_OFFICES = API_VERSION_2 + "provider-offices/";
   private static final String SCHEDULES_ENDPOINT = "/schedules";
   private static final String FEE_DETAILS = API_VERSION_1 + "fee-details/";
@@ -213,6 +223,21 @@ public abstract class MockServerIntegrationTest {
                 .withBody(json(readJsonFromFile(expectedResponse))));
   }
 
+  protected void stubForGetClaim(UUID submissionId, UUID claimId, String expectedResponse)
+      throws Exception {
+    mockServerClient
+        .when(
+            HttpRequest.request()
+                .withMethod(HttpMethod.GET.toString())
+                .withPath(
+                    API_VERSION_0 + "submissions/" + submissionId + CLAIMS_ENDPOINT + claimId))
+        .respond(
+            HttpResponse.response()
+                .withStatusCode(HttpStatusCode.OK)
+                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
+                .withBody(json(readJsonFromFile(expectedResponse))));
+  }
+
   @AfterEach
   void tearDown() {
     mockServerClient.reset();
@@ -252,5 +277,42 @@ public abstract class MockServerIntegrationTest {
             HttpResponse.response()
                 .withStatusCode(204)
                 .withHeader("Content-Type", "application/json"));
+  }
+
+  @TestConfiguration
+  public static class ClaimsConfiguration {
+
+    @Bean
+    @Primary
+    DataClaimsApiProperties dataClaimsApiProperties() {
+      // Set using host and port running the mock server
+      return new DataClaimsApiProperties("http://localhost:30000", "localhost", 30000, "");
+    }
+
+    @Bean
+    @Primary
+    FeeSchemePlatformApiProperties feeSchemePlatformApiProperties() {
+      // Set using host and port running the mock server
+      return new FeeSchemePlatformApiProperties("http://localhost:30000", "localhost", 30000, "");
+    }
+
+    @Bean
+    @Primary
+    ProviderDetailsApiProperties providerDetailsApiProperties() {
+      // Set using host and port running the mock server
+      return new ProviderDetailsApiProperties("http://localhost:30000", "localhost", 30000, "");
+    }
+
+    @Bean
+    @Primary
+    DateUtil dateUtil() {
+      return new DateUtil() {
+        @Override
+        public YearMonth currentYearMonth() {
+          // Set current year to 2025-05 for constant values within code
+          return YearMonth.of(2025, 5);
+        }
+      };
+    }
   }
 }

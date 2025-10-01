@@ -4,20 +4,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.ContextUtil.assertContextClaimError;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.ContextUtil.assertContextHasNoErrors;
 
-import java.time.YearMonth;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Primary;
-import uk.gov.justice.laa.dstew.payments.claimsevent.config.DataClaimsApiProperties;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MockServerIntegrationTest;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.SubmissionValidationService;
-import uk.gov.justice.laa.dstew.payments.claimsevent.util.DateUtil;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationError;
 
@@ -31,29 +25,6 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 public class SubmissionValidationServiceIntegrationTest extends MockServerIntegrationTest {
 
   @Autowired protected SubmissionValidationService submissionValidationService;
-
-  @TestConfiguration
-  public static class ClaimsConfiguration {
-
-    @Bean
-    @Primary
-    DataClaimsApiProperties dataClaimsApiProperties() {
-      // Set using host and port running the mock server
-      return new DataClaimsApiProperties("http://localhost:30000", "localhost", 30000, "");
-    }
-
-    @Bean
-    @Primary
-    DateUtil dateUtil() {
-      return new DateUtil() {
-        @Override
-        public YearMonth currentYearMonth() {
-          // Set current year to 2025-05 for constant values within code
-          return YearMonth.of(2025, 5);
-        }
-      };
-    }
-  }
 
   UUID submissionId = UUID.fromString("0561d67b-30ed-412e-8231-f6296a53538d");
 
