@@ -77,7 +77,7 @@ class JsonSchemaValidatorTest {
       "submission_period",
       "area_of_law",
       "status",
-      "schedule_number",
+      "crime_schedule_number",
       "is_nil_submission",
       "number_of_claims"
     })
@@ -100,7 +100,7 @@ class JsonSchemaValidatorTest {
       submission.setSubmissionPeriod("OCTOBER-2024");
       submission.setAreaOfLaw("INVALID");
       submission.setNumberOfClaims(-1);
-      submission.setScheduleNumber("SCHEDULE");
+      submission.setCrimeScheduleNumber("SCHEDULE");
       submission.setIsNilSubmission(false);
       submission.setStatus(SubmissionStatus.CREATED);
       final List<ValidationMessagePatch> errors =
@@ -156,7 +156,7 @@ class JsonSchemaValidatorTest {
           + "^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-[0-9]{4}$ (provided value: OCT-20)'",
       "submissionPeriod, 'OCT/2020', 'submission_period: does not match the regex pattern "
           + "^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-[0-9]{4}$ (provided value: OCT/2020)'",
-      "scheduleNumber, 'A/VERY/LONG/SCHEDULE/NUMBER', 'schedule_number: must be at most 20 characters long (provided value: A/VERY/LONG/SCHEDULE/NUMBER)'",
+      "crimeScheduleNumber, 'A/VERY/LONG/SCHEDULE/NUMBER', 'crime_schedule_number: must be at most 20 characters long (provided value: A/VERY/LONG/SCHEDULE/NUMBER)'",
     })
     void validateSubmissionIndividualInvalidField(
         String fieldName, String badValue, String expectedError) {
@@ -175,7 +175,7 @@ class JsonSchemaValidatorTest {
       submission.setSubmissionId(UUID.randomUUID());
       submission.setBulkSubmissionId(UUID.randomUUID());
       submission.setStatus(SubmissionStatus.CREATED);
-      submission.setScheduleNumber("abc123");
+      submission.setCrimeScheduleNumber("abc123");
       submission.setOfficeAccountNumber("2Q286D");
       submission.setSubmissionPeriod("OCT-2024");
       submission.setAreaOfLaw("CRIME");
@@ -776,9 +776,9 @@ class JsonSchemaValidatorTest {
         .submissionPeriod("OCT-2024")
         .areaOfLaw("CRIME")
         .status(SubmissionStatus.CREATED)
-        .scheduleNumber("SCHEDULE/NUMBER/1")
         .isNilSubmission(false)
-        .numberOfClaims(1);
+        .numberOfClaims(1)
+        .crimeScheduleNumber("SCHEDULE/NUMBER/1");
     return submission;
   }
 
