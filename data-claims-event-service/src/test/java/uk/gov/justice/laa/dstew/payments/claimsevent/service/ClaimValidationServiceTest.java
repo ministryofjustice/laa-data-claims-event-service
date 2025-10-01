@@ -567,22 +567,27 @@ class ClaimValidationServiceTest {
       }
     }
 
+    /*
+    Schedule Reference should have format validation for CIVIL, but it's no formation is needed for MEDIATION.
+    This field is optional for CRIME.
+    Ref: https://dsdmoj.atlassian.net/browse/DSTEW-430
+     */
     @ParameterizedTest(
         name =
             "{index} => claimId={0}, matterType={1}, areaOfLaw={2}, caseReferenceNumber={3}, scheduleReference={4}, stageReachedCode={5}, regex={6}, expectError={7}")
     @CsvSource({
-      "claim1, ab12:bc24, CIVIL, 123, SCH123, AB, '^[a-zA-Z0-9/.\\-]{1,20}$', false",
-      "claim2, ab12:bc24, CIVIL, 123, ABCDEFGHIJKLMNOPQRST123, AB, '^[a-zA-Z0-9/.\\-]{1,20}$', true",
-      "claim3, ab12:bc24, CIVIL, 123, SCH/ABC-12.34, AB, '^[a-zA-Z0-9/.\\-]{1,20}$', false",
-      "claim4, ab12:bc24, CIVIL, 123, Schedule Ref, AB, '^[a-zA-Z0-9/.\\-]{1,20}$', true",
-      "claim5, ab12:bc24, CIVIL, 123, Schedule:Ref, AB, '^[a-zA-Z0-9/.\\-]{1,20}$', true",
-      "claim6, ab12:bc24, CRIME,,, ABCD, '^[a-zA-Z0-9/.\\-]{1,20}$', false",
-      "claim7, ab12:bc24, CRIME,, ABCD?!, ABCD, '^[a-zA-Z0-9/.\\-]{1,20}$', false",
-      "claim8, ABCD:EFGH, MEDIATION, 123, ABCDEFGHIJKLMNOPQRST123, AB, '^[a-zA-Z0-9/.\\-]{1,20}$', false",
-      "claim9, ABCD:EFGH, MEDIATION, 123, ABCD?!, AB, '^[a-zA-Z0-9/.\\-]{1,20}$', false"
+      "1, ab12:bc24, CIVIL, 123, SCH123, AB, '^[a-zA-Z0-9/.\\-]{1,20}$', false",
+      "2, ab12:bc24, CIVIL, 123, ABCDEFGHIJKLMNOPQRST123, AB, '^[a-zA-Z0-9/.\\-]{1,20}$', true",
+      "3, ab12:bc24, CIVIL, 123, SCH/ABC-12.34, AB, '^[a-zA-Z0-9/.\\-]{1,20}$', false",
+      "4, ab12:bc24, CIVIL, 123, Schedule Ref, AB, '^[a-zA-Z0-9/.\\-]{1,20}$', true",
+      "5, ab12:bc24, CIVIL, 123, Schedule:Ref, AB, '^[a-zA-Z0-9/.\\-]{1,20}$', true",
+      "6, ab12:bc24, CRIME,,, ABCD, '^[a-zA-Z0-9/.\\-]{1,20}$', false",
+      "7, ab12:bc24, CRIME,, ABCD?!, ABCD, '^[a-zA-Z0-9/.\\-]{1,20}$', false",
+      "8, ABCD:EFGH, MEDIATION, 123, ABCDEFGHIJKLMNOPQRST123, AB, '^[a-zA-Z0-9/.\\-]{1,20}$', false",
+      "9, ABCD:EFGH, MEDIATION, 123, ABCD?!, AB, '^[a-zA-Z0-9/.\\-]{1,20}$', false"
     })
     void checkScheduleReference(
-        String claimId,
+        int claimIdBit,
         String matterTypeCode,
         String areaOfLaw,
         String caseReferenceNumber,
@@ -590,9 +595,10 @@ class ClaimValidationServiceTest {
         String stageReachedCode,
         String regex,
         boolean expectError) {
+      UUID claimId = new UUID(claimIdBit, claimIdBit);
       ClaimResponse claim =
           new ClaimResponse()
-              .id(claimId)
+              .id(claimId.toString())
               .feeCode("feeCode1")
               .caseStartDate("2025-08-14")
               .caseReferenceNumber(caseReferenceNumber)
@@ -614,21 +620,15 @@ class ClaimValidationServiceTest {
           new SubmissionResponse()
               .submissionId(new UUID(1, 1))
               .areaOfLaw(areaOfLaw)
+              .claims(
+                  singletonList(
+                      new SubmissionClaim().status(ClaimStatus.READY_TO_PROCESS).claimId(claimId)))
               .officeAccountNumber("officeAccountNumber");
 
       ClaimResultSet claimResultSet = new ClaimResultSet();
       claimResultSet.content(claims);
 
-      when(dataClaimsRestClient.getClaims(
-              submissionResponse.getOfficeAccountNumber(),
-              submissionResponse.getSubmissionId().toString(),
-              null,
-              null,
-              null,
-              null,
-              null,
-              null))
-          .thenReturn(ResponseEntity.ok(claimResultSet));
+      when(dataClaimsRestClient.getClaim(any(), any())).thenReturn(ResponseEntity.ok(claim));
 
       ProviderFirmOfficeContractAndScheduleDto data =
           new ProviderFirmOfficeContractAndScheduleDto()
@@ -650,34 +650,39 @@ class ClaimValidationServiceTest {
             String.format(
                 "schedule_reference (%s): does not match the regex pattern %s (provided value: %s)",
                 areaOfLaw, regex, scheduleReference);
-        assertThat(getClaimMessages(context, claimId).getFirst().getTechnicalMessage())
+        assertThat(getClaimMessages(context, claimId.toString()).getFirst().getTechnicalMessage())
             .isEqualTo(expectedMessage);
       } else {
-        assertThat(getClaimMessages(context, claimId).isEmpty()).isTrue();
+        assertThat(getClaimMessages(context, claimId.toString()).isEmpty()).isTrue();
       }
     }
 
+    /*
+    Schedule Reference should be mandatory for CIVIL and MEDIATION, but it's optional for CRIME.
+    Ref: https://dsdmoj.atlassian.net/browse/DSTEW-430
+     */
     @ParameterizedTest(
         name =
             "{index} => claimId={0}, matterType={1}, areaOfLaw={2}, caseReferenceNumber={3}, scheduleReference={4}, stageReachedCode={5}, expectError={6}")
     @CsvSource({
-      "claim1, ab12:bc24, CIVIL, 123,, AB, true",
-      "claim2, ab12:bc24, CIVIL, 123, SCH123, AB, false",
-      "claim3, ABCD:EFGH, MEDIATION, 123,, AB, true",
-      "claim4, ABCD:EFGH, MEDIATION, 123, SCH:123, AB, false",
-      "claim5, ab12:bc24, CRIME, 123,, ABCD, false"
+      "1, ab12:bc24, CIVIL, 123,, AB, true",
+      "2, ab12:bc24, CIVIL, 123, SCH123, AB, false",
+      "3, ABCD:EFGH, MEDIATION, 123,, AB, true",
+      "4, ABCD:EFGH, MEDIATION, 123, SCH:123, AB, false",
+      "5, ab12:bc24, CRIME, 123,, ABCD, false"
     })
     void checkMandatoryScheduleReference(
-        String claimId,
+        int claimIdBit,
         String matterTypeCode,
         String areaOfLaw,
         String caseReferenceNumber,
         String scheduleReference,
         String stageReachedCode,
         boolean expectError) {
+      UUID claimId = new UUID(claimIdBit, claimIdBit);
       ClaimResponse claim =
           new ClaimResponse()
-              .id(claimId)
+              .id(claimId.toString())
               .feeCode("feeCode1")
               .caseStartDate("2025-08-14")
               .caseReferenceNumber(caseReferenceNumber)
@@ -699,21 +704,15 @@ class ClaimValidationServiceTest {
           new SubmissionResponse()
               .submissionId(new UUID(1, 1))
               .areaOfLaw(areaOfLaw)
+              .claims(
+                  singletonList(
+                      new SubmissionClaim().status(ClaimStatus.READY_TO_PROCESS).claimId(claimId)))
               .officeAccountNumber("officeAccountNumber");
 
       ClaimResultSet claimResultSet = new ClaimResultSet();
       claimResultSet.content(claims);
 
-      when(dataClaimsRestClient.getClaims(
-              submissionResponse.getOfficeAccountNumber(),
-              submissionResponse.getSubmissionId().toString(),
-              null,
-              null,
-              null,
-              null,
-              null,
-              null))
-          .thenReturn(ResponseEntity.ok(claimResultSet));
+      when(dataClaimsRestClient.getClaim(any(), any())).thenReturn(ResponseEntity.ok(claim));
 
       ProviderFirmOfficeContractAndScheduleDto data =
           new ProviderFirmOfficeContractAndScheduleDto()
@@ -733,34 +732,39 @@ class ClaimValidationServiceTest {
       if (expectError) {
         String expectedMessage =
             String.format("scheduleReference is required for area of law: %s", areaOfLaw);
-        assertThat(getClaimMessages(context, claimId).getFirst().getTechnicalMessage())
+        assertThat(getClaimMessages(context, claimId.toString()).getFirst().getTechnicalMessage())
             .isEqualTo(expectedMessage);
       } else {
-        assertThat(getClaimMessages(context, claimId).isEmpty()).isTrue();
+        assertThat(getClaimMessages(context, claimId.toString()).isEmpty()).isTrue();
       }
     }
 
+    /*
+    Case Reference should be mandatory for CIVIL and MEDIATION, but it's optional for CRIME.
+    Ref: https://dsdmoj.atlassian.net/browse/DSTEW-430
+     */
     @ParameterizedTest(
         name =
             "{index} => claimId={0}, matterType={1}, areaOfLaw={2}, caseReferenceNumber={3}, scheduleReference={4}, stageReachedCode={5}, expectError={6}")
     @CsvSource({
-      "claim1, ab12:bc24, CIVIL,,SCH123, AB, true",
-      "claim2, ab12:bc24, CIVIL, 123, SCH123, AB, false",
-      "claim3, ABCD:EFGH, MEDIATION,, SCH123, AB, true",
-      "claim4, ABCD:EFGH, MEDIATION, 123, SCH:123, AB, false",
-      "claim5, ab12:bc24, CRIME,, SCH123, ABCD, false"
+      "1, ab12:bc24, CIVIL,,SCH123, AB, true",
+      "2, ab12:bc24, CIVIL, 123, SCH123, AB, false",
+      "3, ABCD:EFGH, MEDIATION,, SCH123, AB, true",
+      "4, ABCD:EFGH, MEDIATION, 123, SCH:123, AB, false",
+      "5, ab12:bc24, CRIME,, SCH123, ABCD, false"
     })
     void checkMandatoryCaseReference(
-        String claimId,
+        int claimIdBit,
         String matterTypeCode,
         String areaOfLaw,
         String caseReferenceNumber,
         String scheduleReference,
         String stageReachedCode,
         boolean expectError) {
+      UUID claimId = new UUID(claimIdBit, claimIdBit);
       ClaimResponse claim =
           new ClaimResponse()
-              .id(claimId)
+              .id(claimId.toString())
               .feeCode("feeCode1")
               .caseStartDate("2025-08-14")
               .caseReferenceNumber(caseReferenceNumber)
@@ -782,21 +786,15 @@ class ClaimValidationServiceTest {
           new SubmissionResponse()
               .submissionId(new UUID(1, 1))
               .areaOfLaw(areaOfLaw)
+              .claims(
+                  singletonList(
+                      new SubmissionClaim().status(ClaimStatus.READY_TO_PROCESS).claimId(claimId)))
               .officeAccountNumber("officeAccountNumber");
 
       ClaimResultSet claimResultSet = new ClaimResultSet();
       claimResultSet.content(claims);
 
-      when(dataClaimsRestClient.getClaims(
-              submissionResponse.getOfficeAccountNumber(),
-              submissionResponse.getSubmissionId().toString(),
-              null,
-              null,
-              null,
-              null,
-              null,
-              null))
-          .thenReturn(ResponseEntity.ok(claimResultSet));
+      when(dataClaimsRestClient.getClaim(any(), any())).thenReturn(ResponseEntity.ok(claim));
 
       ProviderFirmOfficeContractAndScheduleDto data =
           new ProviderFirmOfficeContractAndScheduleDto()
@@ -816,10 +814,10 @@ class ClaimValidationServiceTest {
       if (expectError) {
         String expectedMessage =
             String.format("caseReferenceNumber is required for area of law: %s", areaOfLaw);
-        assertThat(getClaimMessages(context, claimId).getFirst().getTechnicalMessage())
+        assertThat(getClaimMessages(context, claimId.toString()).getFirst().getTechnicalMessage())
             .isEqualTo(expectedMessage);
       } else {
-        assertThat(getClaimMessages(context, claimId).isEmpty()).isTrue();
+        assertThat(getClaimMessages(context, claimId.toString()).isEmpty()).isTrue();
       }
     }
 
