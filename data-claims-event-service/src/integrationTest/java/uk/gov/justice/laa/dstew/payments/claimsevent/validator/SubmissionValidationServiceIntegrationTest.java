@@ -36,12 +36,9 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
     @DisplayName("Should have no errors with submission period in the past")
     void shouldHaveNoErrorsWithSubmissionPeriodInThePast() throws Exception {
       // Given
-      String expectedBody =
-          readJsonFromFile("data-claims/get-submission/get-submission-APR-25.json");
-
-      mockReturnSubmission(submissionId, expectedBody);
-      mockUpdateSubmission204(submissionId);
-      mockReturnNoClaims(submissionId);
+      stubForGetSubmission(submissionId, "data-claims/get-submission/get-submission-APR-25.json");
+      stubForUpdateSubmission(submissionId);
+      stubReturnNoClaims(submissionId);
 
       // When
       SubmissionValidationContext submissionValidationContext =
@@ -55,11 +52,8 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
     @DisplayName("Should have one error with submission period in same month as current")
     void shouldHaveOneErrorWithSubmissionPeriodInSameMonthAsCurrent() throws Exception {
       // Given
-      String expectedBody =
-          readJsonFromFile("data-claims/get-submission/get-submission-MAY-25.json");
-
-      mockReturnSubmission(submissionId, expectedBody);
-      mockUpdateSubmission204(submissionId);
+      stubForGetSubmission(submissionId, "data-claims/get-submission/get-submission-MAY-25.json");
+      stubForUpdateSubmission(submissionId);
 
       // When
       SubmissionValidationContext submissionValidationContext =
@@ -77,11 +71,8 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
     @DisplayName("Should have one error with submission period in the future")
     void shouldHaveOneErrorWithSubmissionPeriodInTheFuture() throws Exception {
       // Given
-      String expectedBody =
-          readJsonFromFile("data-claims/get-submission/get-submission-SEP-25.json");
-
-      mockReturnSubmission(submissionId, expectedBody);
-      mockUpdateSubmission204(submissionId);
+      stubForGetSubmission(submissionId, "data-claims/get-submission/get-submission-SEP-25.json");
+      stubForUpdateSubmission(submissionId);
 
       // When
       SubmissionValidationContext submissionValidationContext =

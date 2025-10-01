@@ -55,15 +55,12 @@ public abstract class MockServerIntegrationTest {
   private static final String API_VERSION_2 = "/api/v2/";
   private static final String DATA_SUBMISSION_API_PATH = API_VERSION_0 + "submissions/";
   private static final String DATA_CLAIMS_API_PATH = API_VERSION_0 + "claims";
-  private static final String DATA_GET_CLAIM_API_PATH =
-      API_VERSION_0 + "submissions/{submission-id}/claims/{claim-id}";
   private static final String PROVIDER_OFFICES = API_VERSION_2 + "provider-offices/";
   private static final String SCHEDULES_ENDPOINT = "/schedules";
   private static final String FEE_DETAILS = API_VERSION_1 + "fee-details/";
   private static final String FEE_CALCULATION = API_VERSION_1 + "fee-calculation";
   private static final String CLAIMS_ENDPOINT = "/claims/";
 
-  private static final Integer MOCK_SERVER_PORT = 1080;
   protected static final DockerImageName MOCKSERVER_IMAGE =
       DockerImageName.parse("mockserver/mockserver")
           .withTag("mockserver-" + MockServerClient.class.getPackage().getImplementationVersion());
@@ -85,6 +82,11 @@ public abstract class MockServerIntegrationTest {
     container.start();
     log.info("Started MockServer container on port: {}", container.getFirstMappedPort());
     return container;
+  }
+
+  @AfterEach
+  void tearDown() {
+    mockServerClient.reset();
   }
 
   @BeforeAll
@@ -238,17 +240,14 @@ public abstract class MockServerIntegrationTest {
                 .withBody(json(readJsonFromFile(expectedResponse))));
   }
 
-  @AfterEach
-  void tearDown() {
-    mockServerClient.reset();
-  }
-
-  public void mockReturnSubmission(UUID submissionId, String expectedBody) throws Exception {
+  protected void stubReturnNoClaims(UUID submissionId) throws Exception {
+    String expectedBody = readJsonFromFile("data-claims/get-claims/no-claims.json");
     mockServerClient
         .when(
             HttpRequest.request()
                 .withMethod("GET")
-                .withPath("/api/v0/submissions/" + submissionId.toString()))
+                .withPath(API_VERSION_0 + "claims")
+                .withQueryStringParameter("submissionId", submissionId.toString()))
         .respond(
             HttpResponse.response()
                 .withStatusCode(200)
@@ -256,23 +255,12 @@ public abstract class MockServerIntegrationTest {
                 .withBody(expectedBody));
   }
 
-  public void mockReturnNoClaims(UUID submissionId) throws Exception {
-    String expectedBody = readJsonFromFile("data-claims/get-claims/no-claims.json");
-    mockServerClient
-        .when(HttpRequest.request().withMethod("GET").withPath("/api/v0/claims"))
-        .respond(
-            HttpResponse.response()
-                .withStatusCode(200)
-                .withHeader("Content-Type", "application/json")
-                .withBody(expectedBody));
-  }
-
-  public void mockUpdateSubmission204(UUID submissionId) {
+  protected void stubForUpdateSubmission(UUID submissionId) {
     mockServerClient
         .when(
             HttpRequest.request()
                 .withMethod("PATCH")
-                .withPath("/api/v0/submissions/" + submissionId.toString()))
+                .withPath(API_VERSION_0 + "submissions/" + submissionId.toString()))
         .respond(
             HttpResponse.response()
                 .withStatusCode(204)

@@ -61,7 +61,6 @@ public class DuplicateClaimsTest extends MockServerIntegrationTest {
           "data-claims/get-claim/get-claim-1.json");
 
       stubForGetClaims(Collections.emptyList(), "data-claims/get-claims/no-claims.json");
-
       // provider-details
       stubForGetProviderOffice(
           OFFICE_CODE,
@@ -72,7 +71,7 @@ public class DuplicateClaimsTest extends MockServerIntegrationTest {
       // fee-calculation
       stubForPostFeeCalculation("fee-scheme/post-fee-calculation-200.json");
       // Stub patch submission
-      mockUpdateSubmission204(SUBMISSION_ID);
+      stubForUpdateSubmission(SUBMISSION_ID);
 
       var actualValidationContext = submissionValidationService.validateSubmission(submissionId);
 
