@@ -1,15 +1,14 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.validator;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static uk.gov.justice.laa.dstew.payments.claimsevent.ContextUtil.assertContextClaimError;
+import static uk.gov.justice.laa.dstew.payments.claimsevent.ContextUtil.assertContextHasNoErrors;
 
 import java.time.YearMonth;
 import java.util.UUID;
-import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -69,9 +68,9 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
       String expectedBody =
           readJsonFromFile("data-claims/get-submission/get-submission-APR-25.json");
 
-      mockReturnSubmission(expectedBody);
-      mockUpdateSubmission204();
-      mockReturnNoClaims();
+      mockReturnSubmission(submissionId, expectedBody);
+      mockUpdateSubmission204(submissionId);
+      mockReturnNoClaims(submissionId);
 
       // When
       SubmissionValidationContext submissionValidationContext =
@@ -88,8 +87,8 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
       String expectedBody =
           readJsonFromFile("data-claims/get-submission/get-submission-MAY-25.json");
 
-      mockReturnSubmission(expectedBody);
-      mockUpdateSubmission204();
+      mockReturnSubmission(submissionId, expectedBody);
+      mockUpdateSubmission204(submissionId);
 
       // When
       SubmissionValidationContext submissionValidationContext =
@@ -110,8 +109,8 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
       String expectedBody =
           readJsonFromFile("data-claims/get-submission/get-submission-SEP-25.json");
 
-      mockReturnSubmission(expectedBody);
-      mockUpdateSubmission204();
+      mockReturnSubmission(submissionId, expectedBody);
+      mockUpdateSubmission204(submissionId);
 
       // When
       SubmissionValidationContext submissionValidationContext =
@@ -124,66 +123,5 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
           SubmissionValidationError.SUBMISSION_PERIOD_FUTURE_MONTH,
           "May 2025");
     }
-  }
-
-  private void mockReturnSubmission(String expectedBody) {
-    mockServerClient
-        .when(
-            HttpRequest.request()
-                .withMethod("GET")
-                .withPath("/api/v0/submissions/" + submissionId.toString()))
-        .respond(
-            HttpResponse.response()
-                .withStatusCode(200)
-                .withHeader("Content-Type", "application/json")
-                .withBody(expectedBody));
-  }
-
-  private void mockReturnNoClaims() throws Exception {
-    String expectedBody = readJsonFromFile("data-claims/get-claims/no-claims.json");
-    mockServerClient
-        .when(
-            HttpRequest.request()
-                .withMethod("GET")
-                .withPath("/api/v0/claims")
-                .withQueryStringParameter("submissionId", submissionId.toString()))
-        .respond(
-            HttpResponse.response()
-                .withStatusCode(200)
-                .withHeader("Content-Type", "application/json")
-                .withBody(expectedBody));
-  }
-
-  private void mockUpdateSubmission204() {
-    mockServerClient
-        .when(
-            HttpRequest.request()
-                .withMethod("PATCH")
-                .withPath("/api/v0/submissions/" + submissionId.toString()))
-        .respond(
-            HttpResponse.response()
-                .withStatusCode(204)
-                .withHeader("Content-Type", "application/json"));
-  }
-
-  void assertContextHasNoErrors(SubmissionValidationContext context) {
-    SoftAssertions.assertSoftly(
-        softly -> {
-          softly.assertThat(context.hasErrors()).isFalse();
-          if (context.hasErrors()) {
-            for (var error : context.getSubmissionValidationErrors()) {
-              softly.fail(error.getDisplayMessage());
-            }
-          }
-        });
-  }
-
-  public static void assertContextClaimError(
-      SubmissionValidationContext context,
-      SubmissionValidationError submissionValidationError,
-      Object... args) {
-    assertThat(context.getSubmissionValidationErrors())
-        .isNotEmpty()
-        .contains(submissionValidationError.toPatch(args));
   }
 }

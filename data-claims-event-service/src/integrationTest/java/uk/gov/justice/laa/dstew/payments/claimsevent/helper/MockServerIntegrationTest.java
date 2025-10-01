@@ -24,6 +24,8 @@ import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
 import org.mockserver.model.Parameter;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -216,5 +218,41 @@ public abstract class MockServerIntegrationTest {
   @AfterEach
   void tearDown() {
     mockServerClient.reset();
+  }
+
+  public void mockReturnSubmission(UUID submissionId, String expectedBody) throws Exception {
+    mockServerClient
+        .when(
+            HttpRequest.request()
+                .withMethod("GET")
+                .withPath("/api/v0/submissions/" + submissionId.toString()))
+        .respond(
+            HttpResponse.response()
+                .withStatusCode(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody(expectedBody));
+  }
+
+  public void mockReturnNoClaims(UUID submissionId) throws Exception {
+    String expectedBody = readJsonFromFile("data-claims/get-claims/no-claims.json");
+    mockServerClient
+        .when(HttpRequest.request().withMethod("GET").withPath("/api/v0/claims"))
+        .respond(
+            HttpResponse.response()
+                .withStatusCode(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody(expectedBody));
+  }
+
+  public void mockUpdateSubmission204(UUID submissionId) {
+    mockServerClient
+        .when(
+            HttpRequest.request()
+                .withMethod("PATCH")
+                .withPath("/api/v0/submissions/" + submissionId.toString()))
+        .respond(
+            HttpResponse.response()
+                .withStatusCode(204)
+                .withHeader("Content-Type", "application/json"));
   }
 }

@@ -149,7 +149,8 @@ public interface DataClaimsRestClient {
   ResponseEntity<ClaimResultSet> getClaims(
       @RequestParam(value = "office_code") String officeCode,
       @RequestParam(value = "submission_id", required = false) String submissionId,
-      @RequestParam(value = "submission_statuses", required = false) List<SubmissionStatus> submissionStatuses,
+      @RequestParam(value = "submission_statuses", required = false)
+          List<SubmissionStatus> submissionStatuses,
       @RequestParam(value = "fee_code", required = false) String feeCode,
       @RequestParam(value = "unique_file_number", required = false) String uniqueFileNumber,
       @RequestParam(value = "unique_client_number", required = false) String uniqueClientNumber,
@@ -158,13 +159,13 @@ public interface DataClaimsRestClient {
       @RequestParam(value = "size", required = false) Integer size,
       @RequestParam(value = "sort", required = false) Sort sort);
 
-      /**
-       * Get a specific claim for a submission.
-       *
-       * @param submissionId submission UUID
-       * @param claimId claim UUID
-       * @return full claim details map (fields per {@code ClaimResponse})
-       */
+  /**
+   * Get a specific claim for a submission.
+   *
+   * @param submissionId submission UUID
+   * @param claimId claim UUID
+   * @return full claim details map (fields per {@code ClaimResponse})
+   */
   @GetExchange("/submissions/{submission-id}/claims/{claim-id}")
   ResponseEntity<ClaimResponse> getClaim(
       @PathVariable("submission-id") UUID submissionId, @PathVariable("claim-id") UUID claimId);

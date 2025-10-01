@@ -11,7 +11,9 @@ import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionClaim;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
@@ -60,6 +62,16 @@ public class SubmissionValidationService {
       // TODO: Verify all claims have been validated, and update submission status to
       updateClaims(submission, context);
     }
+
+    // Update submission status after completion
+    SubmissionStatus completedStatus = SubmissionStatus.VALIDATION_SUCCEEDED;
+    if (context.hasErrors()) {
+      completedStatus = SubmissionStatus.VALIDATION_FAILED;
+    }
+    SubmissionPatch submissionPatch =
+        new SubmissionPatch().submissionId(submissionId).status(completedStatus);
+    dataClaimsRestClient.updateSubmission(submissionId.toString(), submissionPatch);
+
     //  VALIDATION_SUCCEEDED or VALIDATION_FAILED
     //  If unvalidated claims remain, re-queue message.
     log.debug("Validation completed for submission {}", submissionId);
