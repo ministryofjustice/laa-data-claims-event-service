@@ -30,7 +30,7 @@ public interface BulkSubmissionMapper {
   @Mapping(target = "officeAccountNumber", source = "bulkSubmission.details.office.account")
   @Mapping(target = "submissionPeriod", source = "bulkSubmission.details.schedule.submissionPeriod")
   @Mapping(target = "areaOfLaw", source = "bulkSubmission.details.schedule.areaOfLaw")
-  @Mapping(target = "scheduleNumber", source = "bulkSubmission.details.schedule.scheduleNum")
+  @Mapping(target = "crimeScheduleNumber", source = "bulkSubmission.details.schedule.scheduleNum")
   @Mapping(target = "previousSubmissionId", ignore = true)
   @Mapping(target = "status", expression = "java(SubmissionStatus.CREATED)")
   @Mapping(
