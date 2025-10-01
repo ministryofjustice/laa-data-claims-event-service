@@ -1,7 +1,6 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service.strategy;
 
 import java.util.List;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -60,15 +59,5 @@ public class DuplicateClaimCrimeValidationServiceStrategy extends DuplicateClaim
       }
     }
     log.debug("Duplicate validation completed for claim {}", claim.getId());
-  }
-
-  private void logDuplicates(ClaimResponse claim, List<ClaimResponse> duplicateClaims) {
-    String csvDuplicateClaimIds =
-        duplicateClaims.stream().map(ClaimResponse::getId).collect(Collectors.joining(","));
-    log.debug(
-        "{} duplicate claims found matching claim {}. Duplicates: {}",
-        duplicateClaims.size(),
-        claim.getId(),
-        csvDuplicateClaimIds);
   }
 }

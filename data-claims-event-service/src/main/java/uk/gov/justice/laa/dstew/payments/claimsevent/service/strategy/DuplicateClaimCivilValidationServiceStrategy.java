@@ -3,7 +3,6 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.service.strategy;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -44,13 +43,13 @@ public class DuplicateClaimCivilValidationServiceStrategy extends DuplicateClaim
         getDuplicateClaimsInCurrentSubmission(
             otherClaimsWithNonInvalidStatus,
             duplicatePredicate ->
-                duplicatePredicate.getFeeCode().equals(currentClaim.getFeeCode())
-                    && duplicatePredicate
-                        .getUniqueFileNumber()
-                        .equals(currentClaim.getUniqueFileNumber())
-                    && duplicatePredicate
-                        .getUniqueClientNumber()
-                        .equals(currentClaim.getUniqueClientNumber()));
+                Objects.equals(duplicatePredicate.getFeeCode(), currentClaim.getFeeCode())
+                    && Objects.equals(
+                        duplicatePredicate.getUniqueFileNumber(),
+                        currentClaim.getUniqueFileNumber())
+                    && Objects.equals(
+                        duplicatePredicate.getUniqueClientNumber(),
+                        currentClaim.getUniqueClientNumber()));
 
     List<ClaimResponse> duplicateClaimsInPreviousSubmission =
         isDisbursementClaim(currentClaim)
@@ -85,15 +84,5 @@ public class DuplicateClaimCivilValidationServiceStrategy extends DuplicateClaim
                 feeSchemePlatformRestClient.getFeeDetails(currentClaim.getFeeCode()).getBody())
             .getFeeType(),
         DISBURSEMENT_FEE_TYPE);
-  }
-
-  private void logDuplicates(final ClaimResponse claim, final List<ClaimResponse> duplicateClaims) {
-    String csvDuplicateClaimIds =
-        duplicateClaims.stream().map(ClaimResponse::getId).collect(Collectors.joining(","));
-    log.debug(
-        "{} duplicate claims found matching claim {}. Duplicates: {}",
-        duplicateClaims.size(),
-        claim.getId(),
-        csvDuplicateClaimIds);
   }
 }

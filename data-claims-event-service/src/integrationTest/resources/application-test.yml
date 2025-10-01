@@ -1,3 +1,8 @@
 laa:
   bulk-claim-queue:
     name: test-queue-name
+spring:
+  cloud:
+    aws:
+      region:
+        static: us-east-1
