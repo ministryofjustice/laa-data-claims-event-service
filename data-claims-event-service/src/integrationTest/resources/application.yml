@@ -42,18 +42,3 @@ logging:
 server:
   port: 8085
 
-laa:
-  provider-details-api:
-    hostname: ${PROVIDER_DETAILS_API_HOSTNAME}
-    url: ${laa.provider-details-api.hostname}
-    accessToken: ${PROVIDER_DETAILS_API_ACCESS_TOKEN}
-  claims-api:
-    hostname: ${CLAIMS_API_URL}
-    url: ${laa.claims-api.hostname}
-    accessToken: ${CLAIMS_API_ACCESS_TOKEN}
-  fee-scheme-platform-api:
-    hostname: ${FEE_SCHEME_PLATFORM_API_URL}
-    url: ${laa.claims-api.hostname}
-    accessToken: ${FEE_SCHEME_PLATFORM_API_ACCESS_TOKEN}
-  bulk-claim-queue:
-    name: ${BULK_CLAIM_QUEUE_NAME}

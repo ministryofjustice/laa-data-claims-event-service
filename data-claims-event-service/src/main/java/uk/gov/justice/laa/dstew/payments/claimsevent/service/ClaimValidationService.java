@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionClaim;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
@@ -60,19 +61,16 @@ public class ClaimValidationService {
    * @param submission the submission
    */
   public void validateClaims(SubmissionResponse submission, SubmissionValidationContext context) {
+
     List<ClaimResponse> submissionClaims =
-        dataClaimsRestClient
-            .getClaims(
-                submission.getOfficeAccountNumber(),
-                submission.getSubmissionId().toString(),
-                null,
-                null,
-                null,
-                null,
-                null,
-                null)
-            .getBody()
-            .getContent();
+        submission.getClaims().stream()
+            .filter(claim -> ClaimStatus.READY_TO_PROCESS.equals(claim.getStatus()))
+            .map(SubmissionClaim::getClaimId)
+            .map(
+                claimId ->
+                    dataClaimsRestClient.getClaim(submission.getSubmissionId(), claimId).getBody())
+            .toList();
+
     Map<String, CategoryOfLawResult> categoryOfLawLookup =
         categoryOfLawValidationService.getCategoryOfLawLookup(submissionClaims);
     submissionClaims.stream()

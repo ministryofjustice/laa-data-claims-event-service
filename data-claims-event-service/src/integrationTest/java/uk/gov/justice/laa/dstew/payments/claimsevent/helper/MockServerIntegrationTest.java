@@ -11,6 +11,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
+import java.time.YearMonth;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +26,9 @@ import org.mockserver.client.MockServerClient;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.Parameter;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
@@ -36,7 +41,11 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 import software.amazon.awssdk.http.HttpStatusCode;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.ApiProperties;
+import uk.gov.justice.laa.dstew.payments.claimsevent.config.DataClaimsApiProperties;
+import uk.gov.justice.laa.dstew.payments.claimsevent.config.FeeSchemePlatformApiProperties;
+import uk.gov.justice.laa.dstew.payments.claimsevent.config.ProviderDetailsApiProperties;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.WebClientConfiguration;
+import uk.gov.justice.laa.dstew.payments.claimsevent.util.DateUtil;
 
 @Slf4j
 @TestInstance(Lifecycle.PER_CLASS)
@@ -58,19 +67,26 @@ public abstract class MockServerIntegrationTest {
 
   private static final MockServerContainer MOCK_SERVER_CONTAINER = createContainer();
 
-  protected MockServerContainer mockServerContainer;
+  protected static MockServerContainer mockServerContainer;
   protected MockServerClient mockServerClient;
   protected static MockServerContainer mockStaticServerContainer = MOCK_SERVER_CONTAINER;
 
   protected ObjectMapper objectMapper = new ObjectMapper();
 
   private static MockServerContainer createContainer() {
+    List<String> portBinding = Arrays.asList("30000:1080");
     MockServerContainer container =
         new MockServerContainer(MOCKSERVER_IMAGE)
             .waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofSeconds(30)));
+    container.setPortBindings(portBinding);
     container.start();
     log.info("Started MockServer container on port: {}", container.getFirstMappedPort());
     return container;
+  }
+
+  @AfterEach
+  void tearDown() {
+    mockServerClient.reset();
   }
 
   @BeforeAll
@@ -97,14 +113,14 @@ public abstract class MockServerIntegrationTest {
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
   }
 
-  protected <T> T createClient(Class<T> serviceClass) {
+  protected static <T> T createClient(Class<T> serviceClass) {
     WebClient webClient = createWebClient();
     HttpServiceProxyFactory factory =
         HttpServiceProxyFactory.builderFor(WebClientAdapter.create(webClient)).build();
     return factory.createClient(serviceClass);
   }
 
-  protected @NotNull WebClient createWebClient() {
+  protected static @NotNull WebClient createWebClient() {
     ApiProperties apiProperties =
         new ApiProperties(
             mockServerContainer.getEndpoint(),
@@ -209,8 +225,82 @@ public abstract class MockServerIntegrationTest {
                 .withBody(json(readJsonFromFile(expectedResponse))));
   }
 
-  @AfterEach
-  void tearDown() {
-    mockServerClient.reset();
+  protected void stubForGetClaim(UUID submissionId, UUID claimId, String expectedResponse)
+      throws Exception {
+    mockServerClient
+        .when(
+            HttpRequest.request()
+                .withMethod(HttpMethod.GET.toString())
+                .withPath(
+                    API_VERSION_0 + "submissions/" + submissionId + CLAIMS_ENDPOINT + claimId))
+        .respond(
+            HttpResponse.response()
+                .withStatusCode(HttpStatusCode.OK)
+                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
+                .withBody(json(readJsonFromFile(expectedResponse))));
+  }
+
+  protected void stubReturnNoClaims(UUID submissionId) throws Exception {
+    String expectedBody = readJsonFromFile("data-claims/get-claims/no-claims.json");
+    mockServerClient
+        .when(
+            HttpRequest.request()
+                .withMethod("GET")
+                .withPath(API_VERSION_0 + "claims")
+                .withQueryStringParameter("submissionId", submissionId.toString()))
+        .respond(
+            HttpResponse.response()
+                .withStatusCode(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody(expectedBody));
+  }
+
+  protected void stubForUpdateSubmission(UUID submissionId) {
+    mockServerClient
+        .when(
+            HttpRequest.request()
+                .withMethod("PATCH")
+                .withPath(API_VERSION_0 + "submissions/" + submissionId.toString()))
+        .respond(
+            HttpResponse.response()
+                .withStatusCode(204)
+                .withHeader("Content-Type", "application/json"));
+  }
+
+  @TestConfiguration
+  public static class ClaimsConfiguration {
+
+    @Bean
+    @Primary
+    DataClaimsApiProperties dataClaimsApiProperties() {
+      // Set using host and port running the mock server
+      return new DataClaimsApiProperties("http://localhost:30000", "localhost", 30000, "");
+    }
+
+    @Bean
+    @Primary
+    FeeSchemePlatformApiProperties feeSchemePlatformApiProperties() {
+      // Set using host and port running the mock server
+      return new FeeSchemePlatformApiProperties("http://localhost:30000", "localhost", 30000, "");
+    }
+
+    @Bean
+    @Primary
+    ProviderDetailsApiProperties providerDetailsApiProperties() {
+      // Set using host and port running the mock server
+      return new ProviderDetailsApiProperties("http://localhost:30000", "localhost", 30000, "");
+    }
+
+    @Bean
+    @Primary
+    DateUtil dateUtil() {
+      return new DateUtil() {
+        @Override
+        public YearMonth currentYearMonth() {
+          // Set current year to 2025-05 for constant values within code
+          return YearMonth.of(2025, 5);
+        }
+      };
+    }
   }
 }

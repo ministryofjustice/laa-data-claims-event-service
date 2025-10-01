@@ -1,62 +1,87 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
 import static java.util.Collections.singletonList;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.justice.laa.dstew.payments.claimsevent.ValidationServiceTestUtils.assertContextClaimError;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Stream;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.NullAndEmptySource;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
-import reactor.core.publisher.Mono;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPatch;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionClaim;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
-import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
-import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
-import uk.gov.justice.laa.dstew.payments.claimsevent.validation.JsonSchemaValidator;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
-import uk.gov.justice.laa.provider.model.FirmOfficeContractAndScheduleDetails;
-import uk.gov.justice.laa.provider.model.FirmOfficeContractAndScheduleLine;
-import uk.gov.justice.laa.provider.model.ProviderFirmOfficeContractAndScheduleDto;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationError;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.submission.SubmissionValidator;
 
 @ExtendWith(MockitoExtension.class)
-public class SubmissionValidationServiceTest {
+class SubmissionValidationServiceTest {
 
   @Mock private ClaimValidationService claimValidationService;
 
   @Mock private DataClaimsRestClient dataClaimsRestClient;
 
-  @Mock private ProviderDetailsRestClient providerDetailsRestClient;
+  @Mock private SubmissionValidator submissionValidator;
 
-  @Mock private JsonSchemaValidator jsonSchemaValidator;
+  private SubmissionValidationService submissionValidationService;
 
-  @InjectMocks private SubmissionValidationService submissionValidationService;
+  @BeforeEach
+  void beforeEach() {
+    submissionValidationService =
+        new SubmissionValidationService(
+            claimValidationService, dataClaimsRestClient, singletonList(submissionValidator));
+  }
 
   @Nested
   @DisplayName("validateSubmission")
   class ValidateSubmissionTests {
+
+    @Test
+    @DisplayName("Should have submission validation errors and not validate claims")
+    void shouldHaveSubmissionValidationErrorsAndNotValidateClaims() {
+      // Given
+      UUID submissionId = new UUID(0, 0);
+      UUID claimId = new UUID(2, 0);
+      SubmissionResponse submission = buildSubmission(submissionId, claimId, false);
+      when(dataClaimsRestClient.getSubmission(submissionId))
+          .thenReturn(ResponseEntity.ok(submission));
+      doAnswer(
+              invocation -> {
+                SubmissionValidationContext context = invocation.getArgument(1);
+                context.addSubmissionValidationError(
+                    SubmissionValidationError.SUBMISSION_PERIOD_MISSING);
+                return null;
+              })
+          .when(submissionValidator)
+          .validate(any(), any());
+      // When
+      SubmissionValidationContext submissionValidationContext =
+          submissionValidationService.validateSubmission(submissionId);
+      // Then
+      assertTrue(submissionValidationContext.hasErrors());
+      assertContextClaimError(
+          submissionValidationContext, SubmissionValidationError.SUBMISSION_PERIOD_MISSING);
+      verify(claimValidationService, times(0)).validateClaims(any(), any());
+      verify(dataClaimsRestClient, times(0)).updateClaim(any(), any(), any());
+    }
 
     @Test
     @DisplayName("Should have no validation errors")
@@ -68,7 +93,6 @@ public class SubmissionValidationServiceTest {
       UUID submissionId = new UUID(0, 0);
       UUID claimId =
           claimStatus != null ? new UUID(1, 1) : null; // only create claimId if there is a claim
-      String categoryOfLaw = "categoryOfLaw";
       String officeAccountNumber = "officeAccountNumber";
       String areaOfLaw = "areaOfLaw";
 
@@ -82,10 +106,6 @@ public class SubmissionValidationServiceTest {
       SubmissionValidationContext result;
 
       if (claimId != null) {
-        mockProviderSchedules(officeAccountNumber, areaOfLaw, categoryOfLaw);
-
-        mockSubmissionUpdate(submissionId, submissionPatch);
-
         ClaimPatch claimPatch = new ClaimPatch().id(claimId.toString()).status(claimStatus);
         mockClaimUpdate(submissionId, claimId, claimPatch);
 
@@ -105,125 +125,6 @@ public class SubmissionValidationServiceTest {
         // When
         result = submissionValidationService.validateSubmission(submission.getSubmissionId());
       }
-
-      if (expectsValidationError) {
-        // Determine which error to verify
-        ClaimValidationError error;
-        if (isNilSubmission) {
-          error = ClaimValidationError.INVALID_NIL_SUBMISSION_CONTAINS_CLAIMS;
-        } else {
-          error = ClaimValidationError.NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS;
-        }
-        assertThat(result.getSubmissionValidationErrors().getFirst())
-            .isEqualTo(ClaimValidationError.NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS.toPatch());
-      }
-    }
-
-    @ParameterizedTest
-    @NullAndEmptySource
-    @DisplayName(
-        "Adds submission validation error if submission not marked as nil submission contains no "
-            + "claims")
-    void throwsExceptionIfSubmissionNotMarkedAsNilSubmissionContainsNoClaims(
-        List<SubmissionClaim> submissionClaims) {
-      // Given
-      UUID submissionId = new UUID(0, 0);
-      String areaOfLaw = "areaOfLaw";
-      String categoryOfLaw = "categoryOfLaw";
-      String officeAccountNumber = "officeAccountNumber";
-
-      SubmissionResponse submission =
-          getSubmission(
-              SubmissionStatus.READY_FOR_VALIDATION,
-              submissionId,
-              areaOfLaw,
-              officeAccountNumber,
-              false,
-              submissionClaims);
-
-      mockProviderSchedules(officeAccountNumber, areaOfLaw, categoryOfLaw);
-
-      when(dataClaimsRestClient.getSubmission(submissionId))
-          .thenReturn(ResponseEntity.of(Optional.of(submission)));
-
-      // When
-      SubmissionValidationContext result =
-          submissionValidationService.validateSubmission(submission.getSubmissionId());
-
-      // Then
-      assertThat(result.getSubmissionValidationErrors().getFirst())
-          .isEqualTo(ClaimValidationError.NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS.toPatch());
-    }
-
-    @ParameterizedTest
-    @MethodSource("invalidSubmissionStatusArguments")
-    @DisplayName("Throws exception is submission has invalid status")
-    void throwsExceptionIfSubmissionHasInvalidStatus(SubmissionStatus submissionStatus) {
-      // Given
-      UUID submissionId = new UUID(0, 0);
-      String areaOfLaw = "areaOfLaw";
-      String officeAccountNumber = "officeAccountNumber";
-
-      SubmissionResponse submission =
-          getSubmission(
-              submissionStatus,
-              submissionId,
-              areaOfLaw,
-              officeAccountNumber,
-              false,
-              singletonList(new SubmissionClaim().status(ClaimStatus.INVALID)));
-
-      mockProviderSchedules(officeAccountNumber, areaOfLaw, "categoryOfLaw");
-
-      when(dataClaimsRestClient.getSubmission(submissionId))
-          .thenReturn(ResponseEntity.of(Optional.of(submission)));
-
-      // When
-      SubmissionValidationContext result =
-          submissionValidationService.validateSubmission(submission.getSubmissionId());
-
-      // Then
-      assertThat(result.getSubmissionValidationErrors().get(0).getDisplayMessage())
-          .isEqualTo("Submission cannot be validated in state " + submissionStatus);
-    }
-
-    static Stream<Arguments> invalidSubmissionStatusArguments() {
-      return Stream.of(
-          Arguments.of(SubmissionStatus.CREATED),
-          Arguments.of(SubmissionStatus.REPLACED),
-          Arguments.of(SubmissionStatus.VALIDATION_SUCCEEDED),
-          Arguments.of(SubmissionStatus.VALIDATION_FAILED));
-    }
-
-    @Test
-    @DisplayName("Throws exception is submission status is null")
-    void throwsExceptionIfSubmissionStatusIsNull() {
-      // Given
-      UUID submissionId = new UUID(0, 0);
-      String areaOfLaw = "areaOfLaw";
-      String officeAccountNumber = "officeAccountNumber";
-
-      SubmissionResponse submission =
-          getSubmission(
-              null,
-              submissionId,
-              areaOfLaw,
-              officeAccountNumber,
-              false,
-              singletonList(new SubmissionClaim()));
-
-      when(dataClaimsRestClient.getSubmission(submissionId))
-          .thenReturn(ResponseEntity.of(Optional.of(submission)));
-
-      mockProviderSchedules(officeAccountNumber, areaOfLaw, "categoryOfLaw");
-
-      // When
-      SubmissionValidationContext result =
-          submissionValidationService.validateSubmission(submission.getSubmissionId());
-
-      // Then
-      assertThat(result.getSubmissionValidationErrors().getFirst())
-          .isEqualTo(ClaimValidationError.SUBMISSION_STATE_IS_NULL.toPatch());
     }
 
     private SubmissionResponse buildSubmission(
@@ -241,38 +142,10 @@ public class SubmissionValidationServiceTest {
           List.of(claim));
     }
 
-    private ClaimResponse buildClaimResponse(UUID claimId) {
-      ClaimResponse claimResponse = new ClaimResponse();
-      claimResponse.id(claimId.toString());
-      claimResponse.feeCode("feeCode");
-      return claimResponse;
-    }
-
-    private void mockProviderSchedules(
-        String officeAccountNumber, String areaOfLaw, String categoryOfLaw) {
-      FirmOfficeContractAndScheduleLine scheduleLine = new FirmOfficeContractAndScheduleLine();
-      scheduleLine.setCategoryOfLaw(categoryOfLaw);
-
-      FirmOfficeContractAndScheduleDetails schedule = new FirmOfficeContractAndScheduleDetails();
-      schedule.scheduleLines(List.of(scheduleLine));
-
-      ProviderFirmOfficeContractAndScheduleDto providerFirmResponse =
-          new ProviderFirmOfficeContractAndScheduleDto();
-      providerFirmResponse.addSchedulesItem(schedule);
-
-      when(providerDetailsRestClient.getProviderFirmSchedules(officeAccountNumber, areaOfLaw))
-          .thenReturn(Mono.just(providerFirmResponse));
-    }
-
     private SubmissionPatch buildSubmissionPatch(UUID submissionId) {
       return new SubmissionPatch()
           .submissionId(submissionId)
           .status(SubmissionStatus.VALIDATION_IN_PROGRESS);
-    }
-
-    private void mockSubmissionUpdate(UUID submissionId, SubmissionPatch patch) {
-      when(dataClaimsRestClient.updateSubmission(submissionId.toString(), patch))
-          .thenReturn(ResponseEntity.ok().build());
     }
 
     private void mockClaimUpdate(UUID submissionId, UUID claimId, ClaimPatch patch) {
@@ -288,12 +161,7 @@ public class SubmissionValidationServiceTest {
         SubmissionResponse submissionResponse,
         SubmissionPatch submissionPatch,
         ClaimPatch claimPatch) {
-      verify(dataClaimsRestClient, times(1))
-          .updateSubmission(submissionId.toString(), submissionPatch);
-      // verify(dataClaimsRestClient, times(1)).getClaim(submissionId, claimId);
       verify(claimValidationService, times(1)).validateClaims(eq(submissionResponse), any());
-      verify(providerDetailsRestClient, times(1))
-          .getProviderFirmSchedules(officeAccountNumber, areaOfLaw);
       verify(claimValidationService, times(1))
           .validateClaims(eq(submissionResponse), any(SubmissionValidationContext.class));
       verify(dataClaimsRestClient, times(1)).updateClaim(submissionId, claimId, claimPatch);
