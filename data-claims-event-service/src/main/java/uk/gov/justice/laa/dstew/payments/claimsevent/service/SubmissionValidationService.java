@@ -63,15 +63,6 @@ public class SubmissionValidationService {
       updateClaims(submission, context);
     }
 
-    // Update submission status after completion
-    SubmissionStatus completedStatus = SubmissionStatus.VALIDATION_SUCCEEDED;
-    if (context.hasErrors()) {
-      completedStatus = SubmissionStatus.VALIDATION_FAILED;
-    }
-    SubmissionPatch submissionPatch =
-        new SubmissionPatch().submissionId(submissionId).status(completedStatus);
-    dataClaimsRestClient.updateSubmission(submissionId.toString(), submissionPatch);
-
     //  VALIDATION_SUCCEEDED or VALIDATION_FAILED
     //  If unvalidated claims remain, re-queue message.
     log.debug("Validation completed for submission {}", submissionId);

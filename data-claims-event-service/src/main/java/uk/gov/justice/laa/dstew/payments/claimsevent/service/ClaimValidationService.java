@@ -62,14 +62,14 @@ public class ClaimValidationService {
    */
   public void validateClaims(SubmissionResponse submission, SubmissionValidationContext context) {
 
-    List<ClaimResponse> submissionClaims = submission.getClaims().stream()
-        .filter(claim -> ClaimStatus.READY_TO_PROCESS.equals(claim.getStatus()))
-        .map(SubmissionClaim::getClaimId)
-        .map(
-            claimId ->
-                dataClaimsRestClient.getClaim(submission.getSubmissionId(), claimId).getBody())
-        .toList();
-
+    List<ClaimResponse> submissionClaims =
+        submission.getClaims().stream()
+            .filter(claim -> ClaimStatus.READY_TO_PROCESS.equals(claim.getStatus()))
+            .map(SubmissionClaim::getClaimId)
+            .map(
+                claimId ->
+                    dataClaimsRestClient.getClaim(submission.getSubmissionId(), claimId).getBody())
+            .toList();
 
     Map<String, CategoryOfLawResult> categoryOfLawLookup =
         categoryOfLawValidationService.getCategoryOfLawLookup(submissionClaims);

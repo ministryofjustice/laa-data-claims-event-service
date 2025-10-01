@@ -24,8 +24,6 @@ import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
 import org.mockserver.model.Parameter;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
