@@ -17,6 +17,7 @@ public class MandatoryFieldsRegistry {
   private final List<String> civilMandatoryFields =
       List.of(
           "uniqueFileNumber",
+          "caseStartDate",
           "caseConcludedDate",
           "outcomeCode",
           "travelWaitingCostsAmount",
@@ -59,6 +60,7 @@ public class MandatoryFieldsRegistry {
           "disabilityCode",
           "isLegallyAided",
           "caseId",
+          "caseStartDate",
           "caseReferenceNumber",
           "scheduleReference",
           "matterTypeCode",

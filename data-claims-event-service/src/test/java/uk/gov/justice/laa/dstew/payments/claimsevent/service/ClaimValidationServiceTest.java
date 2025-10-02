@@ -92,11 +92,13 @@ class ClaimValidationServiceTest {
       Map<String, List<String>> mandatoryFieldsByAreaOfLaw =
           Map.of(
               "CIVIL",
-              List.of("uniqueFileNumber", "caseReferenceNumber", "scheduleReference"),
+              List.of(
+                  "uniqueFileNumber", "caseReferenceNumber", "scheduleReference", "caseStartDate"),
               "CRIME",
               List.of("stageReachedCode"),
               "MEDIATION",
-              List.of("uniqueFileNumber", "caseReferenceNumber", "scheduleReference"),
+              List.of(
+                  "uniqueFileNumber", "caseReferenceNumber", "scheduleReference", "caseStartDate"),
               "CRIME_LOWER",
               List.of("stageReachedCode"));
 
@@ -734,6 +736,86 @@ class ClaimValidationServiceTest {
             String.format("scheduleReference is required for area of law: %s", areaOfLaw);
         assertThat(getClaimMessages(context, claimId.toString()).getFirst().getTechnicalMessage())
             .isEqualTo(expectedMessage);
+      } else {
+        assertThat(getClaimMessages(context, claimId.toString()).isEmpty()).isTrue();
+      }
+    }
+
+    /*
+    Case Start Date should be mandatory for CIVIL and MEDIATION, but it's optional for CRIME.
+    Ref: https://dsdmoj.atlassian.net/browse/DSTEW-430
+     */
+    @ParameterizedTest(
+        name =
+            "{index} => claimId={0}, matterType={1}, areaOfLaw={2}, caseStartDate={3}, stageReachedCode={4}, expectError={5}")
+    @CsvSource({
+      "1, ab12:bc24, CIVIL, 2025-08-14, AB, false, null",
+      "2, ab12:bc24, CIVIL,, AB, true, caseStartDate is required for area of law: CIVIL",
+      "3, ABCD:EFGH, MEDIATION, 2025-08-14, AB, false, null",
+      "4, ABCD:EFGH, MEDIATION,, AB, true, caseStartDate is required for area of law: MEDIATION",
+      "5, ab12:bc24, CRIME,, ABCD, false, null"
+    })
+    void checkMandatoryCaseStartDate(
+        int claimIdBit,
+        String matterTypeCode,
+        String areaOfLaw,
+        String caseStartDate,
+        String stageReachedCode,
+        boolean expectError,
+        String expectedErrorMsg) {
+      UUID claimId = new UUID(claimIdBit, claimIdBit);
+      ClaimResponse claim =
+          new ClaimResponse()
+              .id(claimId.toString())
+              .feeCode("feeCode1")
+              .caseStartDate(caseStartDate)
+              .caseReferenceNumber("123")
+              .scheduleReference("SCH123")
+              .status(ClaimStatus.READY_TO_PROCESS)
+              .uniqueFileNumber("010101/123")
+              .matterTypeCode(matterTypeCode)
+              .stageReachedCode(stageReachedCode);
+
+      List<ClaimResponse> claims = List.of(claim);
+      Map<String, CategoryOfLawResult> categoryOfLawLookup = Collections.emptyMap();
+
+      when(categoryOfLawValidationService.getCategoryOfLawLookup(claims))
+          .thenReturn(categoryOfLawLookup);
+
+      when(claimEffectiveDateUtil.getEffectiveDate(any())).thenReturn(LocalDate.of(2025, 8, 14));
+
+      SubmissionResponse submissionResponse =
+          new SubmissionResponse()
+              .submissionId(new UUID(1, 1))
+              .areaOfLaw(areaOfLaw)
+              .claims(
+                  singletonList(
+                      new SubmissionClaim().status(ClaimStatus.READY_TO_PROCESS).claimId(claimId)))
+              .officeAccountNumber("officeAccountNumber");
+
+      ClaimResultSet claimResultSet = new ClaimResultSet();
+      claimResultSet.content(claims);
+
+      when(dataClaimsRestClient.getClaim(any(), any())).thenReturn(ResponseEntity.ok(claim));
+
+      ProviderFirmOfficeContractAndScheduleDto data =
+          new ProviderFirmOfficeContractAndScheduleDto()
+              .addSchedulesItem(
+                  new FirmOfficeContractAndScheduleDetails()
+                      .addScheduleLinesItem(
+                          new FirmOfficeContractAndScheduleLine().categoryOfLaw("categoryOfLaw1")));
+      when(providerDetailsRestClient.getProviderFirmSchedules(any(), any(), any()))
+          .thenReturn(Mono.just(data));
+
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
+
+      // Run validation
+      claimValidationService.validateClaims(submissionResponse, context);
+
+      if (expectError) {
+        assertThat(getClaimMessages(context, claimId.toString()).getFirst().getTechnicalMessage())
+            .isEqualTo(expectedErrorMsg);
       } else {
         assertThat(getClaimMessages(context, claimId.toString()).isEmpty()).isTrue();
       }
