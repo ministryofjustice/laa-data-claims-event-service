@@ -27,7 +27,7 @@ import uk.gov.justice.laa.provider.model.ProviderFirmOfficeContractAndScheduleDt
     })
 class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest {
 
-  public static final String PROVIDER_OFFICES = "/api/v2/provider-offices/";
+  public static final String PROVIDER_OFFICES = "/api/v1/provider-offices/";
   public static final String SCHEDULES_ENDPOINT = "/schedules";
   private ProviderDetailsRestClient providerDetailsRestClient;
 
@@ -197,7 +197,7 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
       assertThatThrownBy(result::block)
           .isInstanceOf(WebClientResponseException.class)
           .hasMessageContaining(
-              "409 Conflict from GET http://%s:%d/api/v2/provider-offices/1234/schedules"
+              "409 Conflict from GET http://%s:%d/api/v1/provider-offices/1234/schedules"
                   .formatted(mockServerContainer.getHost(), mockServerContainer.getServerPort()));
     }
   }
@@ -367,7 +367,7 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
       assertThatThrownBy(result::block)
           .isInstanceOf(WebClientResponseException.class)
           .hasMessageContaining(
-              "409 Conflict from GET http://%s:%d/api/v2/provider-offices/1234/schedules"
+              "409 Conflict from GET http://%s:%d/api/v1/provider-offices/1234/schedules"
                   .formatted(mockServerContainer.getHost(), mockServerContainer.getServerPort()));
     }
   }
