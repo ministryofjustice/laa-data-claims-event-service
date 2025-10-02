@@ -40,15 +40,15 @@ management:
 
 laa:
   provider-details-api:
-    hostname: ${PROVIDER_DETAILS_API_HOSTNAME}
+    host: ${PROVIDER_DETAILS_API_HOSTNAME}
     url: ${laa.provider-details-api.hostname}
     accessToken: ${PROVIDER_DETAILS_API_ACCESS_TOKEN}
   claims-api:
-    hostname: ${CLAIMS_API_HOSTNAME}
+    host: ${CLAIMS_API_HOSTNAME}
     url: ${laa.claims-api.hostname}
     accessToken: ${CLAIMS_API_ACCESS_TOKEN}
   fee-scheme-platform-api:
-    hostname: ${FEE_SCHEME_PLATFORM_API_URL}
+    host: ${FEE_SCHEME_PLATFORM_API_URL}
     url: ${laa.claims-api.hostname}
     accessToken: ${FEE_SCHEME_PLATFORM_API_ACCESS_TOKEN}
   bulk-claim-queue:

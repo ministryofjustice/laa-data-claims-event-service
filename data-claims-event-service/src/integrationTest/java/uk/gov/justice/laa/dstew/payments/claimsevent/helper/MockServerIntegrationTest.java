@@ -122,12 +122,7 @@ public abstract class MockServerIntegrationTest {
 
   protected static @NotNull WebClient createWebClient() {
     ApiProperties apiProperties =
-        new ApiProperties(
-            mockServerContainer.getEndpoint(),
-            String.valueOf(mockServerContainer.getServerPort()),
-            0,
-            "",
-            "Authorization");
+        new ApiProperties(mockServerContainer.getEndpoint(), "", "Authorization");
     return WebClientConfiguration.createWebClient(apiProperties);
   }
 
@@ -274,21 +269,21 @@ public abstract class MockServerIntegrationTest {
     @Primary
     DataClaimsApiProperties dataClaimsApiProperties() {
       // Set using host and port running the mock server
-      return new DataClaimsApiProperties("http://localhost:30000", "localhost", 30000, "");
+      return new DataClaimsApiProperties("http://localhost:30000", "");
     }
 
     @Bean
     @Primary
     FeeSchemePlatformApiProperties feeSchemePlatformApiProperties() {
       // Set using host and port running the mock server
-      return new FeeSchemePlatformApiProperties("http://localhost:30000", "localhost", 30000, "");
+      return new FeeSchemePlatformApiProperties("http://localhost:30000", "");
     }
 
     @Bean
     @Primary
     ProviderDetailsApiProperties providerDetailsApiProperties() {
       // Set using host and port running the mock server
-      return new ProviderDetailsApiProperties("http://localhost:30000", "localhost", 30000, "");
+      return new ProviderDetailsApiProperties("http://localhost:30000", "");
     }
 
     @Bean

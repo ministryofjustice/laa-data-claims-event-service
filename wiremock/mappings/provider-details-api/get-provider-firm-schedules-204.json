@@ -1,0 +1,16 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/api/v2/provider-offices/[a-zA-Z0-9\\-]+/schedules"
+  },
+  "scenarioName": "get schedules",
+  "requiredScenarioState": "schedule-two",
+  "newScenarioState": "Started",
+  "response": {
+    "status": 204,
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}
+
