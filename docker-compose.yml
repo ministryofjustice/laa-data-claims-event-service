@@ -12,21 +12,21 @@ services:
       - "./docker-scripts/init-localstack.sh:/etc/localstack/init/ready.d/init-localstack.sh"
       - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
-  #data-claim-api-wiremock:
-  #  image: wiremock/wiremock:latest
-  #  container_name: data-claim-api-wiremock
-  #  entrypoint:
-  #    [
-  #      "/docker-entrypoint.sh",
-  #      "--global-response-templating",
-  #      "--disable-gzip",
-  #      "--verbose",
-  #    ]
-  #  volumes:
-  #    - ./wiremock/mappings/data-claims-api:/home/wiremock/mappings
-  #  restart: always
-  #  ports:
-  #    - "8190:8080"
+  data-claim-api-wiremock:
+    image: wiremock/wiremock:latest
+    container_name: data-claim-api-wiremock
+    entrypoint:
+      [
+        "/docker-entrypoint.sh",
+        "--global-response-templating",
+        "--disable-gzip",
+        "--verbose",
+      ]
+    volumes:
+      - ./wiremock/mappings/data-claims-api:/home/wiremock/mappings
+    restart: always
+    ports:
+      - "8190:8080"
   fee-scheme-platform-api-wiremock:
     image: wiremock/wiremock:latest
     container_name: fee-scheme-platform-api-wiremock
