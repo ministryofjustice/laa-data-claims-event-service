@@ -1,5 +1,7 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
+import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationSource.EVENT_SERVICE;
+
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
@@ -179,7 +181,8 @@ public class ClaimValidationService {
         if (value == null || (value instanceof String s && s.trim().isEmpty())) {
           context.addClaimError(
               claim.getId(),
-              String.format("%s is required for area of law: %s", fieldName, areaOfLaw));
+              String.format("%s is required for area of law: %s", fieldName, areaOfLaw),
+              EVENT_SERVICE);
         }
 
       } catch (IntrospectionException | IllegalAccessException | InvocationTargetException e) {
@@ -201,7 +204,8 @@ public class ClaimValidationService {
           claim.getId(),
           String.format(
               "%s (%s): does not match the regex pattern %s (provided value: %s)",
-              fieldName, areaOfLaw, regex, fieldValue));
+              fieldName, areaOfLaw, regex, fieldValue),
+          EVENT_SERVICE);
     }
   }
 
@@ -250,7 +254,8 @@ public class ClaimValidationService {
           claim.getId(),
           String.format(
               "disbursementsVatAmount (%s): must have a maximum value of %s (provided value: %s)",
-              areaOfLaw, maxAllowed, disbursementsVatAmount));
+              areaOfLaw, maxAllowed, disbursementsVatAmount),
+          EVENT_SERVICE);
     }
   }
 
@@ -302,12 +307,14 @@ public class ClaimValidationService {
               claim.getId(),
               String.format(
                   "Invalid date value for %s (Must be between %s and today): %s",
-                  fieldName, oldestDateAllowedStr, dateValueToCheck));
+                  fieldName, oldestDateAllowedStr, dateValueToCheck),
+              EVENT_SERVICE);
         }
       } catch (DateTimeParseException e) {
         context.addClaimError(
             claim.getId(),
-            String.format("Invalid date value provided for %s: %s", fieldName, dateValueToCheck));
+            String.format("Invalid date value provided for %s: %s", fieldName, dateValueToCheck),
+            EVENT_SERVICE);
       }
     }
   }
