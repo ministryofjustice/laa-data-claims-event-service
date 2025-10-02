@@ -10,7 +10,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "laa.provider-details-api")
 public class ProviderDetailsApiProperties extends ApiProperties {
 
-  public ProviderDetailsApiProperties(String url, String host, int port, String accessToken) {
-    super(url, host, port, accessToken, "X-Authorization");
+  public ProviderDetailsApiProperties(String url, String accessToken) {
+    super(url, accessToken, "X-Authorization");
   }
 }

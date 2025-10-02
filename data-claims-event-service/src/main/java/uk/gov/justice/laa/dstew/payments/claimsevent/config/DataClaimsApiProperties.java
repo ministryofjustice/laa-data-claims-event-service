@@ -11,7 +11,7 @@ import org.springframework.http.HttpHeaders;
 @ConfigurationProperties(prefix = "laa.claims-api")
 public class DataClaimsApiProperties extends ApiProperties {
 
-  public DataClaimsApiProperties(String url, String host, int port, String accessToken) {
-    super(url, host, port, accessToken, HttpHeaders.AUTHORIZATION);
+  public DataClaimsApiProperties(String url, String accessToken) {
+    super(url, accessToken, HttpHeaders.AUTHORIZATION);
   }
 }
