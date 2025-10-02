@@ -1,0 +1,22 @@
+{
+    "submission_id": "00000000-0000-0001-0000-000000000001",
+    "bulk_submission_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "status": "VALIDATION_IN_PROGRESS",
+    "office_account_number": "AQ2B3C",
+    "submission_period": "JAN-2025",
+    "area_of_law": "CIVIL",
+    "schedule_number": "23456",
+    "previous_submission_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "is_nil_submission": false,
+    "number_of_claims": 30,
+     "claims": [
+      {
+      "claim_id": "6850db96-fbb7-4859-a5a5-fc111cd205b2",
+      "status": "VALID"
+    },
+    {
+      "claim_id": "6850db96-fbb7-4859-a5a5-fc111cd205b2",
+      "status": "READY_TO_PROCESS"
+    }
+  ]
+}

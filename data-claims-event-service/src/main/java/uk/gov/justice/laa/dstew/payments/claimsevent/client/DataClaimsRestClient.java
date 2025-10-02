@@ -1,8 +1,10 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.client;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -89,23 +91,73 @@ public interface DataClaimsRestClient {
   /**
    * Get claims in an office, filtering on certain criteria.
    *
+   * <p>Currently using Pageable within HttpExchange is not supported. This method aims to work
+   * around this limitation until it has been implemented. <a
+   * href="https://github.com/spring-projects/spring-data-commons/issues/3046">Issue #25899</a>
+   *
+   * @param officeCode the office code of the claims to be retrieved
+   * @param submissionId the submission id of the claims to be retrieved
    * @param submissionStatuses the statuses of the parent submissions
-   * @param feeCode the fee code of the claim
-   * @param uniqueFileNumber the unique file number of the claim
-   * @param uniqueClientNumber the unique client number of the claim
+   * @param feeCode the fee code of the claims to be retrieved
+   * @param uniqueFileNumber the unique file number of the claims to be retrieved
+   * @param uniqueClientNumber the unique client number of the claims to be retrieved
    * @param claimStatuses the claim statuses
+   * @param pageable the pageable object containing the page number and page size
+   * @return 200 OK with JSON body containing the list of matched claims
+   */
+  default ResponseEntity<ClaimResultSet> getClaims(
+      String officeCode,
+      String submissionId,
+      List<SubmissionStatus> submissionStatuses,
+      String feeCode,
+      String uniqueFileNumber,
+      String uniqueClientNumber,
+      List<ClaimStatus> claimStatuses,
+      Pageable pageable) {
+    Integer pageNumber = Objects.nonNull(pageable) ? pageable.getPageNumber() : null;
+    Integer pageSize = Objects.nonNull(pageable) ? pageable.getPageSize() : null;
+    Sort sort = Objects.nonNull(pageable) ? pageable.getSort() : null;
+    return this.getClaims(
+        officeCode,
+        submissionId,
+        submissionStatuses,
+        feeCode,
+        uniqueFileNumber,
+        uniqueClientNumber,
+        claimStatuses,
+        pageNumber,
+        pageSize,
+        sort);
+  }
+
+  /**
+   * Get claims in an office, filtering on certain criteria.
+   *
+   * @param officeCode the office code of the claims to be retrieved
+   * @param submissionId the submission id of the claims to be retrieved
+   * @param submissionStatuses the statuses of the parent submissions
+   * @param feeCode the fee code of the claims to be retrieved
+   * @param uniqueFileNumber the unique file number of the claims to be retrieved
+   * @param uniqueClientNumber the unique client number of the claims to be retrieved
+   * @param claimStatuses the claim statuses
+   * @param page the page number
+   * @param size the page size
+   * @param sort the sort order
    * @return 200 OK with JSON body containing the list of matched claims
    */
   @GetExchange("/claims")
   ResponseEntity<ClaimResultSet> getClaims(
-      @RequestParam String officeCode,
-      @RequestParam(required = false) String submissionId,
-      @RequestParam(required = false) List<SubmissionStatus> submissionStatuses,
-      @RequestParam(required = false) String feeCode,
-      @RequestParam(required = false) String uniqueFileNumber,
-      @RequestParam(required = false) String uniqueClientNumber,
-      @RequestParam(required = false) List<ClaimStatus> claimStatuses,
-      Pageable pageable);
+      @RequestParam(value = "office_code") String officeCode,
+      @RequestParam(value = "submission_id", required = false) String submissionId,
+      @RequestParam(value = "submission_statuses", required = false)
+          List<SubmissionStatus> submissionStatuses,
+      @RequestParam(value = "fee_code", required = false) String feeCode,
+      @RequestParam(value = "unique_file_number", required = false) String uniqueFileNumber,
+      @RequestParam(value = "unique_client_number", required = false) String uniqueClientNumber,
+      @RequestParam(value = "claim_statuses", required = false) List<ClaimStatus> claimStatuses,
+      @RequestParam(value = "page", required = false) Integer page,
+      @RequestParam(value = "size", required = false) Integer size,
+      @RequestParam(value = "sort", required = false) Sort sort);
 
   /**
    * Get a specific claim for a submission.

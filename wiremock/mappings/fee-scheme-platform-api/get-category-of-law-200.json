@@ -1,7 +1,7 @@
 {
   "request": {
     "method": "GET",
-    "urlPathPattern": "/category-of-law/[a-f0-9\\-]+/claims/[a-f0-9\\-]+"
+    "urlPathPattern": "/api/v1/fee-details/[a-zA-Z0-9\\-]+"
   },
   "response": {
     "status": 200,
@@ -9,7 +9,9 @@
       "Content-Type": "application/json"
     },
     "jsonBody": {
-      "categoryOfLawCode": "CAT A"
+      "categoryOfLawCode": "string",
+      "feeCodeDescription": "string",
+      "feeType": "string"
     }
   }
 }

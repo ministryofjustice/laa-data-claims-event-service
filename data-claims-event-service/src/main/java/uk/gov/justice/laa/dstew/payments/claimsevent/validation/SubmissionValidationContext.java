@@ -56,6 +56,15 @@ public class SubmissionValidationContext {
   }
 
   /**
+   * Adds a submission-level validation error from a ClaimValidationError.
+   *
+   * @param error the validation error to convert and add
+   */
+  public void addSubmissionValidationError(SubmissionValidationError error, Object... params) {
+    submissionValidationErrors.add(error.toPatch(params));
+  }
+
+  /**
    * Adds a claim-level validation error for a specific claim.
    *
    * @param claimId the ID of the claim

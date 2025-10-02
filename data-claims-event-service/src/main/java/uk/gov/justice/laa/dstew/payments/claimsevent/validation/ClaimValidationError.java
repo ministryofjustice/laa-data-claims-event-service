@@ -12,8 +12,6 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessageType;
 @RequiredArgsConstructor
 @Getter
 public enum ClaimValidationError {
-  SUBMISSION_STATE_IS_NULL(
-      "The submission state is null", null, EVENT_SERVICE, ValidationMessageType.ERROR),
   INVALID_AREA_OF_LAW_FOR_PROVIDER(
       "A contract schedule with the provided area of law could not be found for this provider",
       null,
@@ -26,16 +24,6 @@ public enum ClaimValidationError {
       ValidationMessageType.ERROR),
   INVALID_CATEGORY_OF_LAW_NOT_AUTHORISED_FOR_PROVIDER(
       "The provider is not contracted for the category of law associated with the fee code",
-      null,
-      EVENT_SERVICE,
-      ValidationMessageType.ERROR),
-  INVALID_NIL_SUBMISSION_CONTAINS_CLAIMS(
-      "Submission is marked as nil submission, but contains claims",
-      null,
-      EVENT_SERVICE,
-      ValidationMessageType.ERROR),
-  NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS(
-      "Submission is marked as nil submission, but contains claims",
       null,
       EVENT_SERVICE,
       ValidationMessageType.ERROR),

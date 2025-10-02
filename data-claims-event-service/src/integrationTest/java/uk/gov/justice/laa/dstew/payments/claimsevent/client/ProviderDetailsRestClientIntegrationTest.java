@@ -12,11 +12,13 @@ import org.junit.jupiter.api.Test;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MockServerIntegrationTest;
 import uk.gov.justice.laa.provider.model.ProviderFirmOfficeContractAndScheduleDto;
 
+@ActiveProfiles("test")
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = {

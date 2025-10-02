@@ -40,6 +40,7 @@ public class DuplicateClaimValidationService {
 
       List<ClaimResponse> submissionDuplicateClaims = new ArrayList<>();
       List<ClaimResponse> officeDuplicateClaims = new ArrayList<>();
+      List<ClaimResponse> caseDuplicateClaims = new ArrayList<>();
 
       if ("CRIME_LOWER".equals(areaOfLaw)) {
         String feeCode = claim.getFeeCode();
@@ -58,6 +59,25 @@ public class DuplicateClaimValidationService {
             searchOfficeClaims(officeCode, feeCode, uniqueFileNumber, submissionClaimIds);
       }
 
+      if ("MEDIATION".equals(areaOfLaw)) {
+        String feeCode = claim.getFeeCode();
+        String uniqueCaseId = claim.getUniqueCaseId();
+        ClaimStatus status = claim.getStatus();
+        List<String> submissionClaimIds =
+            submissionClaims.stream().map(ClaimResponse::getId).toList();
+
+        submissionDuplicateClaims =
+            findDuplicates(
+                claimsToCompare,
+                claimToCompare ->
+                    feeCode.equals(claimToCompare.getFeeCode())
+                        && uniqueCaseId.equals(claimToCompare.getUniqueCaseId())
+                        && status.equals(claimToCompare.getStatus()));
+
+        caseDuplicateClaims =
+            searchOfficeClaims(officeCode, feeCode, uniqueFileNumber, submissionClaimIds);
+      }
+
       if (!submissionDuplicateClaims.isEmpty()) {
         log.debug("Duplicate claims found in submission");
         logDuplicates(claim, submissionDuplicateClaims);
@@ -69,6 +89,11 @@ public class DuplicateClaimValidationService {
         logDuplicates(claim, officeDuplicateClaims);
         context.addClaimError(
             claim.getId(), ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_ANOTHER_SUBMISSION);
+      }
+
+      if (caseDuplicateClaims != null && !caseDuplicateClaims.isEmpty()) {
+        log.debug("Duplicate claims found in another submission for this office");
+        logDuplicates(claim, caseDuplicateClaims);
       }
     }
     log.debug("Duplicate validation completed for claim {}", claim.getId());
@@ -118,12 +143,20 @@ public class DuplicateClaimValidationService {
             uniqueFileNumber,
             null,
             List.of(ClaimStatus.VALID, ClaimStatus.READY_TO_PROCESS),
+            null,
             null)
         .getBody()
         .getContent()
         .stream()
         .filter(otherClaim -> !submissionClaimIds.contains(otherClaim.getId()))
         .toList();
+  }
+
+  private List<ClaimResponse> searchOfficeClaims2(
+      String officeCode, String feeCode, String uniqeCaseNumber, List<String> submissionClaimIds
+  ){
+    return null;
+
   }
 
   private void logDuplicates(ClaimResponse claim, List<ClaimResponse> duplicateClaims) {

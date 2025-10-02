@@ -11,22 +11,34 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionClaim;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
+import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.MandatoryFieldsRegistry;
+import uk.gov.justice.laa.dstew.payments.claimsevent.exception.EventServiceIllegalArgumentException;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.strategy.DuplicateClaimValidationStrategy;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.strategy.StrategyTypes;
+import uk.gov.justice.laa.dstew.payments.claimsevent.util.ClaimEffectiveDateUtil;
+import uk.gov.justice.laa.dstew.payments.claimsevent.util.UniqueFileNumberUtil;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.JsonSchemaValidator;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
+import uk.gov.justice.laa.provider.model.FirmOfficeContractAndScheduleDetails;
+import uk.gov.justice.laa.provider.model.FirmOfficeContractAndScheduleLine;
+import uk.gov.justice.laa.provider.model.ProviderFirmOfficeContractAndScheduleDto;
 
 /**
  * A service for validating submitted claims that are ready to process. Validation errors will
  * result in claims being marked as invalid and all validation errors will be reported against the
  * claim.
  */
+@Slf4j
 @Service
 @AllArgsConstructor
 public class ClaimValidationService {
@@ -35,35 +47,30 @@ public class ClaimValidationService {
   public static final String MIN_REP_ORDER_DATE = "2016-04-01";
   public static final String MIN_BIRTH_DATE = "1900-01-01";
   private final CategoryOfLawValidationService categoryOfLawValidationService;
-  private final DuplicateClaimValidationService duplicateClaimValidationService;
+  private final ProviderDetailsRestClient providerDetailsRestClient;
   private final FeeCalculationService feeCalculationService;
   private final DataClaimsRestClient dataClaimsRestClient;
   private final JsonSchemaValidator jsonSchemaValidator;
   private final MandatoryFieldsRegistry mandatoryFieldsRegistry;
+  private final ClaimEffectiveDateUtil claimEffectiveDateUtil;
+  private final Map<String, DuplicateClaimValidationStrategy> strategies;
 
   /**
    * Validate a list of claims in a submission.
    *
    * @param submission the submission
-   * @param providerCategoriesOfLaw the categories of law that the provider is contracted for
    */
-  public void validateClaims(
-      SubmissionResponse submission,
-      List<String> providerCategoriesOfLaw,
-      SubmissionValidationContext context) {
+  public void validateClaims(SubmissionResponse submission, SubmissionValidationContext context) {
+
     List<ClaimResponse> submissionClaims =
-        dataClaimsRestClient
-            .getClaims(
-                submission.getOfficeAccountNumber(),
-                submission.getSubmissionId().toString(),
-                null,
-                null,
-                null,
-                null,
-                null,
-                null)
-            .getBody()
-            .getContent();
+        submission.getClaims().stream()
+            .filter(claim -> ClaimStatus.READY_TO_PROCESS.equals(claim.getStatus()))
+            .map(SubmissionClaim::getClaimId)
+            .map(
+                claimId ->
+                    dataClaimsRestClient.getClaim(submission.getSubmissionId(), claimId).getBody())
+            .toList();
+
     Map<String, CategoryOfLawResult> categoryOfLawLookup =
         categoryOfLawValidationService.getCategoryOfLawLookup(submissionClaims);
     submissionClaims.stream()
@@ -74,7 +81,6 @@ public class ClaimValidationService {
                     claim,
                     submissionClaims,
                     categoryOfLawLookup,
-                    providerCategoriesOfLaw,
                     submission.getAreaOfLaw(),
                     submission.getOfficeAccountNumber(),
                     context));
@@ -90,7 +96,6 @@ public class ClaimValidationService {
    * @param claim the claim object to validate
    * @param categoryOfLawLookup a map containing category of law codes and their corresponding
    *     descriptions
-   * @param providerCategoriesOfLaw a list of categories of law applicable to the provider
    * @param areaOfLaw the area of law for the parent submission: some validations change depending
    *     on the area of law.
    */
@@ -98,7 +103,6 @@ public class ClaimValidationService {
       ClaimResponse claim,
       List<ClaimResponse> submissionClaims,
       Map<String, CategoryOfLawResult> categoryOfLawLookup,
-      List<String> providerCategoriesOfLaw,
       String areaOfLaw,
       String officeCode,
       SubmissionValidationContext context) {
@@ -109,8 +113,8 @@ public class ClaimValidationService {
     validateUniqueFileNumber(claim, context);
     validateStageReachedCode(claim, areaOfLaw, context);
     validateDisbursementsVatAmount(claim, areaOfLaw, context);
-    checkDateInPast(
-        claim, "Case Start Date", claim.getCaseStartDate(), OLDEST_DATE_ALLOWED_1, context);
+    String caseStartDate = claim.getCaseStartDate();
+    checkDateInPast(claim, "Case Start Date", caseStartDate, OLDEST_DATE_ALLOWED_1, context);
     checkDateInPast(
         claim, "Case Concluded Date", claim.getCaseConcludedDate(), OLDEST_DATE_ALLOWED_1, context);
     checkDateInPast(
@@ -127,13 +131,22 @@ public class ClaimValidationService {
         claim, "Client2 Date of Birth", claim.getClient2DateOfBirth(), MIN_BIRTH_DATE, context);
     validateMatterType(claim, areaOfLaw, context);
 
-    // category of law validation
-    categoryOfLawValidationService.validateCategoryOfLaw(
-        claim, categoryOfLawLookup, providerCategoriesOfLaw, context);
+    try {
+      LocalDate effectiveDate = claimEffectiveDateUtil.getEffectiveDate(claim);
+      List<String> effectiveCategoriesOfLaw =
+          getEffectiveCategoriesOfLaw(officeCode, areaOfLaw, effectiveDate);
+      // Get effective category of law lookup
+      categoryOfLawValidationService.validateCategoryOfLaw(
+          claim, categoryOfLawLookup, effectiveCategoriesOfLaw, context);
+    } catch (EventServiceIllegalArgumentException e) {
+      log.debug(
+          "Error getting effective date for category of law validation: {}. Continuing with claim"
+              + " validation",
+          e.getMessage());
+    }
 
-    // duplicates
-    duplicateClaimValidationService.validateDuplicateClaims(
-        claim, submissionClaims, areaOfLaw, officeCode, context);
+    // duplicates bases on area of law
+    validateDuplicateClaims(claim, submissionClaims, areaOfLaw, officeCode, context);
 
     // fee calculation validation
     feeCalculationService.validateFeeCalculation(claim, context);
@@ -251,10 +264,8 @@ public class ClaimValidationService {
   private void validateUniqueFileNumber(ClaimResponse claim, SubmissionValidationContext context) {
     String uniqueFileNumber = claim.getUniqueFileNumber();
     if (uniqueFileNumber != null && uniqueFileNumber.length() > 1) {
-      String datePart = uniqueFileNumber.substring(0, 6); // DDMMYY
-      DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyy");
       try {
-        LocalDate date = LocalDate.parse(datePart, formatter);
+        LocalDate date = UniqueFileNumberUtil.parse(uniqueFileNumber);
         if (!date.isBefore(LocalDate.now())) {
           context.addClaimError(
               claim.getId(), ClaimValidationError.INVALID_DATE_IN_UNIQUE_FILE_NUMBER);
@@ -298,6 +309,40 @@ public class ClaimValidationService {
             claim.getId(),
             String.format("Invalid date value provided for %s: %s", fieldName, dateValueToCheck));
       }
+    }
+  }
+
+  private List<String> getEffectiveCategoriesOfLaw(
+      String officeCode, String areaOfLaw, LocalDate effectiveDate) {
+    return providerDetailsRestClient
+        .getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate)
+        .blockOptional()
+        .stream()
+        .map(ProviderFirmOfficeContractAndScheduleDto::getSchedules)
+        .flatMap(List::stream)
+        .map(FirmOfficeContractAndScheduleDetails::getScheduleLines)
+        .flatMap(List::stream)
+        .map(FirmOfficeContractAndScheduleLine::getCategoryOfLaw)
+        .toList();
+  }
+
+  private void validateDuplicateClaims(
+      final ClaimResponse claim,
+      final List<ClaimResponse> submissionClaims,
+      final String areaOfLaw,
+      final String officeCode,
+      final SubmissionValidationContext context) {
+    switch (areaOfLaw) {
+      case StrategyTypes.CRIME ->
+          strategies
+              .get(StrategyTypes.CRIME)
+              .validateDuplicateClaims(claim, submissionClaims, officeCode, context);
+      case StrategyTypes.CIVIL ->
+          strategies
+              .get(StrategyTypes.CIVIL)
+              .validateDuplicateClaims(claim, submissionClaims, officeCode, context);
+      default ->
+          log.debug("No duplicate claim validation strategy found for area of law: {}", areaOfLaw);
     }
   }
 }

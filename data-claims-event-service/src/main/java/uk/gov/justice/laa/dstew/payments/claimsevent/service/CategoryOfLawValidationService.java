@@ -14,7 +14,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
-import uk.gov.justice.laa.fee.scheme.model.CategoryOfLawResponse;
+import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponse;
 
 /** A service responsible for validating data items related to category of law. */
 @Slf4j
@@ -76,22 +76,26 @@ public class CategoryOfLawValidationService {
 
     uniqueFeeCodes.forEach(
         feeCode -> {
-          ResponseEntity<CategoryOfLawResponse> categoryOfLawResponse =
-              feeSchemePlatformRestClient.getCategoryOfLaw(feeCode);
-          if (categoryOfLawResponse.getStatusCode().is2xxSuccessful()) {
-            categoryOfLawLookup.put(
-                feeCode,
-                CategoryOfLawResult.withCategoryOfLaw(
-                    categoryOfLawResponse.getBody().getCategoryOfLawCode()));
-          } else if (categoryOfLawResponse.getStatusCode().isSameCodeAs(HttpStatus.NOT_FOUND)) {
-            log.debug("Get category of law returned 404 for fee code: {}", feeCode);
-            categoryOfLawLookup.put(feeCode, CategoryOfLawResult.withCategoryOfLaw(null));
-          } else {
-            log.debug(
-                "Get category of law resulted in error for fee code {} with status: {}",
-                feeCode,
-                categoryOfLawResponse.getStatusCode());
-            categoryOfLawLookup.put(feeCode, CategoryOfLawResult.error());
+          ResponseEntity<FeeDetailsResponse> feeDetailsResponse =
+              feeSchemePlatformRestClient.getFeeDetails(feeCode);
+
+          switch (feeDetailsResponse.getStatusCode()) {
+            case HttpStatus status when status.is2xxSuccessful() ->
+                categoryOfLawLookup.put(
+                    feeCode,
+                    CategoryOfLawResult.withCategoryOfLaw(
+                        feeDetailsResponse.getBody().getCategoryOfLawCode()));
+            case HttpStatus.NOT_FOUND -> {
+              log.debug("Get category of law returned 404 for fee code: {}", feeCode);
+              categoryOfLawLookup.put(feeCode, CategoryOfLawResult.withCategoryOfLaw(null));
+            }
+            default -> {
+              log.debug(
+                  "Get category of law resulted in error for fee code {} with status: {}",
+                  feeCode,
+                  feeDetailsResponse.getStatusCode());
+              categoryOfLawLookup.put(feeCode, CategoryOfLawResult.error());
+            }
           }
         });
 

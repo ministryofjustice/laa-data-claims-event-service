@@ -16,14 +16,22 @@ public interface FeeSchemeMapper {
    * @param claim the claim to map
    * @return a {@code FeeCalculationRequest} representing the claim
    */
+  @Mapping(target = "claimId", source = "id")
   @Mapping(target = "feeCode", source = "feeCode")
-  @Mapping(target = "startDate", source = "caseStartDate", dateFormat = "yyyy-MM-dd")
+  @Mapping(target = "startDate", source = "caseStartDate")
   @Mapping(target = "netProfitCosts", source = "netProfitCostsAmount")
   @Mapping(target = "netDisbursementAmount", source = "netDisbursementAmount")
   @Mapping(target = "netCostOfCounsel", source = "netCounselCostsAmount")
   @Mapping(target = "disbursementVatAmount", source = "disbursementsVatAmount")
   @Mapping(target = "vatIndicator", source = "isVatApplicable")
-  @Mapping(target = "disbursementPriorAuthority", source = "priorAuthorityReference")
+  @Mapping(target = "immigrationPriorAuthorityNumber", source = "priorAuthorityReference")
+  @Mapping(
+      target = "policeStationId",
+      ignore = true) // TODO: policeStationId missing from ClaimResponse?
+  @Mapping(
+      target = "policeStationSchemeId",
+      ignore = true) // TODO: policeStationSchemeId missing from ClaimResponse?
+  @Mapping(target = "policeCourtOrPrisonId", source = "policeStationCourtPrisonId")
   @Mapping(target = "boltOns", source = "claim")
   @Mapping(
       target = "netTravelCosts",
@@ -31,13 +39,12 @@ public interface FeeSchemeMapper {
   @Mapping(target = "netWaitingCosts", source = "netWaitingCostsAmount")
   @Mapping(target = "travelAndWaitingCosts", source = "travelWaitingCostsAmount")
   @Mapping(target = "detentionAndWaitingCosts", source = "detentionTravelWaitingCostsAmount")
-  @Mapping(target = "caseConcludedDate", source = "caseConcludedDate", dateFormat = "yyyy-MM-dd")
-  @Mapping(target = "policeCourtOrPrisonId", source = "policeStationCourtPrisonId")
+  @Mapping(target = "caseConcludedDate", source = "caseConcludedDate")
   @Mapping(
       target = "dutySolicitor",
       source = "isDutySolicitor") // TODO: Mismatch in types String <-> Boolean
   @Mapping(target = "schemeId", source = "schemeId")
-  @Mapping(target = "ufn", source = "uniqueFileNumber")
+  @Mapping(target = "uniqueFileNumber", source = "uniqueFileNumber")
   @Mapping(target = "numberOfMediationSessions", source = "mediationSessionsCount")
   @Mapping(target = "jrFormFilling", source = "jrFormFillingAmount")
   FeeCalculationRequest mapToFeeCalculationRequest(ClaimResponse claim);
@@ -52,7 +59,7 @@ public interface FeeSchemeMapper {
       target = "boltOnAdjournedHearing",
       source = "adjournedHearingFeeAmount") // TODO: Mismatch in types Integer <-> BigDecimal
   @Mapping(target = "boltOnCmrhOral", source = "cmrhOralCount")
-  @Mapping(target = "boltOnCrmhTelephone", source = "cmrhTelephoneCount")
+  @Mapping(target = "boltOnCmrhTelephone", source = "cmrhTelephoneCount")
   @Mapping(target = "boltOnAdditionalTravel", ignore = true) // TODO: Missing from ClaimResponse?
   @Mapping(target = "boltOnHomeOfficeInterview", source = "hoInterview")
   BoltOnType mapToBoltOnType(ClaimResponse claim);
