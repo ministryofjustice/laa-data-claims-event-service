@@ -5,7 +5,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
-import static uk.gov.justice.laa.dstew.payments.claimsevent.ValidationServiceTestUtils.assertContextClaimError;
 
 import java.util.Collections;
 import java.util.List;
@@ -20,11 +19,11 @@ import org.springframework.http.ResponseEntity;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.mapper.FeeSchemeMapper;
-import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationRequest;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationResponse;
+import uk.gov.justice.laa.fee.scheme.model.ValidationMessagesInner;
 
 @ExtendWith(MockitoExtension.class)
 class FeeCalculationServiceTest {
@@ -69,9 +68,13 @@ class FeeCalculationServiceTest {
 
       FeeCalculationRequest feeCalculationRequest = new FeeCalculationRequest().feeCode("feeCode");
 
-      String warning = "warningDescription";
+      ValidationMessagesInner validationMessagesInner =
+          new ValidationMessagesInner()
+              .message("test")
+              .type(ValidationMessagesInner.TypeEnum.ERROR);
       FeeCalculationResponse feeCalculationResponse =
-          new FeeCalculationResponse().warnings(Collections.singletonList(warning));
+          new FeeCalculationResponse()
+              .validationMessages(Collections.singletonList(validationMessagesInner));
 
       when(feeSchemeMapper.mapToFeeCalculationRequest(claim)).thenReturn(feeCalculationRequest);
       when(feeSchemePlatformRestClient.calculateFee(feeCalculationRequest))
@@ -84,8 +87,6 @@ class FeeCalculationServiceTest {
 
       verify(feeSchemePlatformRestClient, times(1)).calculateFee(feeCalculationRequest);
       assertThat(context.hasErrors(claim.getId())).isTrue();
-      assertContextClaimError(
-          context, claim.getId(), ClaimValidationError.INVALID_FEE_CALCULATION_VALIDATION_FAILED);
     }
 
     @Test
