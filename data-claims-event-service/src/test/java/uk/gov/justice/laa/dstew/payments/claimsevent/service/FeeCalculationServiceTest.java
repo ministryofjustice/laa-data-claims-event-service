@@ -54,7 +54,7 @@ class FeeCalculationServiceTest {
       SubmissionValidationContext context = new SubmissionValidationContext();
       context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
 
-      feeCalculationService.validateFeeCalculation(claim, context);
+      feeCalculationService.validateFeeCalculation(submissionId, claim, context);
 
       verify(feeSchemePlatformRestClient, times(1)).calculateFee(feeCalculationRequest);
       assertThat(context.hasErrors()).isFalse();
@@ -83,7 +83,7 @@ class FeeCalculationServiceTest {
       SubmissionValidationContext context = new SubmissionValidationContext();
       context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
 
-      feeCalculationService.validateFeeCalculation(claim, context);
+      feeCalculationService.validateFeeCalculation(submissionId, claim, context);
 
       verify(feeSchemePlatformRestClient, times(1)).calculateFee(feeCalculationRequest);
       assertThat(context.hasErrors(claim.getId())).isTrue();
@@ -104,7 +104,7 @@ class FeeCalculationServiceTest {
       SubmissionValidationContext context = new SubmissionValidationContext();
       context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
 
-      feeCalculationService.validateFeeCalculation(claim, context);
+      feeCalculationService.validateFeeCalculation(submissionId, claim, context);
 
       verify(feeSchemePlatformRestClient, times(1)).calculateFee(feeCalculationRequest);
 
@@ -126,7 +126,7 @@ class FeeCalculationServiceTest {
       SubmissionValidationContext context = new SubmissionValidationContext();
       context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
 
-      feeCalculationService.validateFeeCalculation(claim, context);
+      feeCalculationService.validateFeeCalculation(submissionId, claim, context);
 
       verify(feeSchemePlatformRestClient, times(1)).calculateFee(feeCalculationRequest);
 
@@ -146,7 +146,7 @@ class FeeCalculationServiceTest {
       context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
       context.flagForRetry(claim.getId());
 
-      feeCalculationService.validateFeeCalculation(claim, context);
+      feeCalculationService.validateFeeCalculation(submissionId, claim, context);
 
       verifyNoInteractions(feeSchemeMapper);
       verifyNoInteractions(feeSchemePlatformRestClient);
