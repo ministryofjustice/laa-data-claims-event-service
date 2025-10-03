@@ -3,6 +3,7 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationSource.FEE_SERVICE;
 
 import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -27,14 +28,18 @@ public class FeeCalculationService {
 
   private final FeeSchemePlatformRestClient feeSchemePlatformRestClient;
   private final FeeSchemeMapper feeSchemeMapper;
+  private final FeeCalculationUpdaterService feeCalculationUpdaterService;
 
   /**
    * Calculates the fee for the claim using the Fee Scheme Platform API, and handles any returned
    * validation errors.
    *
+   * @param submissionId the ID of the submission to validate
    * @param claim the submitted claim
+   * @param context the validation context to add errors to
    */
-  public void validateFeeCalculation(ClaimResponse claim, SubmissionValidationContext context) {
+  public void validateFeeCalculation(
+      UUID submissionId, ClaimResponse claim, SubmissionValidationContext context) {
     log.debug("Validating fee calculation for claim {}", claim.getId());
     if (!context.isFlaggedForRetry(claim.getId())) {
       FeeCalculationRequest feeCalculationRequest =
@@ -50,6 +55,10 @@ public class FeeCalculationService {
           context.flagForRetry(claim.getId());
           return;
         }
+
+        // Patch claim with fee calculation response
+        feeCalculationUpdaterService.updateClaimWithFeeCalculationDetails(
+            submissionId, claim, feeCalculationResponse);
 
         List<ValidationMessagesInner> validationMessages =
             feeCalculationResponse.getValidationMessages();

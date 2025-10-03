@@ -12,6 +12,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -80,6 +81,7 @@ public class ClaimValidationService {
         .forEach(
             claim ->
                 validateClaim(
+                    submission.getSubmissionId(),
                     claim,
                     submissionClaims,
                     categoryOfLawLookup,
@@ -95,6 +97,7 @@ public class ClaimValidationService {
    * errors encountered during the validation process are added to the submission validation
    * context.
    *
+   * @param submissionId the ID of the submission to which the claim belongs
    * @param claim the claim object to validate
    * @param categoryOfLawLookup a map containing category of law codes and their corresponding
    *     descriptions
@@ -102,6 +105,7 @@ public class ClaimValidationService {
    *     on the area of law.
    */
   private void validateClaim(
+      UUID submissionId,
       ClaimResponse claim,
       List<ClaimResponse> submissionClaims,
       Map<String, CategoryOfLawResult> categoryOfLawLookup,
@@ -151,7 +155,7 @@ public class ClaimValidationService {
     validateDuplicateClaims(claim, submissionClaims, areaOfLaw, officeCode, context);
 
     // fee calculation validation
-    feeCalculationService.validateFeeCalculation(claim, context);
+    feeCalculationService.validateFeeCalculation(submissionId, claim, context);
   }
 
   /**
