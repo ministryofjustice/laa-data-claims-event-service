@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
@@ -122,8 +123,14 @@ public class ClaimValidationService {
     validateDisbursementsVatAmount(claim, areaOfLaw, context);
     String caseStartDate = claim.getCaseStartDate();
     checkDateInPast(claim, "Case Start Date", caseStartDate, OLDEST_DATE_ALLOWED_1, context);
+    String caseConcludedDateValidationDate =
+        areaOfLaw.equals("CRIME") ? MIN_REP_ORDER_DATE : OLDEST_DATE_ALLOWED_1;
     checkDateInPast(
-        claim, "Case Concluded Date", claim.getCaseConcludedDate(), OLDEST_DATE_ALLOWED_1, context);
+        claim,
+        "Case Concluded Date",
+        claim.getCaseConcludedDate(),
+        caseConcludedDateValidationDate,
+        context);
     checkDateInPast(
         claim, "Transfer Date", claim.getTransferDate(), OLDEST_DATE_ALLOWED_1, context);
     checkDateInPast(
@@ -312,7 +319,7 @@ public class ClaimValidationService {
       String dateValueToCheck,
       String oldestDateAllowedStr,
       SubmissionValidationContext context) {
-    if (dateValueToCheck != null) {
+    if (!StringUtils.isEmpty(dateValueToCheck)) {
       DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
       try {
         LocalDate oldestDateAllowed = LocalDate.parse(oldestDateAllowedStr, formatter);

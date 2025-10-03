@@ -93,9 +93,13 @@ class ClaimValidationServiceTest {
           Map.of(
               "CIVIL",
               List.of(
-                  "uniqueFileNumber", "caseReferenceNumber", "scheduleReference", "caseStartDate"),
+                  "uniqueFileNumber",
+                  "caseReferenceNumber",
+                  "scheduleReference",
+                  "caseStartDate",
+                  "caseConcludedDate"),
               "CRIME",
-              List.of("stageReachedCode"),
+              List.of("stageReachedCode", "caseConcludedDate"),
               "MEDIATION",
               List.of(
                   "uniqueFileNumber", "caseReferenceNumber", "scheduleReference", "caseStartDate"),
@@ -403,6 +407,7 @@ class ClaimValidationServiceTest {
               .status(ClaimStatus.READY_TO_PROCESS)
               .feeCode("feeCode1")
               .caseStartDate("2025-08-14")
+              .caseConcludedDate("2025-09-14")
               .caseReferenceNumber("123")
               .scheduleReference("SCH123")
               .uniqueFileNumber("010101/123")
@@ -415,6 +420,7 @@ class ClaimValidationServiceTest {
               .status(ClaimStatus.READY_TO_PROCESS)
               .feeCode("feeCode2")
               .caseStartDate("2025-05-25")
+              .caseConcludedDate("2025-09-14")
               .caseReferenceNumber("124")
               .scheduleReference("SCH123")
               .matterTypeCode("123:456");
@@ -514,6 +520,7 @@ class ClaimValidationServiceTest {
               .id(claimId.toString())
               .feeCode("feeCode1")
               .caseStartDate("2025-08-14")
+              .caseConcludedDate("2025-09-14")
               .caseReferenceNumber(caseReferenceNumber)
               .scheduleReference(scheduleReference)
               .status(ClaimStatus.READY_TO_PROCESS)
@@ -603,6 +610,7 @@ class ClaimValidationServiceTest {
               .id(claimId.toString())
               .feeCode("feeCode1")
               .caseStartDate("2025-08-14")
+              .caseConcludedDate("2025-09-14")
               .caseReferenceNumber(caseReferenceNumber)
               .scheduleReference(scheduleReference)
               .status(ClaimStatus.READY_TO_PROCESS)
@@ -687,6 +695,7 @@ class ClaimValidationServiceTest {
               .id(claimId.toString())
               .feeCode("feeCode1")
               .caseStartDate("2025-08-14")
+              .caseConcludedDate("2025-09-14")
               .caseReferenceNumber(caseReferenceNumber)
               .scheduleReference(scheduleReference)
               .status(ClaimStatus.READY_TO_PROCESS)
@@ -753,7 +762,7 @@ class ClaimValidationServiceTest {
       "2, ab12:bc24, CIVIL,, AB, true, caseStartDate is required for area of law: CIVIL",
       "3, ABCD:EFGH, MEDIATION, 2025-08-14, AB, false, null",
       "4, ABCD:EFGH, MEDIATION,, AB, true, caseStartDate is required for area of law: MEDIATION",
-      "5, ab12:bc24, CRIME,, ABCD, false, null"
+      "5, ab12:bc24, CRIME,'', ABCD, false, null"
     })
     void checkMandatoryCaseStartDate(
         int claimIdBit,
@@ -769,6 +778,94 @@ class ClaimValidationServiceTest {
               .id(claimId.toString())
               .feeCode("feeCode1")
               .caseStartDate(caseStartDate)
+              .caseConcludedDate("2025-08-14")
+              .caseReferenceNumber("123")
+              .scheduleReference("SCH123")
+              .status(ClaimStatus.READY_TO_PROCESS)
+              .uniqueFileNumber("010101/123")
+              .matterTypeCode(matterTypeCode)
+              .stageReachedCode(stageReachedCode);
+
+      List<ClaimResponse> claims = List.of(claim);
+      Map<String, CategoryOfLawResult> categoryOfLawLookup = Collections.emptyMap();
+
+      when(categoryOfLawValidationService.getCategoryOfLawLookup(claims))
+          .thenReturn(categoryOfLawLookup);
+
+      when(claimEffectiveDateUtil.getEffectiveDate(any())).thenReturn(LocalDate.of(2025, 8, 14));
+
+      SubmissionResponse submissionResponse =
+          new SubmissionResponse()
+              .submissionId(new UUID(1, 1))
+              .areaOfLaw(areaOfLaw)
+              .claims(
+                  singletonList(
+                      new SubmissionClaim().status(ClaimStatus.READY_TO_PROCESS).claimId(claimId)))
+              .officeAccountNumber("officeAccountNumber");
+
+      ClaimResultSet claimResultSet = new ClaimResultSet();
+      claimResultSet.content(claims);
+
+      when(dataClaimsRestClient.getClaim(any(), any())).thenReturn(ResponseEntity.ok(claim));
+
+      ProviderFirmOfficeContractAndScheduleDto data =
+          new ProviderFirmOfficeContractAndScheduleDto()
+              .addSchedulesItem(
+                  new FirmOfficeContractAndScheduleDetails()
+                      .addScheduleLinesItem(
+                          new FirmOfficeContractAndScheduleLine().categoryOfLaw("categoryOfLaw1")));
+      when(providerDetailsRestClient.getProviderFirmSchedules(any(), any(), any()))
+          .thenReturn(Mono.just(data));
+
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
+
+      // Run validation
+      claimValidationService.validateClaims(submissionResponse, context);
+
+      if (expectError) {
+        assertThat(getClaimMessages(context, claimId.toString()).getFirst().getTechnicalMessage())
+            .isEqualTo(expectedErrorMsg);
+      } else {
+        assertThat(getClaimMessages(context, claimId.toString()).isEmpty()).isTrue();
+      }
+    }
+
+    /*
+    Case Concluded Date should be mandatory for CIVIL and CRIME, but it's optional for MEDIATION.
+    Ref: https://dsdmoj.atlassian.net/browse/DSTEW-566
+     */
+    @ParameterizedTest(
+        name =
+            "{index} => claimId={0}, matterType={1}, areaOfLaw={2}, caseStartDate={3}, stageReachedCode={4}, expectError={5}")
+    @CsvSource({
+      "1, ab12:bc24, CIVIL, 2025-08-14, AB, false, null",
+      "2, ab12:bc24, CIVIL, '', AB, true, caseConcludedDate is required for area of law: CIVIL", // empty String for caseConcludedDate
+      "3, ab12:bc24, CIVIL,, AB, true, caseConcludedDate is required for area of law: CIVIL", // null for caseConcludedDate
+      "4, ab12:bc24, CIVIL, ' ', AB, true, caseConcludedDate is required for area of law: CIVIL", // space for caseConcludedDate
+      "5, ab12:bc24, CIVIL, 1994-08-14, AB, true, Invalid date value for Case Concluded Date (Must be between 1995-01-01 and today): 1994-08-14",
+      "6, ab12:bc24, CRIME, 2017-08-14, ABCD, false, null",
+      "7, ab12:bc24, CRIME, 2015-08-14, ABCD, true, Invalid date value for Case Concluded Date (Must be between 2016-04-01 and today): 2015-08-14",
+      "8, ab12:bc24, CRIME, 2099-08-14, ABCD, true, Invalid date value for Case Concluded Date (Must be between 2016-04-01 and today): 2099-08-14",
+      "9, ABCD:EFGH, MEDIATION, 1996-08-14, AB, false, null",
+      "10, ABCD:EFGH, MEDIATION, '', AB, false, null",
+      "11, ABCD:EFGH, MEDIATION, 1994-08-14, AB, true, Invalid date value for Case Concluded Date (Must be between 1995-01-01 and today): 1994-08-14"
+    })
+    void checkMandatoryCaseConcludedDate(
+        int claimIdBit,
+        String matterTypeCode,
+        String areaOfLaw,
+        String caseConcludedDate,
+        String stageReachedCode,
+        boolean expectError,
+        String expectedErrorMsg) {
+      UUID claimId = new UUID(claimIdBit, claimIdBit);
+      ClaimResponse claim =
+          new ClaimResponse()
+              .id(claimId.toString())
+              .feeCode("feeCode1")
+              .caseStartDate("2025-08-14")
+              .caseConcludedDate(caseConcludedDate)
               .caseReferenceNumber("123")
               .scheduleReference("SCH123")
               .status(ClaimStatus.READY_TO_PROCESS)
@@ -849,6 +946,7 @@ class ClaimValidationServiceTest {
               .id(claimId.toString())
               .feeCode("feeCode1")
               .caseStartDate("2025-08-14")
+              .caseConcludedDate("2025-09-14")
               .caseReferenceNumber(caseReferenceNumber)
               .scheduleReference(scheduleReference)
               .status(ClaimStatus.READY_TO_PROCESS)
@@ -930,6 +1028,7 @@ class ClaimValidationServiceTest {
               .id(claimId.toString())
               .feeCode("feeCode1")
               .caseStartDate("2025-08-14")
+              .caseConcludedDate("2025-09-14")
               .status(ClaimStatus.READY_TO_PROCESS)
               .uniqueFileNumber("010101/123")
               .stageReachedCode(stageReachedCode)
@@ -1012,6 +1111,7 @@ class ClaimValidationServiceTest {
               .id(claimId.toString())
               .feeCode("feeCode1")
               .caseStartDate("2025-08-14")
+              .caseConcludedDate("2025-09-14")
               .uniqueFileNumber("010101/123")
               .caseReferenceNumber(caseReferenceNumber)
               .scheduleReference(scheduleReference)
