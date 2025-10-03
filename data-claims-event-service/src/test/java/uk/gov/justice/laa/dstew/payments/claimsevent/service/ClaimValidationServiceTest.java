@@ -183,8 +183,10 @@ class ClaimValidationServiceTest {
       verify(mockDuplicateClaimCivilValidationServiceStrategy, times(1))
           .validateDuplicateClaims(claim2, claims, "officeAccountNumber", context);
 
-      verify(feeCalculationService, times(1)).validateFeeCalculation(submissionId, claim1, context);
-      verify(feeCalculationService, times(1)).validateFeeCalculation(submissionId, claim2, context);
+      verify(feeCalculationService, times(1))
+          .validateFeeCalculation(submissionResponse.getSubmissionId(), claim1, context);
+      verify(feeCalculationService, times(1))
+          .validateFeeCalculation(submissionResponse.getSubmissionId(), claim2, context);
     }
 
     @Test
