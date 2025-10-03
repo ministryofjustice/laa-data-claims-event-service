@@ -9,7 +9,12 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.BoltOnPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationPatch;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationResponse;
 
-@Mapper(componentModel = "spring")
+/**
+ * Maps Fee Calculation Response to Fee Calculation Patch.
+ *
+ * @author Jamie Briggs
+ */
+@Mapper(componentModel = "spring", unmappedTargetPolicy = org.mapstruct.ReportingPolicy.IGNORE)
 public interface FeeCalculationPatchMapper {
 
   @Mapping(target = ".", source = "feeCalculationResponse.feeCalculation")
@@ -19,6 +24,12 @@ public interface FeeCalculationPatchMapper {
   @Mapping(
       target = "boltOnDetails",
       source = "feeCalculationResponse.feeCalculation.boltOnFeeDetails")
+  @Mapping(target = "calculatedFeeDetailId", ignore = true)
+  @Mapping(target = "claimSummaryFeeId", ignore = true)
+  @Mapping(target = "feeCodeDescription", ignore = true)
+  @Mapping(target = "feeType", ignore = true)
+  @Mapping(target = "categoryOfLaw", ignore = true)
+  @Mapping(target = "travelAndWaitingCostsAmount", ignore = true)
   FeeCalculationPatch mapToFeeCalculationPatch(FeeCalculationResponse feeCalculationResponse);
 
   /**

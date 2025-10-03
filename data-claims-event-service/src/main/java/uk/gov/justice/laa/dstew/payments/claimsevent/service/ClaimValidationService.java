@@ -97,7 +97,7 @@ public class ClaimValidationService {
    * errors encountered during the validation process are added to the submission validation
    * context.
    *
-   * @param submissionId
+   * @param submissionId the ID of the submission to which the claim belongs
    * @param claim the claim object to validate
    * @param categoryOfLawLookup a map containing category of law codes and their corresponding
    *     descriptions
