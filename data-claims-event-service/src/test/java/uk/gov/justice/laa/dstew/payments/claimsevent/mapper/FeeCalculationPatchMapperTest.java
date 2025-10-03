@@ -48,6 +48,7 @@ class FeeCalculationPatchMapperTest {
             .requestedNetProfitCostsAmount(109.09)
             .netCostOfCounselAmount(110.10)
             .netTravelCostsAmount(111.11)
+            .travelAndWaitingCostAmount(111.12)
             .netWaitingCosts(112.12)
             .detentionAndWaitingCostsAmount(113.13)
             .jrFormFillingAmount(114.14)
@@ -114,6 +115,9 @@ class FeeCalculationPatchMapperTest {
           softAssertions
               .assertThat(result.getNetTravelCostsAmount())
               .isEqualTo(BigDecimal.valueOf(111.11));
+          softAssertions
+              .assertThat(result.getTravelAndWaitingCostsAmount())
+              .isEqualTo(BigDecimal.valueOf(111.12));
           softAssertions
               .assertThat(result.getNetWaitingCostsAmount())
               .isEqualTo(BigDecimal.valueOf(112.12));

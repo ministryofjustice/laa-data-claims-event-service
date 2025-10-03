@@ -21,6 +21,9 @@ public interface FeeCalculationPatchMapper {
   @Mapping(target = ".", source = "feeCalculationResponse")
   @Mapping(target = ".", source = "feeCalculationResponse.feeCalculation")
   @Mapping(
+      target = "travelAndWaitingCostsAmount",
+      source = "feeCalculationResponse.feeCalculation.travelAndWaitingCostAmount")
+  @Mapping(
       target = "netWaitingCostsAmount",
       source = "feeCalculationResponse.feeCalculation.netWaitingCosts")
   @Mapping(
@@ -31,7 +34,6 @@ public interface FeeCalculationPatchMapper {
   @Mapping(target = "categoryOfLaw", source = "feeDetailsResponse.categoryOfLawCode")
   @Mapping(target = "calculatedFeeDetailId", ignore = true)
   @Mapping(target = "claimSummaryFeeId", ignore = true)
-  @Mapping(target = "travelAndWaitingCostsAmount", ignore = true)
   FeeCalculationPatch mapToFeeCalculationPatch(
       FeeCalculationResponse feeCalculationResponse, FeeDetailsResponse feeDetailsResponse);
 
