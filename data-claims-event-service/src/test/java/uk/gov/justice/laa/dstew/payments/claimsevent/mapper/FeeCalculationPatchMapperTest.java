@@ -6,9 +6,11 @@ import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationPatch;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationType;
 import uk.gov.justice.laa.fee.scheme.model.BoltOnFeeDetails;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculation;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationResponse;
+import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponse;
 
 @DisplayName("Fee calculation patch mapper test")
 class FeeCalculationPatchMapperTest {
@@ -58,8 +60,15 @@ class FeeCalculationPatchMapperTest {
             .claimId(new UUID(1, 1).toString())
             .escapeCaseFlag(true)
             .feeCalculation(feeCalculationRequest);
+
+    FeeDetailsResponse feeDetailsResponse =
+        new FeeDetailsResponse()
+            .categoryOfLawCode("categoryOfLawCode")
+            .feeCodeDescription("feeCodeDescription")
+            .feeType(FeeCalculationType.DISBURSEMENT_ONLY.getValue());
     // When
-    FeeCalculationPatch result = mapper.mapToFeeCalculationPatch(feeCalculationResponse);
+    FeeCalculationPatch result =
+        mapper.mapToFeeCalculationPatch(feeCalculationResponse, feeDetailsResponse);
     // Then
     SoftAssertions.assertSoftly(
         softAssertions -> {
@@ -143,6 +152,13 @@ class FeeCalculationPatchMapperTest {
           softAssertions
               .assertThat(result.getBoltOnDetails().getBoltOnHomeOfficeInterviewFee())
               .isEqualTo(BigDecimal.valueOf(104.04));
+
+          // Check details from FeeDetailsResponse
+          softAssertions.assertThat(result.getCategoryOfLaw()).isEqualTo("categoryOfLawCode");
+          softAssertions.assertThat(result.getFeeCodeDescription()).isEqualTo("feeCodeDescription");
+          softAssertions
+              .assertThat(result.getFeeType())
+              .isEqualTo(FeeCalculationType.DISBURSEMENT_ONLY);
         });
   }
 }

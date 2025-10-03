@@ -9,12 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationPatch;
-import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
-import uk.gov.justice.laa.dstew.payments.claimsevent.mapper.FeeCalculationPatchMapper;
 import uk.gov.justice.laa.dstew.payments.claimsevent.mapper.FeeSchemeMapper;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
@@ -30,10 +26,9 @@ import uk.gov.justice.laa.fee.scheme.model.ValidationMessagesInner;
 @RequiredArgsConstructor
 public class FeeCalculationService {
 
-  private final DataClaimsRestClient dataClaimsRestClient;
   private final FeeSchemePlatformRestClient feeSchemePlatformRestClient;
   private final FeeSchemeMapper feeSchemeMapper;
-  private final FeeCalculationPatchMapper feeCalculationPatchMapper;
+  private final FeeCalculationUpdaterService feeCalculationUpdaterService;
 
   /**
    * Calculates the fee for the claim using the Fee Scheme Platform API, and handles any returned
@@ -62,7 +57,8 @@ public class FeeCalculationService {
         }
 
         // Patch claim with fee calculation response
-        updateClaimWithFeeCalculationDetails(submissionId, claim, feeCalculationResponse);
+        feeCalculationUpdaterService.updateClaimWithFeeCalculationDetails(
+            submissionId, claim, feeCalculationResponse);
 
         List<ValidationMessagesInner> validationMessages =
             feeCalculationResponse.getValidationMessages();
@@ -98,14 +94,5 @@ public class FeeCalculationService {
       }
     }
     log.debug("Fee calculation validation completed for claim {}", claim.getId());
-  }
-
-  private void updateClaimWithFeeCalculationDetails(
-      UUID submissionId, ClaimResponse claim, FeeCalculationResponse feeCalculationResponse) {
-    FeeCalculationPatch feeCalculationPatch =
-        feeCalculationPatchMapper.mapToFeeCalculationPatch(feeCalculationResponse);
-    ClaimPatch claimPatch =
-        ClaimPatch.builder().id(claim.getId()).feeCalculationResponse(feeCalculationPatch).build();
-    dataClaimsRestClient.updateClaim(submissionId, UUID.fromString(claim.getId()), claimPatch);
   }
 }

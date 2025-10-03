@@ -17,12 +17,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationPatch;
-import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
-import uk.gov.justice.laa.dstew.payments.claimsevent.mapper.FeeCalculationPatchMapper;
 import uk.gov.justice.laa.dstew.payments.claimsevent.mapper.FeeSchemeMapper;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
@@ -37,9 +33,7 @@ class FeeCalculationServiceTest {
 
   @Mock private FeeSchemeMapper feeSchemeMapper;
 
-  @Mock private FeeCalculationPatchMapper feeCalculationPatchMapper;
-
-  @Mock private DataClaimsRestClient dataClaimsRestClient;
+  @Mock private FeeCalculationUpdaterService feeCalculationUpdaterService;
 
   @InjectMocks private FeeCalculationService feeCalculationService;
 
@@ -89,26 +83,17 @@ class FeeCalculationServiceTest {
       when(feeSchemeMapper.mapToFeeCalculationRequest(claim)).thenReturn(feeCalculationRequest);
       when(feeSchemePlatformRestClient.calculateFee(feeCalculationRequest))
           .thenReturn(ResponseEntity.ok(feeCalculationResponse));
-      FeeCalculationPatch feeCalculationPatch = new FeeCalculationPatch();
-      when(feeCalculationPatchMapper.mapToFeeCalculationPatch(feeCalculationResponse))
-          .thenReturn(feeCalculationPatch);
 
       SubmissionValidationContext context = new SubmissionValidationContext();
       context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
 
       UUID submissionId = new UUID(1, 1);
-      UUID claimId = UUID.fromString("0199a9c0-63ba-7bc2-bf71-0a8acfe1700e");
       feeCalculationService.validateFeeCalculation(submissionId, claim, context);
 
       verify(feeSchemePlatformRestClient, times(1)).calculateFee(feeCalculationRequest);
-      verify(dataClaimsRestClient, times(1))
-          .updateClaim(
-              submissionId,
-              claimId,
-              ClaimPatch.builder()
-                  .id(claimId.toString())
-                  .feeCalculationResponse(feeCalculationPatch)
-                  .build());
+      verify(feeCalculationUpdaterService, times(1))
+          .updateClaimWithFeeCalculationDetails(submissionId, claim, feeCalculationResponse);
+
       assertThat(context.hasErrors(claim.getId())).isTrue();
     }
 

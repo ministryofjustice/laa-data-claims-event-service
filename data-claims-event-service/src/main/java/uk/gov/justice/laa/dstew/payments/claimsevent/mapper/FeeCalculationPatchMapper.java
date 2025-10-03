@@ -8,6 +8,7 @@ import org.mapstruct.MappingTarget;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BoltOnPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationPatch;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationResponse;
+import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponse;
 
 /**
  * Maps Fee Calculation Response to Fee Calculation Patch.
@@ -17,6 +18,7 @@ import uk.gov.justice.laa.fee.scheme.model.FeeCalculationResponse;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = org.mapstruct.ReportingPolicy.IGNORE)
 public interface FeeCalculationPatchMapper {
 
+  @Mapping(target = ".", source = "feeCalculationResponse")
   @Mapping(target = ".", source = "feeCalculationResponse.feeCalculation")
   @Mapping(
       target = "netWaitingCostsAmount",
@@ -24,13 +26,14 @@ public interface FeeCalculationPatchMapper {
   @Mapping(
       target = "boltOnDetails",
       source = "feeCalculationResponse.feeCalculation.boltOnFeeDetails")
+  @Mapping(target = "feeType", source = "feeDetailsResponse.feeType")
+  @Mapping(target = "feeCodeDescription", source = "feeDetailsResponse.feeCodeDescription")
+  @Mapping(target = "categoryOfLaw", source = "feeDetailsResponse.categoryOfLawCode")
   @Mapping(target = "calculatedFeeDetailId", ignore = true)
   @Mapping(target = "claimSummaryFeeId", ignore = true)
-  @Mapping(target = "feeCodeDescription", ignore = true)
-  @Mapping(target = "feeType", ignore = true)
-  @Mapping(target = "categoryOfLaw", ignore = true)
   @Mapping(target = "travelAndWaitingCostsAmount", ignore = true)
-  FeeCalculationPatch mapToFeeCalculationPatch(FeeCalculationResponse feeCalculationResponse);
+  FeeCalculationPatch mapToFeeCalculationPatch(
+      FeeCalculationResponse feeCalculationResponse, FeeDetailsResponse feeDetailsResponse);
 
   /**
    * Adds scheme ID and escape case flag to the bolt on details afterwards. Mapstruct doesn't like
