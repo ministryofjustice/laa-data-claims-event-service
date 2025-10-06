@@ -3,6 +3,7 @@ package uk.gov.justice.laa.dstew.payments.claimsevent;
 import static org.assertj.core.api.Assertions.assertThat;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationSource.EVENT_SERVICE;
 
+import java.util.List;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessageType;
@@ -46,5 +47,10 @@ public class ValidationServiceTestUtils {
     ValidationMessagePatch messagePatch = new ValidationMessagePatch();
     messagePatch.displayMessage(message).source(EVENT_SERVICE).type(ValidationMessageType.ERROR);
     assertThat(context.getSubmissionValidationErrors()).isNotEmpty().contains(messagePatch);
+  }
+
+  public static List<ValidationMessagePatch> getClaimMessages(
+      SubmissionValidationContext context, String claim1) {
+    return context.getClaimReport(claim1).get().getMessages();
   }
 }
