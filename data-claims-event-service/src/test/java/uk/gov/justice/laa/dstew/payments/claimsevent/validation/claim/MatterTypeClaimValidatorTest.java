@@ -11,9 +11,9 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
 @DisplayName("Matter type claim with area of law validator test")
-class MatterTypeClaimWithAreaOfLawValidatorTest {
+class MatterTypeClaimValidatorTest {
 
-  MatterTypeClaimWithAreaOfLawValidator validator = new MatterTypeClaimWithAreaOfLawValidator();
+  MatterTypeClaimValidator validator = new MatterTypeClaimValidator();
 
   @ParameterizedTest(
       name = "{index} => claimId={0}, matterType={1}, areaOfLaw={2}, regex={3}, expectError={4}")

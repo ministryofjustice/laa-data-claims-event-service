@@ -13,7 +13,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
  * @see ClaimWithAreaOfLawValidator
  */
 @Component
-public class MatterTypeClaimWithAreaOfLawValidator
+public class MatterTypeClaimValidator
     implements ClaimValidator, ClaimWithAreaOfLawValidator {
 
   private static final String MATTER_TYPE_CIVIL_PATTERN = "^[a-zA-Z0-9]{1,4}[-:][a-zA-Z0-9]{1,4}$";

@@ -25,7 +25,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
  */
 @Component
 @RequiredArgsConstructor
-public class MandatoryFieldClaimWithAreaOfLawValidator
+public class MandatoryFieldClaimValidator
     implements ClaimValidator, ClaimWithAreaOfLawValidator {
 
   private final MandatoryFieldsRegistry mandatoryFieldsRegistry;

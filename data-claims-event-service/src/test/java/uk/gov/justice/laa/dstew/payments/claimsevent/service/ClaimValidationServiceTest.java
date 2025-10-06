@@ -8,8 +8,8 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.justice.laa.dstew.payments.claimsevent.ValidationServiceTestUtils.getClaimMessages;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
@@ -32,7 +32,6 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResultSet;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionClaim;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.MandatoryFieldsRegistry;
@@ -804,90 +803,7 @@ class ClaimValidationServiceTest {
       }
     }
 
-    @ParameterizedTest(
-        name =
-            "{index} => claimId={0}, disbursementVatAmount={1}, areaOfLaw={2}, maxAllowed={3}, "
-                + "expectError={4}")
-    @CsvSource({
-      "1, 99999.99, CIVIL, 123, SCH123, 99999.99, false",
-      "2, 999999.99, CRIME,,, 999999.99, false",
-      "3, 999999999.99, MEDIATION, 124, SCH123, 999999999.99, false",
-      "4, 100000.0, CIVIL, 126, SCH123, 99999.99, true",
-      "5, 1000000.0, CRIME,,, 999999.99, true",
-      "6, 1000000000.0, MEDIATION, 127, SCH123, 999999999.99, true",
-    })
-    void checkDisbursementsVatAmount(
-        int claimIdBit,
-        BigDecimal disbursementsVatAmount,
-        String areaOfLaw,
-        String caseReferenceNumber,
-        String scheduleReference,
-        BigDecimal maxAllowed,
-        boolean expectError) {
-      UUID claimId = new UUID(claimIdBit, claimIdBit);
-      ClaimResponse claim =
-          new ClaimResponse()
-              .id(claimId.toString())
-              .feeCode("feeCode1")
-              .caseStartDate("2025-08-14")
-              .caseConcludedDate("2025-09-14")
-              .uniqueFileNumber("010101/123")
-              .caseReferenceNumber(caseReferenceNumber)
-              .scheduleReference(scheduleReference)
-              .status(ClaimStatus.READY_TO_PROCESS)
-              .disbursementsVatAmount(disbursementsVatAmount);
-      if (areaOfLaw.equals("CRIME")) {
-        claim.setStageReachedCode("ABCD");
-      }
 
-      List<ClaimResponse> claims = List.of(claim);
-      Map<String, CategoryOfLawResult> categoryOfLawLookup = Collections.emptyMap();
-
-      when(categoryOfLawValidationService.getCategoryOfLawLookup(claims))
-          .thenReturn(categoryOfLawLookup);
-
-      when(claimEffectiveDateUtil.getEffectiveDate(any())).thenReturn(LocalDate.of(2025, 8, 14));
-
-      SubmissionResponse submissionResponse =
-          new SubmissionResponse()
-              .submissionId(new UUID(1, 1))
-              .areaOfLaw(areaOfLaw)
-              .claims(
-                  singletonList(
-                      new SubmissionClaim().claimId(claimId).status(ClaimStatus.READY_TO_PROCESS)))
-              .officeAccountNumber("officeAccountNumber");
-
-      when(dataClaimsRestClient.getClaim(any(), any())).thenReturn(ResponseEntity.ok(claim));
-
-      ProviderFirmOfficeContractAndScheduleDto data =
-          new ProviderFirmOfficeContractAndScheduleDto()
-              .addSchedulesItem(
-                  new FirmOfficeContractAndScheduleDetails()
-                      .addScheduleLinesItem(
-                          new FirmOfficeContractAndScheduleLine().categoryOfLaw("categoryOfLaw1")));
-      when(providerDetailsRestClient.getProviderFirmSchedules(
-              eq("officeAccountNumber"), eq(areaOfLaw), any(LocalDate.class)))
-          .thenReturn(Mono.just(data));
-
-      SubmissionValidationContext context = new SubmissionValidationContext();
-      context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
-
-      // Run validation
-      claimValidationService.validateClaims(submissionResponse, context);
-
-      if (expectError) {
-        String expectedMessage =
-            String.format(
-                "disbursementsVatAmount (%s): must have a maximum value of %s (provided value: %s)",
-                areaOfLaw, maxAllowed, disbursementsVatAmount);
-        assertThat(getClaimMessages(context, claimId.toString()).getFirst().getDisplayMessage())
-            .isEqualTo(expectedMessage);
-      } else {
-        for (var claimReport : context.getClaimReports()) {
-          assertThat(claimReport.hasErrors()).isFalse();
-        }
-      }
-    }
 
     @Nested
     class DuplicateClaimsValidation {
@@ -981,8 +897,4 @@ class ClaimValidationServiceTest {
     }
   }
 
-  private static List<ValidationMessagePatch> getClaimMessages(
-      SubmissionValidationContext context, String claim1) {
-    return context.getClaimReport(claim1).get().getMessages();
-  }
 }
