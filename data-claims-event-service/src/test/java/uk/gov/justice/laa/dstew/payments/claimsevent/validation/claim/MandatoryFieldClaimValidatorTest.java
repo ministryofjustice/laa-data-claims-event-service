@@ -24,8 +24,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 @DisplayName("Mandatory field claim validator test")
 class MandatoryFieldClaimValidatorTest {
 
-  @Mock
-  MandatoryFieldsRegistry mandatoryFieldsRegistry;
+  @Mock MandatoryFieldsRegistry mandatoryFieldsRegistry;
 
   MandatoryFieldClaimValidator validator;
 
@@ -37,8 +36,7 @@ class MandatoryFieldClaimValidatorTest {
   @Test
   void shouldHaveNoErrorsWhenNoMandatoryFields() {
     // Define the map for the test
-    Map<String, List<String>> civilMandatoryFields =
-        Map.of();
+    Map<String, List<String>> civilMandatoryFields = Map.of();
 
     lenient()
         .when(mandatoryFieldsRegistry.getMandatoryFieldsByAreaOfLaw())
@@ -66,8 +64,14 @@ class MandatoryFieldClaimValidatorTest {
   void shouldHaveNoErrorsWhenNoMandatoryFieldsMissing() {
     // Define the map for the test
     Map<String, List<String>> civilMandatoryFields =
-        Map.of("CIVIL", List.of("feeCode", "caseStartDate", "uniqueFileNumber",
-            "matterTypeCode", "stageReachedCode"));
+        Map.of(
+            "CIVIL",
+            List.of(
+                "feeCode",
+                "caseStartDate",
+                "uniqueFileNumber",
+                "matterTypeCode",
+                "stageReachedCode"));
 
     lenient()
         .when(mandatoryFieldsRegistry.getMandatoryFieldsByAreaOfLaw())
@@ -92,13 +96,18 @@ class MandatoryFieldClaimValidatorTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"feeCode", "caseStartDate", "uniqueFileNumber",
-      "matterTypeCode", "stageReachedCode"})
+  @ValueSource(
+      strings = {
+        "feeCode",
+        "caseStartDate",
+        "uniqueFileNumber",
+        "matterTypeCode",
+        "stageReachedCode"
+      })
   @DisplayName("Should have error when mandatory fields missing")
   void shouldHaveErrorWhenMandatoryFieldsMissing(String mandatoryField) {
     // Define the map for the test
-    Map<String, List<String>> civilMandatoryFields =
-        Map.of("CIVIL", List.of(mandatoryField));
+    Map<String, List<String>> civilMandatoryFields = Map.of("CIVIL", List.of(mandatoryField));
 
     lenient()
         .when(mandatoryFieldsRegistry.getMandatoryFieldsByAreaOfLaw())
@@ -106,9 +115,7 @@ class MandatoryFieldClaimValidatorTest {
 
     UUID claimId = new UUID(1, 1);
     ClaimResponse claim =
-        new ClaimResponse()
-            .id(claimId.toString())
-            .status(ClaimStatus.READY_TO_PROCESS);
+        new ClaimResponse().id(claimId.toString()).status(ClaimStatus.READY_TO_PROCESS);
 
     SubmissionValidationContext context = new SubmissionValidationContext();
 
@@ -116,8 +123,6 @@ class MandatoryFieldClaimValidatorTest {
 
     assertThat(getClaimMessages(context, claimId.toString()).isEmpty()).isFalse();
     assertThat(getClaimMessages(context, claimId.toString()).getFirst().getDisplayMessage())
-        .isEqualTo(
-            "%s is required for area of law: CIVIL".formatted(mandatoryField));
+        .isEqualTo("%s is required for area of law: CIVIL".formatted(mandatoryField));
   }
-
 }

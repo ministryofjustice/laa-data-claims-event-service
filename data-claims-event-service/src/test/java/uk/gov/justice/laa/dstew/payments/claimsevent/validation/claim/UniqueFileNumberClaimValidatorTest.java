@@ -38,8 +38,9 @@ class UniqueFileNumberClaimValidatorTest {
 
   @ParameterizedTest
   @NullAndEmptySource
-  @DisplayName("Should have no errors if ufn is null or empty (Handled in "
-      + "MandatoryFieldClaimValidator)")
+  @DisplayName(
+      "Should have no errors if ufn is null or empty (Handled in "
+          + "MandatoryFieldClaimValidator)")
   void shouldHaveErrorsIfUfnIsEmpty(String ufn) {
     // Given
     String claimId = new UUID(1, 1).toString();
@@ -53,15 +54,16 @@ class UniqueFileNumberClaimValidatorTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {
-      "010130",
-      "123",
-      "0101030/123",
-      "010101/1234",
-      "01010/12345",
-      "abcdef/123",
-      "010130/abc",
-  })
+  @ValueSource(
+      strings = {
+        "010130",
+        "123",
+        "0101030/123",
+        "010101/1234",
+        "01010/12345",
+        "abcdef/123",
+        "010130/abc",
+      })
   @DisplayName("Should have errors if UFN is not in correct format")
   void shouldHaveAnErrorIfUfnIsNotInCorrectFormat(String ufn) {
     // Given
@@ -95,5 +97,4 @@ class UniqueFileNumberClaimValidatorTest {
     assertContextClaimError(
         context, claimId, ClaimValidationError.INVALID_DATE_IN_UNIQUE_FILE_NUMBER);
   }
-
 }

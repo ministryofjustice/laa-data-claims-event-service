@@ -27,8 +27,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
  */
 @Component
 @RequiredArgsConstructor
-public class MandatoryFieldClaimValidator
-    implements ClaimValidator, ClaimWithAreaOfLawValidator {
+public class MandatoryFieldClaimValidator implements ClaimValidator, ClaimWithAreaOfLawValidator {
 
   private final MandatoryFieldsRegistry mandatoryFieldsRegistry;
 
@@ -36,9 +35,8 @@ public class MandatoryFieldClaimValidator
   public void validate(ClaimResponse claim, SubmissionValidationContext context, String areaOfLaw) {
     Map<String, List<String>> mandatoryFieldsByAreaOfLaw =
         mandatoryFieldsRegistry.getMandatoryFieldsByAreaOfLaw();
-    List<String> mandatoryFields =
-        mandatoryFieldsByAreaOfLaw.get(areaOfLaw);
-    if(Objects.isNull(mandatoryFields)){
+    List<String> mandatoryFields = mandatoryFieldsByAreaOfLaw.get(areaOfLaw);
+    if (Objects.isNull(mandatoryFields)) {
       return;
     }
     for (String fieldName : mandatoryFields) {

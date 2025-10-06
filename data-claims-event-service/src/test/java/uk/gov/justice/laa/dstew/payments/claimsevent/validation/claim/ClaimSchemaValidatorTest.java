@@ -39,8 +39,7 @@ class ClaimSchemaValidatorTest {
     String claimId = new UUID(1, 1).toString();
     ClaimResponse claimResponse = ClaimResponse.builder().id(claimId).build();
     SubmissionValidationContext submissionValidationContext = new SubmissionValidationContext();
-    when(jsonSchemaValidator.validate("claim", claimResponse))
-        .thenReturn(emptyErrorsList);
+    when(jsonSchemaValidator.validate("claim", claimResponse)).thenReturn(emptyErrorsList);
     // When
     claimSchemaValidator.validate(claimResponse, submissionValidationContext);
     // Then
@@ -58,13 +57,14 @@ class ClaimSchemaValidatorTest {
         List.of(ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER.toPatch());
     ClaimResponse claimResponse = ClaimResponse.builder().id(claimId).build();
     SubmissionValidationContext submissionValidationContext = new SubmissionValidationContext();
-    when(jsonSchemaValidator.validate("claim", claimResponse))
-        .thenReturn(errorList);
+    when(jsonSchemaValidator.validate("claim", claimResponse)).thenReturn(errorList);
     // When
     claimSchemaValidator.validate(claimResponse, submissionValidationContext);
     // Then
     assertTrue(submissionValidationContext.hasErrors());
     assertContextClaimError(
-        submissionValidationContext, claimId, ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER);
+        submissionValidationContext,
+        claimId,
+        ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER);
   }
 }

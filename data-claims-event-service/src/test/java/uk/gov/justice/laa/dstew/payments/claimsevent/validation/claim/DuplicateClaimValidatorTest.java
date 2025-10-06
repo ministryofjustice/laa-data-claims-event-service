@@ -29,11 +29,10 @@ class DuplicateClaimValidatorTest {
 
   DuplicateClaimValidator validator;
 
-  @Mock
-  private Map<String, DuplicateClaimValidationStrategy> strategies;
+  @Mock private Map<String, DuplicateClaimValidationStrategy> strategies;
 
-  @Mock
-  private DuplicateClaimCrimeValidationServiceStrategy duplicateClaimCrimeValidationService;
+  @Mock private DuplicateClaimCrimeValidationServiceStrategy duplicateClaimCrimeValidationService;
+
   @Mock
   private DuplicateClaimCivilValidationServiceStrategy
       mockDuplicateClaimCivilValidationServiceStrategy;
@@ -48,7 +47,6 @@ class DuplicateClaimValidatorTest {
 
   private final List<ClaimResponse> claims = List.of(claim);
 
-
   @BeforeEach
   void setup() {
     lenient()
@@ -59,7 +57,6 @@ class DuplicateClaimValidatorTest {
         .thenReturn(mockDuplicateClaimCivilValidationServiceStrategy);
     validator = new DuplicateClaimValidator(strategies);
   }
-
 
   @DisplayName("Area of Code CIVIL: should call civil validation strategy")
   @Test
@@ -92,6 +89,4 @@ class DuplicateClaimValidatorTest {
     verify(mockDuplicateClaimCivilValidationServiceStrategy, times(0))
         .validateDuplicateClaims(any(), any(), any(), any());
   }
-
-
 }

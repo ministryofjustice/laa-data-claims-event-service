@@ -33,39 +33,32 @@ class ClaimValidationServiceTest {
 
   ClaimValidationService claimValidationService;
 
-  @Mock
-  CategoryOfLawValidationService categoryOfLawValidationService;
-  @Mock
-  DataClaimsRestClient dataClaimsRestClient;
-  @Mock
-  FeeCalculationService feeCalculationService;
+  @Mock CategoryOfLawValidationService categoryOfLawValidationService;
+  @Mock DataClaimsRestClient dataClaimsRestClient;
+  @Mock FeeCalculationService feeCalculationService;
 
-  public interface StubBasicClaimValidator extends ClaimValidator, BasicClaimValidator {
+  public interface StubBasicClaimValidator extends ClaimValidator, BasicClaimValidator {}
 
-  }
+  public interface StubClaimWithAreaOfLawValidator
+      extends ClaimValidator, ClaimWithAreaOfLawValidator {}
 
-  public interface StubClaimWithAreaOfLawValidator extends ClaimValidator,
-      ClaimWithAreaOfLawValidator {
-
-  }
-
-  @Mock
-  StubBasicClaimValidator basicClaimValidator;
-  @Mock
-  StubClaimWithAreaOfLawValidator claimWithAreaOfLawValidator;
-  @Mock
-  EffectiveCategoryOfLawClaimValidator effectiveCategoryOfLawClaimValidator;
-  @Mock
-  DuplicateClaimValidator duplicateClaimValidator;
+  @Mock StubBasicClaimValidator basicClaimValidator;
+  @Mock StubClaimWithAreaOfLawValidator claimWithAreaOfLawValidator;
+  @Mock EffectiveCategoryOfLawClaimValidator effectiveCategoryOfLawClaimValidator;
+  @Mock DuplicateClaimValidator duplicateClaimValidator;
 
   @BeforeEach
   void beforeEach() {
-    claimValidationService = new ClaimValidationService(
-        categoryOfLawValidationService,
-        dataClaimsRestClient, feeCalculationService,
-        Arrays.asList(
-            basicClaimValidator, claimWithAreaOfLawValidator, effectiveCategoryOfLawClaimValidator,
-            duplicateClaimValidator));
+    claimValidationService =
+        new ClaimValidationService(
+            categoryOfLawValidationService,
+            dataClaimsRestClient,
+            feeCalculationService,
+            Arrays.asList(
+                basicClaimValidator,
+                claimWithAreaOfLawValidator,
+                effectiveCategoryOfLawClaimValidator,
+                duplicateClaimValidator));
 
     lenient().when(basicClaimValidator.priority()).thenReturn(1);
     lenient().when(claimWithAreaOfLawValidator.priority()).thenReturn(1);
@@ -73,31 +66,32 @@ class ClaimValidationServiceTest {
     lenient().when(duplicateClaimValidator.priority()).thenReturn(1);
   }
 
-
   @Test
   @DisplayName("Should call all validators")
   void shouldCallAllValidators() {
     UUID submissionId = new UUID(0, 0);
     UUID claimId = new UUID(1, 1);
     UUID claimIdTwo = new UUID(1, 2);
-    SubmissionResponse submissionResponse = SubmissionResponse.builder()
-        .submissionId(submissionId)
-        .areaOfLaw("CIVIL")
-        .officeAccountNumber("officeAccountNumber")
-        .build()
-        .addClaimsItem(new SubmissionClaim().status(ClaimStatus.READY_TO_PROCESS).claimId(claimId))
-        .addClaimsItem(
-            new SubmissionClaim().status(ClaimStatus.READY_TO_PROCESS).claimId(claimIdTwo));
+    SubmissionResponse submissionResponse =
+        SubmissionResponse.builder()
+            .submissionId(submissionId)
+            .areaOfLaw("CIVIL")
+            .officeAccountNumber("officeAccountNumber")
+            .build()
+            .addClaimsItem(
+                new SubmissionClaim().status(ClaimStatus.READY_TO_PROCESS).claimId(claimId))
+            .addClaimsItem(
+                new SubmissionClaim().status(ClaimStatus.READY_TO_PROCESS).claimId(claimIdTwo));
     SubmissionValidationContext context = new SubmissionValidationContext();
 
     ClaimResponse claimOne =
         new ClaimResponse().id(claimId.toString()).status(ClaimStatus.READY_TO_PROCESS);
-    when(dataClaimsRestClient.getClaim(submissionId, claimId)).thenReturn(
-        ResponseEntity.ok(claimOne));
+    when(dataClaimsRestClient.getClaim(submissionId, claimId))
+        .thenReturn(ResponseEntity.ok(claimOne));
     ClaimResponse claimTwo =
         new ClaimResponse().id(claimIdTwo.toString()).status(ClaimStatus.READY_TO_PROCESS);
-    when(dataClaimsRestClient.getClaim(submissionId, claimIdTwo)).thenReturn(
-        ResponseEntity.ok(claimTwo));
+    when(dataClaimsRestClient.getClaim(submissionId, claimIdTwo))
+        .thenReturn(ResponseEntity.ok(claimTwo));
     HashMap<String, CategoryOfLawResult> categoryOfLawLookup = new HashMap<>();
     categoryOfLawLookup.put("feeCode1", CategoryOfLawResult.withCategoryOfLaw("categoryOfLaw1"));
     List<ClaimResponse> claimsList = Arrays.asList(claimOne, claimTwo);
@@ -110,22 +104,16 @@ class ClaimValidationServiceTest {
     // Then
     verify(basicClaimValidator, times(1)).validate(claimOne, context);
     verify(basicClaimValidator, times(1)).validate(claimTwo, context);
-    verify(claimWithAreaOfLawValidator, times(1)).validate(
-        claimOne, context, "CIVIL");
-    verify(claimWithAreaOfLawValidator, times(1)).validate(
-        claimTwo, context, "CIVIL");
-    verify(effectiveCategoryOfLawClaimValidator, times(1)).validate(
-        claimOne, context, "CIVIL", "officeAccountNumber",
-        categoryOfLawLookup);
-    verify(effectiveCategoryOfLawClaimValidator, times(1)).validate(
-        claimTwo, context, "CIVIL", "officeAccountNumber",
-        categoryOfLawLookup);
-    verify(duplicateClaimValidator, times(1)).validate(
-        claimOne, context, "CIVIL", "officeAccountNumber",
-        claimsList);
-    verify(duplicateClaimValidator, times(1)).validate(
-        claimTwo, context, "CIVIL", "officeAccountNumber",
-        claimsList);
+    verify(claimWithAreaOfLawValidator, times(1)).validate(claimOne, context, "CIVIL");
+    verify(claimWithAreaOfLawValidator, times(1)).validate(claimTwo, context, "CIVIL");
+    verify(effectiveCategoryOfLawClaimValidator, times(1))
+        .validate(claimOne, context, "CIVIL", "officeAccountNumber", categoryOfLawLookup);
+    verify(effectiveCategoryOfLawClaimValidator, times(1))
+        .validate(claimTwo, context, "CIVIL", "officeAccountNumber", categoryOfLawLookup);
+    verify(duplicateClaimValidator, times(1))
+        .validate(claimOne, context, "CIVIL", "officeAccountNumber", claimsList);
+    verify(duplicateClaimValidator, times(1))
+        .validate(claimTwo, context, "CIVIL", "officeAccountNumber", claimsList);
 
     verify(feeCalculationService, times(1)).validateFeeCalculation(submissionId, claimOne, context);
     verify(feeCalculationService, times(1)).validateFeeCalculation(submissionId, claimTwo, context);

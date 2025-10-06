@@ -21,13 +21,13 @@ class StageReachedClaimValidatorTest {
           "{index} => claimId={0}, stageReachedCode={1}, areaOfLaw={2}, regex={3}, "
               + "expectError={4}")
   @CsvSource({
-      "1, AABB, CIVIL, '^[a-zA-Z0-9]{2}$', true",
-      "2, AZ, CIVIL, '^[a-zA-Z0-9]{2}$', false",
-      "3, C9, CIVIL, '^[a-zA-Z0-9]{2}$', false",
-      "4, A!, CIVIL, '^[a-zA-Z0-9]{2}$', true",
-      "5, ABCD, CRIME, '^[A-Z]{4}$', false",
-      "6, A1, CRIME, '^[A-Z]{4}$', true",
-      "7, A-CD, CRIME, '^[A-Z]{4}$', true",
+    "1, AABB, CIVIL, '^[a-zA-Z0-9]{2}$', true",
+    "2, AZ, CIVIL, '^[a-zA-Z0-9]{2}$', false",
+    "3, C9, CIVIL, '^[a-zA-Z0-9]{2}$', false",
+    "4, A!, CIVIL, '^[a-zA-Z0-9]{2}$', true",
+    "5, ABCD, CRIME, '^[A-Z]{4}$', false",
+    "6, A1, CRIME, '^[A-Z]{4}$', true",
+    "7, A-CD, CRIME, '^[A-Z]{4}$', true",
   })
   void checkStageReachedCode(
       int claimIdBit,

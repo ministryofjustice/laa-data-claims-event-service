@@ -52,7 +52,9 @@ public class ValidationServiceTestUtils {
 
   public static List<ValidationMessagePatch> getClaimMessages(
       SubmissionValidationContext context, String claimId) {
-    return context.getClaimReport(claimId).map(ClaimValidationReport::getMessages)
+    return context
+        .getClaimReport(claimId)
+        .map(ClaimValidationReport::getMessages)
         .orElse(Collections.emptyList());
   }
 }

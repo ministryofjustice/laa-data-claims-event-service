@@ -21,12 +21,12 @@ class DisbursementsClaimValidatorTest {
           "{index} => claimId={0}, disbursementVatAmount={1}, areaOfLaw={2}, maxAllowed={3}, "
               + "expectError={4}")
   @CsvSource({
-      "1, 99999.99, CIVIL, 99999.99, false",
-      "2, 999999.99, CRIME, 999999.99, false",
-      "3, 999999999.99, MEDIATION, 999999999.99, false",
-      "4, 100000.0, CIVIL, 99999.99, true",
-      "5, 1000000.0, CRIME, 999999.99, true",
-      "6, 1000000000.0, MEDIATION, 999999999.99, true",
+    "1, 99999.99, CIVIL, 99999.99, false",
+    "2, 999999.99, CRIME, 999999.99, false",
+    "3, 999999999.99, MEDIATION, 999999999.99, false",
+    "4, 100000.0, CIVIL, 99999.99, true",
+    "5, 1000000.0, CRIME, 999999.99, true",
+    "6, 1000000000.0, MEDIATION, 999999999.99, true",
   })
   void checkDisbursementsVatAmount(
       int claimIdBit,
@@ -36,9 +36,7 @@ class DisbursementsClaimValidatorTest {
       boolean expectError) {
     UUID claimId = new UUID(claimIdBit, claimIdBit);
     ClaimResponse claim =
-        new ClaimResponse()
-            .id(claimId.toString())
-            .disbursementsVatAmount(disbursementsVatAmount);
+        new ClaimResponse().id(claimId.toString()).disbursementsVatAmount(disbursementsVatAmount);
     if (areaOfLaw.equals("CRIME")) {
       claim.setStageReachedCode("ABCD");
     }
@@ -61,5 +59,4 @@ class DisbursementsClaimValidatorTest {
       }
     }
   }
-
 }

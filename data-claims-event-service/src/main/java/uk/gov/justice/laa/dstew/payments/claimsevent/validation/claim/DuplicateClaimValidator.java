@@ -24,13 +24,13 @@ public class DuplicateClaimValidator implements ClaimValidator {
 
   private final Map<String, DuplicateClaimValidationStrategy> strategies;
 
-
   /**
    * Validates a claim to ensure it is not a duplicate of another claim, based on the provided
    * validation context, area of law, office code, and existing submission claims.
    *
    * @param claim the {@code ClaimResponse} object to be validated.
-   * @param context the {@code SubmissionValidationContext} containing validation-related information.
+   * @param context the {@code SubmissionValidationContext} containing validation-related
+   *     information.
    * @param areaOfLaw the area of law to which the claim pertains (e.g., "CRIME" or "CIVIL").
    * @param officeCode the code of the office associated with the claim.
    * @param submissionClaims the list of previously submitted claims for duplicate validation.

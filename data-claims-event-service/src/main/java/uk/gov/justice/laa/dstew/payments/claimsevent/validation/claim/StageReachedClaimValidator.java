@@ -15,8 +15,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
  */
 @Component
 @RequiredArgsConstructor
-public class StageReachedClaimValidator
-    implements ClaimValidator, ClaimWithAreaOfLawValidator {
+public class StageReachedClaimValidator implements ClaimValidator, ClaimWithAreaOfLawValidator {
 
   private static final String STAGE_REACHED_CIVIL_PATTERN = "^[a-zA-Z0-9]{2}$";
   private static final String STAGE_REACHED_CRIME_PATTERN = "^[A-Z]{4}$";

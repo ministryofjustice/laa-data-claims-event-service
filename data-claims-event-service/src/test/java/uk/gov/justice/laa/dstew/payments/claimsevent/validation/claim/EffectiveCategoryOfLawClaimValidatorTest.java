@@ -35,22 +35,20 @@ class EffectiveCategoryOfLawClaimValidatorTest {
 
   EffectiveCategoryOfLawClaimValidator validator;
 
-  @Mock
-  CategoryOfLawValidationService categoryOfLawValidationService;
-  @Mock
-  ClaimEffectiveDateUtil claimEffectiveDateUtil;
-  @Mock
-  ProviderDetailsRestClient providerDetailsRestClient;
+  @Mock CategoryOfLawValidationService categoryOfLawValidationService;
+  @Mock ClaimEffectiveDateUtil claimEffectiveDateUtil;
+  @Mock ProviderDetailsRestClient providerDetailsRestClient;
 
   @BeforeEach
   void beforeEach() {
-    validator = new EffectiveCategoryOfLawClaimValidator(
-        categoryOfLawValidationService, claimEffectiveDateUtil, providerDetailsRestClient);
+    validator =
+        new EffectiveCategoryOfLawClaimValidator(
+            categoryOfLawValidationService, claimEffectiveDateUtil, providerDetailsRestClient);
   }
 
   @Test
   @DisplayName("Verify category of law validation service is correctly called")
-  void verifyCategoryOfLawValidationServiceIsCorrectlyCalled(){
+  void verifyCategoryOfLawValidationServiceIsCorrectlyCalled() {
     UUID claimId = new UUID(1, 1);
     ClaimResponse claim =
         new ClaimResponse()
@@ -71,24 +69,19 @@ class EffectiveCategoryOfLawClaimValidatorTest {
                         new FirmOfficeContractAndScheduleLine().categoryOfLaw("categoryOfLaw1")));
 
     when(providerDetailsRestClient.getProviderFirmSchedules(
-        eq("officeAccountNumber"), eq("CIVIL"), any(LocalDate.class)))
+            eq("officeAccountNumber"), eq("CIVIL"), any(LocalDate.class)))
         .thenReturn(Mono.just(data));
 
     // Two claims make two separate calls to claimEffectiveDateUtil
-    when(claimEffectiveDateUtil.getEffectiveDate(any()))
-        .thenReturn(LocalDate.of(2025, 8, 14));
+    when(claimEffectiveDateUtil.getEffectiveDate(any())).thenReturn(LocalDate.of(2025, 8, 14));
 
     SubmissionValidationContext context = new SubmissionValidationContext();
 
     validator.validate(claim, context, "CIVIL", "officeAccountNumber", categoryOfLawLookup);
 
-    verify(claimEffectiveDateUtil, times(1))
-        .getEffectiveDate(claim);
+    verify(claimEffectiveDateUtil, times(1)).getEffectiveDate(claim);
 
     verify(categoryOfLawValidationService, times(1))
         .validateCategoryOfLaw(claim, categoryOfLawLookup, providerCategoriesOfLaw, context);
-
   }
-
-
 }
