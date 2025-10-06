@@ -42,7 +42,6 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.service.strategy.DuplicateC
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.strategy.StrategyTypes;
 import uk.gov.justice.laa.dstew.payments.claimsevent.util.ClaimEffectiveDateUtil;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
-import uk.gov.justice.laa.dstew.payments.claimsevent.validation.JsonSchemaValidator;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.provider.model.FirmOfficeContractAndScheduleDetails;
 import uk.gov.justice.laa.provider.model.FirmOfficeContractAndScheduleLine;
@@ -60,8 +59,6 @@ class ClaimValidationServiceTest {
   @Mock private FeeCalculationService feeCalculationService;
 
   @Mock private ProviderDetailsRestClient providerDetailsRestClient;
-
-  @Mock private JsonSchemaValidator jsonSchemaValidator;
 
   @Mock private MandatoryFieldsRegistry mandatoryFieldsRegistry;
 
@@ -296,85 +293,7 @@ class ClaimValidationServiceTest {
           .isEqualTo("stageReachedCode is required for area of law: CRIME");
     }
 
-    @ParameterizedTest(
-        name = "{index} => claimId={0}, matterType={1}, areaOfLaw={2}, regex={3}, expectError={4}")
-    @CsvSource({
-      "1, BadMatterType, CIVIL, 123, SCH123, '^[a-zA-Z0-9]{1,4}[-:][a-zA-Z0-9]{1,4}$', true",
-      "2, ab12:bc24, CIVIL, 125, SCH123, '^[a-zA-Z0-9]{1,4}[-:][a-zA-Z0-9]{1,4}$', false",
-      "3, AB-CD, CIVIL, 126, SCH123, '^[a-zA-Z0-9]{1,4}[-:][a-zA-Z0-9]{1,4}$', false",
-      "4, ABCD:EFGH, MEDIATION, 127, SCH123, '^[A-Z]{4}[-:][A-Z]{4}$', false",
-      "5, AB12:CD34, MEDIATION, 128, SCH123, '^[A-Z]{4}[-:][A-Z]{4}$', true",
-      "6, AB-CD, MEDIATION, 129, SCH123, '^[A-Z]{4}[-:][A-Z]{4}$', true",
-    })
-    void checkMatterType(
-        int claimIdBit,
-        String matterTypeCode,
-        String areaOfLaw,
-        String caseReferenceNumber,
-        String scheduleReference,
-        String regex,
-        boolean expectError) {
-      UUID claimId = new UUID(claimIdBit, claimIdBit);
-      ClaimResponse claim =
-          new ClaimResponse()
-              .id(claimId.toString())
-              .feeCode("feeCode1")
-              .caseStartDate("2025-08-14")
-              .caseConcludedDate("2025-09-14")
-              .caseReferenceNumber(caseReferenceNumber)
-              .scheduleReference(scheduleReference)
-              .status(ClaimStatus.READY_TO_PROCESS)
-              .uniqueFileNumber("010101/123")
-              .matterTypeCode(matterTypeCode);
 
-      List<ClaimResponse> claims = List.of(claim);
-      Map<String, CategoryOfLawResult> categoryOfLawLookup = Collections.emptyMap();
-
-      when(categoryOfLawValidationService.getCategoryOfLawLookup(claims))
-          .thenReturn(categoryOfLawLookup);
-
-      when(claimEffectiveDateUtil.getEffectiveDate(any())).thenReturn(LocalDate.of(2025, 8, 14));
-
-      SubmissionResponse submissionResponse =
-          new SubmissionResponse()
-              .submissionId(new UUID(1, 1))
-              .areaOfLaw(areaOfLaw)
-              .claims(
-                  singletonList(
-                      new SubmissionClaim().status(ClaimStatus.READY_TO_PROCESS).claimId(claimId)))
-              .officeAccountNumber("officeAccountNumber");
-
-      ClaimResultSet claimResultSet = new ClaimResultSet();
-      claimResultSet.content(claims);
-
-      when(dataClaimsRestClient.getClaim(any(), any())).thenReturn(ResponseEntity.ok(claim));
-
-      ProviderFirmOfficeContractAndScheduleDto data =
-          new ProviderFirmOfficeContractAndScheduleDto()
-              .addSchedulesItem(
-                  new FirmOfficeContractAndScheduleDetails()
-                      .addScheduleLinesItem(
-                          new FirmOfficeContractAndScheduleLine().categoryOfLaw("categoryOfLaw1")));
-      when(providerDetailsRestClient.getProviderFirmSchedules(any(), any(), any()))
-          .thenReturn(Mono.just(data));
-
-      SubmissionValidationContext context = new SubmissionValidationContext();
-      context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
-
-      // Run validation
-      claimValidationService.validateClaims(submissionResponse, context);
-
-      if (expectError) {
-        String expectedMessage =
-            String.format(
-                "matter_type_code (%s): does not match the regex pattern %s (provided value: %s)",
-                areaOfLaw, regex, matterTypeCode);
-        assertThat(getClaimMessages(context, claimId.toString()).getFirst().getTechnicalMessage())
-            .isEqualTo(expectedMessage);
-      } else {
-        assertThat(getClaimMessages(context, claimId.toString()).isEmpty()).isTrue();
-      }
-    }
 
     /*
     Schedule Reference should have format validation for CIVIL, but no format validation is needed for MEDIATION.

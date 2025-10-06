@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.dstew.payments.claimsevent.validation.submission;
+package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -6,29 +6,29 @@ import static org.mockito.Mockito.when;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.ValidationServiceTestUtils.assertContextClaimError;
 
 import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.JsonSchemaValidator;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
-import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationError;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("Submission Schema Validator Test")
-class SubmissionSchemaValidatorTest {
+class ClaimSchemaValidatorTest {
 
   @Mock private JsonSchemaValidator jsonSchemaValidator;
 
-  private SubmissionSchemaValidator submissionSchemaValidator;
+  private ClaimSchemaValidator claimSchemaValidator;
 
   @BeforeEach
   void beforeEach() {
-    submissionSchemaValidator = new SubmissionSchemaValidator(jsonSchemaValidator);
+    claimSchemaValidator = new ClaimSchemaValidator(jsonSchemaValidator);
   }
 
   @Test
@@ -36,12 +36,13 @@ class SubmissionSchemaValidatorTest {
   void shouldHaveNoErrorsIfJsonSchemaValidatorReturnsNoErrors() {
     // Given
     List<ValidationMessagePatch> emptyErrorsList = List.of();
-    SubmissionResponse submissionResponse = SubmissionResponse.builder().build();
+    String claimId = new UUID(1, 1).toString();
+    ClaimResponse claimResponse = ClaimResponse.builder().id(claimId).build();
     SubmissionValidationContext submissionValidationContext = new SubmissionValidationContext();
-    when(jsonSchemaValidator.validate("submission", submissionResponse))
+    when(jsonSchemaValidator.validate("claim", claimResponse))
         .thenReturn(emptyErrorsList);
     // When
-    submissionSchemaValidator.validate(submissionResponse, submissionValidationContext);
+    claimSchemaValidator.validate(claimResponse, submissionValidationContext);
     // Then
     assertFalse(submissionValidationContext.hasErrors());
   }
@@ -52,17 +53,18 @@ class SubmissionSchemaValidatorTest {
     // Given
     // Not the usual error returned by JSON schema validator, this validator should just add
     // whatever the schema validator returns so this is fine.
-    List<ValidationMessagePatch> emptyErrorsList =
-        List.of(SubmissionValidationError.SUBMISSION_STATUS_IS_NULL.toPatch());
-    SubmissionResponse submissionResponse = SubmissionResponse.builder().build();
+    String claimId = new UUID(1, 1).toString();
+    List<ValidationMessagePatch> errorList =
+        List.of(ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER.toPatch());
+    ClaimResponse claimResponse = ClaimResponse.builder().id(claimId).build();
     SubmissionValidationContext submissionValidationContext = new SubmissionValidationContext();
-    when(jsonSchemaValidator.validate("submission", submissionResponse))
-        .thenReturn(emptyErrorsList);
+    when(jsonSchemaValidator.validate("claim", claimResponse))
+        .thenReturn(errorList);
     // When
-    submissionSchemaValidator.validate(submissionResponse, submissionValidationContext);
+    claimSchemaValidator.validate(claimResponse, submissionValidationContext);
     // Then
     assertTrue(submissionValidationContext.hasErrors());
     assertContextClaimError(
-        submissionValidationContext, SubmissionValidationError.SUBMISSION_STATUS_IS_NULL);
+        submissionValidationContext, claimId, ClaimValidationError.INVALID_AREA_OF_LAW_FOR_PROVIDER);
   }
 }
