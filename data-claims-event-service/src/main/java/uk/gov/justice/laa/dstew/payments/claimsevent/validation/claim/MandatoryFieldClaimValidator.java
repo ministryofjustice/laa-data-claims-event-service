@@ -7,6 +7,8 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
@@ -32,8 +34,13 @@ public class MandatoryFieldClaimValidator
 
   @Override
   public void validate(ClaimResponse claim, SubmissionValidationContext context, String areaOfLaw) {
+    Map<String, List<String>> mandatoryFieldsByAreaOfLaw =
+        mandatoryFieldsRegistry.getMandatoryFieldsByAreaOfLaw();
     List<String> mandatoryFields =
-        mandatoryFieldsRegistry.getMandatoryFieldsByAreaOfLaw().get(areaOfLaw);
+        mandatoryFieldsByAreaOfLaw.get(areaOfLaw);
+    if(Objects.isNull(mandatoryFields)){
+      return;
+    }
     for (String fieldName : mandatoryFields) {
       try {
         // Look up getter method for the property
