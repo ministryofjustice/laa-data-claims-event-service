@@ -785,6 +785,37 @@ class ClaimValidationServiceTest {
             .validateDuplicateClaims(any(), any(), any(), any());
       }
 
+      @DisplayName("Area of Code MEDIATION: should call mediation validation strategy")
+      @Test
+      void MediationValidationStrategy() {
+        SubmissionResponse submissionResponse =
+            new SubmissionResponse()
+                .submissionId(new UUID(1, 1))
+                .areaOfLaw("MEDIATION")
+                .addClaimsItem(
+                    new SubmissionClaim()
+                        .status(ClaimStatus.READY_TO_PROCESS)
+                        .claimId(UUID.fromString(claim.getId())))
+                .officeAccountNumber("officeAccountNumber");
+
+        when(dataClaimsRestClient.getClaim(any(), any())).thenReturn(ResponseEntity.ok(claim));
+        when(categoryOfLawValidationService.getCategoryOfLawLookup(claims))
+            .thenReturn(Collections.emptyMap());
+
+        when(claimEffectiveDateUtil.getEffectiveDate(any())).thenReturn(LocalDate.of(2025, 8, 14));
+        when(providerDetailsRestClient.getProviderFirmSchedules(
+            eq("officeAccountNumber"), eq("MEDIATION"), any(LocalDate.class)))
+            .thenReturn(Mono.just(data));
+        SubmissionValidationContext context = createSubmissionValidationContext();
+
+        claimValidationService.validateClaims(submissionResponse, context);
+
+        verify(duplicateClaimMediationValidationServiceStrategy)
+            .validateDuplicateClaims(claim, claims, "officeAccountNumber", context);
+        verify(mockDuplicateClaimCivilValidationServiceStrategy, times(0))
+            .validateDuplicateClaims(any(), any(), any(), any());
+      }
+
       private final ClaimResponse claim =
           new ClaimResponse()
               .id(new UUID(1, 1).toString())
