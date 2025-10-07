@@ -11,21 +11,28 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
  * @author Jamie Briggs
  * @see ClaimResponse
  * @see SubmissionValidationContext
- * @see BasicClaimValidator
+ * @see ClaimWithAreaOfLawValidator
  */
 @Component
 public class CaseDatesClaimValidator extends AbstractDateValidator
-    implements ClaimValidator, BasicClaimValidator {
+    implements ClaimValidator, ClaimWithAreaOfLawValidator {
 
   public static final String OLDEST_DATE_ALLOWED_1 = "1995-01-01";
   public static final String MIN_REP_ORDER_DATE = "2016-04-01";
 
   @Override
-  public void validate(ClaimResponse claim, SubmissionValidationContext context) {
+  public void validate(ClaimResponse claim, SubmissionValidationContext context, String areaOfLaw) {
+
     String caseStartDate = claim.getCaseStartDate();
     checkDateInPast(claim, "Case Start Date", caseStartDate, OLDEST_DATE_ALLOWED_1, context);
+    String oldestDateAllowedForCaseConcludedDate =
+        areaOfLaw.equalsIgnoreCase("CRIME") ? MIN_REP_ORDER_DATE : OLDEST_DATE_ALLOWED_1;
     checkDateInPast(
-        claim, "Case Concluded Date", claim.getCaseConcludedDate(), OLDEST_DATE_ALLOWED_1, context);
+        claim,
+        "Case Concluded Date",
+        claim.getCaseConcludedDate(),
+        oldestDateAllowedForCaseConcludedDate,
+        context);
     checkDateInPast(
         claim, "Transfer Date", claim.getTransferDate(), OLDEST_DATE_ALLOWED_1, context);
     checkDateInPast(

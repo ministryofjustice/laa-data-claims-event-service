@@ -5,6 +5,7 @@ import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimVali
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import org.apache.commons.lang3.StringUtils;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 
 /**
@@ -29,7 +30,7 @@ public abstract class AbstractDateValidator {
       String dateValueToCheck,
       String oldestDateAllowedStr,
       SubmissionValidationContext context) {
-    if (dateValueToCheck != null) {
+    if (!StringUtils.isEmpty(dateValueToCheck)) {
       DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
       try {
         LocalDate oldestDateAllowed = LocalDate.parse(oldestDateAllowedStr, formatter);
