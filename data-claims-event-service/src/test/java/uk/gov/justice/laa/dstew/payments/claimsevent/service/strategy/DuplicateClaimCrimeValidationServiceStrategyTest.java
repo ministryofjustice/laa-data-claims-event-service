@@ -53,7 +53,7 @@ class DuplicateClaimCrimeValidationServiceStrategyTest {
 
       List<ClaimResponse> submissionClaims = List.of(claim1, claim2);
 
-      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any(), any(), any()))
+      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
 
       SubmissionValidationContext context = new SubmissionValidationContext();
@@ -91,7 +91,7 @@ class DuplicateClaimCrimeValidationServiceStrategyTest {
 
       List<ClaimResponse> submissionClaims = List.of(claim1, claim2);
 
-      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any(), any(), any()))
+      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
 
       SubmissionValidationContext context = new SubmissionValidationContext();

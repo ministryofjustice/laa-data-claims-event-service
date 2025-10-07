@@ -341,6 +341,10 @@ public class ClaimValidationService {
           strategies
               .get(StrategyTypes.CIVIL)
               .validateDuplicateClaims(claim, submissionClaims, officeCode, context);
+      case StrategyTypes.MEDIATION ->
+          strategies
+              .get(StrategyTypes.MEDIATION)
+              .validateDuplicateClaims(claim, submissionClaims, officeCode, context);
       default ->
           log.debug("No duplicate claim validation strategy found for area of law: {}", areaOfLaw);
     }

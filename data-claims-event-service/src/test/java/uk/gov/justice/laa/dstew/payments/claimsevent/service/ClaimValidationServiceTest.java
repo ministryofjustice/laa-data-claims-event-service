@@ -36,10 +36,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.MandatoryFieldsRegistry;
-import uk.gov.justice.laa.dstew.payments.claimsevent.service.strategy.DuplicateClaimCivilValidationServiceStrategy;
-import uk.gov.justice.laa.dstew.payments.claimsevent.service.strategy.DuplicateClaimCrimeValidationServiceStrategy;
-import uk.gov.justice.laa.dstew.payments.claimsevent.service.strategy.DuplicateClaimValidationStrategy;
-import uk.gov.justice.laa.dstew.payments.claimsevent.service.strategy.StrategyTypes;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.strategy.*;
 import uk.gov.justice.laa.dstew.payments.claimsevent.util.ClaimEffectiveDateUtil;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.JsonSchemaValidator;
@@ -71,6 +68,10 @@ class ClaimValidationServiceTest {
   private DuplicateClaimCivilValidationServiceStrategy
       mockDuplicateClaimCivilValidationServiceStrategy;
 
+  @Mock
+  private DuplicateClaimMediationValidationServiceStrategy
+      duplicateClaimMediationValidationServiceStrategy;
+
   @Mock private Map<String, DuplicateClaimValidationStrategy> strategies;
 
   @InjectMocks private ClaimValidationService claimValidationService;
@@ -87,6 +88,9 @@ class ClaimValidationServiceTest {
       lenient()
           .when(strategies.get(StrategyTypes.CIVIL))
           .thenReturn(mockDuplicateClaimCivilValidationServiceStrategy);
+      lenient()
+          .when(strategies.get(StrategyTypes.MEDIATION))
+          .thenReturn(duplicateClaimMediationValidationServiceStrategy);
 
       // Define the map for the test
       Map<String, List<String>> civilMandatoryFields =
