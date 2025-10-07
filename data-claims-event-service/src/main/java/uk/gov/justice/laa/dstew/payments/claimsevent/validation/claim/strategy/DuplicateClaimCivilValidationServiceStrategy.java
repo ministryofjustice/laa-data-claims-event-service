@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.dstew.payments.claimsevent.service.strategy;
+package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.strategy;
 
 import java.util.Collections;
 import java.util.List;
@@ -37,7 +37,7 @@ public class DuplicateClaimCivilValidationServiceStrategy extends DuplicateClaim
       final SubmissionValidationContext context) {
 
     List<ClaimResponse> otherClaimsWithNonInvalidStatus =
-        filterCurrentClaimWithNonInvalidStatus(currentClaim, submissionClaims);
+        filterCurrentClaimWithNonInvalidStatusAndWithinPeriod(currentClaim, submissionClaims);
 
     List<ClaimResponse> duplicateClaimsInThisSubmission =
         getDuplicateClaimsInCurrentSubmission(
