@@ -21,7 +21,7 @@ securityContext:
 
 ingress:
   externalRoute:
-    enabled: true
+    enabled: false
     hostname:
       enabled: false
 
