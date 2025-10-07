@@ -123,13 +123,13 @@ public class ClaimValidationService {
     validateDisbursementsVatAmount(claim, areaOfLaw, context);
     String caseStartDate = claim.getCaseStartDate();
     checkDateInPast(claim, "Case Start Date", caseStartDate, OLDEST_DATE_ALLOWED_1, context);
-    String caseConcludedDateValidationDate =
+    String oldestDateAllowedForCaseConcludedDate =
         areaOfLaw.equals("CRIME") ? MIN_REP_ORDER_DATE : OLDEST_DATE_ALLOWED_1;
     checkDateInPast(
         claim,
         "Case Concluded Date",
         claim.getCaseConcludedDate(),
-        caseConcludedDateValidationDate,
+        oldestDateAllowedForCaseConcludedDate,
         context);
     checkDateInPast(
         claim, "Transfer Date", claim.getTransferDate(), OLDEST_DATE_ALLOWED_1, context);
