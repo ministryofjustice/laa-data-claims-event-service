@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
@@ -118,11 +119,18 @@ public class ClaimValidationService {
     checkMandatoryFields(claim, areaOfLaw, context);
     validateUniqueFileNumber(claim, context);
     validateStageReachedCode(claim, areaOfLaw, context);
+    validateScheduleReference(claim, areaOfLaw, context);
     validateDisbursementsVatAmount(claim, areaOfLaw, context);
     String caseStartDate = claim.getCaseStartDate();
     checkDateInPast(claim, "Case Start Date", caseStartDate, OLDEST_DATE_ALLOWED_1, context);
+    String oldestDateAllowedForCaseConcludedDate =
+        areaOfLaw.equals("CRIME") ? MIN_REP_ORDER_DATE : OLDEST_DATE_ALLOWED_1;
     checkDateInPast(
-        claim, "Case Concluded Date", claim.getCaseConcludedDate(), OLDEST_DATE_ALLOWED_1, context);
+        claim,
+        "Case Concluded Date",
+        claim.getCaseConcludedDate(),
+        oldestDateAllowedForCaseConcludedDate,
+        context);
     checkDateInPast(
         claim, "Transfer Date", claim.getTransferDate(), OLDEST_DATE_ALLOWED_1, context);
     checkDateInPast(
@@ -226,6 +234,16 @@ public class ClaimValidationService {
         claim, areaOfLaw, claim.getStageReachedCode(), "stage_reached_code", regex, context);
   }
 
+  private void validateScheduleReference(
+      ClaimResponse claim, String areaOfLaw, SubmissionValidationContext context) {
+    String regex = null;
+    if (areaOfLaw.equals("CIVIL")) {
+      regex = "^[a-zA-Z0-9/.\\-]{1,20}$";
+    }
+    validateFieldWithRegex(
+        claim, areaOfLaw, claim.getScheduleReference(), "schedule_reference", regex, context);
+  }
+
   private void validateMatterType(
       ClaimResponse claim, String areaOfLaw, SubmissionValidationContext context) {
     String regex =
@@ -301,7 +319,7 @@ public class ClaimValidationService {
       String dateValueToCheck,
       String oldestDateAllowedStr,
       SubmissionValidationContext context) {
-    if (dateValueToCheck != null) {
+    if (!StringUtils.isEmpty(dateValueToCheck)) {
       DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
       try {
         LocalDate oldestDateAllowed = LocalDate.parse(oldestDateAllowedStr, formatter);

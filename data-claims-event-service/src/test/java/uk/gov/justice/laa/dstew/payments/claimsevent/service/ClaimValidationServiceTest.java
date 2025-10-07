@@ -89,20 +89,26 @@ class ClaimValidationServiceTest {
           .thenReturn(mockDuplicateClaimCivilValidationServiceStrategy);
 
       // Define the map for the test
-      Map<String, List<String>> civilMandatoryFields =
+      Map<String, List<String>> mandatoryFieldsByAreaOfLaw =
           Map.of(
               "CIVIL",
-              List.of("uniqueFileNumber"),
+              List.of(
+                  "uniqueFileNumber",
+                  "caseReferenceNumber",
+                  "scheduleReference",
+                  "caseStartDate",
+                  "caseConcludedDate"),
               "CRIME",
-              List.of("stageReachedCode"),
+              List.of("stageReachedCode", "caseConcludedDate"),
               "MEDIATION",
-              List.of("uniqueFileNumber"),
+              List.of(
+                  "uniqueFileNumber", "caseReferenceNumber", "scheduleReference", "caseStartDate"),
               "CRIME_LOWER",
               List.of("stageReachedCode"));
 
       lenient()
           .when(mandatoryFieldsRegistry.getMandatoryFieldsByAreaOfLaw())
-          .thenReturn(civilMandatoryFields);
+          .thenReturn(mandatoryFieldsByAreaOfLaw);
     }
 
     @Test
@@ -401,6 +407,9 @@ class ClaimValidationServiceTest {
               .status(ClaimStatus.READY_TO_PROCESS)
               .feeCode("feeCode1")
               .caseStartDate("2025-08-14")
+              .caseConcludedDate("2025-09-14")
+              .caseReferenceNumber("123")
+              .scheduleReference("SCH123")
               .uniqueFileNumber("010101/123")
               .matterTypeCode("AB:CD")
               .stageReachedCode("AA");
@@ -411,6 +420,9 @@ class ClaimValidationServiceTest {
               .status(ClaimStatus.READY_TO_PROCESS)
               .feeCode("feeCode2")
               .caseStartDate("2025-05-25")
+              .caseConcludedDate("2025-09-14")
+              .caseReferenceNumber("124")
+              .scheduleReference("SCH123")
               .matterTypeCode("123:456");
       List<ClaimResponse> claims = List.of(claim1, claim2);
 
@@ -487,17 +499,19 @@ class ClaimValidationServiceTest {
     @ParameterizedTest(
         name = "{index} => claimId={0}, matterType={1}, areaOfLaw={2}, regex={3}, expectError={4}")
     @CsvSource({
-      "1, BadMatterType, CIVIL, '^[a-zA-Z0-9]{1,4}[-:][a-zA-Z0-9]{1,4}$', true",
-      "2, ab12:bc24, CIVIL, '^[a-zA-Z0-9]{1,4}[-:][a-zA-Z0-9]{1,4}$', false",
-      "3, AB-CD, CIVIL, '^[a-zA-Z0-9]{1,4}[-:][a-zA-Z0-9]{1,4}$', false",
-      "4, ABCD:EFGH, MEDIATION, '^[A-Z]{4}[-:][A-Z]{4}$', false",
-      "5, AB12:CD34, MEDIATION, '^[A-Z]{4}[-:][A-Z]{4}$', true",
-      "6, AB-CD, MEDIATION, '^[A-Z]{4}[-:][A-Z]{4}$', true",
+      "1, BadMatterType, CIVIL, 123, SCH123, '^[a-zA-Z0-9]{1,4}[-:][a-zA-Z0-9]{1,4}$', true",
+      "2, ab12:bc24, CIVIL, 125, SCH123, '^[a-zA-Z0-9]{1,4}[-:][a-zA-Z0-9]{1,4}$', false",
+      "3, AB-CD, CIVIL, 126, SCH123, '^[a-zA-Z0-9]{1,4}[-:][a-zA-Z0-9]{1,4}$', false",
+      "4, ABCD:EFGH, MEDIATION, 127, SCH123, '^[A-Z]{4}[-:][A-Z]{4}$', false",
+      "5, AB12:CD34, MEDIATION, 128, SCH123, '^[A-Z]{4}[-:][A-Z]{4}$', true",
+      "6, AB-CD, MEDIATION, 129, SCH123, '^[A-Z]{4}[-:][A-Z]{4}$', true",
     })
     void checkMatterType(
         int claimIdBit,
         String matterTypeCode,
         String areaOfLaw,
+        String caseReferenceNumber,
+        String scheduleReference,
         String regex,
         boolean expectError) {
       UUID claimId = new UUID(claimIdBit, claimIdBit);
@@ -506,6 +520,9 @@ class ClaimValidationServiceTest {
               .id(claimId.toString())
               .feeCode("feeCode1")
               .caseStartDate("2025-08-14")
+              .caseConcludedDate("2025-09-14")
+              .caseReferenceNumber(caseReferenceNumber)
+              .scheduleReference(scheduleReference)
               .status(ClaimStatus.READY_TO_PROCESS)
               .uniqueFileNumber("010101/123")
               .matterTypeCode(matterTypeCode);
@@ -559,23 +576,32 @@ class ClaimValidationServiceTest {
       }
     }
 
+    /*
+    Schedule Reference should have format validation for CIVIL, but no format validation is needed for MEDIATION.
+    This field is optional for CRIME.
+    Ref: https://dsdmoj.atlassian.net/browse/DSTEW-430
+     */
     @ParameterizedTest(
         name =
-            "{index} => claimId={0}, stageReachedCode={1}, areaOfLaw={2}, regex={3}, "
-                + "expectError={4}")
+            "{index} => claimId={0}, matterType={1}, areaOfLaw={2}, caseReferenceNumber={3}, scheduleReference={4}, stageReachedCode={5}, regex={6}, expectError={7}")
     @CsvSource({
-      "1, AABB, CIVIL, '^[a-zA-Z0-9]{2}$', true",
-      "2, AZ, CIVIL, '^[a-zA-Z0-9]{2}$', false",
-      "3, C9, CIVIL, '^[a-zA-Z0-9]{2}$', false",
-      "4, A!, CIVIL, '^[a-zA-Z0-9]{2}$', true",
-      "5, ABCD, CRIME, '^[A-Z]{4}$', false",
-      "6, A1, CRIME, '^[A-Z]{4}$', true",
-      "7, A-CD, CRIME, '^[A-Z]{4}$', true",
+      "1, ab12:bc24, CIVIL, 123, SCH123, AB, '^[a-zA-Z0-9/.\\-]{1,20}$', false",
+      "2, ab12:bc24, CIVIL, 123, ABCDEFGHIJKLMNOPQRST123, AB, '^[a-zA-Z0-9/.\\-]{1,20}$', true",
+      "3, ab12:bc24, CIVIL, 123, SCH/ABC-12.34, AB, '^[a-zA-Z0-9/.\\-]{1,20}$', false",
+      "4, ab12:bc24, CIVIL, 123, Schedule Ref, AB, '^[a-zA-Z0-9/.\\-]{1,20}$', true",
+      "5, ab12:bc24, CIVIL, 123, Schedule:Ref, AB, '^[a-zA-Z0-9/.\\-]{1,20}$', true",
+      "6, ab12:bc24, CRIME,,, ABCD, '^[a-zA-Z0-9/.\\-]{1,20}$', false",
+      "7, ab12:bc24, CRIME,, ABCD?!, ABCD, '^[a-zA-Z0-9/.\\-]{1,20}$', false",
+      "8, ABCD:EFGH, MEDIATION, 123, ABCDEFGHIJKLMNOPQRST123, AB, '^[a-zA-Z0-9/.\\-]{1,20}$', false",
+      "9, ABCD:EFGH, MEDIATION, 123, ABCD?!, AB, '^[a-zA-Z0-9/.\\-]{1,20}$', false"
     })
-    void checkStageReachedCode(
+    void validateFormatForScheduleReference(
         int claimIdBit,
-        String stageReachedCode,
+        String matterTypeCode,
         String areaOfLaw,
+        String caseReferenceNumber,
+        String scheduleReference,
+        String stageReachedCode,
         String regex,
         boolean expectError) {
       UUID claimId = new UUID(claimIdBit, claimIdBit);
@@ -584,9 +610,430 @@ class ClaimValidationServiceTest {
               .id(claimId.toString())
               .feeCode("feeCode1")
               .caseStartDate("2025-08-14")
+              .caseConcludedDate("2025-09-14")
+              .caseReferenceNumber(caseReferenceNumber)
+              .scheduleReference(scheduleReference)
               .status(ClaimStatus.READY_TO_PROCESS)
               .uniqueFileNumber("010101/123")
+              .matterTypeCode(matterTypeCode)
               .stageReachedCode(stageReachedCode);
+
+      List<ClaimResponse> claims = List.of(claim);
+      Map<String, CategoryOfLawResult> categoryOfLawLookup = Collections.emptyMap();
+
+      when(categoryOfLawValidationService.getCategoryOfLawLookup(claims))
+          .thenReturn(categoryOfLawLookup);
+
+      when(claimEffectiveDateUtil.getEffectiveDate(any())).thenReturn(LocalDate.of(2025, 8, 14));
+
+      SubmissionResponse submissionResponse =
+          new SubmissionResponse()
+              .submissionId(new UUID(1, 1))
+              .areaOfLaw(areaOfLaw)
+              .claims(
+                  singletonList(
+                      new SubmissionClaim().status(ClaimStatus.READY_TO_PROCESS).claimId(claimId)))
+              .officeAccountNumber("officeAccountNumber");
+
+      ClaimResultSet claimResultSet = new ClaimResultSet();
+      claimResultSet.content(claims);
+
+      when(dataClaimsRestClient.getClaim(any(), any())).thenReturn(ResponseEntity.ok(claim));
+
+      ProviderFirmOfficeContractAndScheduleDto data =
+          new ProviderFirmOfficeContractAndScheduleDto()
+              .addSchedulesItem(
+                  new FirmOfficeContractAndScheduleDetails()
+                      .addScheduleLinesItem(
+                          new FirmOfficeContractAndScheduleLine().categoryOfLaw("categoryOfLaw1")));
+      when(providerDetailsRestClient.getProviderFirmSchedules(any(), any(), any()))
+          .thenReturn(Mono.just(data));
+
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
+
+      // Run validation
+      claimValidationService.validateClaims(submissionResponse, context);
+
+      if (expectError) {
+        String expectedMessage =
+            String.format(
+                "schedule_reference (%s): does not match the regex pattern %s (provided value: %s)",
+                areaOfLaw, regex, scheduleReference);
+        assertThat(getClaimMessages(context, claimId.toString()).getFirst().getTechnicalMessage())
+            .isEqualTo(expectedMessage);
+      } else {
+        assertThat(getClaimMessages(context, claimId.toString()).isEmpty()).isTrue();
+      }
+    }
+
+    /*
+    Schedule Reference should be mandatory for CIVIL and MEDIATION, but it's optional for CRIME.
+    Ref: https://dsdmoj.atlassian.net/browse/DSTEW-430
+     */
+    @ParameterizedTest(
+        name =
+            "{index} => claimId={0}, matterType={1}, areaOfLaw={2}, caseReferenceNumber={3}, scheduleReference={4}, stageReachedCode={5}, expectError={6}")
+    @CsvSource({
+      "1, ab12:bc24, CIVIL, 123,, AB, true",
+      "2, ab12:bc24, CIVIL, 123, SCH123, AB, false",
+      "3, ABCD:EFGH, MEDIATION, 123,, AB, true",
+      "4, ABCD:EFGH, MEDIATION, 123, SCH:123, AB, false",
+      "5, ab12:bc24, CRIME, 123,, ABCD, false"
+    })
+    void checkMandatoryScheduleReference(
+        int claimIdBit,
+        String matterTypeCode,
+        String areaOfLaw,
+        String caseReferenceNumber,
+        String scheduleReference,
+        String stageReachedCode,
+        boolean expectError) {
+      UUID claimId = new UUID(claimIdBit, claimIdBit);
+      ClaimResponse claim =
+          new ClaimResponse()
+              .id(claimId.toString())
+              .feeCode("feeCode1")
+              .caseStartDate("2025-08-14")
+              .caseConcludedDate("2025-09-14")
+              .caseReferenceNumber(caseReferenceNumber)
+              .scheduleReference(scheduleReference)
+              .status(ClaimStatus.READY_TO_PROCESS)
+              .uniqueFileNumber("010101/123")
+              .matterTypeCode(matterTypeCode)
+              .stageReachedCode(stageReachedCode);
+
+      List<ClaimResponse> claims = List.of(claim);
+      Map<String, CategoryOfLawResult> categoryOfLawLookup = Collections.emptyMap();
+
+      when(categoryOfLawValidationService.getCategoryOfLawLookup(claims))
+          .thenReturn(categoryOfLawLookup);
+
+      when(claimEffectiveDateUtil.getEffectiveDate(any())).thenReturn(LocalDate.of(2025, 8, 14));
+
+      SubmissionResponse submissionResponse =
+          new SubmissionResponse()
+              .submissionId(new UUID(1, 1))
+              .areaOfLaw(areaOfLaw)
+              .claims(
+                  singletonList(
+                      new SubmissionClaim().status(ClaimStatus.READY_TO_PROCESS).claimId(claimId)))
+              .officeAccountNumber("officeAccountNumber");
+
+      ClaimResultSet claimResultSet = new ClaimResultSet();
+      claimResultSet.content(claims);
+
+      when(dataClaimsRestClient.getClaim(any(), any())).thenReturn(ResponseEntity.ok(claim));
+
+      ProviderFirmOfficeContractAndScheduleDto data =
+          new ProviderFirmOfficeContractAndScheduleDto()
+              .addSchedulesItem(
+                  new FirmOfficeContractAndScheduleDetails()
+                      .addScheduleLinesItem(
+                          new FirmOfficeContractAndScheduleLine().categoryOfLaw("categoryOfLaw1")));
+      when(providerDetailsRestClient.getProviderFirmSchedules(any(), any(), any()))
+          .thenReturn(Mono.just(data));
+
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
+
+      // Run validation
+      claimValidationService.validateClaims(submissionResponse, context);
+
+      if (expectError) {
+        String expectedMessage =
+            String.format("scheduleReference is required for area of law: %s", areaOfLaw);
+        assertThat(getClaimMessages(context, claimId.toString()).getFirst().getTechnicalMessage())
+            .isEqualTo(expectedMessage);
+      } else {
+        assertThat(getClaimMessages(context, claimId.toString()).isEmpty()).isTrue();
+      }
+    }
+
+    /*
+    Case Start Date should be mandatory for CIVIL and MEDIATION, but it's optional for CRIME.
+    Ref: https://dsdmoj.atlassian.net/browse/DSTEW-430
+     */
+    @ParameterizedTest(
+        name =
+            "{index} => claimId={0}, matterType={1}, areaOfLaw={2}, caseStartDate={3}, stageReachedCode={4}, expectError={5}")
+    @CsvSource({
+      "1, ab12:bc24, CIVIL, 2025-08-14, AB, false, null",
+      "2, ab12:bc24, CIVIL,, AB, true, caseStartDate is required for area of law: CIVIL",
+      "3, ABCD:EFGH, MEDIATION, 2025-08-14, AB, false, null",
+      "4, ABCD:EFGH, MEDIATION,, AB, true, caseStartDate is required for area of law: MEDIATION",
+      "5, ab12:bc24, CRIME,'', ABCD, false, null"
+    })
+    void checkMandatoryCaseStartDate(
+        int claimIdBit,
+        String matterTypeCode,
+        String areaOfLaw,
+        String caseStartDate,
+        String stageReachedCode,
+        boolean expectError,
+        String expectedErrorMsg) {
+      UUID claimId = new UUID(claimIdBit, claimIdBit);
+      ClaimResponse claim =
+          new ClaimResponse()
+              .id(claimId.toString())
+              .feeCode("feeCode1")
+              .caseStartDate(caseStartDate)
+              .caseConcludedDate("2025-08-14")
+              .caseReferenceNumber("123")
+              .scheduleReference("SCH123")
+              .status(ClaimStatus.READY_TO_PROCESS)
+              .uniqueFileNumber("010101/123")
+              .matterTypeCode(matterTypeCode)
+              .stageReachedCode(stageReachedCode);
+
+      List<ClaimResponse> claims = List.of(claim);
+      Map<String, CategoryOfLawResult> categoryOfLawLookup = Collections.emptyMap();
+
+      when(categoryOfLawValidationService.getCategoryOfLawLookup(claims))
+          .thenReturn(categoryOfLawLookup);
+
+      when(claimEffectiveDateUtil.getEffectiveDate(any())).thenReturn(LocalDate.of(2025, 8, 14));
+
+      SubmissionResponse submissionResponse =
+          new SubmissionResponse()
+              .submissionId(new UUID(1, 1))
+              .areaOfLaw(areaOfLaw)
+              .claims(
+                  singletonList(
+                      new SubmissionClaim().status(ClaimStatus.READY_TO_PROCESS).claimId(claimId)))
+              .officeAccountNumber("officeAccountNumber");
+
+      ClaimResultSet claimResultSet = new ClaimResultSet();
+      claimResultSet.content(claims);
+
+      when(dataClaimsRestClient.getClaim(any(), any())).thenReturn(ResponseEntity.ok(claim));
+
+      ProviderFirmOfficeContractAndScheduleDto data =
+          new ProviderFirmOfficeContractAndScheduleDto()
+              .addSchedulesItem(
+                  new FirmOfficeContractAndScheduleDetails()
+                      .addScheduleLinesItem(
+                          new FirmOfficeContractAndScheduleLine().categoryOfLaw("categoryOfLaw1")));
+      when(providerDetailsRestClient.getProviderFirmSchedules(any(), any(), any()))
+          .thenReturn(Mono.just(data));
+
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
+
+      // Run validation
+      claimValidationService.validateClaims(submissionResponse, context);
+
+      if (expectError) {
+        assertThat(getClaimMessages(context, claimId.toString()).getFirst().getTechnicalMessage())
+            .isEqualTo(expectedErrorMsg);
+      } else {
+        assertThat(getClaimMessages(context, claimId.toString()).isEmpty()).isTrue();
+      }
+    }
+
+    /*
+    Case Concluded Date should be mandatory for CIVIL and CRIME, but it's optional for MEDIATION.
+    Ref: https://dsdmoj.atlassian.net/browse/DSTEW-566
+     */
+    @ParameterizedTest(
+        name =
+            "{index} => claimId={0}, matterType={1}, areaOfLaw={2}, caseStartDate={3}, stageReachedCode={4}, expectError={5}")
+    @CsvSource({
+      "1, ab12:bc24, CIVIL, 2025-08-14, AB, false, null",
+      "2, ab12:bc24, CIVIL, '', AB, true, caseConcludedDate is required for area of law: CIVIL", // empty String for caseConcludedDate
+      "3, ab12:bc24, CIVIL,, AB, true, caseConcludedDate is required for area of law: CIVIL", // null for caseConcludedDate
+      "4, ab12:bc24, CIVIL, ' ', AB, true, caseConcludedDate is required for area of law: CIVIL", // space for caseConcludedDate
+      "5, ab12:bc24, CIVIL, 1994-08-14, AB, true, Invalid date value for Case Concluded Date (Must be between 1995-01-01 and today): 1994-08-14",
+      "6, ab12:bc24, CRIME, 2017-08-14, ABCD, false, null",
+      "7, ab12:bc24, CRIME, 2015-08-14, ABCD, true, Invalid date value for Case Concluded Date (Must be between 2016-04-01 and today): 2015-08-14",
+      "8, ab12:bc24, CRIME, 2099-08-14, ABCD, true, Invalid date value for Case Concluded Date (Must be between 2016-04-01 and today): 2099-08-14",
+      "9, ABCD:EFGH, MEDIATION, 1996-08-14, AB, false, null",
+      "10, ABCD:EFGH, MEDIATION, '', AB, false, null",
+      "11, ABCD:EFGH, MEDIATION, 1994-08-14, AB, true, Invalid date value for Case Concluded Date (Must be between 1995-01-01 and today): 1994-08-14"
+    })
+    void checkMandatoryCaseConcludedDate(
+        int claimIdBit,
+        String matterTypeCode,
+        String areaOfLaw,
+        String caseConcludedDate,
+        String stageReachedCode,
+        boolean expectError,
+        String expectedErrorMsg) {
+      UUID claimId = new UUID(claimIdBit, claimIdBit);
+      ClaimResponse claim =
+          new ClaimResponse()
+              .id(claimId.toString())
+              .feeCode("feeCode1")
+              .caseStartDate("2025-08-14")
+              .caseConcludedDate(caseConcludedDate)
+              .caseReferenceNumber("123")
+              .scheduleReference("SCH123")
+              .status(ClaimStatus.READY_TO_PROCESS)
+              .uniqueFileNumber("010101/123")
+              .matterTypeCode(matterTypeCode)
+              .stageReachedCode(stageReachedCode);
+
+      List<ClaimResponse> claims = List.of(claim);
+      Map<String, CategoryOfLawResult> categoryOfLawLookup = Collections.emptyMap();
+
+      when(categoryOfLawValidationService.getCategoryOfLawLookup(claims))
+          .thenReturn(categoryOfLawLookup);
+
+      when(claimEffectiveDateUtil.getEffectiveDate(any())).thenReturn(LocalDate.of(2025, 8, 14));
+
+      SubmissionResponse submissionResponse =
+          new SubmissionResponse()
+              .submissionId(new UUID(1, 1))
+              .areaOfLaw(areaOfLaw)
+              .claims(
+                  singletonList(
+                      new SubmissionClaim().status(ClaimStatus.READY_TO_PROCESS).claimId(claimId)))
+              .officeAccountNumber("officeAccountNumber");
+
+      ClaimResultSet claimResultSet = new ClaimResultSet();
+      claimResultSet.content(claims);
+
+      when(dataClaimsRestClient.getClaim(any(), any())).thenReturn(ResponseEntity.ok(claim));
+
+      ProviderFirmOfficeContractAndScheduleDto data =
+          new ProviderFirmOfficeContractAndScheduleDto()
+              .addSchedulesItem(
+                  new FirmOfficeContractAndScheduleDetails()
+                      .addScheduleLinesItem(
+                          new FirmOfficeContractAndScheduleLine().categoryOfLaw("categoryOfLaw1")));
+      when(providerDetailsRestClient.getProviderFirmSchedules(any(), any(), any()))
+          .thenReturn(Mono.just(data));
+
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
+
+      // Run validation
+      claimValidationService.validateClaims(submissionResponse, context);
+
+      if (expectError) {
+        assertThat(getClaimMessages(context, claimId.toString()).getFirst().getTechnicalMessage())
+            .isEqualTo(expectedErrorMsg);
+      } else {
+        assertThat(getClaimMessages(context, claimId.toString()).isEmpty()).isTrue();
+      }
+    }
+
+    /*
+    Case Reference should be mandatory for CIVIL and MEDIATION, but it's optional for CRIME.
+    Ref: https://dsdmoj.atlassian.net/browse/DSTEW-430
+     */
+    @ParameterizedTest(
+        name =
+            "{index} => claimId={0}, matterType={1}, areaOfLaw={2}, caseReferenceNumber={3}, scheduleReference={4}, stageReachedCode={5}, expectError={6}")
+    @CsvSource({
+      "1, ab12:bc24, CIVIL,,SCH123, AB, true",
+      "2, ab12:bc24, CIVIL, 123, SCH123, AB, false",
+      "3, ABCD:EFGH, MEDIATION,, SCH123, AB, true",
+      "4, ABCD:EFGH, MEDIATION, 123, SCH:123, AB, false",
+      "5, ab12:bc24, CRIME,, SCH123, ABCD, false"
+    })
+    void checkMandatoryCaseReference(
+        int claimIdBit,
+        String matterTypeCode,
+        String areaOfLaw,
+        String caseReferenceNumber,
+        String scheduleReference,
+        String stageReachedCode,
+        boolean expectError) {
+      UUID claimId = new UUID(claimIdBit, claimIdBit);
+      ClaimResponse claim =
+          new ClaimResponse()
+              .id(claimId.toString())
+              .feeCode("feeCode1")
+              .caseStartDate("2025-08-14")
+              .caseConcludedDate("2025-09-14")
+              .caseReferenceNumber(caseReferenceNumber)
+              .scheduleReference(scheduleReference)
+              .status(ClaimStatus.READY_TO_PROCESS)
+              .uniqueFileNumber("010101/123")
+              .matterTypeCode(matterTypeCode)
+              .stageReachedCode(stageReachedCode);
+
+      List<ClaimResponse> claims = List.of(claim);
+      Map<String, CategoryOfLawResult> categoryOfLawLookup = Collections.emptyMap();
+
+      when(categoryOfLawValidationService.getCategoryOfLawLookup(claims))
+          .thenReturn(categoryOfLawLookup);
+
+      when(claimEffectiveDateUtil.getEffectiveDate(any())).thenReturn(LocalDate.of(2025, 8, 14));
+
+      SubmissionResponse submissionResponse =
+          new SubmissionResponse()
+              .submissionId(new UUID(1, 1))
+              .areaOfLaw(areaOfLaw)
+              .claims(
+                  singletonList(
+                      new SubmissionClaim().status(ClaimStatus.READY_TO_PROCESS).claimId(claimId)))
+              .officeAccountNumber("officeAccountNumber");
+
+      ClaimResultSet claimResultSet = new ClaimResultSet();
+      claimResultSet.content(claims);
+
+      when(dataClaimsRestClient.getClaim(any(), any())).thenReturn(ResponseEntity.ok(claim));
+
+      ProviderFirmOfficeContractAndScheduleDto data =
+          new ProviderFirmOfficeContractAndScheduleDto()
+              .addSchedulesItem(
+                  new FirmOfficeContractAndScheduleDetails()
+                      .addScheduleLinesItem(
+                          new FirmOfficeContractAndScheduleLine().categoryOfLaw("categoryOfLaw1")));
+      when(providerDetailsRestClient.getProviderFirmSchedules(any(), any(), any()))
+          .thenReturn(Mono.just(data));
+
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
+
+      // Run validation
+      claimValidationService.validateClaims(submissionResponse, context);
+
+      if (expectError) {
+        String expectedMessage =
+            String.format("caseReferenceNumber is required for area of law: %s", areaOfLaw);
+        assertThat(getClaimMessages(context, claimId.toString()).getFirst().getTechnicalMessage())
+            .isEqualTo(expectedMessage);
+      } else {
+        assertThat(getClaimMessages(context, claimId.toString()).isEmpty()).isTrue();
+      }
+    }
+
+    @ParameterizedTest(
+        name =
+            "{index} => claimId={0}, stageReachedCode={1}, areaOfLaw={2}, regex={3}, "
+                + "expectError={4}")
+    @CsvSource({
+      "1, AABB, CIVIL, 123, SCH123, '^[a-zA-Z0-9]{2}$', true",
+      "2, AZ, CIVIL, 124, SCH123, '^[a-zA-Z0-9]{2}$', false",
+      "3, C9, CIVIL, 125, SCH123, '^[a-zA-Z0-9]{2}$', false",
+      "4, A!, CIVIL, 126, SCH123, '^[a-zA-Z0-9]{2}$', true",
+      "5, ABCD, CRIME, null, null, '^[A-Z]{4}$', false",
+      "6, A1, CRIME,,,'^[A-Z]{4}$', true",
+      "7, A-CD, CRIME,,, '^[A-Z]{4}$', true",
+    })
+    void checkStageReachedCode(
+        int claimIdBit,
+        String stageReachedCode,
+        String areaOfLaw,
+        String caseReferenceNumber,
+        String scheduleReference,
+        String regex,
+        boolean expectError) {
+      UUID claimId = new UUID(claimIdBit, claimIdBit);
+      ClaimResponse claim =
+          new ClaimResponse()
+              .id(claimId.toString())
+              .feeCode("feeCode1")
+              .caseStartDate("2025-08-14")
+              .caseConcludedDate("2025-09-14")
+              .status(ClaimStatus.READY_TO_PROCESS)
+              .uniqueFileNumber("010101/123")
+              .stageReachedCode(stageReachedCode)
+              .caseReferenceNumber(caseReferenceNumber)
+              .scheduleReference(scheduleReference);
 
       List<ClaimResponse> claims = List.of(claim);
       Map<String, CategoryOfLawResult> categoryOfLawLookup = Collections.emptyMap();
@@ -643,17 +1090,19 @@ class ClaimValidationServiceTest {
             "{index} => claimId={0}, disbursementVatAmount={1}, areaOfLaw={2}, maxAllowed={3}, "
                 + "expectError={4}")
     @CsvSource({
-      "1, 99999.99, CIVIL, 99999.99, false",
-      "2, 999999.99, CRIME, 999999.99, false",
-      "3, 999999999.99, MEDIATION, 999999999.99, false",
-      "4, 100000.0, CIVIL, 99999.99, true",
-      "5, 1000000.0, CRIME, 999999.99, true",
-      "6, 1000000000.0, MEDIATION, 999999999.99, true",
+      "1, 99999.99, CIVIL, 123, SCH123, 99999.99, false",
+      "2, 999999.99, CRIME,,, 999999.99, false",
+      "3, 999999999.99, MEDIATION, 124, SCH123, 999999999.99, false",
+      "4, 100000.0, CIVIL, 126, SCH123, 99999.99, true",
+      "5, 1000000.0, CRIME,,, 999999.99, true",
+      "6, 1000000000.0, MEDIATION, 127, SCH123, 999999999.99, true",
     })
     void checkDisbursementsVatAmount(
         int claimIdBit,
         BigDecimal disbursementsVatAmount,
         String areaOfLaw,
+        String caseReferenceNumber,
+        String scheduleReference,
         BigDecimal maxAllowed,
         boolean expectError) {
       UUID claimId = new UUID(claimIdBit, claimIdBit);
@@ -662,7 +1111,10 @@ class ClaimValidationServiceTest {
               .id(claimId.toString())
               .feeCode("feeCode1")
               .caseStartDate("2025-08-14")
+              .caseConcludedDate("2025-09-14")
               .uniqueFileNumber("010101/123")
+              .caseReferenceNumber(caseReferenceNumber)
+              .scheduleReference(scheduleReference)
               .status(ClaimStatus.READY_TO_PROCESS)
               .disbursementsVatAmount(disbursementsVatAmount);
       if (areaOfLaw.equals("CRIME")) {
