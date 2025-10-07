@@ -17,11 +17,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
-import uk.gov.justice.laa.dstew.payments.claimsevent.service.strategy.DuplicateClaimCivilValidationServiceStrategy;
-import uk.gov.justice.laa.dstew.payments.claimsevent.service.strategy.DuplicateClaimCrimeValidationServiceStrategy;
-import uk.gov.justice.laa.dstew.payments.claimsevent.service.strategy.DuplicateClaimValidationStrategy;
-import uk.gov.justice.laa.dstew.payments.claimsevent.service.strategy.StrategyTypes;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.strategy.DuplicateClaimCivilValidationServiceStrategy;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.strategy.DuplicateClaimCrimeValidationServiceStrategy;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.strategy.DuplicateClaimValidationStrategy;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.strategy.StrategyTypes;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Duplicate claim validator test")

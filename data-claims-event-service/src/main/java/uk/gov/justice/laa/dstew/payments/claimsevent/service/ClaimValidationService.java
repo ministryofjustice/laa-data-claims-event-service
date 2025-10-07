@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
@@ -97,6 +96,7 @@ public class ClaimValidationService {
     // - Mandatory field validations
     // - UFN
     // - Stage reached validation
+    // - Schedule Reference Claim
     // - Disbursements VAT amount
     // - Claim dates:
     // -- Case start date
@@ -126,16 +126,5 @@ public class ClaimValidationService {
 
     // fee calculation validation - done last after every other claim validation
     feeCalculationService.validateFeeCalculation(submissionId, claim, context);
-  }
-
-
-  private void validateScheduleReference(
-      ClaimResponse claim, String areaOfLaw, SubmissionValidationContext context) {
-    String regex = null;
-    if (areaOfLaw.equals("CIVIL")) {
-      regex = "^[a-zA-Z0-9/.\\-]{1,20}$";
-    }
-    validateFieldWithRegex(
-        claim, areaOfLaw, claim.getScheduleReference(), "schedule_reference", regex, context);
   }
 }

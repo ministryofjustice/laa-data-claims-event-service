@@ -6,9 +6,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
-import uk.gov.justice.laa.dstew.payments.claimsevent.service.strategy.DuplicateClaimValidationStrategy;
-import uk.gov.justice.laa.dstew.payments.claimsevent.service.strategy.StrategyTypes;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.strategy.DuplicateClaimValidationStrategy;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.strategy.StrategyTypes;
 
 /**
  * Validates that a claim is not a duplicate of a previous claim.
