@@ -54,6 +54,7 @@ class BulkSubmissionMapperTest {
     assertThat(result.getOfficeAccountNumber()).isEqualTo("2Q286D");
     assertThat(result.getStatus())
         .isEqualTo(SubmissionStatus.CREATED); // or enum value depending on type
+    assertThat(result.getProviderUserId()).isEqualTo("test123");
   }
 
   @Test

@@ -38,6 +38,7 @@ public interface BulkSubmissionMapper {
       source = "bulkSubmission",
       qualifiedByName = "isNilSubmission")
   @Mapping(target = "numberOfClaims", source = "bulkSubmission", qualifiedByName = "countClaims")
+  @Mapping(target = "providerUserId", source = "bulkSubmission.createdByUserId")
   SubmissionPost mapToSubmissionPost(
       GetBulkSubmission200Response bulkSubmission, UUID submissionId);
 
