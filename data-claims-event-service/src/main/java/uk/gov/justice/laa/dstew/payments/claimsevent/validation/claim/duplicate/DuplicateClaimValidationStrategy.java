@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.strategy;
+package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,5 +31,9 @@ public interface DuplicateClaimValidationStrategy {
         duplicateClaims.size(),
         claim.getId(),
         csvDuplicateClaimIds);
+  }
+
+  default List<String> compatibleStrategies(){
+    return List.of(StrategyTypes.CRIME, StrategyTypes.CIVIL);
   }
 }
