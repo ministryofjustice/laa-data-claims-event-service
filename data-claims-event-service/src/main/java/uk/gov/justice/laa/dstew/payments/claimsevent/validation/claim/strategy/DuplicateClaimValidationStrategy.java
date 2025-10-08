@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.dstew.payments.claimsevent.service.strategy;
+package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.strategy;
 
 import java.util.List;
 import java.util.stream.Collectors;
