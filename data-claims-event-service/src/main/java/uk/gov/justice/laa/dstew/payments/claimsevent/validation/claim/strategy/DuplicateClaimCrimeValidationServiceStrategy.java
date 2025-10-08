@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.dstew.payments.claimsevent.service.strategy;
+package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.strategy;
 
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +29,7 @@ public class DuplicateClaimCrimeValidationServiceStrategy extends DuplicateClaim
     log.debug("Validating duplicates for claim {}", claim.getId());
     if (!context.isFlaggedForRetry(claim.getId())) {
       List<ClaimResponse> claimsToCompare =
-          filterCurrentClaimWithNonInvalidStatus(claim, submissionClaims);
+          filterCurrentClaimWithNonInvalidStatusAndWithinPeriod(claim, submissionClaims);
 
       String feeCode = claim.getFeeCode();
       String uniqueFileNumber = claim.getUniqueFileNumber();
