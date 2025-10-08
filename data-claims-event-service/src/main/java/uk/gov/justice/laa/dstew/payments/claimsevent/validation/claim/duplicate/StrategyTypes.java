@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.strategy;
+package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate;
 
 /** Strategy types for duplicate claim validation. */
 public class StrategyTypes {

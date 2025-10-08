@@ -22,18 +22,19 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResultSet;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationType;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
-import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.strategy.DuplicateClaimCivilValidationServiceStrategy;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.DuplicateClaimCivilValidationServiceStrategy;
 import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponse;
 
 @ExtendWith(MockitoExtension.class)
 public class DuplicateClaimCivilValidationServiceStrategyTest extends DuplicateClaim {
 
-  private static final String DISBURSEMENT_FEE_TYPE = "DISBURSEMENT ONLY";
+  private static final String DISBURSEMENT_FEE_TYPE = FeeCalculationType.DISBURSEMENT_ONLY.toString();
 
   @Mock private DataClaimsRestClient mockDataClaimsRestClient;
 

@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.strategy;
+package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate;
 
 import java.util.List;
 import java.util.function.Predicate;
