@@ -4,6 +4,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockserver.model.Parameter;
@@ -43,9 +44,7 @@ public class DataClaimRestClientIntTest extends MockServerIntegrationTest {
             Parameter.param("submitted-date-from", "01/01/2025"),
             Parameter.param("submitted-date-to", "29/12/2025"),
             Parameter.param("area-of-law", areaOfLaw),
-            Parameter.param("submission-period", submissionPeriod),
-            Parameter.param("size", "0"),
-            Parameter.param("page", "0")),
+            Parameter.param("submission-period", submissionPeriod)),
         "data-claims/get-submission/get-submissions-by-filter.json");
 
     var actualResults =
@@ -61,5 +60,8 @@ public class DataClaimRestClientIntTest extends MockServerIntegrationTest {
             null);
 
     assertThat(actualResults.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+    assertThat(actualResults.getBody().getContent().get(0).getSubmissionId())
+        .isEqualTo(UUID.fromString("0561d67b-30ed-412e-8231-f6296a53538d"));
   }
 }
