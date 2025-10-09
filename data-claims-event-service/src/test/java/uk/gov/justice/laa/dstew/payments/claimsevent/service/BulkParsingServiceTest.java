@@ -80,6 +80,7 @@ class BulkParsingServiceTest {
 
     final MatterStartPost matterStartRequest = new MatterStartPost();
     matterStartRequest.setScheduleReference("M1");
+    matterStartRequest.setCreatedByUserId("data-claims-event-service");
     final List<MatterStartPost> matterStartRequests = List.of(matterStartRequest);
 
     when(dataClaimsRestClient.getBulkSubmission(bulkSubmissionId))

@@ -62,6 +62,7 @@ class FeeCalculationUpdaterServiceTest {
             ClaimPatch.builder()
                 .id(claimId.toString())
                 .feeCalculationResponse(feeCalculationPatch)
+                .createdByUserId("data-claims-event-service")
                 .build());
   }
 }

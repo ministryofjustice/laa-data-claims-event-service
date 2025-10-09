@@ -25,6 +25,8 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
     unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface BulkSubmissionMapper {
 
+  String DATA_CLAIMS_EVENT_SERVICE = "data-claims-event-service";
+
   @Mapping(target = "submissionId", source = "submissionId")
   @Mapping(target = "bulkSubmissionId", source = "bulkSubmission.bulkSubmissionId")
   @Mapping(target = "officeAccountNumber", source = "bulkSubmission.details.office.account")
@@ -39,6 +41,7 @@ public interface BulkSubmissionMapper {
       qualifiedByName = "isNilSubmission")
   @Mapping(target = "numberOfClaims", source = "bulkSubmission", qualifiedByName = "countClaims")
   @Mapping(target = "providerUserId", source = "bulkSubmission.createdByUserId")
+  @Mapping(target = "createdByUserId", constant = DATA_CLAIMS_EVENT_SERVICE)
   SubmissionPost mapToSubmissionPost(
       GetBulkSubmission200Response bulkSubmission, UUID submissionId);
 
@@ -133,6 +136,7 @@ public interface BulkSubmissionMapper {
   @Mapping(target = "client2DisabilityCode", source = "client2Disability")
   @Mapping(target = "client2IsLegallyAided", source = "client2LegallyAided")
   @Mapping(target = "isClient2PostalApplicationAccepted", source = "client2PostalApplAccp")
+  @Mapping(target = "createdByUserId", constant = DATA_CLAIMS_EVENT_SERVICE)
   ClaimPost mapToClaimPost(BulkSubmissionOutcome outcome);
 
   List<ClaimPost> mapToClaimPosts(List<BulkSubmissionOutcome> outcomes);
@@ -140,6 +144,9 @@ public interface BulkSubmissionMapper {
   @Mapping(target = "categoryCode", source = "categoryCode")
   @Mapping(target = "accessPointCode", source = "accessPoint")
   @Mapping(target = "deliveryLocation", source = "deliveryLocation")
+  @Mapping(target = "scheduleReference", source = "scheduleRef")
+  @Mapping(target = "procurementAreaCode", source = "procurementArea")
+  @Mapping(target = "createdByUserId", constant = DATA_CLAIMS_EVENT_SERVICE)
   MatterStartPost mapToMatterStart(BulkSubmissionMatterStart matterStart);
 
   List<MatterStartPost> mapToMatterStartRequests(List<BulkSubmissionMatterStart> matterStarts);

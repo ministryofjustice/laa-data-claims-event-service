@@ -41,7 +41,11 @@ public class FeeCalculationUpdaterService {
     FeeCalculationPatch feeCalculationPatch =
         feeCalculationPatchMapper.mapToFeeCalculationPatch(feeCalculationResponse, feeDetails);
     ClaimPatch claimPatch =
-        ClaimPatch.builder().id(claim.getId()).feeCalculationResponse(feeCalculationPatch).build();
+        ClaimPatch.builder()
+            .id(claim.getId())
+            .feeCalculationResponse(feeCalculationPatch)
+            .createdByUserId("data-claims-event-service")
+            .build();
     dataClaimsRestClient.updateClaim(submissionId, UUID.fromString(claim.getId()), claimPatch);
   }
 }
