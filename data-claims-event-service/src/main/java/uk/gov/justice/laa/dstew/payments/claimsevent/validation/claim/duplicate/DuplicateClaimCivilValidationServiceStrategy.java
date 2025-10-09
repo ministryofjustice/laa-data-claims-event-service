@@ -37,21 +37,6 @@ public class DuplicateClaimCivilValidationServiceStrategy extends DuplicateClaim
       final String officeCode,
       final SubmissionValidationContext context) {
 
-    List<ClaimResponse> otherClaimsWithNonInvalidStatus =
-        filterCurrentClaimWithNonInvalidStatusAndWithinPeriod(currentClaim, submissionClaims);
-
-    List<ClaimResponse> duplicateClaimsInThisSubmission =
-        getDuplicateClaimsInCurrentSubmission(
-            otherClaimsWithNonInvalidStatus,
-            duplicatePredicate ->
-                Objects.equals(duplicatePredicate.getFeeCode(), currentClaim.getFeeCode())
-                    && Objects.equals(
-                        duplicatePredicate.getUniqueFileNumber(),
-                        currentClaim.getUniqueFileNumber())
-                    && Objects.equals(
-                        duplicatePredicate.getUniqueClientNumber(),
-                        currentClaim.getUniqueClientNumber()));
-
     // Don't check other claims if current claim is a disbursement claim
     List<ClaimResponse> duplicateClaimsInPreviousSubmission =
         isDisbursementClaim(currentClaim)
@@ -62,14 +47,6 @@ public class DuplicateClaimCivilValidationServiceStrategy extends DuplicateClaim
                 currentClaim.getUniqueFileNumber(),
                 currentClaim.getUniqueClientNumber(),
                 submissionClaims);
-
-    duplicateClaimsInThisSubmission.forEach(
-        duplicateClaim -> {
-          logDuplicates(duplicateClaim, duplicateClaimsInThisSubmission);
-          context.addClaimError(
-              duplicateClaim.getId(),
-              ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_EXISTING_SUBMISSION);
-        });
 
     duplicateClaimsInPreviousSubmission.forEach(
         duplicateClaim -> {
