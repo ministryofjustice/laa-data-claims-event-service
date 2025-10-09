@@ -27,7 +27,7 @@ public class DataClaimRestClientIntTest extends MockServerIntegrationTest {
   private static final List<String> offices = List.of("office1");
   private static final String submissionId = "f6bde766-a0a3-483b-bf13-bef888b4f06e";
   private static final LocalDate submittedDateFrom = LocalDate.of(2025, 1, 1);
-  ;
+
   private static final LocalDate submittedDateTo = LocalDate.of(2025, 12, 29);
   private static final String areaOfLaw = "CIVIL";
   private static final String submissionPeriod = "2025-07";
