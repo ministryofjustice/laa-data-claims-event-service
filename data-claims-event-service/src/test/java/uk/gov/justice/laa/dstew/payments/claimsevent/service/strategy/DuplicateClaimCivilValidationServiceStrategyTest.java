@@ -32,32 +32,45 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.
 import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponse;
 
 @ExtendWith(MockitoExtension.class)
-public class DuplicateClaimCivilValidationServiceStrategyTest extends DuplicateClaim {
+class DuplicateClaimCivilValidationServiceStrategyTest extends
+    AbstractDuplicateClaimValidatorStrategy {
 
-  private static final String DISBURSEMENT_FEE_TYPE = FeeCalculationType.DISBURSEMENT_ONLY.toString();
+  private static final String DISBURSEMENT_FEE_TYPE =
+      FeeCalculationType.DISBURSEMENT_ONLY.toString();
 
-  @Mock private DataClaimsRestClient mockDataClaimsRestClient;
+  @Mock
+  private DataClaimsRestClient mockDataClaimsRestClient;
 
-  @Mock private FeeSchemePlatformRestClient mockFeeSchemePlatformRestClient;
+  @Mock
+  private FeeSchemePlatformRestClient mockFeeSchemePlatformRestClient;
 
-  @InjectMocks private DuplicateClaimCivilValidationServiceStrategy duplicateClaimCivilValidation;
+  @InjectMocks
+  private DuplicateClaimCivilValidationServiceStrategy duplicateClaimCivilValidation;
 
-  @Captor private ArgumentCaptor<String> officeCodeArgumentCaptor;
+  @Captor
+  private ArgumentCaptor<String> officeCodeArgumentCaptor;
 
-  @Captor private ArgumentCaptor<String> feeCodeArgumentCaptor;
+  @Captor
+  private ArgumentCaptor<String> feeCodeArgumentCaptor;
 
-  @Captor private ArgumentCaptor<String> uniqueFileNumberArgumentCaptor;
+  @Captor
+  private ArgumentCaptor<String> uniqueFileNumberArgumentCaptor;
 
-  @Captor private ArgumentCaptor<String> uniqueClientNumberArgumentCaptor;
+  @Captor
+  private ArgumentCaptor<String> uniqueClientNumberArgumentCaptor;
 
-  @Captor private ArgumentCaptor<List<ClaimStatus>> claimStatusArgumentCaptor;
+  @Captor
+  private ArgumentCaptor<List<ClaimStatus>> claimStatusArgumentCaptor;
 
-  @Captor private ArgumentCaptor<List<SubmissionStatus>> submissionStatusArgumentCaptor;
+  @Captor
+  private ArgumentCaptor<List<SubmissionStatus>> submissionStatusArgumentCaptor;
 
   @Nested
   class ValidClaim {
+
     @DisplayName(
-        "No validation error: When there is no existing civil claim with the same Office, UFN, Fee Code, and UCN in the same submission or previous submission")
+        "No validation error: When there is no existing civil claim with the same Office, UFN, "
+            + "Fee Code, and UCN in the same submission or previous submission")
     @Test
     void whenNoExistingClaim() {
       var claimTobeProcessed =
@@ -71,7 +84,7 @@ public class DuplicateClaimCivilValidationServiceStrategyTest extends DuplicateC
           .thenReturn(ResponseEntity.of(Optional.of(new FeeDetailsResponse())));
 
       when(mockDataClaimsRestClient.getClaims(
-              any(), any(), any(), any(), any(), any(), any(), any()))
+          any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
 
       duplicateClaimCivilValidation.validateDuplicateClaims(
@@ -106,7 +119,8 @@ public class DuplicateClaimCivilValidationServiceStrategyTest extends DuplicateC
     }
 
     @DisplayName(
-        "No validation error: When current claims is of disbursement type should check again previous submissions")
+        "No validation error: When current claims is of disbursement type should check again "
+            + "previous submissions")
     @Test
     void whenCurrentClaimIsDisbursement() {
       var claimTobeProcessed =
@@ -133,7 +147,8 @@ public class DuplicateClaimCivilValidationServiceStrategyTest extends DuplicateC
     }
 
     @DisplayName(
-        "No validation error: when  same Office, UFN, Fee Code exits but for different client (UCN differs)")
+        "No validation error: when  same Office, UFN, Fee Code exits but for different client "
+            + "(UCN differs)")
     @Test
     void whenDifferentClient() {
       var claimTobeProcessed =
@@ -147,7 +162,7 @@ public class DuplicateClaimCivilValidationServiceStrategyTest extends DuplicateC
           .thenReturn(ResponseEntity.of(Optional.of(new FeeDetailsResponse())));
 
       when(mockDataClaimsRestClient.getClaims(
-              any(), any(), any(), any(), any(), any(), any(), any()))
+          any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
 
       duplicateClaimCivilValidation.validateDuplicateClaims(
@@ -157,7 +172,8 @@ public class DuplicateClaimCivilValidationServiceStrategyTest extends DuplicateC
     }
 
     @DisplayName(
-        "No validation error: when there exits a claim with same UFN and UCN but different fee code in same submission")
+        "No validation error: when there exits a claim with same UFN and UCN but different fee "
+            + "code in same submission")
     @Test
     void whenExistingClaimInPreviousSubmission() {
       var claimTobeProcessed =
@@ -170,7 +186,7 @@ public class DuplicateClaimCivilValidationServiceStrategyTest extends DuplicateC
           .thenReturn(ResponseEntity.of(Optional.of(new FeeDetailsResponse())));
 
       when(mockDataClaimsRestClient.getClaims(
-              any(), any(), any(), any(), any(), any(), any(), any()))
+          any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
 
       duplicateClaimCivilValidation.validateDuplicateClaims(
@@ -192,7 +208,7 @@ public class DuplicateClaimCivilValidationServiceStrategyTest extends DuplicateC
           .thenReturn(ResponseEntity.of(Optional.of(new FeeDetailsResponse())));
 
       when(mockDataClaimsRestClient.getClaims(
-              any(), any(), any(), any(), any(), any(), any(), any()))
+          any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
 
       duplicateClaimCivilValidation.validateDuplicateClaims(
@@ -204,50 +220,10 @@ public class DuplicateClaimCivilValidationServiceStrategyTest extends DuplicateC
 
   @Nested
   class InvalidClaim {
-    @DisplayName(
-        "Validation error: When there an exist a civil claim with the same Office, UFN, Fee Code, and UCN in the same submission")
-    @Test
-    void whenExistingClaim() {
-      var claimTobeProcessed =
-          createClaim("claimId1", "CIV123", "070722/001", "CLI001", ClaimStatus.READY_TO_PROCESS);
-      var otherClaim =
-          createClaim("claimId2", "CIV123", "070722/001", "CLI001", ClaimStatus.READY_TO_PROCESS);
-      var otherClaim1 =
-          createClaim("claimId3", "CIV123", "070722/001", "CLI001", ClaimStatus.VALID);
-      var submissionClaims = List.of(claimTobeProcessed, otherClaim, otherClaim1);
-      var context = new SubmissionValidationContext();
-
-      when(mockFeeSchemePlatformRestClient.getFeeDetails(any()))
-          .thenReturn(ResponseEntity.of(Optional.of(new FeeDetailsResponse())));
-
-      when(mockDataClaimsRestClient.getClaims(
-              any(), any(), any(), any(), any(), any(), any(), any()))
-          .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
-
-      duplicateClaimCivilValidation.validateDuplicateClaims(
-          claimTobeProcessed, submissionClaims, "2Q286D", context);
-
-      assertThat(context.hasErrors()).isTrue();
-
-      assertThat(context.getClaimReports())
-          .extracting("claimId")
-          .containsAll(List.of("claimId2", "claimId3"));
-
-      context
-          .getClaimReport("claimId2")
-          .ifPresent(
-              claimValidationReport ->
-                  assertThat(claimValidationReport.getMessages())
-                      .extracting("displayMessage")
-                      .isEqualTo(
-                          List.of(
-                              ClaimValidationError
-                                  .INVALID_CLAIM_HAS_DUPLICATE_IN_EXISTING_SUBMISSION
-                                  .getDisplayMessage())));
-    }
 
     @DisplayName(
-        "Validation error: When there an exist civil a claim with the same Office, UFN, Fee Code, and UCN in the previous submission")
+        "Validation error: When there an exist civil a claim with the same Office, UFN, Fee Code, "
+            + "and UCN in the previous submission")
     @Test
     void whenExistingClaimInPreviousSubmission() {
       var claimTobeProcessed =
@@ -265,7 +241,7 @@ public class DuplicateClaimCivilValidationServiceStrategyTest extends DuplicateC
           .thenReturn(ResponseEntity.of(Optional.of(new FeeDetailsResponse())));
 
       when(mockDataClaimsRestClient.getClaims(
-              any(), any(), any(), any(), any(), any(), any(), any()))
+          any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(
               ResponseEntity.of(
                   Optional.of(new ClaimResultSet().addContentItem(claimInPreviousSubmission))));
@@ -290,7 +266,8 @@ public class DuplicateClaimCivilValidationServiceStrategyTest extends DuplicateC
     }
 
     @DisplayName(
-        "Validation error: When there an exist civil a claim with the same Office, UFN, Fee Code, and UCN in the previous and current submission")
+        "Validation error: When there an exist civil a claim with the same Office, UFN, Fee Code, "
+            + "and UCN in the previous and current submission")
     @Test
     void whenExistingClaimInPreviousAndCurrentSubmission() {
       var claimTobeProcessed =
@@ -306,7 +283,7 @@ public class DuplicateClaimCivilValidationServiceStrategyTest extends DuplicateC
           .thenReturn(ResponseEntity.of(Optional.of(new FeeDetailsResponse())));
 
       when(mockDataClaimsRestClient.getClaims(
-              any(), any(), any(), any(), any(), any(), any(), any()))
+          any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(
               ResponseEntity.of(
                   Optional.of(new ClaimResultSet().addContentItem(claimInPreviousSubmission))));
@@ -342,39 +319,6 @@ public class DuplicateClaimCivilValidationServiceStrategyTest extends DuplicateC
                                   .getDisplayMessage())));
     }
 
-    @DisplayName("Validation error: duplicate disbursement claim on the same submission")
-    @Test
-    void whenDuplicateDisbursementClaim() {
-      var claimTobeProcessed =
-          createClaim("claimId1", "DISB01", "070722/001", "CLI001", ClaimStatus.READY_TO_PROCESS);
-      var otherClaim =
-          createClaim("claimId2", "DISB01", "070722/001", "CLI001", ClaimStatus.READY_TO_PROCESS);
-      var submissionClaims = List.of(claimTobeProcessed, otherClaim);
-      var context = new SubmissionValidationContext();
-
-      when(mockFeeSchemePlatformRestClient.getFeeDetails(any()))
-          .thenReturn(
-              ResponseEntity.of(
-                  Optional.of(new FeeDetailsResponse().feeType(DISBURSEMENT_FEE_TYPE))));
-
-      duplicateClaimCivilValidation.validateDuplicateClaims(
-          claimTobeProcessed, submissionClaims, "2Q286D", context);
-
-      assertThat(context.hasErrors()).isTrue();
-
-      assertThat(context.getClaimReports()).extracting("claimId").contains("claimId2");
-
-      context
-          .getClaimReport("claimId2")
-          .ifPresent(
-              claimValidationReport ->
-                  assertThat(claimValidationReport.getMessages())
-                      .extracting("displayMessage")
-                      .isEqualTo(
-                          List.of(
-                              ClaimValidationError
-                                  .INVALID_CLAIM_HAS_DUPLICATE_IN_EXISTING_SUBMISSION
-                                  .getDisplayMessage())));
-    }
   }
 }
+

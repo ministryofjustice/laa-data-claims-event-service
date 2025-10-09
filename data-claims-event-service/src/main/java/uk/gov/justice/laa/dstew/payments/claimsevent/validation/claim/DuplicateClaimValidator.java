@@ -1,6 +1,7 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim;
 
 import java.util.List;
+import java.util.function.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -20,7 +21,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.
 @RequiredArgsConstructor
 public class DuplicateClaimValidator implements ClaimValidator {
 
-  private final List<DuplicateClaimValidationStrategy> strategieList;
+  private final List<DuplicateClaimValidationStrategy> strategyList;
 
   /**
    * Validates a claim to ensure it is not a duplicate of another claim, based on the provided
@@ -41,8 +42,11 @@ public class DuplicateClaimValidator implements ClaimValidator {
       final String officeCode,
       final List<ClaimResponse> submissionClaims) {
 
-    List<DuplicateClaimValidationStrategy> compatibleStrategies =
-        strategieList.stream().filter(x -> x.compatibleStrategies().contains(areaOfLaw)).toList();
+    final Predicate<DuplicateClaimValidationStrategy> areaOfLawPredicate =
+        x -> x.compatibleStrategies().contains(areaOfLaw);
+
+    final List<DuplicateClaimValidationStrategy> compatibleStrategies =
+        strategyList.stream().filter(areaOfLawPredicate).toList();
 
     if (compatibleStrategies.isEmpty()) {
       log.debug("No duplicate claim validation strategy found for area of law: {}", areaOfLaw);

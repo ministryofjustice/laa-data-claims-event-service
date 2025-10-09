@@ -7,7 +7,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -18,8 +17,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.CivilDuplicateClaimValidationStrategy;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.CrimeDuplicateClaimValidationStrategy;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.DuplicateClaimCivilValidationServiceStrategy;
-import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.DuplicateClaimCrimeValidationServiceStrategy;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.DuplicateClaimValidationStrategy;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.StrategyTypes;
 
@@ -29,9 +29,13 @@ class DuplicateClaimValidatorTest {
 
   DuplicateClaimValidator validator;
 
-  @Mock private Map<String, DuplicateClaimValidationStrategy> strategies;
+  @Mock
+  private List<DuplicateClaimValidationStrategy> strategies;
 
-  @Mock private DuplicateClaimCrimeValidationServiceStrategy duplicateClaimCrimeValidationService;
+  @Mock
+  private CivilDuplicateClaimValidationStrategy mockCivilValidationStrategy;
+  @Mock
+  private CrimeDuplicateClaimValidationStrategy mockCrimeValidationStrategy;
 
   @Mock
   private DuplicateClaimCivilValidationServiceStrategy
@@ -49,12 +53,10 @@ class DuplicateClaimValidatorTest {
 
   @BeforeEach
   void setup() {
-    lenient()
-        .when(strategies.get(StrategyTypes.CRIME))
-        .thenReturn(duplicateClaimCrimeValidationService);
-    lenient()
-        .when(strategies.get(StrategyTypes.CIVIL))
-        .thenReturn(mockDuplicateClaimCivilValidationServiceStrategy);
+    lenient().when(mockCivilValidationStrategy.compatibleStrategies())
+        .thenReturn(List.of(StrategyTypes.CIVIL));
+    lenient().when(mockCrimeValidationStrategy.compatibleStrategies())
+        .thenReturn(List.of(StrategyTypes.CRIME));
     validator = new DuplicateClaimValidator(strategies);
   }
 
@@ -70,7 +72,7 @@ class DuplicateClaimValidatorTest {
     // Then
     verify(mockDuplicateClaimCivilValidationServiceStrategy)
         .validateDuplicateClaims(this.claim, claims, "officeAccountNumber", context);
-    verify(duplicateClaimCrimeValidationService, times(0))
+    verify(mockCrimeValidationStrategy, times(0))
         .validateDuplicateClaims(any(), any(), any(), any());
   }
 
@@ -84,7 +86,7 @@ class DuplicateClaimValidatorTest {
     validator.validate(claim, context, "CRIME_LOWER", "officeAccountNumber", singletonList(claim));
 
     // Then
-    verify(duplicateClaimCrimeValidationService)
+    verify(mockCrimeValidationStrategy)
         .validateDuplicateClaims(claim, claims, "officeAccountNumber", context);
     verify(mockDuplicateClaimCivilValidationServiceStrategy, times(0))
         .validateDuplicateClaims(any(), any(), any(), any());
