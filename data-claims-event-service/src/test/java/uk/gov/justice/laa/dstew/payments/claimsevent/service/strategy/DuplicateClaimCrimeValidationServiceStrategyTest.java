@@ -22,7 +22,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
-import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.strategy.DuplicateClaimCrimeValidationServiceStrategy;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.DuplicateClaimCrimeValidationServiceStrategy;
 
 @ExtendWith(MockitoExtension.class)
 class DuplicateClaimCrimeValidationServiceStrategyTest {

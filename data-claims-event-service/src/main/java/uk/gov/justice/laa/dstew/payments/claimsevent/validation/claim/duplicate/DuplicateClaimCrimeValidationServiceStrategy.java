@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.strategy;
+package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate;
 
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -11,9 +11,9 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 
 /** Service responsible for validating whether a claim is a duplicate. */
 @Slf4j
-@Service(StrategyTypes.CRIME)
+@Service
 public class DuplicateClaimCrimeValidationServiceStrategy extends DuplicateClaimValidation
-    implements DuplicateClaimValidationStrategy {
+    implements CrimeDuplicateClaimValidationStrategy {
 
   @Autowired
   public DuplicateClaimCrimeValidationServiceStrategy(DataClaimsRestClient dataClaimsRestClient) {
