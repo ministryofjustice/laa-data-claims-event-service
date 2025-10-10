@@ -9,6 +9,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationSource.EVENT_SERVICE;
 
 import java.net.URI;
 import java.util.List;
@@ -80,6 +81,7 @@ class BulkParsingServiceTest {
 
     final MatterStartPost matterStartRequest = new MatterStartPost();
     matterStartRequest.setScheduleReference("M1");
+    matterStartRequest.setCreatedByUserId(EVENT_SERVICE);
     final List<MatterStartPost> matterStartRequests = List.of(matterStartRequest);
 
     when(dataClaimsRestClient.getBulkSubmission(bulkSubmissionId))

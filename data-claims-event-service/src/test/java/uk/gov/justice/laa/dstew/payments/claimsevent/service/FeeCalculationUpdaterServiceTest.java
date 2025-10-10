@@ -3,6 +3,7 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationSource.EVENT_SERVICE;
 
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -62,6 +63,7 @@ class FeeCalculationUpdaterServiceTest {
             ClaimPatch.builder()
                 .id(claimId.toString())
                 .feeCalculationResponse(feeCalculationPatch)
+                .createdByUserId(EVENT_SERVICE)
                 .build());
   }
 }
