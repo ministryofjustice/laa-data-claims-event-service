@@ -1,6 +1,7 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.mapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationSource.EVENT_SERVICE;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,7 +17,6 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.*;
 
 class BulkSubmissionMapperTest {
 
-  private static final String DATA_CLAIMS_EVENT_SERVICE = "data-claims-event-service";
   private BulkSubmissionMapper mapper;
   private ObjectMapper objectMapper;
 
@@ -52,7 +52,7 @@ class BulkSubmissionMapperTest {
     assertThat(result.getStatus())
         .isEqualTo(SubmissionStatus.CREATED); // or enum value depending on type
     assertThat(result.getProviderUserId()).isEqualTo("test123");
-    assertThat(result.getCreatedByUserId()).isEqualTo(DATA_CLAIMS_EVENT_SERVICE);
+    assertThat(result.getCreatedByUserId()).isEqualTo(EVENT_SERVICE);
   }
 
   @Test
@@ -69,7 +69,7 @@ class BulkSubmissionMapperTest {
     assertThat(claim.getScheduleReference()).isEqualTo("01/2Q286D/2024/01");
     assertThat(claim.getCaseReferenceNumber()).isEqualTo("JI/OKUSU");
     assertThat(claim.getUniqueFileNumber()).isEqualTo("220422/013");
-    assertThat(claim.getCreatedByUserId()).isEqualTo(DATA_CLAIMS_EVENT_SERVICE);
+    assertThat(claim.getCreatedByUserId()).isEqualTo(EVENT_SERVICE);
   }
 
   @Test
@@ -86,7 +86,7 @@ class BulkSubmissionMapperTest {
     assertThat(matterStartPost.getAccessPointCode()).isEqualTo("AP00137");
     assertThat(matterStartPost.getScheduleReference()).isEqualTo("0U733A/2018/02");
     assertThat(matterStartPost.getCategoryCode()).isEqualTo("CAT1");
-    assertThat(matterStartPost.getCreatedByUserId()).isEqualTo(DATA_CLAIMS_EVENT_SERVICE);
+    assertThat(matterStartPost.getCreatedByUserId()).isEqualTo(EVENT_SERVICE);
     assertThat(matterStartPost.getDeliveryLocation()).isEqualTo("test-loc");
     assertThat(matterStartPost.getProcurementAreaCode()).isEqualTo("PA00136");
   }

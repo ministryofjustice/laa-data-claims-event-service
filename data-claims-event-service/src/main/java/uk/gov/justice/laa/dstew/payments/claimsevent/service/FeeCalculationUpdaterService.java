@@ -1,5 +1,7 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
+import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationSource.EVENT_SERVICE;
+
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -44,7 +46,7 @@ public class FeeCalculationUpdaterService {
         ClaimPatch.builder()
             .id(claim.getId())
             .feeCalculationResponse(feeCalculationPatch)
-            .createdByUserId("data-claims-event-service")
+            .createdByUserId(EVENT_SERVICE)
             .build();
     dataClaimsRestClient.updateClaim(submissionId, UUID.fromString(claim.getId()), claimPatch);
   }
