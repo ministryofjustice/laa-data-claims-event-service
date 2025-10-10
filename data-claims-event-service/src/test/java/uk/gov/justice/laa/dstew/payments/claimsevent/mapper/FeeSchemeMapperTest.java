@@ -39,14 +39,12 @@ class FeeSchemeMapperTest {
               .adjournedHearingFeeAmount(1)
               .cmrhOralCount(2)
               .cmrhTelephoneCount(3)
-              // TODO: add additional travel property
+              .isAdditionalTravelPayment(true)
               .hoInterview(5)
-              // TODO: add net travel costs property
               .netWaitingCostsAmount(BigDecimal.valueOf(1.05))
               .travelWaitingCostsAmount(BigDecimal.valueOf(1.06))
               .detentionTravelWaitingCostsAmount(BigDecimal.valueOf(1.07))
               .caseConcludedDate("2025-01-02")
-              // TODO: Add police station ID
               .policeStationCourtPrisonId("policeCourtOrPrisonId")
               .isDutySolicitor(true)
               .schemeId("schemeId")
@@ -59,8 +57,7 @@ class FeeSchemeMapperTest {
               .boltOnAdjournedHearing(1)
               .boltOnCmrhOral(2)
               .boltOnCmrhTelephone(3)
-              // TODO: add additional travel property
-              .boltOnAdditionalTravel(null)
+              .boltOnAdditionalTravel(1)
               .boltOnHomeOfficeInterview(5);
 
       FeeCalculationRequest expected =
@@ -75,17 +72,13 @@ class FeeSchemeMapperTest {
               .vatIndicator(true)
               .immigrationPriorAuthorityNumber("disbursementPriorAuthority")
               .boltOns(boltOnType)
-              // TODO: add net travel costs property
-              .netTravelCosts(null)
+              .netTravelCosts(1.06)
               .netWaitingCosts(1.05)
               .travelAndWaitingCosts(1.06)
               .detentionAndWaitingCosts(1.07)
               .caseConcludedDate(LocalDate.parse("2025-01-02"))
-              .policeStationId("policeStationCourtPrisonId")
-              // TODO: Add police station id property
-              .policeStationId(null)
-              // TODO: Add police station scheme id property
-              .policeStationSchemeId(null)
+              .policeStationId("policeCourtOrPrisonId")
+              .policeStationSchemeId("schemeId")
               .policeCourtOrPrisonId("policeCourtOrPrisonId")
               .dutySolicitor("true") // TODO: Fix type
               .schemeId("schemeId")
@@ -113,7 +106,7 @@ class FeeSchemeMapperTest {
               .adjournedHearingFeeAmount(1)
               .cmrhOralCount(2)
               .cmrhTelephoneCount(3)
-              // TODO: add additional travel property
+              .isAdditionalTravelPayment(true)
               .hoInterview(5);
 
       BoltOnType expected =
@@ -121,8 +114,7 @@ class FeeSchemeMapperTest {
               .boltOnAdjournedHearing(1)
               .boltOnCmrhOral(2)
               .boltOnCmrhTelephone(3)
-              // TODO: add additional travel property
-              .boltOnAdditionalTravel(null)
+              .boltOnAdditionalTravel(1)
               .boltOnHomeOfficeInterview(5);
 
       BoltOnType actual = feeSchemeMapper.mapToBoltOnType(claim);
