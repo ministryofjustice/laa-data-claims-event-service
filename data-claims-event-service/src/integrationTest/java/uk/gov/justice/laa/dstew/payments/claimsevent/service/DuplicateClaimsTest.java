@@ -27,6 +27,7 @@ public class DuplicateClaimsTest extends MockServerIntegrationTest {
   private static final String OFFICE_CODE = "AQ2B3C";
   private static final String AREA_OF_LAW = "CIVIL";
   private static final String FEE_CODE = "432EC";
+  private static final String SUBMISSION_PERIOD = "APR-2025";
   private static final String UNIQUE_FILE_NUMBER = "060925/010";
   private static final String UNIQUE_CLIENT_NUMBER = "29384";
   private static final String CLAIM_ID = "6850db96-fbb7-4859-a5a5-fc111cd205b2";
@@ -72,6 +73,13 @@ public class DuplicateClaimsTest extends MockServerIntegrationTest {
       stubForPostFeeCalculation("fee-scheme/post-fee-calculation-200.json");
       // Stub patch submission
       stubForUpdateSubmission(SUBMISSION_ID);
+
+      getStubForGetSubmissionByCriteria(
+          List.of(
+              Parameter.param("offices", OFFICE_CODE),
+              Parameter.param("area-of-law", AREA_OF_LAW),
+              Parameter.param("submission-period", SUBMISSION_PERIOD)),
+          "data-claims/get-submission/get-submissions-by-filter_no_content.json");
 
       var actualValidationContext = submissionValidationService.validateSubmission(submissionId);
 

@@ -262,6 +262,23 @@ public abstract class MockServerIntegrationTest {
                 .withHeader("Content-Type", "application/json"));
   }
 
+  protected void getStubForGetSubmissionByCriteria(
+      final List<Parameter> parameters, final String expectedResponse) throws Exception {
+    mockServerClient
+        .when(
+            HttpRequest.request()
+                .withMethod(HttpMethod.GET.toString())
+                .withPath(API_VERSION_0 + "submissions")
+                .withQueryStringParameters(parameters)
+                .withQueryStringParameters(
+                    Parameter.param("size", "0"), Parameter.param("page", "0")))
+        .respond(
+            HttpResponse.response()
+                .withStatusCode(200)
+                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
+                .withBody(json(readJsonFromFile(expectedResponse))));
+  }
+
   @TestConfiguration
   public static class ClaimsConfiguration {
 
