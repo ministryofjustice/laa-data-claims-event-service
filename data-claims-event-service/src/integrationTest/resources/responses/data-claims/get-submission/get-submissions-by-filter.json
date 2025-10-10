@@ -1,0 +1,23 @@
+{
+  "totalPages": 0,
+  "totalElements": 0,
+  "number": 0,
+  "size": 0,
+  "content": [
+    {
+    "submission_id": "0561d67b-30ed-412e-8231-f6296a53538d",
+    "bulk_submission_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "office_account_number": "AQ2B3C",
+    "submission_period": "APR-2025",
+    "area_of_law": "CIVIL",
+    "status": "VALIDATION_SUCCEEDED",
+    "crime_schedule_number": "23456",
+    "civil_submission_reference": "23455",
+    "mediation_submission_reference" : "ddd",
+    "previous_submission_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "is_nil_submission": false,
+    "number_of_claims": 30,
+    "submitted": "2025-05-01T12:32:00Z"
+  }
+  ]
+}

@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.client;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -26,6 +27,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionsResultSet;
 
 /**
  * REST client interface for fetching claims data. This interface communicates with the Data Claims
@@ -75,6 +77,33 @@ public interface DataClaimsRestClient {
    */
   @GetExchange("/submissions/{id}")
   ResponseEntity<SubmissionResponse> getSubmission(@PathVariable("id") UUID id);
+
+  /**
+   * Return claim submissions by office account numbers (mandatory), submissionId,
+   * submittedDateFrom, submittedDateTo, areaOfLaw, submissionPeriod.
+   *
+   * @param offices list of office account numbers
+   * @param submissionId submission UUID
+   * @param submittedDateFrom submitted date from
+   * @param submittedDateTo submitted date to
+   * @param areaOfLaw area of law
+   * @param submissionPeriod submission period
+   * @param page page number
+   * @param size page size
+   * @param sort sort order
+   * @return returns a list of paginated claim submissions (status code 200)
+   */
+  @GetExchange("/submissions")
+  ResponseEntity<SubmissionsResultSet> getSubmissions(
+      @RequestParam(value = "offices") List<String> offices,
+      @RequestParam(value = "submission-id", required = false) String submissionId,
+      @RequestParam(value = "submitted-date-from", required = false) LocalDate submittedDateFrom,
+      @RequestParam(value = "submitted-date-to", required = false) LocalDate submittedDateTo,
+      @RequestParam(value = "area-of-law", required = false) String areaOfLaw,
+      @RequestParam(value = "submission-period", required = false) String submissionPeriod,
+      @RequestParam(value = "page", required = false) int page,
+      @RequestParam(value = "size", required = false) int size,
+      @RequestParam(value = "sort", required = false) String sort);
 
   /**
    * Add a claim to a submission.

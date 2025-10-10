@@ -64,14 +64,14 @@ jobs:
       image_tag: ${{ needs.ecr-publish-image.outputs.published_image_version }}
     secrets: inherit
 
-#  deploy-production:
-#    needs: [ ecr-publish-image, deploy-staging ]
-#    permissions:
-#      id-token: write
-#      contents: read
-#    uses: ./.github/workflows/helm-deploy.yml
-#    with:
-#      environment: production
-#      deployment_name: prod
-#      image_tag: ${{ needs.ecr-publish-image.outputs.published_image_version }}
-#    secrets: inherit
+  deploy-production:
+    needs: [ ecr-publish-image, deploy-staging ]
+    permissions:
+      id-token: write
+      contents: read
+    uses: ./.github/workflows/helm-deploy.yml
+    with:
+      environment: production
+      deployment_name: prod
+      image_tag: ${{ needs.ecr-publish-image.outputs.published_image_version }}
+    secrets: inherit
