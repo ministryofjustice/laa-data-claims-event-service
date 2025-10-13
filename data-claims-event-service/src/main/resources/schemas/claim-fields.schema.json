@@ -441,6 +441,9 @@
       "type": "string",
       "pattern": "^[a-zA-Z0-9]+$",
       "maxLength": 30
+    },
+    "created_by_user_id": {
+      "type": "string"
     }
   },
   "additionalProperties": false,
