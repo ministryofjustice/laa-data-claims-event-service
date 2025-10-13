@@ -56,7 +56,7 @@ public interface FeeSchemeMapper {
   @Mapping(target = "boltOnCmrhTelephone", source = "cmrhTelephoneCount")
   @Mapping(
       target = "boltOnAdditionalTravel",
-      constant = "1") // this field might be dropped from the FSP side.
+      constant = "1") // this field will be dropped from the FSP side, temporarily setting it to 1.
   @Mapping(target = "boltOnHomeOfficeInterview", source = "hoInterview")
   BoltOnType mapToBoltOnType(ClaimResponse claim);
 }
