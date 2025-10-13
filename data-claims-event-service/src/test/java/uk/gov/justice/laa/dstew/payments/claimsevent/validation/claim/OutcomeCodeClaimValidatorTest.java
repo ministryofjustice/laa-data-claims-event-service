@@ -20,21 +20,27 @@ class OutcomeCodeClaimValidatorTest {
       name =
           "{index} => claimId={0}, outcomeCode={1}, areaOfLaw={2}, regex={3}, " + "expectError={4}")
   @CsvSource({
-    "1, AA, CIVIL, '^[A-Za-z0-9-]{2}$', false",
-    "2, ABC, CIVIL, '^[A-Za-z0-9-]{2}$', true",
+    "1, IX, CIVIL, '^[A-Za-z0-9-]{2}$', false",
+    "2, ABCD, CIVIL, '^[A-Za-z0-9-]{2}$', true",
     "3, C9, CIVIL, '^[A-Za-z0-9-]{2}$', false",
     "4, --, CIVIL, '^[A-Za-z0-9-]{2}$', false",
-    "5, A!, CIVIL, '^[A-Za-z0-9-]{2}$', true",
-    "6, CP02, CRIME, '^(CP(0[1-9]|1[0-9]|2[0-8])|CN(0[1-9]|1[0-3])|PL(0[1-9]|1[0-4]))?$', false",
-    "7, CN03, CRIME, '^(CP(0[1-9]|1[0-9]|2[0-8])|CN(0[1-9]|1[0-3])|PL(0[1-9]|1[0-4]))?$', false",
-    "8, PL13, CRIME, '^(CP(0[1-9]|1[0-9]|2[0-8])|CN(0[1-9]|1[0-3])|PL(0[1-9]|1[0-4]))?$', false",
-    "9, CP29, CRIME, '^(CP(0[1-9]|1[0-9]|2[0-8])|CN(0[1-9]|1[0-3])|PL(0[1-9]|1[0-4]))?$', true",
-    "10, CN14, CRIME, '^(CP(0[1-9]|1[0-9]|2[0-8])|CN(0[1-9]|1[0-3])|PL(0[1-9]|1[0-4]))?$', true",
-    "11, PL15, CRIME, '^(CP(0[1-9]|1[0-9]|2[0-8])|CN(0[1-9]|1[0-3])|PL(0[1-9]|1[0-4]))?$', true",
-    "12, A!, MEDIATION, '^(A|B|S|C|P)?$', true",
-    "13, A, MEDIATION, '^(A|B|S|C|P)?$', false",
-    "14, -, MEDIATION, '^(A|B|S|C|P)?$', true",
-    "15, X, MEDIATION, '^(A|B|S|C|P)?$', true"
+    "5, I@, CIVIL, '^[A-Za-z0-9-]{2}$', true",
+    "6, I, CIVIL, '^[A-Za-z0-9-]{2}$', true",
+    "7, CP01, CRIME, '^(CP(0[1-9]|1[0-9]|2[0-8])|CN(0[1-9]|1[0-3])|PL(0[1-9]|1[0-4]))?$', false",
+    "8, CP28, CRIME, '^(CP(0[1-9]|1[0-9]|2[0-8])|CN(0[1-9]|1[0-3])|PL(0[1-9]|1[0-4]))?$', false",
+    "9, CN04, CRIME, '^(CP(0[1-9]|1[0-9]|2[0-8])|CN(0[1-9]|1[0-3])|PL(0[1-9]|1[0-4]))?$', false",
+    "10, CN13, CRIME, '^(CP(0[1-9]|1[0-9]|2[0-8])|CN(0[1-9]|1[0-3])|PL(0[1-9]|1[0-4]))?$', false",
+    "11, PL01, CRIME, '^(CP(0[1-9]|1[0-9]|2[0-8])|CN(0[1-9]|1[0-3])|PL(0[1-9]|1[0-4]))?$', false",
+    "12, PL14, CRIME, '^(CP(0[1-9]|1[0-9]|2[0-8])|CN(0[1-9]|1[0-3])|PL(0[1-9]|1[0-4]))?$', false",
+    "13, CP29, CRIME, '^(CP(0[1-9]|1[0-9]|2[0-8])|CN(0[1-9]|1[0-3])|PL(0[1-9]|1[0-4]))?$', true",
+    "14, CN14, CRIME, '^(CP(0[1-9]|1[0-9]|2[0-8])|CN(0[1-9]|1[0-3])|PL(0[1-9]|1[0-4]))?$', true",
+    "15, PL15, CRIME, '^(CP(0[1-9]|1[0-9]|2[0-8])|CN(0[1-9]|1[0-3])|PL(0[1-9]|1[0-4]))?$', true",
+    "16, XY01, CRIME, '^(CP(0[1-9]|1[0-9]|2[0-8])|CN(0[1-9]|1[0-3])|PL(0[1-9]|1[0-4]))?$', true",
+    "17, A!, MEDIATION, '^(A|B|S|C|P)?$', true",
+    "18, A, MEDIATION, '^(A|B|S|C|P)?$', false",
+    "19, -, MEDIATION, '^(A|B|S|C|P)?$', true",
+    "20, X, MEDIATION, '^(A|B|S|C|P)?$', true",
+    "21, AB, MEDIATION, '^(A|B|S|C|P)?$', true"
   })
   void checkStageReachedCode(
       int claimIdBit, String outcomeCode, String areaOfLaw, String regex, boolean expectError) {
