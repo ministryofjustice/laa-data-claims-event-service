@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -33,7 +34,15 @@ public interface DuplicateClaimValidationStrategy {
         csvDuplicateClaimIds);
   }
 
-  default List<String> compatibleStrategies(){
-    return List.of(StrategyTypes.CRIME, StrategyTypes.CIVIL);
+  /**
+   * Get the list of compatible area of laws for this strategy.
+   *
+   * @return List of compatible area of laws.
+   */
+  default List<String> compatibleStrategies() {
+    List<String> strategies = new ArrayList<>();
+    strategies.addAll(StrategyTypes.CRIME);
+    strategies.addAll(StrategyTypes.CIVIL);
+    return strategies;
   }
 }

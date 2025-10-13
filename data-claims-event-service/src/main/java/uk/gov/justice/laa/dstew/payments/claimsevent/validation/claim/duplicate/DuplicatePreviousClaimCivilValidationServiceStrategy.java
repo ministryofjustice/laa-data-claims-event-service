@@ -16,7 +16,6 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 public class DuplicatePreviousClaimCivilValidationServiceStrategy extends DuplicateClaimValidation
     implements CivilDuplicateClaimValidationStrategy {
 
-
   @Autowired
   public DuplicatePreviousClaimCivilValidationServiceStrategy(
       final DataClaimsRestClient dataClaimsRestClient) {
@@ -45,7 +44,6 @@ public class DuplicatePreviousClaimCivilValidationServiceStrategy extends Duplic
                         duplicatePredicate.getUniqueClientNumber(),
                         currentClaim.getUniqueClientNumber()));
 
-
     duplicateClaimsInThisSubmission.forEach(
         duplicateClaim -> {
           logDuplicates(duplicateClaim, duplicateClaimsInThisSubmission);
@@ -54,5 +52,4 @@ public class DuplicatePreviousClaimCivilValidationServiceStrategy extends Duplic
               ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_EXISTING_SUBMISSION);
         });
   }
-
 }

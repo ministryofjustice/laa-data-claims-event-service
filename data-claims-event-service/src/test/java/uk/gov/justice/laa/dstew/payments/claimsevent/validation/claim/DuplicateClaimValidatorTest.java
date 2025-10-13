@@ -19,8 +19,6 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.CivilDuplicateClaimValidationStrategy;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.CrimeDuplicateClaimValidationStrategy;
-import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.DuplicateClaimCivilValidationServiceStrategy;
-import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.DuplicateClaimValidationStrategy;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.StrategyTypes;
 
 @ExtendWith(MockitoExtension.class)
@@ -29,17 +27,8 @@ class DuplicateClaimValidatorTest {
 
   DuplicateClaimValidator validator;
 
-  @Mock
-  private List<DuplicateClaimValidationStrategy> strategies;
-
-  @Mock
-  private CivilDuplicateClaimValidationStrategy mockCivilValidationStrategy;
-  @Mock
-  private CrimeDuplicateClaimValidationStrategy mockCrimeValidationStrategy;
-
-  @Mock
-  private DuplicateClaimCivilValidationServiceStrategy
-      mockDuplicateClaimCivilValidationServiceStrategy;
+  @Mock private CivilDuplicateClaimValidationStrategy mockCivilValidationStrategy;
+  @Mock private CrimeDuplicateClaimValidationStrategy mockCrimeValidationStrategy;
 
   private final ClaimResponse claim =
       new ClaimResponse()
@@ -53,15 +42,19 @@ class DuplicateClaimValidatorTest {
 
   @BeforeEach
   void setup() {
-    lenient().when(mockCivilValidationStrategy.compatibleStrategies())
-        .thenReturn(List.of(StrategyTypes.CIVIL));
-    lenient().when(mockCrimeValidationStrategy.compatibleStrategies())
-        .thenReturn(List.of(StrategyTypes.CRIME));
-    validator = new DuplicateClaimValidator(strategies);
+    lenient()
+        .when(mockCivilValidationStrategy.compatibleStrategies())
+        .thenReturn(StrategyTypes.CIVIL);
+    lenient()
+        .when(mockCrimeValidationStrategy.compatibleStrategies())
+        .thenReturn(StrategyTypes.CRIME);
+    validator =
+        new DuplicateClaimValidator(
+            List.of(mockCivilValidationStrategy, mockCrimeValidationStrategy));
   }
 
-  @DisplayName("Area of Code CIVIL: should call civil validation strategy")
   @Test
+  @DisplayName("Area of Code CIVIL: should call civil validation strategy")
   void callCivilValidationStrategy() {
     // Given
     SubmissionValidationContext context = new SubmissionValidationContext();
@@ -70,25 +63,55 @@ class DuplicateClaimValidatorTest {
     validator.validate(claim, context, "CIVIL", "officeAccountNumber", singletonList(claim));
 
     // Then
-    verify(mockDuplicateClaimCivilValidationServiceStrategy)
-        .validateDuplicateClaims(this.claim, claims, "officeAccountNumber", context);
+    verify(mockCivilValidationStrategy).validateDuplicateClaims(any(), any(), any(), any());
     verify(mockCrimeValidationStrategy, times(0))
         .validateDuplicateClaims(any(), any(), any(), any());
   }
 
-  @DisplayName("Area of Code CRIME_LOWER: should call crime validation strategy")
   @Test
+  @DisplayName("Area of Code LEGAL HELP: should call civil validation strategy")
+  void callLegalHelpValidationStrategy() {
+    // Given
+    SubmissionValidationContext context = new SubmissionValidationContext();
+
+    // When
+    validator.validate(claim, context, "LEGAL HELP", "officeAccountNumber", singletonList(claim));
+
+    // Then
+    verify(mockCivilValidationStrategy).validateDuplicateClaims(any(), any(), any(), any());
+    verify(mockCrimeValidationStrategy, times(0))
+        .validateDuplicateClaims(any(), any(), any(), any());
+  }
+
+  @Test
+  @DisplayName("Area of Code CRIME LOWER: should call crime validation strategy")
+  void crimeLowerValidationStrategy() {
+    // Given
+    SubmissionValidationContext context = new SubmissionValidationContext();
+
+    // When
+    validator.validate(claim, context, "CRIME LOWER", "officeAccountNumber", singletonList(claim));
+
+    // Then
+    verify(mockCrimeValidationStrategy)
+        .validateDuplicateClaims(claim, claims, "officeAccountNumber", context);
+    verify(mockCivilValidationStrategy, times(0))
+        .validateDuplicateClaims(any(), any(), any(), any());
+  }
+
+  @Test
+  @DisplayName("Area of Code CRIME: should call crime validation strategy")
   void crimeValidationStrategy() {
     // Given
     SubmissionValidationContext context = new SubmissionValidationContext();
 
     // When
-    validator.validate(claim, context, "CRIME_LOWER", "officeAccountNumber", singletonList(claim));
+    validator.validate(claim, context, "CRIME", "officeAccountNumber", singletonList(claim));
 
     // Then
     verify(mockCrimeValidationStrategy)
         .validateDuplicateClaims(claim, claims, "officeAccountNumber", context);
-    verify(mockDuplicateClaimCivilValidationServiceStrategy, times(0))
+    verify(mockCivilValidationStrategy, times(0))
         .validateDuplicateClaims(any(), any(), any(), any());
   }
 }

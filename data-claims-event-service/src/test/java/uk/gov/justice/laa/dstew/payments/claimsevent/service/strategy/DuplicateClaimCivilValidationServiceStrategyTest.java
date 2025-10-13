@@ -32,38 +32,29 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.
 import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponse;
 
 @ExtendWith(MockitoExtension.class)
-class DuplicateClaimCivilValidationServiceStrategyTest extends
-    AbstractDuplicateClaimValidatorStrategy {
+class DuplicateClaimCivilValidationServiceStrategyTest
+    extends AbstractDuplicateClaimValidatorStrategy {
 
   private static final String DISBURSEMENT_FEE_TYPE =
       FeeCalculationType.DISBURSEMENT_ONLY.toString();
 
-  @Mock
-  private DataClaimsRestClient mockDataClaimsRestClient;
+  @Mock private DataClaimsRestClient mockDataClaimsRestClient;
 
-  @Mock
-  private FeeSchemePlatformRestClient mockFeeSchemePlatformRestClient;
+  @Mock private FeeSchemePlatformRestClient mockFeeSchemePlatformRestClient;
 
-  @InjectMocks
-  private DuplicateClaimCivilValidationServiceStrategy duplicateClaimCivilValidation;
+  @InjectMocks private DuplicateClaimCivilValidationServiceStrategy duplicateClaimCivilValidation;
 
-  @Captor
-  private ArgumentCaptor<String> officeCodeArgumentCaptor;
+  @Captor private ArgumentCaptor<String> officeCodeArgumentCaptor;
 
-  @Captor
-  private ArgumentCaptor<String> feeCodeArgumentCaptor;
+  @Captor private ArgumentCaptor<String> feeCodeArgumentCaptor;
 
-  @Captor
-  private ArgumentCaptor<String> uniqueFileNumberArgumentCaptor;
+  @Captor private ArgumentCaptor<String> uniqueFileNumberArgumentCaptor;
 
-  @Captor
-  private ArgumentCaptor<String> uniqueClientNumberArgumentCaptor;
+  @Captor private ArgumentCaptor<String> uniqueClientNumberArgumentCaptor;
 
-  @Captor
-  private ArgumentCaptor<List<ClaimStatus>> claimStatusArgumentCaptor;
+  @Captor private ArgumentCaptor<List<ClaimStatus>> claimStatusArgumentCaptor;
 
-  @Captor
-  private ArgumentCaptor<List<SubmissionStatus>> submissionStatusArgumentCaptor;
+  @Captor private ArgumentCaptor<List<SubmissionStatus>> submissionStatusArgumentCaptor;
 
   @Nested
   class ValidClaim {
@@ -84,7 +75,7 @@ class DuplicateClaimCivilValidationServiceStrategyTest extends
           .thenReturn(ResponseEntity.of(Optional.of(new FeeDetailsResponse())));
 
       when(mockDataClaimsRestClient.getClaims(
-          any(), any(), any(), any(), any(), any(), any(), any()))
+              any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
 
       duplicateClaimCivilValidation.validateDuplicateClaims(
@@ -162,7 +153,7 @@ class DuplicateClaimCivilValidationServiceStrategyTest extends
           .thenReturn(ResponseEntity.of(Optional.of(new FeeDetailsResponse())));
 
       when(mockDataClaimsRestClient.getClaims(
-          any(), any(), any(), any(), any(), any(), any(), any()))
+              any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
 
       duplicateClaimCivilValidation.validateDuplicateClaims(
@@ -186,7 +177,7 @@ class DuplicateClaimCivilValidationServiceStrategyTest extends
           .thenReturn(ResponseEntity.of(Optional.of(new FeeDetailsResponse())));
 
       when(mockDataClaimsRestClient.getClaims(
-          any(), any(), any(), any(), any(), any(), any(), any()))
+              any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
 
       duplicateClaimCivilValidation.validateDuplicateClaims(
@@ -208,7 +199,7 @@ class DuplicateClaimCivilValidationServiceStrategyTest extends
           .thenReturn(ResponseEntity.of(Optional.of(new FeeDetailsResponse())));
 
       when(mockDataClaimsRestClient.getClaims(
-          any(), any(), any(), any(), any(), any(), any(), any()))
+              any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
 
       duplicateClaimCivilValidation.validateDuplicateClaims(
@@ -241,7 +232,7 @@ class DuplicateClaimCivilValidationServiceStrategyTest extends
           .thenReturn(ResponseEntity.of(Optional.of(new FeeDetailsResponse())));
 
       when(mockDataClaimsRestClient.getClaims(
-          any(), any(), any(), any(), any(), any(), any(), any()))
+              any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(
               ResponseEntity.of(
                   Optional.of(new ClaimResultSet().addContentItem(claimInPreviousSubmission))));
@@ -283,7 +274,7 @@ class DuplicateClaimCivilValidationServiceStrategyTest extends
           .thenReturn(ResponseEntity.of(Optional.of(new FeeDetailsResponse())));
 
       when(mockDataClaimsRestClient.getClaims(
-          any(), any(), any(), any(), any(), any(), any(), any()))
+              any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(
               ResponseEntity.of(
                   Optional.of(new ClaimResultSet().addContentItem(claimInPreviousSubmission))));
@@ -318,7 +309,5 @@ class DuplicateClaimCivilValidationServiceStrategyTest extends
                                   .INVALID_CLAIM_HAS_DUPLICATE_IN_EXISTING_SUBMISSION
                                   .getDisplayMessage())));
     }
-
   }
 }
-

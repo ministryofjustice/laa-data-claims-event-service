@@ -18,7 +18,8 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 @Service
 public class DuplicateClaimCivilValidationServiceStrategy extends DuplicateClaimValidation
     implements CivilDuplicateClaimValidationStrategy {
-  private static final String DISBURSEMENT_FEE_TYPE = FeeCalculationType.DISBURSEMENT_ONLY.toString();
+  private static final String DISBURSEMENT_FEE_TYPE =
+      FeeCalculationType.DISBURSEMENT_ONLY.toString();
 
   private final FeeSchemePlatformRestClient feeSchemePlatformRestClient;
 

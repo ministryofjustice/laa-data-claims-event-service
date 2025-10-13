@@ -17,11 +17,10 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationE
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
 @ExtendWith(MockitoExtension.class)
-class DuplicatePreviousClaimCivilValidationServiceStrategyTest extends
-    AbstractDuplicateClaimValidatorStrategy {
+class DuplicatePreviousClaimCivilValidationServiceStrategyTest
+    extends AbstractDuplicateClaimValidatorStrategy {
 
-  @Mock
-  private DataClaimsRestClient mockDataClaimsRestClient;
+  @Mock private DataClaimsRestClient mockDataClaimsRestClient;
 
   private DuplicatePreviousClaimCivilValidationServiceStrategy duplicateClaimCivilValidation;
 
@@ -30,7 +29,6 @@ class DuplicatePreviousClaimCivilValidationServiceStrategyTest extends
     duplicateClaimCivilValidation =
         new DuplicatePreviousClaimCivilValidationServiceStrategy(mockDataClaimsRestClient);
   }
-
 
   @Nested
   class ValidClaim {
@@ -64,7 +62,6 @@ class DuplicatePreviousClaimCivilValidationServiceStrategyTest extends
                                   .INVALID_CLAIM_HAS_DUPLICATE_IN_EXISTING_SUBMISSION
                                   .getDisplayMessage())));
     }
-
   }
 
   @Nested
