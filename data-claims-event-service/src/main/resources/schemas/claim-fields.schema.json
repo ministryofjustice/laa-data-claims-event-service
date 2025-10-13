@@ -244,10 +244,7 @@
       "pattern": "^(1A|2A|1B|2B|1A-HSF|1B-HSF|1A-LSF|1B-LSF|1EW|1SO|2|3|ULF|UHF|CLF|CHF|Sending Hearing Fixed Fee)$"
     },
     "outcome_code": {
-      "type": "string",
-      "pattern": "^[a-zA-Z0-9]+$",
-      "minLength": 2,
-      "maxLength": 2
+      "type": "string"
     },
     "designated_accredited_representative_code": {
       "type": "string",
