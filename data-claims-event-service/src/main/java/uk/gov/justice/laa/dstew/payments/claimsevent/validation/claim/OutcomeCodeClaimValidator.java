@@ -17,10 +17,10 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 @RequiredArgsConstructor
 public class OutcomeCodeClaimValidator implements ClaimValidator, ClaimWithAreaOfLawValidator {
 
-  private static final String OUTCOME_CODE_CIVIL_PATTERN = "^[A-Za-z0-9-]{2}$";
-  private static final String OUTCOME_CODE_CRIME_PATTERN =
-      "^(CP(0[1-9]|1[0-9]|2[0-8])|CN(0[1-9]|1[0-3])|PL(0[1-9]|1[0-4]))?$";
-  private static final String OUTCOME_CODE_MEDIATION_PATTERN = "^(A|B|S|C|P)?$";
+  public static final String OUTCOME_CODE_CIVIL_PATTERN = "^[A-Za-z0-9-]{2}$";
+  public static final String OUTCOME_CODE_CRIME_PATTERN =
+      "(?i)^(CP(0[1-9]|1[0-9]|2[0-8])|CN(0[1-9]|1[0-3])|PL(0[1-9]|1[0-4]))?$";
+  public static final String OUTCOME_CODE_MEDIATION_PATTERN = "(?i)^(A|B|S|C|P)?$";
 
   @Override
   public void validate(ClaimResponse claim, SubmissionValidationContext context, String areaOfLaw) {
