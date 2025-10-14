@@ -3,6 +3,7 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.helper;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockserver.model.JsonBody.json;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -15,6 +16,7 @@ import java.time.YearMonth;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
@@ -40,6 +42,7 @@ import org.testcontainers.containers.MockServerContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 import software.amazon.awssdk.http.HttpStatusCode;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.ApiProperties;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.DataClaimsApiProperties;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.FeeSchemePlatformApiProperties;
@@ -262,16 +265,36 @@ public abstract class MockServerIntegrationTest {
                 .withHeader("Content-Type", "application/json"));
   }
 
+  protected void stubForUpdateSubmissionWithBody(UUID submissionId, SubmissionPatch patch)
+      throws JsonProcessingException {
+    mockServerClient
+        .when(
+            HttpRequest.request()
+                .withMethod("PATCH")
+                .withPath(API_VERSION_0 + "submissions/" + submissionId.toString())
+                .withBody(json(objectMapper.writeValueAsString(patch))))
+        .respond(
+            HttpResponse.response()
+                .withStatusCode(204)
+                .withHeader("Content-Type", "application/json"));
+  }
+
   protected void getStubForGetSubmissionByCriteria(
       final List<Parameter> parameters, final String expectedResponse) throws Exception {
+    List<Parameter> allParameters =
+        Stream.concat(
+                parameters.stream(),
+                Stream.of(Parameter.param("size", "0"), Parameter.param("page", "0")))
+            .toList();
+    ;
     mockServerClient
         .when(
             HttpRequest.request()
                 .withMethod(HttpMethod.GET.toString())
                 .withPath(API_VERSION_0 + "submissions")
-                .withQueryStringParameters(parameters)
-                .withQueryStringParameters(
-                    Parameter.param("size", "0"), Parameter.param("page", "0")))
+                .withQueryStringParameters(allParameters))
+        //                .withQueryStringParameters(
+        //                    Parameter.param("size", "0"), Parameter.param("page", "0")))
         .respond(
             HttpResponse.response()
                 .withStatusCode(200)
