@@ -12,6 +12,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.mockserver.model.Parameter;
+import org.mockserver.verify.VerificationTimes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.context.ImportTestcontainers;
@@ -78,7 +79,16 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
         .untilAsserted(
             () -> {
               mockServerClient.verify(
-                  request().withPath(API_VERSION_0 + "submissions/" + submissionId));
+                  request()
+                      .withMethod("GET")
+                      .withPath(API_VERSION_0 + "submissions/" + submissionId));
+              mockServerClient.verify(
+                  request().withMethod("GET").withPath(API_VERSION_0 + "submissions"));
+              mockServerClient.verify(
+                  request()
+                      .withMethod("PATCH")
+                      .withPath(API_VERSION_0 + "submissions/" + submissionId),
+                  VerificationTimes.exactly(2));
             });
   }
 }
