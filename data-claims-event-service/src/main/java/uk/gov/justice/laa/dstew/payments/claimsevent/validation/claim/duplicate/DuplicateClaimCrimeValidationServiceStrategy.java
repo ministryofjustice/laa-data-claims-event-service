@@ -29,7 +29,7 @@ public class DuplicateClaimCrimeValidationServiceStrategy extends DuplicateClaim
     log.debug("Validating duplicates for claim {}", claim.getId());
     if (!context.isFlaggedForRetry(claim.getId())) {
       List<ClaimResponse> claimsToCompare =
-          filterCurrentClaimWithNonInvalidStatusAndWithinPeriod(claim, submissionClaims);
+          filterCurrentClaimWithValidStatusAndWithinPeriod(claim, submissionClaims);
 
       String feeCode = claim.getFeeCode();
       String uniqueFileNumber = claim.getUniqueFileNumber();

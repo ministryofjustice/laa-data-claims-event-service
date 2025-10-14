@@ -27,7 +27,7 @@ public abstract class DuplicateClaimValidation {
    * @param submissionClaims the list of claims in the submission
    * @return a filtered list of claims in the submission, excluding the given claim
    */
-  protected List<ClaimResponse> filterCurrentClaimWithNonInvalidStatusAndWithinPeriod(
+  protected List<ClaimResponse> filterCurrentClaimWithValidStatusAndWithinPeriod(
       ClaimResponse currentClaim, List<ClaimResponse> submissionClaims) {
     return submissionClaims.stream()
         .filter(submissionClaim -> submissionClaim != currentClaim)

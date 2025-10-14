@@ -29,12 +29,12 @@ public class DuplicatePreviousClaimCivilValidationServiceStrategy extends Duplic
       final String officeCode,
       final SubmissionValidationContext context) {
 
-    List<ClaimResponse> otherClaimsWithNonInvalidStatus =
-        filterCurrentClaimWithNonInvalidStatusAndWithinPeriod(currentClaim, submissionClaims);
+    List<ClaimResponse> otherClaimsWithValidStatus =
+        filterCurrentClaimWithValidStatusAndWithinPeriod(currentClaim, submissionClaims);
 
     List<ClaimResponse> duplicateClaimsInThisSubmission =
         getDuplicateClaimsInCurrentSubmission(
-            otherClaimsWithNonInvalidStatus,
+            otherClaimsWithValidStatus,
             duplicatePredicate ->
                 Objects.equals(duplicatePredicate.getFeeCode(), currentClaim.getFeeCode())
                     && Objects.equals(

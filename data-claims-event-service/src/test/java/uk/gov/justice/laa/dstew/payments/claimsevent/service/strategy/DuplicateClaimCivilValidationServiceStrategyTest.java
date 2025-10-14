@@ -138,7 +138,7 @@ class DuplicateClaimCivilValidationServiceStrategyTest
     }
 
     @DisplayName(
-        "No validation error: when  same Office, UFN, Fee Code exits but for different client "
+        "No validation error: when  same Office, UFN, Fee Code exists but for different client "
             + "(UCN differs)")
     @Test
     void whenDifferentClient() {
@@ -163,7 +163,7 @@ class DuplicateClaimCivilValidationServiceStrategyTest
     }
 
     @DisplayName(
-        "No validation error: when there exits a claim with same UFN and UCN but different fee "
+        "No validation error: when there exists a claim with same UFN and UCN but different fee "
             + "code in same submission")
     @Test
     void whenExistingClaimInPreviousSubmission() {
@@ -213,7 +213,7 @@ class DuplicateClaimCivilValidationServiceStrategyTest
   class InvalidClaim {
 
     @DisplayName(
-        "Validation error: When there an exist civil a claim with the same Office, UFN, Fee Code, "
+        "Validation error: When there is an existing civil claim with the same Office, UFN, Fee Code, "
             + "and UCN in the previous submission")
     @Test
     void whenExistingClaimInPreviousSubmission() {
@@ -257,7 +257,7 @@ class DuplicateClaimCivilValidationServiceStrategyTest
     }
 
     @DisplayName(
-        "Validation error: When there an exist civil a claim with the same Office, UFN, Fee Code, "
+        "Validation error: When there is an existing civil claim with the same Office, UFN, Fee Code, "
             + "and UCN in the previous and current submission")
     @Test
     void whenExistingClaimInPreviousAndCurrentSubmission() {
