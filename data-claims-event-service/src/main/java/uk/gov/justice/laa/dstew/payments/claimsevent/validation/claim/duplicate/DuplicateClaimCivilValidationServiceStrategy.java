@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.strategy;
+package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate;
 
 import java.util.Collections;
 import java.util.List;
@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
@@ -14,10 +15,11 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 
 /** Validation service for civil duplicate claims. */
 @Slf4j
-@Service(StrategyTypes.CIVIL)
+@Service
 public class DuplicateClaimCivilValidationServiceStrategy extends DuplicateClaimValidation
-    implements DuplicateClaimValidationStrategy {
-  private static final String DISBURSEMENT_FEE_TYPE = "DISBURSEMENT ONLY";
+    implements CivilDuplicateClaimValidationStrategy {
+  private static final String DISBURSEMENT_FEE_TYPE =
+      FeeCalculationType.DISBURSEMENT_ONLY.toString();
 
   private final FeeSchemePlatformRestClient feeSchemePlatformRestClient;
 
@@ -36,21 +38,7 @@ public class DuplicateClaimCivilValidationServiceStrategy extends DuplicateClaim
       final String officeCode,
       final SubmissionValidationContext context) {
 
-    List<ClaimResponse> otherClaimsWithNonInvalidStatus =
-        filterCurrentClaimWithNonInvalidStatusAndWithinPeriod(currentClaim, submissionClaims);
-
-    List<ClaimResponse> duplicateClaimsInThisSubmission =
-        getDuplicateClaimsInCurrentSubmission(
-            otherClaimsWithNonInvalidStatus,
-            duplicatePredicate ->
-                Objects.equals(duplicatePredicate.getFeeCode(), currentClaim.getFeeCode())
-                    && Objects.equals(
-                        duplicatePredicate.getUniqueFileNumber(),
-                        currentClaim.getUniqueFileNumber())
-                    && Objects.equals(
-                        duplicatePredicate.getUniqueClientNumber(),
-                        currentClaim.getUniqueClientNumber()));
-
+    // Don't check other claims if current claim is a disbursement claim
     List<ClaimResponse> duplicateClaimsInPreviousSubmission =
         isDisbursementClaim(currentClaim)
             ? Collections.emptyList()
@@ -60,14 +48,6 @@ public class DuplicateClaimCivilValidationServiceStrategy extends DuplicateClaim
                 currentClaim.getUniqueFileNumber(),
                 currentClaim.getUniqueClientNumber(),
                 submissionClaims);
-
-    duplicateClaimsInThisSubmission.forEach(
-        duplicateClaim -> {
-          logDuplicates(duplicateClaim, duplicateClaimsInThisSubmission);
-          context.addClaimError(
-              duplicateClaim.getId(),
-              ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_EXISTING_SUBMISSION);
-        });
 
     duplicateClaimsInPreviousSubmission.forEach(
         duplicateClaim -> {

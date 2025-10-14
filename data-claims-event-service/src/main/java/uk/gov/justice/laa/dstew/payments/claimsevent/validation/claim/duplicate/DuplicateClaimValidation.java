@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.strategy;
+package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate;
 
 import java.util.List;
 import java.util.function.Predicate;
@@ -27,7 +27,7 @@ public abstract class DuplicateClaimValidation {
    * @param submissionClaims the list of claims in the submission
    * @return a filtered list of claims in the submission, excluding the given claim
    */
-  protected List<ClaimResponse> filterCurrentClaimWithNonInvalidStatusAndWithinPeriod(
+  protected List<ClaimResponse> filterCurrentClaimWithValidStatusAndWithinPeriod(
       ClaimResponse currentClaim, List<ClaimResponse> submissionClaims) {
     return submissionClaims.stream()
         .filter(submissionClaim -> submissionClaim != currentClaim)
