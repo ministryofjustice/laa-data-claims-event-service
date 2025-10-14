@@ -9,8 +9,8 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.mockserver.model.Parameter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -19,7 +19,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
-import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MessageListenerBase;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MockServerIntegrationTest;
 import uk.gov.justice.laa.dstew.payments.claimsevent.model.SubmissionEventType;
@@ -27,6 +26,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.model.SubmissionEventType;
 @ActiveProfiles("test")
 @ImportTestcontainers(MessageListenerBase.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Import(MockServerIntegrationTest.ClaimsConfiguration.class)
 public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
 
@@ -34,18 +34,8 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
   private static final String AREA_OF_LAW = "CIVIL";
   private static final String API_VERSION_0 = "/api/v0/";
 
-  @Autowired SubmissionListener listener;
-
   @Autowired private SqsTemplate sqsTemplate;
   @Autowired private ObjectMapper objectMapper;
-
-  private DataClaimsRestClient dataClaimsRestClient;
-
-  @BeforeEach
-  void setUp() {
-    // Configure WebClient and integrate it with FeeSchemePlatformRestClient
-    dataClaimsRestClient = createClient(DataClaimsRestClient.class);
-  }
 
   @Test
   void sendMessage() throws Exception {

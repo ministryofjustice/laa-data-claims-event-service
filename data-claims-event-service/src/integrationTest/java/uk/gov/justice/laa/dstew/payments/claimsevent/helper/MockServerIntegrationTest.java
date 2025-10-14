@@ -286,7 +286,7 @@ public abstract class MockServerIntegrationTest {
                 parameters.stream(),
                 Stream.of(Parameter.param("size", "0"), Parameter.param("page", "0")))
             .toList();
-    ;
+
     mockServerClient
         .when(
             HttpRequest.request()
