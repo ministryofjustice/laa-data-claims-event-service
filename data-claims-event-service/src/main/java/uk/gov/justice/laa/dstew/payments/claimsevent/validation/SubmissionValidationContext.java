@@ -178,4 +178,22 @@ public class SubmissionValidationContext {
     return !submissionValidationErrors.isEmpty()
         || claimReports.stream().anyMatch(ClaimValidationReport::hasErrors);
   }
+
+  /**
+   * Checks if there are any submission-level errors.
+   *
+   * @return true if there are any submission-level errors, false otherwise
+   */
+  public boolean hasSubmissionLevelErrors() {
+    return !submissionValidationErrors.isEmpty();
+  }
+
+  /**
+   * Checks if there are any claim-level errors.
+   *
+   * @return true if there are any claim-level errors, false otherwise
+   */
+  public boolean hasClaimLevelErrors() {
+    return claimReports.stream().anyMatch(ClaimValidationReport::hasErrors);
+  }
 }

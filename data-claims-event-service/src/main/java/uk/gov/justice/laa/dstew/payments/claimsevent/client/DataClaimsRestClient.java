@@ -96,11 +96,11 @@ public interface DataClaimsRestClient {
   @GetExchange("/submissions")
   ResponseEntity<SubmissionsResultSet> getSubmissions(
       @RequestParam(value = "offices") List<String> offices,
-      @RequestParam(value = "submission-id", required = false) String submissionId,
-      @RequestParam(value = "submitted-date-from", required = false) LocalDate submittedDateFrom,
-      @RequestParam(value = "submitted-date-to", required = false) LocalDate submittedDateTo,
-      @RequestParam(value = "area-of-law", required = false) String areaOfLaw,
-      @RequestParam(value = "submission-period", required = false) String submissionPeriod,
+      @RequestParam(value = "submission_id", required = false) String submissionId,
+      @RequestParam(value = "submitted_date_from", required = false) LocalDate submittedDateFrom,
+      @RequestParam(value = "submitted_date_to", required = false) LocalDate submittedDateTo,
+      @RequestParam(value = "area_of_law", required = false) String areaOfLaw,
+      @RequestParam(value = "submission_period", required = false) String submissionPeriod,
       @RequestParam(value = "page", required = false) int page,
       @RequestParam(value = "size", required = false) int size,
       @RequestParam(value = "sort", required = false) String sort);
