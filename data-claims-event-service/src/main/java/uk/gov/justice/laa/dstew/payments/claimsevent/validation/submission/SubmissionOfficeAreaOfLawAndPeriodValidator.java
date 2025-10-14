@@ -58,6 +58,8 @@ public class SubmissionOfficeAreaOfLawAndPeriodValidator implements SubmissionVa
                     Objects.equals(
                         submissionBase.getStatus(), SubmissionStatus.VALIDATION_SUCCEEDED))
             .toList();
+    log.debug("Found {} duplicates for submission {}", submissionBases.size(), submission);
+
     return !submissionBases.isEmpty();
   }
 }

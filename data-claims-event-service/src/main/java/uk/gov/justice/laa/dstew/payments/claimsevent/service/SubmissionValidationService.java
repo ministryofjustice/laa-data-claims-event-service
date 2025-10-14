@@ -54,8 +54,8 @@ public class SubmissionValidationService {
         .sorted(Comparator.comparingInt(SubmissionValidator::priority))
         .forEach(validator -> validator.validate(submission, context));
 
-    // Only validate claims if no validation errors have been recorded.
-    if (!context.hasErrors()) {
+    // Only validate claims if no submission level validation errors have been recorded.
+    if (!context.hasSubmissionLevelErrors()) {
       claimValidationService.validateClaims(submission, context);
 
       // TODO: Send through all claim errors in the patch request.
@@ -63,19 +63,24 @@ public class SubmissionValidationService {
       updateClaims(submission, context);
     }
 
-    //  VALIDATION_SUCCEEDED or VALIDATION_FAILED
-    //  If unvalidated claims remain, re-queue message.
-    log.debug("Validation completed for submission {}", submissionId);
-
     // Update submission status after completion
-    SubmissionStatus completedStatus = SubmissionStatus.VALIDATION_SUCCEEDED;
+    SubmissionPatch submissionPatch = new SubmissionPatch().submissionId(submissionId);
     if (context.hasErrors()) {
-      completedStatus = SubmissionStatus.VALIDATION_FAILED;
+      log.debug(
+          "Validation completed for submission {} with errors: {}",
+          submissionId,
+          context.getSubmissionValidationErrors());
+      submissionPatch
+          .status(SubmissionStatus.VALIDATION_FAILED)
+          .validationMessages(context.getSubmissionValidationErrors());
+      // todo we need to patch the claim status to INVALID but not add any claim level validation
+      // errors
+    } else {
+      log.debug("Validation completed for submission {} with no errors", submissionId);
+      submissionPatch.status(SubmissionStatus.VALIDATION_SUCCEEDED);
     }
-    SubmissionPatch submissionPatch =
-        new SubmissionPatch().submissionId(submissionId).status(completedStatus);
-    dataClaimsRestClient.updateSubmission(submissionId.toString(), submissionPatch);
 
+    dataClaimsRestClient.updateSubmission(submissionId.toString(), submissionPatch);
     return context;
   }
 
