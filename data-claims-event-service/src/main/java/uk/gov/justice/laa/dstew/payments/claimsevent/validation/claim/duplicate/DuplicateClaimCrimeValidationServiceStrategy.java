@@ -43,7 +43,7 @@ public class DuplicateClaimCrimeValidationServiceStrategy extends DuplicateClaim
 
       List<ClaimResponse> officeDuplicateClaims =
           getDuplicateClaimsInPreviousSubmission(
-              officeCode, feeCode, uniqueFileNumber, null, submissionClaims);
+              officeCode, feeCode, uniqueFileNumber, null, null, submissionClaims);
 
       if (!submissionDuplicateClaims.isEmpty()) {
         log.debug("Duplicate claims found in submission");

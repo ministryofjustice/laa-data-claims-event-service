@@ -69,7 +69,7 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
       // Then
       assertThat(context.hasErrors()).isFalse();
       verify(dataClaimsRestClient, times(0))
-          .getClaims(any(), any(), any(), any(), any(), any(), any(), any());
+          .getClaims(any(), any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -89,7 +89,8 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
       stubIsDisbursementClaim(true);
       SubmissionValidationContext context = new SubmissionValidationContext();
 
-      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any(), any()))
+      when(dataClaimsRestClient.getClaims(
+              any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(
               ResponseEntity.of(
                   Optional.of(new ClaimResultSet().content(Collections.emptyList()))));
@@ -99,7 +100,7 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
       // Then
       assertThat(context.hasErrors()).isFalse();
       verify(dataClaimsRestClient, times(1))
-          .getClaims(any(), any(), any(), any(), any(), any(), any(), any());
+          .getClaims(any(), any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -127,7 +128,8 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
       stubIsDisbursementClaim(true);
       SubmissionValidationContext context = new SubmissionValidationContext();
 
-      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any(), any()))
+      when(dataClaimsRestClient.getClaims(
+              any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(
               ResponseEntity.of(
                   Optional.of(new ClaimResultSet().content(Collections.emptyList()))));
@@ -137,7 +139,7 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
       // Then
       assertThat(context.hasErrors()).isFalse();
       verify(dataClaimsRestClient, times(1))
-          .getClaims(any(), any(), any(), any(), any(), any(), any(), any());
+          .getClaims(any(), any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -163,7 +165,8 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
       stubIsDisbursementClaim(true);
       SubmissionValidationContext context = new SubmissionValidationContext();
 
-      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any(), any()))
+      when(dataClaimsRestClient.getClaims(
+              any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(
               ResponseEntity.of(
                   Optional.of(
@@ -175,7 +178,7 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
       // Then
       assertThat(context.hasErrors()).isFalse();
       verify(dataClaimsRestClient, times(1))
-          .getClaims(any(), any(), any(), any(), any(), any(), any(), any());
+          .getClaims(any(), any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -201,7 +204,8 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
       stubIsDisbursementClaim(true);
       SubmissionValidationContext context = new SubmissionValidationContext();
 
-      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any(), any()))
+      when(dataClaimsRestClient.getClaims(
+              any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(
               ResponseEntity.of(
                   Optional.of(
@@ -213,7 +217,7 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
       // Then
       assertThat(context.hasErrors()).isFalse();
       verify(dataClaimsRestClient, times(1))
-          .getClaims(any(), any(), any(), any(), any(), any(), any(), any());
+          .getClaims(any(), any(), any(), any(), any(), any(), any(), any(), any());
     }
   }
 
@@ -244,7 +248,8 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
       stubIsDisbursementClaim(true);
       SubmissionValidationContext context = new SubmissionValidationContext();
 
-      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any(), any()))
+      when(dataClaimsRestClient.getClaims(
+              any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(
               ResponseEntity.of(
                   Optional.of(
@@ -256,7 +261,7 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
       // Then
       assertThat(context.hasErrors()).isTrue();
       verify(dataClaimsRestClient, times(1))
-          .getClaims(any(), any(), any(), any(), any(), any(), any(), any());
+          .getClaims(any(), any(), any(), any(), any(), any(), any(), any(), any());
       assertContextClaimError(
           context,
           "claimId1",

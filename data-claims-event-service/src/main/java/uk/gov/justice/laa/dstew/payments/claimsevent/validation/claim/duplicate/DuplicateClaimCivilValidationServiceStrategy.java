@@ -38,7 +38,7 @@ public class DuplicateClaimCivilValidationServiceStrategy extends DuplicateClaim
       final String officeCode,
       final SubmissionValidationContext context) {
 
-    // Don't check other claims if current claim is a disbursement claim
+    // Don't check other claims if the current claim is a disbursement claim
     List<ClaimResponse> duplicateClaimsInPreviousSubmission =
         isDisbursementClaim(currentClaim)
             ? Collections.emptyList()
@@ -47,6 +47,7 @@ public class DuplicateClaimCivilValidationServiceStrategy extends DuplicateClaim
                 currentClaim.getFeeCode(),
                 currentClaim.getUniqueFileNumber(),
                 currentClaim.getUniqueClientNumber(),
+                null,
                 submissionClaims);
 
     duplicateClaimsInPreviousSubmission.forEach(

@@ -141,6 +141,7 @@ public interface DataClaimsRestClient {
       String feeCode,
       String uniqueFileNumber,
       String uniqueClientNumber,
+      String uniqueCaseId,
       List<ClaimStatus> claimStatuses,
       Pageable pageable) {
     Integer pageNumber = Objects.nonNull(pageable) ? pageable.getPageNumber() : null;
@@ -153,6 +154,7 @@ public interface DataClaimsRestClient {
         feeCode,
         uniqueFileNumber,
         uniqueClientNumber,
+        uniqueCaseId,
         claimStatuses,
         pageNumber,
         pageSize,
@@ -183,6 +185,7 @@ public interface DataClaimsRestClient {
       @RequestParam(value = "fee_code", required = false) String feeCode,
       @RequestParam(value = "unique_file_number", required = false) String uniqueFileNumber,
       @RequestParam(value = "unique_client_number", required = false) String uniqueClientNumber,
+      @RequestParam(value = "unique_case_id", required = false) String uniqueCaseId,
       @RequestParam(value = "claim_statuses", required = false) List<ClaimStatus> claimStatuses,
       @RequestParam(value = "page", required = false) Integer page,
       @RequestParam(value = "size", required = false) Integer size,

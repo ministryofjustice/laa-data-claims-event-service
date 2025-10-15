@@ -59,6 +59,7 @@ public class DuplicateClaimCivilValidationServiceStrategy extends DuplicateClaim
                 currentClaim.getFeeCode(),
                 currentClaim.getUniqueFileNumber(),
                 currentClaim.getUniqueClientNumber(),
+                null,
                 submissionClaims);
 
     duplicateClaimsInThisSubmission.forEach(

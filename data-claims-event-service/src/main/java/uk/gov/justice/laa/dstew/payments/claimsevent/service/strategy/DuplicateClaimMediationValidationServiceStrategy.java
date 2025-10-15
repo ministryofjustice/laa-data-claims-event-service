@@ -55,6 +55,7 @@ public class DuplicateClaimMediationValidationServiceStrategy extends DuplicateC
                 submittedClaim.getFeeCode(),
                 submittedClaim.getUniqueFileNumber(),
                 submittedClaim.getUniqueClientNumber(),
+                submittedClaim.getUniqueCaseId(),
                 submissionClaims)
             .stream()
             .filter(
