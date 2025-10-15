@@ -149,7 +149,7 @@ public abstract class MockServerIntegrationTest {
                 .withBody(readJsonFromFile(expectedResponse)));
   }
 
-  protected void stubForGteFeeDetails(final String feeCode, final String expectedResponse)
+  protected void stubForGetFeeDetails(final String feeCode, final String expectedResponse)
       throws Exception {
     mockServerClient
         .when(

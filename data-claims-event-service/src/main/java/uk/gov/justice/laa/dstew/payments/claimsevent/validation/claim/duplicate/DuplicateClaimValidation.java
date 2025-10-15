@@ -74,7 +74,8 @@ public abstract class DuplicateClaimValidation {
             List.of(
                 SubmissionStatus.CREATED,
                 SubmissionStatus.VALIDATION_IN_PROGRESS,
-                SubmissionStatus.READY_FOR_VALIDATION),
+                SubmissionStatus.READY_FOR_VALIDATION,
+                SubmissionStatus.VALIDATION_SUCCEEDED),
             feeCode,
             uniqueFileNumber,
             uniqueClientNumber,
