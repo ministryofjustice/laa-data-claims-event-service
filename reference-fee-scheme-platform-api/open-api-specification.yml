@@ -68,25 +68,6 @@ paths:
         '500':
           description: Internal server error
 
-  /api/v1/error-log-sentry:
-    get:
-      tags:
-        - errorLogSentry
-      summary: Trigger endpoint to verify Sentry Configuration
-      operationId: captureErrorLogSentry
-      responses:
-        '200':
-          description: 'Success'
-        '400':
-          description: 'Bad request'
-        '401':
-          description: 'Unauthorized'
-        '403':
-          description: 'Forbidden'
-        '500':
-          description: 'Internal server error'
-
-
 components:
   schemas:
     FeeDetailsResponse:
@@ -118,7 +99,7 @@ components:
         startDate:
           type: string
           format: date
-          description: "Civil: case start date. Crime: Representation order date."
+          description: "Civil: case start date."
         policeStationId:
           type: string
           description: "Police Station ID."
@@ -127,7 +108,7 @@ components:
           description: "Police Station Scheme ID."
         uniqueFileNumber:
           type: string
-          description: "Unique File Number (UFN) for Police Station Fees category. Format DDMMYY/NNNN"
+          description: "Unique File Number (UFN) for Police Station/Prison Law category. Format DDMMYY/NNNN"
         netProfitCosts:
           type: number
           format: double
@@ -186,6 +167,10 @@ components:
         immigrationPriorAuthorityNumber:
           type: string
           description: "Authorisation specific to immigration, used for net profit costs over limit or disbursements over limit."
+        representationOrderDate:
+          type: string
+          format: date
+          description: "The official start date for claimable work carried out for Crime Lower categories"
 
     FeeCalculationResponse:
       type: object
@@ -199,8 +184,8 @@ components:
         claimId:
           type: string
           description: "Unique identifier for a Claim record."
-        warnings:
-          $ref: "#/components/schemas/Warning"
+        validationMessages:
+          $ref: "#/components/schemas/ValidationMessages"
         escapeCaseFlag:
           type: boolean
           description: "For hourly fee code, If escape threshold has been passed, will be true, false otherwise."
@@ -280,10 +265,16 @@ components:
         boltOnFeeDetails:
           $ref: "#/components/schemas/BoltOnFeeDetails"
 
-    Warning:
+    ValidationMessages:
       type: array
       items:
-        type: string
+        type: object
+        properties:
+          type:
+            type: string
+            enum: [ERROR, WARNING]
+          message:
+            type: string
 
     BoltOnFeeDetails:
       type: object

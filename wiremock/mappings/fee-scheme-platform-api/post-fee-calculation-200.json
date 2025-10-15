@@ -10,30 +10,44 @@
     },
     "jsonBody": {
       "feeCode": "string",
-      "schemeId": "string",
-      "claimId": "string",
-      "warning": {
-        "warningDescription": "string"
-      },
+      "schemeId": "0199a9a2-bd22-7cdf-b5e5-e128b0034d73",
+      "claimId": "0199a9a2-9631-7b11-bad3-a83d35aa5acf",
+      "validationMessages": [
+        {
+          "type": "ERROR",
+          "message": "string"
+        }
+      ],
       "escapeCaseFlag": true,
       "feeCalculation": {
-        "totalAmount": 0.0,
+        "totalAmount": 0.1,
         "vatIndicator": true,
-        "VatRateApplied": 0.0,
-        "calculatedVatAmount": 0.0,
-        "disbursementAmount": 0.0,
-        "disbursementVatAmount": 0.0,
-        "hourlyTotalAmount": 0.0,
-        "hourlyVatAmount": 0.0,
-        "fixedFeeAmount": 0.0,
-        "netProfitCostsAmount": 0.0,
-        "netCostOfCounselAmount": 0.0,
-        "netTravelCostsAmount": 0.0,
-        "netWaitingCosts": 0.0,
-        "detentionAndWaitingCostsAmount": 0.0,
-        "jrFormFillingAmount": 0.0,
-        "travelAndWaitingCostAmount": 0.0,
-        "boltOnFeeAmount": 0.0
+        "vatRateApplied": 0.1,
+        "calculatedVatAmount": 0.1,
+        "disbursementAmount": 0.1,
+        "requestedNetDisbursementAmount": 0.1,
+        "disbursementVatAmount": 0.1,
+        "hourlyTotalAmount": 0.1,
+        "fixedFeeAmount": 0.1,
+        "netProfitCostsAmount": 0.1,
+        "requestedNetProfitCostsAmount": 0.1,
+        "netCostOfCounselAmount": 0.1,
+        "netTravelCostsAmount": 0.1,
+        "netWaitingCosts": 0.1,
+        "detentionAndWaitingCostsAmount": 0.1,
+        "jrFormFillingAmount": 0.1,
+        "travelAndWaitingCostAmount": 0.1,
+        "boltOnFeeDetails": {
+          "boltOnTotalFeeAmount": 0.1,
+          "boltOnAdjournedHearingCount": 0,
+          "boltOnAdjournedHearingFee": 0.1,
+          "boltOnCmrhTelephoneCount": 0,
+          "boltOnCmrhTelephoneFee": 0.1,
+          "boltOnCmrhOralCount": 0,
+          "boltOnCmrhOralFee": 0.1,
+          "boltOnHomeOfficeInterviewCount": 0,
+          "boltOnHomeOfficeInterviewFee": 0.1
+        }
       }
     }
   }

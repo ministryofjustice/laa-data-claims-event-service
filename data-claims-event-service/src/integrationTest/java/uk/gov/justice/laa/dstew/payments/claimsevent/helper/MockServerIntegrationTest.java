@@ -55,7 +55,7 @@ public abstract class MockServerIntegrationTest {
   private static final String API_VERSION_2 = "/api/v2/";
   private static final String DATA_SUBMISSION_API_PATH = API_VERSION_0 + "submissions/";
   private static final String DATA_CLAIMS_API_PATH = API_VERSION_0 + "claims";
-  private static final String PROVIDER_OFFICES = API_VERSION_2 + "provider-offices/";
+  private static final String PROVIDER_OFFICES = API_VERSION_1 + "provider-offices/";
   private static final String SCHEDULES_ENDPOINT = "/schedules";
   private static final String FEE_DETAILS = API_VERSION_1 + "fee-details/";
   private static final String FEE_CALCULATION = API_VERSION_1 + "fee-calculation";
@@ -122,12 +122,7 @@ public abstract class MockServerIntegrationTest {
 
   protected static @NotNull WebClient createWebClient() {
     ApiProperties apiProperties =
-        new ApiProperties(
-            mockServerContainer.getEndpoint(),
-            String.valueOf(mockServerContainer.getServerPort()),
-            0,
-            "",
-            "Authorization");
+        new ApiProperties(mockServerContainer.getEndpoint(), "", "Authorization");
     return WebClientConfiguration.createWebClient(apiProperties);
   }
 
@@ -267,6 +262,23 @@ public abstract class MockServerIntegrationTest {
                 .withHeader("Content-Type", "application/json"));
   }
 
+  protected void getStubForGetSubmissionByCriteria(
+      final List<Parameter> parameters, final String expectedResponse) throws Exception {
+    mockServerClient
+        .when(
+            HttpRequest.request()
+                .withMethod(HttpMethod.GET.toString())
+                .withPath(API_VERSION_0 + "submissions")
+                .withQueryStringParameters(parameters)
+                .withQueryStringParameters(
+                    Parameter.param("size", "0"), Parameter.param("page", "0")))
+        .respond(
+            HttpResponse.response()
+                .withStatusCode(200)
+                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
+                .withBody(json(readJsonFromFile(expectedResponse))));
+  }
+
   @TestConfiguration
   public static class ClaimsConfiguration {
 
@@ -274,21 +286,21 @@ public abstract class MockServerIntegrationTest {
     @Primary
     DataClaimsApiProperties dataClaimsApiProperties() {
       // Set using host and port running the mock server
-      return new DataClaimsApiProperties("http://localhost:30000", "localhost", 30000, "");
+      return new DataClaimsApiProperties("http://localhost:30000", "");
     }
 
     @Bean
     @Primary
     FeeSchemePlatformApiProperties feeSchemePlatformApiProperties() {
       // Set using host and port running the mock server
-      return new FeeSchemePlatformApiProperties("http://localhost:30000", "localhost", 30000, "");
+      return new FeeSchemePlatformApiProperties("http://localhost:30000", "");
     }
 
     @Bean
     @Primary
     ProviderDetailsApiProperties providerDetailsApiProperties() {
       // Set using host and port running the mock server
-      return new ProviderDetailsApiProperties("http://localhost:30000", "localhost", 30000, "");
+      return new ProviderDetailsApiProperties("http://localhost:30000", "");
     }
 
     @Bean

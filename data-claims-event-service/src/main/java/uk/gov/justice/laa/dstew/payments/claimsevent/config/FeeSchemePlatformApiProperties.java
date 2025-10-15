@@ -7,7 +7,7 @@ import org.springframework.http.HttpHeaders;
 @ConfigurationProperties(prefix = "laa.fee-scheme-platform-api")
 public class FeeSchemePlatformApiProperties extends ApiProperties {
 
-  public FeeSchemePlatformApiProperties(String url, String host, int port, String accessToken) {
-    super(url, host, port, accessToken, HttpHeaders.AUTHORIZATION);
+  public FeeSchemePlatformApiProperties(String url, String accessToken) {
+    super(url, accessToken, HttpHeaders.AUTHORIZATION);
   }
 }

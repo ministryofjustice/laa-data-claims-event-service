@@ -8,7 +8,6 @@ services:
       - SERVICES=sqs
       - DEBUG=1
       - AWS_DEFAULT_REGION=us-east-1
-
     volumes:
       - "./docker-scripts/init-localstack.sh:/etc/localstack/init/ready.d/init-localstack.sh"
       - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
@@ -39,7 +38,7 @@ services:
         "--verbose",
       ]
     volumes:
-      - ./wiremock/mappings/data-claims-api:/home/wiremock/mappings
+      - ./wiremock/mappings/fee-scheme-platform-api:/home/wiremock/mappings
     restart: always
     ports:
       - "8191:8080"

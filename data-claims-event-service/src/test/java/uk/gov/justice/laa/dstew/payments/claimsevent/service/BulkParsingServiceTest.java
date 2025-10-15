@@ -9,6 +9,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationSource.EVENT_SERVICE;
 
 import java.net.URI;
 import java.util.List;
@@ -41,6 +42,8 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.mapper.BulkSubmissionMapper
 @ExtendWith(MockitoExtension.class)
 class BulkParsingServiceTest {
 
+  private static final String BULK_SUBMISSION_CREATED_BY_USER_ID = "a-provider-user-id";
+
   @Mock private DataClaimsRestClient dataClaimsRestClient;
   @Mock private BulkSubmissionMapper mapper;
 
@@ -62,9 +65,15 @@ class BulkParsingServiceTest {
         new GetBulkSubmission200ResponseDetails().outcomes(outcomes).matterStarts(matterStarts);
 
     final GetBulkSubmission200Response bulkSubmission =
-        new GetBulkSubmission200Response().bulkSubmissionId(bulkSubmissionId).details(details);
+        new GetBulkSubmission200Response()
+            .bulkSubmissionId(bulkSubmissionId)
+            .details(details)
+            .createdByUserId(BULK_SUBMISSION_CREATED_BY_USER_ID);
 
-    final SubmissionPost submissionPost = new SubmissionPost();
+    final SubmissionPost submissionPost =
+        new SubmissionPost()
+            .bulkSubmissionId(bulkSubmissionId)
+            .providerUserId(BULK_SUBMISSION_CREATED_BY_USER_ID);
     final ClaimPost claimPost = new ClaimPost();
     claimPost.setScheduleReference("S1");
     claimPost.setLineNumber(1);
@@ -72,6 +81,7 @@ class BulkParsingServiceTest {
 
     final MatterStartPost matterStartRequest = new MatterStartPost();
     matterStartRequest.setScheduleReference("M1");
+    matterStartRequest.setCreatedByUserId(EVENT_SERVICE);
     final List<MatterStartPost> matterStartRequests = List.of(matterStartRequest);
 
     when(dataClaimsRestClient.getBulkSubmission(bulkSubmissionId))
@@ -321,7 +331,9 @@ class BulkParsingServiceTest {
   void getBulkSubmissionReturnsPayload() {
     final UUID id = UUID.randomUUID();
     final GetBulkSubmission200Response payload =
-        new GetBulkSubmission200Response().bulkSubmissionId(id);
+        new GetBulkSubmission200Response()
+            .bulkSubmissionId(id)
+            .createdByUserId(BULK_SUBMISSION_CREATED_BY_USER_ID);
 
     when(dataClaimsRestClient.getBulkSubmission(id)).thenReturn(ResponseEntity.ok(payload));
 

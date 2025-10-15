@@ -1487,9 +1487,9 @@
         "immas": "4",
         "access_point": "AP00137",
         "schedule_ref": "0U733A/2018/02",
-        "category_code": null,
+        "category_code": "CAT1",
         "procurement_area": "PA00136",
-        "delivery_location": null
+        "delivery_location": "test-loc"
       }
     ]
   },

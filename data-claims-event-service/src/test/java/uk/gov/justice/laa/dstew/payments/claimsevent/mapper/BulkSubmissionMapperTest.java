@@ -1,6 +1,7 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.mapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationSource.EVENT_SERVICE;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,11 +13,7 @@ import java.nio.file.Path;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPost;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetBulkSubmission200Response;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPost;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.*;
 
 class BulkSubmissionMapperTest {
 
@@ -54,6 +51,8 @@ class BulkSubmissionMapperTest {
     assertThat(result.getOfficeAccountNumber()).isEqualTo("2Q286D");
     assertThat(result.getStatus())
         .isEqualTo(SubmissionStatus.CREATED); // or enum value depending on type
+    assertThat(result.getProviderUserId()).isEqualTo("test123");
+    assertThat(result.getCreatedByUserId()).isEqualTo(EVENT_SERVICE);
   }
 
   @Test
@@ -70,6 +69,26 @@ class BulkSubmissionMapperTest {
     assertThat(claim.getScheduleReference()).isEqualTo("01/2Q286D/2024/01");
     assertThat(claim.getCaseReferenceNumber()).isEqualTo("JI/OKUSU");
     assertThat(claim.getUniqueFileNumber()).isEqualTo("220422/013");
+    assertThat(claim.getCreatedByUserId()).isEqualTo(EVENT_SERVICE);
+  }
+
+  @Test
+  void shouldMapBulkSubmissionResponseToMatterStarts() throws IOException {
+    String json = Files.readString(Path.of("src/test/resources/bulk-submission-response-3.json"));
+    GetBulkSubmission200Response bulkSubmission =
+        objectMapper.readValue(json, GetBulkSubmission200Response.class);
+
+    var matterStartPosts =
+        mapper.mapToMatterStartRequests(bulkSubmission.getDetails().getMatterStarts());
+
+    assertThat(matterStartPosts).hasSize(1);
+    MatterStartPost matterStartPost = matterStartPosts.getFirst();
+    assertThat(matterStartPost.getAccessPointCode()).isEqualTo("AP00137");
+    assertThat(matterStartPost.getScheduleReference()).isEqualTo("0U733A/2018/02");
+    assertThat(matterStartPost.getCategoryCode()).isEqualTo("CAT1");
+    assertThat(matterStartPost.getCreatedByUserId()).isEqualTo(EVENT_SERVICE);
+    assertThat(matterStartPost.getDeliveryLocation()).isEqualTo("test-loc");
+    assertThat(matterStartPost.getProcurementAreaCode()).isEqualTo("PA00136");
   }
 
   @Test

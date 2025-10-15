@@ -1,8 +1,11 @@
 {
   "request": {
     "method": "GET",
-    "urlPathPattern": "/api/v2/provider-offices/[a-zA-Z0-9\\-]+/schedules"
+    "urlPathPattern": "/api/v1/provider-offices/[a-zA-Z0-9\\-]+/schedules"
   },
+  "scenarioName": "get schedules",
+  "requiredScenarioState": "Started",
+  "newScenarioState": "schedule-two",
   "response": {
     "status": 200,
     "headers": {

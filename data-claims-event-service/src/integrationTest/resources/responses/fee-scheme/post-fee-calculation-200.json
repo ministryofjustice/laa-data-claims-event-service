@@ -2,9 +2,7 @@
   "feeCode": "string",
   "schemeId": "string",
   "claimId": "string",
-  "warnings": [
-    "string"
-  ],
+  "validationMessages": [],
   "escapeCaseFlag": true,
   "feeCalculation": {
     "totalAmount": 0.0,

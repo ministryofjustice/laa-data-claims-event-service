@@ -80,15 +80,32 @@ public class SubmissionValidationContext {
    * @param claimId the ID of the claim
    * @param message the error message to add
    */
-  public void addClaimError(String claimId, String message) {
+  public void addClaimError(String claimId, String message, String source) {
     addClaimMessages(
         claimId,
         List.of(
             new ValidationMessagePatch()
                 .displayMessage(message)
                 .technicalMessage(message)
-                .source(EVENT_SERVICE)
+                .source(source)
                 .type(ValidationMessageType.ERROR)));
+  }
+
+  /**
+   * Adds a claim-level warning message for a specific claim.
+   *
+   * @param claimId the ID of the claim
+   * @param message the warning message to add
+   */
+  public void addClaimWarning(String claimId, String message, String source) {
+    addClaimMessages(
+        claimId,
+        List.of(
+            new ValidationMessagePatch()
+                .displayMessage(message)
+                .technicalMessage(message)
+                .source(source)
+                .type(ValidationMessageType.WARNING)));
   }
 
   /**
@@ -160,5 +177,23 @@ public class SubmissionValidationContext {
   public boolean hasErrors() {
     return !submissionValidationErrors.isEmpty()
         || claimReports.stream().anyMatch(ClaimValidationReport::hasErrors);
+  }
+
+  /**
+   * Checks if there are any submission-level errors.
+   *
+   * @return true if there are any submission-level errors, false otherwise
+   */
+  public boolean hasSubmissionLevelErrors() {
+    return !submissionValidationErrors.isEmpty();
+  }
+
+  /**
+   * Checks if there are any claim-level errors.
+   *
+   * @return true if there are any claim-level errors, false otherwise
+   */
+  public boolean hasClaimLevelErrors() {
+    return claimReports.stream().anyMatch(ClaimValidationReport::hasErrors);
   }
 }

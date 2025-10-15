@@ -51,8 +51,7 @@ class SubmissionSchemaValidatorTest {
   void shouldHaveErrorsIfJsonSchemaValidatorReturnsErrors() {
     // Given
     // Not the usual error returned by JSON schema validator, this validator should just add
-    // whatever
-    //  the schema validator returns so this is fine.
+    // whatever the schema validator returns so this is fine.
     List<ValidationMessagePatch> emptyErrorsList =
         List.of(SubmissionValidationError.SUBMISSION_STATUS_IS_NULL.toPatch());
     SubmissionResponse submissionResponse = SubmissionResponse.builder().build();
