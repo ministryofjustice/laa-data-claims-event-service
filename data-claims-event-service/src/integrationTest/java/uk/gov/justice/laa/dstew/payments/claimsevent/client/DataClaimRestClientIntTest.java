@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockserver.model.HttpRequest;
 import org.mockserver.model.Parameter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -62,8 +63,13 @@ public class DataClaimRestClientIntTest extends MockServerIntegrationTest {
             20,
             "asc");
 
-    assertThat(actualResults.getStatusCode()).isEqualTo(HttpStatus.OK);
+    // 🔍 Log received requests to help debug stub matching
+    HttpRequest[] recordedRequests = mockServerClient.retrieveRecordedRequests(null);
+    for (HttpRequest request : recordedRequests) {
+      System.out.println("Received request: " + request);
+    }
 
+    assertThat(actualResults.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(actualResults.getBody().getContent().get(0).getSubmissionId())
         .isEqualTo(UUID.fromString("0561d67b-30ed-412e-8231-f6296a53538d"));
   }
