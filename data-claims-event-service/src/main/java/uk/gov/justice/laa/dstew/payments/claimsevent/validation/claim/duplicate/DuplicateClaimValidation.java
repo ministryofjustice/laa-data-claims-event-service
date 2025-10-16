@@ -1,22 +1,35 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationType;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
+import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
 
 /** Base class for duplicate claim validation. */
 public abstract class DuplicateClaimValidation {
 
+  private static final String DISBURSEMENT_FEE_TYPE =
+      FeeCalculationType.DISBURSEMENT_ONLY.toString();
   protected static final List<ClaimStatus> listOfNonInvalidStatus =
       List.of(ClaimStatus.READY_TO_PROCESS, ClaimStatus.VALID);
 
   protected final DataClaimsRestClient dataClaimsRestClient;
+  private FeeSchemePlatformRestClient feeSchemePlatformRestClient;
 
   protected DuplicateClaimValidation(DataClaimsRestClient dataClaimsRestClient) {
     this.dataClaimsRestClient = dataClaimsRestClient;
+  }
+
+  protected DuplicateClaimValidation(
+      final DataClaimsRestClient dataClaimsRestClient,
+      final FeeSchemePlatformRestClient feeSchemePlatformRestClient) {
+    this(dataClaimsRestClient);
+    this.feeSchemePlatformRestClient = feeSchemePlatformRestClient;
   }
 
   /**
@@ -86,5 +99,20 @@ public abstract class DuplicateClaimValidation {
         .stream()
         .filter(prevClaim -> !submissionClaims.contains(prevClaim))
         .toList();
+  }
+
+  /**
+   * Determines if the provided claim is a disbursement claim by verifying the fee type associated with the claim.
+   *
+   * @param currentClaim the claim to verify if it is a disbursement claim
+   * @return {@code true} if the claim is a disbursement claim, {@code false} otherwise
+   */
+
+  protected Boolean isDisbursementClaim(final ClaimResponse currentClaim) {
+    return Objects.equals(
+        Objects.requireNonNull(
+                feeSchemePlatformRestClient.getFeeDetails(currentClaim.getFeeCode()).getBody())
+            .getFeeType(),
+        DISBURSEMENT_FEE_TYPE);
   }
 }

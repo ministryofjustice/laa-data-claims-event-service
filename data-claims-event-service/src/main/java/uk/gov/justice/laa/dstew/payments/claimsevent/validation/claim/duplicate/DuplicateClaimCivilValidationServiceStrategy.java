@@ -2,7 +2,6 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,14 +20,11 @@ public class DuplicateClaimCivilValidationServiceStrategy extends DuplicateClaim
   private static final String DISBURSEMENT_FEE_TYPE =
       FeeCalculationType.DISBURSEMENT_ONLY.toString();
 
-  private final FeeSchemePlatformRestClient feeSchemePlatformRestClient;
-
   @Autowired
   public DuplicateClaimCivilValidationServiceStrategy(
       final DataClaimsRestClient dataClaimsRestClient,
       final FeeSchemePlatformRestClient feeSchemePlatformRestClient) {
-    super(dataClaimsRestClient);
-    this.feeSchemePlatformRestClient = feeSchemePlatformRestClient;
+    super(dataClaimsRestClient, feeSchemePlatformRestClient);
   }
 
   @Override
@@ -56,13 +52,5 @@ public class DuplicateClaimCivilValidationServiceStrategy extends DuplicateClaim
               currentClaim.getId(),
               ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_ANOTHER_SUBMISSION);
         });
-  }
-
-  private Boolean isDisbursementClaim(final ClaimResponse currentClaim) {
-    return Objects.equals(
-        Objects.requireNonNull(
-                feeSchemePlatformRestClient.getFeeDetails(currentClaim.getFeeCode()).getBody())
-            .getFeeType(),
-        DISBURSEMENT_FEE_TYPE);
   }
 }

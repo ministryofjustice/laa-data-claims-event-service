@@ -6,12 +6,10 @@ import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
@@ -23,11 +21,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 public class DuplicateClaimCivilDisbursementValidationStrategy extends DuplicateClaimValidation
     implements CivilDuplicateClaimValidationStrategy {
 
-  private static final String DISBURSEMENT_FEE_TYPE =
-      FeeCalculationType.DISBURSEMENT_ONLY.toString();
   private static final int MAXIMUM_MONTHS_DIFFERENCE = 3;
-
-  private final FeeSchemePlatformRestClient feeSchemePlatformRestClient;
 
   private final DateTimeFormatter formatter;
 
@@ -41,8 +35,7 @@ public class DuplicateClaimCivilDisbursementValidationStrategy extends Duplicate
   public DuplicateClaimCivilDisbursementValidationStrategy(
       final DataClaimsRestClient dataClaimsRestClient,
       final FeeSchemePlatformRestClient feeSchemePlatformRestClient) {
-    super(dataClaimsRestClient);
-    this.feeSchemePlatformRestClient = feeSchemePlatformRestClient;
+    super(dataClaimsRestClient, feeSchemePlatformRestClient);
     formatter =
         new DateTimeFormatterBuilder()
             .parseCaseInsensitive()
@@ -97,13 +90,5 @@ public class DuplicateClaimCivilDisbursementValidationStrategy extends Duplicate
     long monthsDifference =
         YearMonth.from(duplicateClaimYearMonth).until(currentClaimYearMonth, ChronoUnit.MONTHS);
     return monthsDifference < MAXIMUM_MONTHS_DIFFERENCE;
-  }
-
-  private Boolean isDisbursementClaim(final ClaimResponse currentClaim) {
-    return Objects.equals(
-        Objects.requireNonNull(
-                feeSchemePlatformRestClient.getFeeDetails(currentClaim.getFeeCode()).getBody())
-            .getFeeType(),
-        DISBURSEMENT_FEE_TYPE);
   }
 }
