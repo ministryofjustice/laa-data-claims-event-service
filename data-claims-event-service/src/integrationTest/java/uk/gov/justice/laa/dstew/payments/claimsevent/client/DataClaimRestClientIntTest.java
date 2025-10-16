@@ -52,8 +52,6 @@ public class DataClaimRestClientIntTest extends MockServerIntegrationTest {
     var params = new java.util.ArrayList<Parameter>();
     params.add(Parameter.param("offices", offices));
     params.add(Parameter.param("submission_id", submissionId));
-    params.add(Parameter.param("submitted_date_from", submittedDateFrom.format(formatter)));
-    params.add(Parameter.param("submitted_date_to", submittedDateTo.format(formatter)));
     params.add(Parameter.param("area_of_law", areaOfLaw));
     params.add(Parameter.param("submission_period", submissionPeriod));
 
@@ -66,15 +64,7 @@ public class DataClaimRestClientIntTest extends MockServerIntegrationTest {
 
     var actualResults =
         dataClaimsRestClient.getSubmissions(
-            offices,
-            submissionId,
-            submittedDateFrom,
-            submittedDateTo,
-            areaOfLaw,
-            submissionPeriod,
-            page,
-            size,
-            sort);
+            offices, submissionId, null, null, areaOfLaw, submissionPeriod, page, size, sort);
 
     assertThat(actualResults.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(actualResults.getBody().getContent().get(0).getSubmissionId())
