@@ -5,6 +5,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,7 +38,7 @@ public class DataClaimRestClientIntTest extends MockServerIntegrationTest {
       "should return 200 when Data claim rest client is called for submission matching the criteria")
   @Test
   public void shouldReturnListOfSubmissionMatchingTheCriteria() throws Exception {
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.UK);
 
     getStubForGetSubmissionByCriteria(
         List.of(
