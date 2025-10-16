@@ -59,7 +59,7 @@ public class SubmissionOfficeAreaOfLawAndPeriodValidatorTest {
     @Test
     void shouldAcceptSubmission() {
       when(mockDataClaimsRestClient.getSubmissions(
-              any(), any(), any(), any(), any(), any(), anyInt(), anyInt(), any()))
+              any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(new SubmissionsResultSet())));
 
       var submissionValidationContext = new SubmissionValidationContext();
@@ -82,8 +82,8 @@ public class SubmissionOfficeAreaOfLawAndPeriodValidatorTest {
               any(),
               areaOfLawCaptor.capture(),
               submissionPeriodCaptor.capture(),
-              anyInt(),
-              anyInt(),
+              any(),
+              any(),
               any());
       assertThat(officeCodeCaptor.getValue()).contains(OFFICE_CODE);
       assertThat(areaOfLawCaptor.getValue()).isEqualTo(AREA_OF_LAW);
@@ -101,7 +101,7 @@ public class SubmissionOfficeAreaOfLawAndPeriodValidatorTest {
               .submissionPeriod(SUBMISSION_PERIOD)
               .status(SubmissionStatus.VALIDATION_SUCCEEDED);
       when(mockDataClaimsRestClient.getSubmissions(
-              any(), any(), any(), any(), any(), any(), anyInt(), anyInt(), any()))
+              any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(
               ResponseEntity.of(
                   Optional.of(
@@ -148,7 +148,7 @@ public class SubmissionOfficeAreaOfLawAndPeriodValidatorTest {
               .submissionPeriod(SUBMISSION_PERIOD)
               .status(status);
       when(mockDataClaimsRestClient.getSubmissions(
-              any(), any(), any(), any(), any(), any(), anyInt(), anyInt(), any()))
+              any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(
               ResponseEntity.of(
                   Optional.of(

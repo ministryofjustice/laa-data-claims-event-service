@@ -57,10 +57,6 @@ public class SubmissionValidationService {
     // Only validate claims if no submission level validation errors have been recorded.
     if (!context.hasSubmissionLevelErrors()) {
       claimValidationService.validateClaims(submission, context);
-
-      // TODO: Send through all claim errors in the patch request.
-      // TODO: Verify all claims have been validated, and update submission status to
-      updateClaims(submission, context);
     }
 
     // Update submission status after completion
@@ -73,13 +69,12 @@ public class SubmissionValidationService {
       submissionPatch
           .status(SubmissionStatus.VALIDATION_FAILED)
           .validationMessages(context.getSubmissionValidationErrors());
-      // todo we need to patch the claim status to INVALID but not add any claim level validation
-      // errors
     } else {
       log.debug("Validation completed for submission {} with no errors", submissionId);
       submissionPatch.status(SubmissionStatus.VALIDATION_SUCCEEDED);
     }
 
+    updateClaims(submission, context);
     dataClaimsRestClient.updateSubmission(submissionId.toString(), submissionPatch);
     return context;
   }
@@ -140,7 +135,7 @@ public class SubmissionValidationService {
   }
 
   private ClaimStatus getClaimStatus(String claimId, SubmissionValidationContext context) {
-    if (context.hasErrors(claimId)) {
+    if (context.hasSubmissionLevelErrors() || context.hasErrors(claimId)) {
       return ClaimStatus.INVALID;
     } else {
       return ClaimStatus.VALID;
