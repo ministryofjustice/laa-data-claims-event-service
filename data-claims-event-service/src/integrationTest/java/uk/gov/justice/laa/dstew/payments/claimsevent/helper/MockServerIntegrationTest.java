@@ -14,6 +14,8 @@ import java.time.Duration;
 import java.time.YearMonth;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -91,6 +93,9 @@ public abstract class MockServerIntegrationTest {
 
   @BeforeAll
   void beforeEveryTest() {
+    TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+    Locale.setDefault(Locale.UK);
+
     // Skip tests if Docker is unavailable
     Assumptions.assumeTrue(
         DockerClientFactory.instance().isDockerAvailable(),

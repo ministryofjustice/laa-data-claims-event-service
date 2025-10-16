@@ -28,9 +28,6 @@ public class DataClaimRestClientIntTest extends MockServerIntegrationTest {
   @Autowired private DataClaimsRestClient dataClaimsRestClient;
   private static final List<String> offices = List.of("office1");
   private static final String submissionId = "f6bde766-a0a3-483b-bf13-bef888b4f06e";
-  private static final LocalDate submittedDateFrom = LocalDate.of(2025, 1, 1);
-
-  private static final LocalDate submittedDateTo = LocalDate.of(2025, 12, 29);
   private static final String areaOfLaw = "CIVIL";
   private static final String submissionPeriod = "2025-07";
 
@@ -48,10 +45,14 @@ public class DataClaimRestClientIntTest extends MockServerIntegrationTest {
       throws Exception {
 
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    LocalDate submittedDateFrom = LocalDate.of(2025, 1, 1);
+    LocalDate submittedDateTo = LocalDate.of(2025, 12, 29);
 
     var params = new java.util.ArrayList<Parameter>();
     params.add(Parameter.param("offices", offices));
     params.add(Parameter.param("submission_id", submissionId));
+    params.add(Parameter.param("submitted_date_from", submittedDateFrom.format(formatter)));
+    params.add(Parameter.param("submitted_date_to", submittedDateTo.format(formatter)));
     params.add(Parameter.param("area_of_law", areaOfLaw));
     params.add(Parameter.param("submission_period", submissionPeriod));
 
@@ -64,7 +65,15 @@ public class DataClaimRestClientIntTest extends MockServerIntegrationTest {
 
     var actualResults =
         dataClaimsRestClient.getSubmissions(
-            offices, submissionId, null, null, areaOfLaw, submissionPeriod, page, size, sort);
+            offices,
+            submissionId,
+            submittedDateFrom,
+            submittedDateTo,
+            areaOfLaw,
+            submissionPeriod,
+            page,
+            size,
+            sort);
 
     assertThat(actualResults.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(actualResults.getBody().getContent().get(0).getSubmissionId())
