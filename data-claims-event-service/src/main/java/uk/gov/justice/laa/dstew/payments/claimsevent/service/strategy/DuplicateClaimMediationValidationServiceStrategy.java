@@ -51,18 +51,12 @@ public class DuplicateClaimMediationValidationServiceStrategy extends DuplicateC
 
     List<ClaimResponse> duplicateClaimsInPreviousSubmission =
         getDuplicateClaimsInPreviousSubmission(
-                officeCode,
-                submittedClaim.getFeeCode(),
-                submittedClaim.getUniqueFileNumber(),
-                submittedClaim.getUniqueClientNumber(),
-                submittedClaim.getUniqueCaseId(),
-                submissionClaims)
-            .stream()
-            .filter(
-                duplicateClaim ->
-                    Objects.equals(
-                        duplicateClaim.getUniqueCaseId(), submittedClaim.getUniqueCaseId()))
-            .toList();
+            officeCode,
+            submittedClaim.getFeeCode(),
+            null,
+            null,
+            submittedClaim.getUniqueCaseId(),
+            submissionClaims);
 
     duplicateClaimsInThisSubmission.forEach(
         duplicateClaim -> {

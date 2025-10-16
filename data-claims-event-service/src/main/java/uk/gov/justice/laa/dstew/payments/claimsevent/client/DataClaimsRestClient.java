@@ -130,6 +130,7 @@ public interface DataClaimsRestClient {
    * @param feeCode the fee code of the claims to be retrieved
    * @param uniqueFileNumber the unique file number of the claims to be retrieved
    * @param uniqueClientNumber the unique client number of the claims to be retrieved
+   * @param uniqueCaseId the unique case id of the retrieved claims
    * @param claimStatuses the claim statuses
    * @param pageable the pageable object containing the page number and page size
    * @return 200 OK with JSON body containing the list of matched claims
@@ -170,6 +171,7 @@ public interface DataClaimsRestClient {
    * @param feeCode the fee code of the claims to be retrieved
    * @param uniqueFileNumber the unique file number of the claims to be retrieved
    * @param uniqueClientNumber the unique client number of the claims to be retrieved
+   * @param uniqueCaseId the unique case id of the retrieved claims
    * @param claimStatuses the claim statuses
    * @param page the page number
    * @param size the page size
