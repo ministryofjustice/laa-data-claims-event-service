@@ -55,8 +55,8 @@ public class DataClaimRestClientIntTest extends MockServerIntegrationTest {
             submittedDateTo,
             areaOfLaw,
             submissionPeriod,
-            null,
-            null,
+            0,
+            0,
             null);
 
     assertThat(actualResults.getStatusCode()).isEqualTo(HttpStatus.OK);
