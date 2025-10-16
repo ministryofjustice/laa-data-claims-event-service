@@ -60,7 +60,8 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
               "070722/001",
               "CLI001",
               ClaimStatus.READY_TO_PROCESS,
-              "MAY-2025");
+              "MAY-2025",
+              null);
       stubIsDisbursementClaim(false);
       SubmissionValidationContext context = new SubmissionValidationContext();
       // When
@@ -85,7 +86,8 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
               "070722/001",
               "CLI001",
               ClaimStatus.READY_TO_PROCESS,
-              "MAY-2025");
+              "MAY-2025",
+              null);
       stubIsDisbursementClaim(true);
       SubmissionValidationContext context = new SubmissionValidationContext();
 
@@ -116,7 +118,8 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
               "070722/001",
               "CLI001",
               ClaimStatus.READY_TO_PROCESS,
-              "MAY-2025");
+              "MAY-2025",
+              null);
       var previousClaim =
           createClaim(
               "claimId1",
@@ -124,7 +127,8 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
               "070722/001",
               "CLI001",
               ClaimStatus.READY_TO_PROCESS,
-              "MAY-2025");
+              "MAY-2025",
+              null);
       stubIsDisbursementClaim(true);
       SubmissionValidationContext context = new SubmissionValidationContext();
 
@@ -153,7 +157,8 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
               "070722/001",
               "CLI001",
               ClaimStatus.READY_TO_PROCESS,
-              "MAY-2025");
+              "MAY-2025",
+              null);
       var duplicateClaimOnPreviousSubmission =
           createClaim(
               "claimId1",
@@ -161,7 +166,8 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
               "070722/001",
               "CLI001",
               ClaimStatus.READY_TO_PROCESS,
-              "FEB-2025");
+              "FEB-2025",
+              null);
       stubIsDisbursementClaim(true);
       SubmissionValidationContext context = new SubmissionValidationContext();
 
@@ -192,7 +198,8 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
               "070722/001",
               "CLI001",
               ClaimStatus.READY_TO_PROCESS,
-              "MAY-2025");
+              "MAY-2025",
+              null);
       var duplicateClaimOnPreviousSubmission =
           createClaim(
               "claimId1",
@@ -200,7 +207,8 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
               "070722/001",
               "CLI001",
               ClaimStatus.READY_TO_PROCESS,
-              "MAY-2024");
+              "MAY-2024",
+              null);
       stubIsDisbursementClaim(true);
       SubmissionValidationContext context = new SubmissionValidationContext();
 
@@ -236,7 +244,8 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
               "070722/001",
               "CLI001",
               ClaimStatus.READY_TO_PROCESS,
-              "MAY-2025");
+              "MAY-2025",
+              null);
       var duplicateClaimOnPreviousSubmission =
           createClaim(
               "claimId1",
@@ -244,7 +253,8 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
               "070722/001",
               "CLI001",
               ClaimStatus.READY_TO_PROCESS,
-              "MAR-2025");
+              "MAR-2025",
+              null);
       stubIsDisbursementClaim(true);
       SubmissionValidationContext context = new SubmissionValidationContext();
 

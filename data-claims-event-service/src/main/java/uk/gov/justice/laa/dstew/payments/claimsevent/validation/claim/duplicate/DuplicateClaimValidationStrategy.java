@@ -43,6 +43,7 @@ public interface DuplicateClaimValidationStrategy {
     List<String> strategies = new ArrayList<>();
     strategies.addAll(StrategyTypes.CRIME);
     strategies.addAll(StrategyTypes.CIVIL);
+    strategies.addAll(StrategyTypes.MEDIATION);
     return strategies;
   }
 }
