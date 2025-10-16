@@ -269,9 +269,7 @@ public abstract class MockServerIntegrationTest {
             HttpRequest.request()
                 .withMethod(HttpMethod.GET.toString())
                 .withPath(API_VERSION_0 + "submissions")
-                .withQueryStringParameters(parameters)
-                .withQueryStringParameters(
-                    Parameter.param("size", "0"), Parameter.param("page", "0")))
+                .withQueryStringParameters(parameters))
         .respond(
             HttpResponse.response()
                 .withStatusCode(200)

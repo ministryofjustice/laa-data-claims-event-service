@@ -77,8 +77,8 @@ public class DuplicateClaimsTest extends MockServerIntegrationTest {
       getStubForGetSubmissionByCriteria(
           List.of(
               Parameter.param("offices", OFFICE_CODE),
-              Parameter.param("area-of-law", AREA_OF_LAW),
-              Parameter.param("submission-period", SUBMISSION_PERIOD)),
+              Parameter.param("area_of_law", AREA_OF_LAW),
+              Parameter.param("submission_period", SUBMISSION_PERIOD)),
           "data-claims/get-submission/get-submissions-by-filter_no_content.json");
 
       var actualValidationContext = submissionValidationService.validateSubmission(submissionId);

@@ -72,8 +72,8 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
       getStubForGetSubmissionByCriteria(
           List.of(
               Parameter.param("offices", OFFICE_CODE),
-              Parameter.param("area-of-law", AREA_OF_LAW),
-              Parameter.param("submission-period", "MAY-2025")),
+              Parameter.param("area_of_law", AREA_OF_LAW),
+              Parameter.param("submission_period", "MAY-2025")),
           "data-claims/get-submission/get-submissions-by-filter_no_content.json");
 
       // When
@@ -98,8 +98,8 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
       getStubForGetSubmissionByCriteria(
           List.of(
               Parameter.param("offices", OFFICE_CODE),
-              Parameter.param("area-of-law", AREA_OF_LAW),
-              Parameter.param("submission-period", "SEP-2025")),
+              Parameter.param("area_of_law", AREA_OF_LAW),
+              Parameter.param("submission_period", "SEP-2025")),
           "data-claims/get-submission/get-submissions-by-filter_no_content.json");
 
       // When

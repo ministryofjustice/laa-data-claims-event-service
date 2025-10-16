@@ -47,8 +47,8 @@ public class SubmissionOfficeAreaOfLawAndPeriodValidator implements SubmissionVa
                 null,
                 submission.getAreaOfLaw(),
                 submission.getSubmissionPeriod(),
-                0,
-                0,
+                null,
+                null,
                 null)
             .getBody()
             .getContent()
