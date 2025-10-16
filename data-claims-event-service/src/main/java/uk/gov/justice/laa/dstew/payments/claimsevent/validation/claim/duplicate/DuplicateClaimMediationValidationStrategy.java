@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate;
 
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
@@ -7,29 +8,31 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
-import java.util.List;
-
 @Service
 @Slf4j
-public class DuplicateClaimMediationValidationStrategy extends DuplicateClaimValidation implements MediationDuplicateClaimValidationStrategy {
+public class DuplicateClaimMediationValidationStrategy extends DuplicateClaimValidation
+    implements MediationDuplicateClaimValidationStrategy {
   protected DuplicateClaimMediationValidationStrategy(DataClaimsRestClient dataClaimsRestClient) {
     super(dataClaimsRestClient);
   }
 
   @Override
-  public void validateDuplicateClaims(ClaimResponse claim, List<ClaimResponse> submissionClaims, String officeCode, SubmissionValidationContext context) {
-    List<ClaimResponse> claimsWithValidStatus
-        = filterCurrentClaimWithValidStatusAndWithinPeriod(claim, submissionClaims);
+  public void validateDuplicateClaims(
+      ClaimResponse claim,
+      List<ClaimResponse> submissionClaims,
+      String officeCode,
+      SubmissionValidationContext context) {
+    List<ClaimResponse> claimsWithValidStatus =
+        filterCurrentClaimWithValidStatusAndWithinPeriod(claim, submissionClaims);
     String feeCode = claim.getFeeCode();
     String uniqueCaseId = claim.getUniqueCaseId();
-
 
     List<ClaimResponse> submissionDuplicateClaims =
         getDuplicateClaimsInCurrentSubmission(
             claimsWithValidStatus,
             claimToCompare ->
                 feeCode.equals(claimToCompare.getFeeCode())
-                  && uniqueCaseId.equals(claimToCompare.getUniqueCaseId()));
+                    && uniqueCaseId.equals(claimToCompare.getUniqueCaseId()));
 
     List<ClaimResponse> officeDuplicateClaims =
         getDuplicateClaimsInPreviousSubmission(

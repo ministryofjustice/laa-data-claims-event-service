@@ -1,5 +1,13 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -14,17 +22,9 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.strategy.AbstractDuplicateClaimValidatorStrategy;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-
 @ExtendWith(MockitoExtension.class)
-class DuplicateClaimMediationValidationStrategyTest extends AbstractDuplicateClaimValidatorStrategy {
+class DuplicateClaimMediationValidationStrategyTest
+    extends AbstractDuplicateClaimValidatorStrategy {
   @Mock DataClaimsRestClient dataClaimsRestClient;
 
   @InjectMocks DuplicateClaimMediationValidationStrategy duplicateClaimMediationValidationStrategy;
@@ -57,10 +57,9 @@ class DuplicateClaimMediationValidationStrategyTest extends AbstractDuplicateCla
       SubmissionValidationContext context = new SubmissionValidationContext();
 
       when(dataClaimsRestClient.getClaims(
-          any(), any(), any(), any(), any(), any(), any(), any(), any()))
+              any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(
-              ResponseEntity.of(
-                  Optional.of(new ClaimResultSet().content(List.of(claim2)))));
+              ResponseEntity.of(Optional.of(new ClaimResultSet().content(List.of(claim2)))));
       // When
       duplicateClaimMediationValidationStrategy.validateDuplicateClaims(
           claimTobeProcessed, List.of(claimTobeProcessed, claim2), "1", context);
@@ -69,12 +68,10 @@ class DuplicateClaimMediationValidationStrategyTest extends AbstractDuplicateCla
       assertThat(context.hasErrors()).isFalse();
       verify(dataClaimsRestClient, times(1))
           .getClaims(any(), any(), any(), any(), any(), any(), any(), any(), any());
-
     }
 
     @Test
-    @DisplayName(
-        "Duplicate detected against a previously submitted submission claims")
+    @DisplayName("Duplicate detected against a previously submitted submission claims")
     void shouldErrorWhenDuplicateDetectedAgainstAPreviouslySubmittedSubmissionClaims() {
       // Given
       var claimTobeProcessed =
@@ -98,8 +95,9 @@ class DuplicateClaimMediationValidationStrategyTest extends AbstractDuplicateCla
       SubmissionValidationContext context = new SubmissionValidationContext();
 
       when(dataClaimsRestClient.getClaims(
-          any(), any(), any(), any(), any(), any(), any(), any(), any()))
-          .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet().content(List.of(claim2)))));
+              any(), any(), any(), any(), any(), any(), any(), any(), any()))
+          .thenReturn(
+              ResponseEntity.of(Optional.of(new ClaimResultSet().content(List.of(claim2)))));
       // When
       duplicateClaimMediationValidationStrategy.validateDuplicateClaims(
           claimTobeProcessed, Collections.emptyList(), "1", context);
@@ -135,7 +133,7 @@ class DuplicateClaimMediationValidationStrategyTest extends AbstractDuplicateCla
       SubmissionValidationContext context = new SubmissionValidationContext();
 
       when(dataClaimsRestClient.getClaims(
-          any(), any(), any(), any(), any(), any(), any(), any(), any()))
+              any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(
               ResponseEntity.of(
                   Optional.of(new ClaimResultSet().content(Collections.emptyList()))));
