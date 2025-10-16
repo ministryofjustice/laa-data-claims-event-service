@@ -3,12 +3,12 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.client;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockserver.model.HttpRequest;
 import org.mockserver.model.Parameter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -39,13 +39,14 @@ public class DataClaimRestClientIntTest extends MockServerIntegrationTest {
       "should return 200 when Data claim rest client is called for submission matching the criteria")
   @Test
   public void shouldReturnListOfSubmissionMatchingTheCriteria() throws Exception {
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     getStubForGetSubmissionByCriteria(
         List.of(
             Parameter.param("offices", offices),
             Parameter.param("submission_id", submissionId),
-            Parameter.param("submitted_date_from", "01/01/2025"),
-            Parameter.param("submitted_date_to", "29/12/2025"),
+            Parameter.param("submitted_date_from", submittedDateFrom.format(formatter)),
+            Parameter.param("submitted_date_to", submittedDateTo.format(formatter)),
             Parameter.param("area_of_law", areaOfLaw),
             Parameter.param("submission_period", submissionPeriod),
             Parameter.param("page", "0"),
@@ -64,12 +65,6 @@ public class DataClaimRestClientIntTest extends MockServerIntegrationTest {
             0,
             20,
             "asc");
-
-    // 🔍 Log received requests to help debug stub matching
-    HttpRequest[] recordedRequests = mockServerClient.retrieveRecordedRequests(null);
-    for (HttpRequest request : recordedRequests) {
-      log.info("Received request: " + request);
-    }
 
     assertThat(actualResults.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(actualResults.getBody().getContent().get(0).getSubmissionId())

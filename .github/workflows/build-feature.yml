@@ -21,7 +21,7 @@ jobs:
       contents: write
       packages: write
     with:
-      integration_test_task: "integrationTest --info --stacktrace"
+      integration_test_task: "integrationTest"
       publish_package: 'false'
       junit_results_path: 'data-claims-event-service/build/test-results'
       junit_report_path: 'data-claims-event-service/build/reports/tests'
