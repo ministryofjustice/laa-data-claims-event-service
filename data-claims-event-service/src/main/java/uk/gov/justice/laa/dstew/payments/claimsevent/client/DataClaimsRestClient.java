@@ -101,8 +101,8 @@ public interface DataClaimsRestClient {
       @RequestParam(value = "submitted_date_to", required = false) LocalDate submittedDateTo,
       @RequestParam(value = "area_of_law", required = false) String areaOfLaw,
       @RequestParam(value = "submission_period", required = false) String submissionPeriod,
-      @RequestParam(value = "page", required = false) int page,
-      @RequestParam(value = "size", required = false) int size,
+      @RequestParam(value = "page", required = false) Integer page,
+      @RequestParam(value = "size", required = false) Integer size,
       @RequestParam(value = "sort", required = false) String sort);
 
   /**

@@ -80,7 +80,8 @@ class SubmissionValidationServiceTest {
       assertContextClaimError(
           submissionValidationContext, SubmissionValidationError.SUBMISSION_PERIOD_MISSING);
       verify(claimValidationService, times(0)).validateClaims(any(), any());
-      verify(dataClaimsRestClient, times(0)).updateClaim(any(), any(), any());
+      // we need to update and mark the claims as invalid when the submission is invalid.
+      verify(dataClaimsRestClient, times(1)).updateClaim(any(), any(), any());
     }
 
     @Test

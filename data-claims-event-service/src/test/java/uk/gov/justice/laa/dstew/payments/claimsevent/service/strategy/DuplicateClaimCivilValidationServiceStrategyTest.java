@@ -104,7 +104,8 @@ class DuplicateClaimCivilValidationServiceStrategyTest
           List.of(
               SubmissionStatus.CREATED,
               SubmissionStatus.VALIDATION_IN_PROGRESS,
-              SubmissionStatus.READY_FOR_VALIDATION),
+              SubmissionStatus.READY_FOR_VALIDATION,
+              SubmissionStatus.VALIDATION_SUCCEEDED),
           submissionStatusArgumentCaptor.getValue());
 
       assertThat(context.hasErrors()).isFalse();
