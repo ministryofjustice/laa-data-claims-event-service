@@ -44,7 +44,9 @@ public class DataClaimRestClientIntTest extends MockServerIntegrationTest {
             Parameter.param("submitted_date_from", "01/01/2025"),
             Parameter.param("submitted_date_to", "29/12/2025"),
             Parameter.param("area_of_law", areaOfLaw),
-            Parameter.param("submission_period", submissionPeriod)),
+            Parameter.param("submission_period", submissionPeriod),
+            Parameter.param("page", "0"),
+            Parameter.param("size", "20")),
         "data-claims/get-submission/get-submissions-by-filter.json");
 
     var actualResults =
@@ -56,7 +58,7 @@ public class DataClaimRestClientIntTest extends MockServerIntegrationTest {
             areaOfLaw,
             submissionPeriod,
             0,
-            0,
+            20,
             null);
 
     assertThat(actualResults.getStatusCode()).isEqualTo(HttpStatus.OK);
