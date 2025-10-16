@@ -8,6 +8,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
+/** Duplicate claims Validation Mediation Strategy. */
 @Service
 @Slf4j
 public class DuplicateClaimMediationValidationStrategy extends DuplicateClaimValidation
