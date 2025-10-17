@@ -1,4 +1,5 @@
 replicas: 1
-mainReleaseName: uat
+metrics:
+  mainReleaseName: uat
 
 serviceAccountName: claims-event-service-uat-irsa-serviceaccount
