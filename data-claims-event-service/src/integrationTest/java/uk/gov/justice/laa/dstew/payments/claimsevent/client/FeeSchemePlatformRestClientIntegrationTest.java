@@ -51,13 +51,7 @@ class FeeSchemePlatformRestClientIntegrationTest extends MockServerIntegrationTe
 
       String expectedBody = readJsonFromFile("fee-scheme/get-fee-details-200.json");
 
-      mockServerClient
-          .when(HttpRequest.request().withMethod("GET").withPath("/api/v1/fee-details/" + feeCode))
-          .respond(
-              HttpResponse.response()
-                  .withStatusCode(200)
-                  .withHeader("Content-Type", "application/json")
-                  .withBody(expectedBody));
+      stubForGetFeeDetails(feeCode, expectedBody);
 
       // When
       ResponseEntity<FeeDetailsResponse> result =
@@ -80,13 +74,7 @@ class FeeSchemePlatformRestClientIntegrationTest extends MockServerIntegrationTe
 
       String expectedBody = readJsonFromFile("fee-scheme/get-fee-details-200.json");
 
-      mockServerClient
-          .when(HttpRequest.request().withMethod("GET").withPath("/api/v1/fee-details/" + feeCode))
-          .respond(
-              HttpResponse.response()
-                  .withStatusCode(statusCode)
-                  .withHeader("Content-Type", "application/json")
-                  .withBody(expectedBody));
+      stubForGetFeeDetails(feeCode, expectedBody);
 
       // When
       ThrowingCallable result = () -> feeSchemePlatformRestClient.getFeeDetails(feeCode);
