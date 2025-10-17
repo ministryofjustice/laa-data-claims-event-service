@@ -28,6 +28,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
+import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.submission.SubmissionValidator;
@@ -41,13 +42,18 @@ class SubmissionValidationServiceTest {
 
   @Mock private SubmissionValidator submissionValidator;
 
+  @Mock private EventServiceMetricService eventServiceMetricService;
+
   private SubmissionValidationService submissionValidationService;
 
   @BeforeEach
   void beforeEach() {
     submissionValidationService =
         new SubmissionValidationService(
-            claimValidationService, dataClaimsRestClient, singletonList(submissionValidator));
+            claimValidationService,
+            dataClaimsRestClient,
+            singletonList(submissionValidator),
+            eventServiceMetricService);
   }
 
   @Nested
