@@ -1,4 +1,6 @@
 clusterDomain: apps.live.cloud-platform.service.justice.gov.uk
+metrics:
+  mainReleaseName: production
 
 image:
   repository: ""
