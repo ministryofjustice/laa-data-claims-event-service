@@ -12,6 +12,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.MatterStartPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPost;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.mapper.BulkSubmissionMapper;
+import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
 
 /** Temporary service used to manually trigger parsing of a bulk submission. */
 @Service
@@ -28,8 +29,9 @@ public class TempService extends BulkParsingService {
    */
   public TempService(
       final DataClaimsRestClient dataClaimsRestClient,
-      final BulkSubmissionMapper bulkSubmissionMapper) {
-    super(dataClaimsRestClient, bulkSubmissionMapper);
+      final BulkSubmissionMapper bulkSubmissionMapper,
+      final EventServiceMetricService eventServiceMetricService) {
+    super(dataClaimsRestClient, bulkSubmissionMapper, eventServiceMetricService);
     this.bulkSubmissionMapper = bulkSubmissionMapper;
   }
 
