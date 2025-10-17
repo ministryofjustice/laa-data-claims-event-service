@@ -1117,8 +1117,8 @@
     "list": [
       {
         "current": {
-          "text": "{{ .Values.global.mainReleaseName }}",
-          "value": "{{ .Values.global.mainReleaseName }}"
+          "text": "{{ .Values.metrics.mainReleaseName }}-{{ .Chart.Name }}",
+          "value": "{{ .Values.metrics.mainReleaseName }}-{{ .Chart.Name }}"
         },
         "definition": "label_values(kube_pod_container_info{namespace=\"{{ .Release.Namespace }}\"},container)",
         "description": "",
