@@ -66,6 +66,7 @@ public abstract class DuplicateClaimValidation {
       final String feeCode,
       final String uniqueFileNumber,
       final String uniqueClientNumber,
+      final String uniqueCaseId,
       final List<ClaimResponse> submissionClaims) {
     return dataClaimsRestClient
         .getClaims(
@@ -79,6 +80,7 @@ public abstract class DuplicateClaimValidation {
             feeCode,
             uniqueFileNumber,
             uniqueClientNumber,
+            uniqueCaseId,
             List.of(ClaimStatus.READY_TO_PROCESS, ClaimStatus.VALID),
             null)
         .getBody()

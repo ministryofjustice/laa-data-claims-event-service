@@ -6,4 +6,5 @@ import java.util.List;
 public class StrategyTypes {
   public static final List<String> CRIME = List.of("CRIME LOWER", "CRIME");
   public static final List<String> CIVIL = List.of("LEGAL HELP", "CIVIL");
+  public static final List<String> MEDIATION = List.of("MEDIATION");
 }

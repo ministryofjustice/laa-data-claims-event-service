@@ -60,7 +60,8 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
               "070722/001",
               "CLI001",
               ClaimStatus.READY_TO_PROCESS,
-              "MAY-2025");
+              "MAY-2025",
+              null);
       stubIsDisbursementClaim(false);
       SubmissionValidationContext context = new SubmissionValidationContext();
       // When
@@ -69,7 +70,7 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
       // Then
       assertThat(context.hasErrors()).isFalse();
       verify(dataClaimsRestClient, times(0))
-          .getClaims(any(), any(), any(), any(), any(), any(), any(), any());
+          .getClaims(any(), any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -85,11 +86,13 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
               "070722/001",
               "CLI001",
               ClaimStatus.READY_TO_PROCESS,
-              "MAY-2025");
+              "MAY-2025",
+              null);
       stubIsDisbursementClaim(true);
       SubmissionValidationContext context = new SubmissionValidationContext();
 
-      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any(), any()))
+      when(dataClaimsRestClient.getClaims(
+              any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(
               ResponseEntity.of(
                   Optional.of(new ClaimResultSet().content(Collections.emptyList()))));
@@ -99,7 +102,7 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
       // Then
       assertThat(context.hasErrors()).isFalse();
       verify(dataClaimsRestClient, times(1))
-          .getClaims(any(), any(), any(), any(), any(), any(), any(), any());
+          .getClaims(any(), any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -115,7 +118,8 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
               "070722/001",
               "CLI001",
               ClaimStatus.READY_TO_PROCESS,
-              "MAY-2025");
+              "MAY-2025",
+              null);
       var previousClaim =
           createClaim(
               "claimId1",
@@ -123,11 +127,13 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
               "070722/001",
               "CLI001",
               ClaimStatus.READY_TO_PROCESS,
-              "MAY-2025");
+              "MAY-2025",
+              null);
       stubIsDisbursementClaim(true);
       SubmissionValidationContext context = new SubmissionValidationContext();
 
-      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any(), any()))
+      when(dataClaimsRestClient.getClaims(
+              any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(
               ResponseEntity.of(
                   Optional.of(new ClaimResultSet().content(Collections.emptyList()))));
@@ -137,7 +143,7 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
       // Then
       assertThat(context.hasErrors()).isFalse();
       verify(dataClaimsRestClient, times(1))
-          .getClaims(any(), any(), any(), any(), any(), any(), any(), any());
+          .getClaims(any(), any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -151,7 +157,8 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
               "070722/001",
               "CLI001",
               ClaimStatus.READY_TO_PROCESS,
-              "MAY-2025");
+              "MAY-2025",
+              null);
       var duplicateClaimOnPreviousSubmission =
           createClaim(
               "claimId1",
@@ -159,11 +166,13 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
               "070722/001",
               "CLI001",
               ClaimStatus.READY_TO_PROCESS,
-              "FEB-2025");
+              "FEB-2025",
+              null);
       stubIsDisbursementClaim(true);
       SubmissionValidationContext context = new SubmissionValidationContext();
 
-      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any(), any()))
+      when(dataClaimsRestClient.getClaims(
+              any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(
               ResponseEntity.of(
                   Optional.of(
@@ -175,7 +184,7 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
       // Then
       assertThat(context.hasErrors()).isFalse();
       verify(dataClaimsRestClient, times(1))
-          .getClaims(any(), any(), any(), any(), any(), any(), any(), any());
+          .getClaims(any(), any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -189,7 +198,8 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
               "070722/001",
               "CLI001",
               ClaimStatus.READY_TO_PROCESS,
-              "MAY-2025");
+              "MAY-2025",
+              null);
       var duplicateClaimOnPreviousSubmission =
           createClaim(
               "claimId1",
@@ -197,11 +207,13 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
               "070722/001",
               "CLI001",
               ClaimStatus.READY_TO_PROCESS,
-              "MAY-2024");
+              "MAY-2024",
+              null);
       stubIsDisbursementClaim(true);
       SubmissionValidationContext context = new SubmissionValidationContext();
 
-      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any(), any()))
+      when(dataClaimsRestClient.getClaims(
+              any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(
               ResponseEntity.of(
                   Optional.of(
@@ -213,7 +225,7 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
       // Then
       assertThat(context.hasErrors()).isFalse();
       verify(dataClaimsRestClient, times(1))
-          .getClaims(any(), any(), any(), any(), any(), any(), any(), any());
+          .getClaims(any(), any(), any(), any(), any(), any(), any(), any(), any());
     }
   }
 
@@ -232,7 +244,8 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
               "070722/001",
               "CLI001",
               ClaimStatus.READY_TO_PROCESS,
-              "MAY-2025");
+              "MAY-2025",
+              null);
       var duplicateClaimOnPreviousSubmission =
           createClaim(
               "claimId1",
@@ -240,11 +253,13 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
               "070722/001",
               "CLI001",
               ClaimStatus.READY_TO_PROCESS,
-              "MAR-2025");
+              "MAR-2025",
+              null);
       stubIsDisbursementClaim(true);
       SubmissionValidationContext context = new SubmissionValidationContext();
 
-      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any(), any()))
+      when(dataClaimsRestClient.getClaims(
+              any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(
               ResponseEntity.of(
                   Optional.of(
@@ -256,7 +271,7 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
       // Then
       assertThat(context.hasErrors()).isTrue();
       verify(dataClaimsRestClient, times(1))
-          .getClaims(any(), any(), any(), any(), any(), any(), any(), any());
+          .getClaims(any(), any(), any(), any(), any(), any(), any(), any(), any());
       assertContextClaimError(
           context,
           "claimId1",

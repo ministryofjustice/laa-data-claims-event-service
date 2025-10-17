@@ -69,6 +69,7 @@ public class DuplicateClaimCivilDisbursementValidationStrategy extends Duplicate
             currentClaim.getFeeCode(),
             currentClaim.getUniqueFileNumber(),
             currentClaim.getUniqueClientNumber(),
+            null,
             submissionClaims);
 
     YearMonth currentClaimYearMonth =

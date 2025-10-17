@@ -75,7 +75,7 @@ class DuplicateClaimCivilValidationServiceStrategyTest
           .thenReturn(ResponseEntity.of(Optional.of(new FeeDetailsResponse())));
 
       when(mockDataClaimsRestClient.getClaims(
-              any(), any(), any(), any(), any(), any(), any(), any()))
+              any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
 
       duplicateClaimCivilValidation.validateDuplicateClaims(
@@ -89,6 +89,7 @@ class DuplicateClaimCivilValidationServiceStrategyTest
               feeCodeArgumentCaptor.capture(),
               uniqueFileNumberArgumentCaptor.capture(),
               uniqueClientNumberArgumentCaptor.capture(),
+              any(),
               claimStatusArgumentCaptor.capture(),
               any());
 
@@ -133,7 +134,7 @@ class DuplicateClaimCivilValidationServiceStrategyTest
       verify(mockFeeSchemePlatformRestClient).getFeeDetails(eq("DISB01"));
 
       verify(mockDataClaimsRestClient, times(0))
-          .getClaims(any(), any(), any(), any(), any(), any(), any(), any());
+          .getClaims(any(), any(), any(), any(), any(), any(), any(), any(), any());
 
       assertThat(context.hasErrors()).isFalse();
     }
@@ -154,7 +155,7 @@ class DuplicateClaimCivilValidationServiceStrategyTest
           .thenReturn(ResponseEntity.of(Optional.of(new FeeDetailsResponse())));
 
       when(mockDataClaimsRestClient.getClaims(
-              any(), any(), any(), any(), any(), any(), any(), any()))
+              any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
 
       duplicateClaimCivilValidation.validateDuplicateClaims(
@@ -178,7 +179,7 @@ class DuplicateClaimCivilValidationServiceStrategyTest
           .thenReturn(ResponseEntity.of(Optional.of(new FeeDetailsResponse())));
 
       when(mockDataClaimsRestClient.getClaims(
-              any(), any(), any(), any(), any(), any(), any(), any()))
+              any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
 
       duplicateClaimCivilValidation.validateDuplicateClaims(
@@ -200,7 +201,7 @@ class DuplicateClaimCivilValidationServiceStrategyTest
           .thenReturn(ResponseEntity.of(Optional.of(new FeeDetailsResponse())));
 
       when(mockDataClaimsRestClient.getClaims(
-              any(), any(), any(), any(), any(), any(), any(), any()))
+              any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
 
       duplicateClaimCivilValidation.validateDuplicateClaims(
@@ -233,7 +234,7 @@ class DuplicateClaimCivilValidationServiceStrategyTest
           .thenReturn(ResponseEntity.of(Optional.of(new FeeDetailsResponse())));
 
       when(mockDataClaimsRestClient.getClaims(
-              any(), any(), any(), any(), any(), any(), any(), any()))
+              any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(
               ResponseEntity.of(
                   Optional.of(new ClaimResultSet().addContentItem(claimInPreviousSubmission))));
@@ -275,7 +276,7 @@ class DuplicateClaimCivilValidationServiceStrategyTest
           .thenReturn(ResponseEntity.of(Optional.of(new FeeDetailsResponse())));
 
       when(mockDataClaimsRestClient.getClaims(
-              any(), any(), any(), any(), any(), any(), any(), any()))
+              any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(
               ResponseEntity.of(
                   Optional.of(new ClaimResultSet().addContentItem(claimInPreviousSubmission))));
