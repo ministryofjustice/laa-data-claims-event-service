@@ -16,6 +16,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
+import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.submission.SubmissionValidator;
@@ -33,6 +34,7 @@ public class SubmissionValidationService {
   private final ClaimValidationService claimValidationService;
   private final DataClaimsRestClient dataClaimsRestClient;
   private final List<SubmissionValidator> submissionValidatorList;
+  private final EventServiceMetricService eventServiceMetricService;
 
   /**
    * Validates a claim submission inside the provided submissionResponse.
@@ -57,6 +59,8 @@ public class SubmissionValidationService {
     // Only validate claims if no submission level validation errors have been recorded.
     if (!context.hasSubmissionLevelErrors()) {
       claimValidationService.validateClaims(submission, context);
+    } else {
+      eventServiceMetricService.incrementTotalSubmissionsValidatedWithSubmissionErrors();
     }
 
     // Update submission status after completion
@@ -69,9 +73,11 @@ public class SubmissionValidationService {
       submissionPatch
           .status(SubmissionStatus.VALIDATION_FAILED)
           .validationMessages(context.getSubmissionValidationErrors());
+      eventServiceMetricService.incrementTotalInvalidSubmissions();
     } else {
       log.debug("Validation completed for submission {} with no errors", submissionId);
       submissionPatch.status(SubmissionStatus.VALIDATION_SUCCEEDED);
+      eventServiceMetricService.incrementTotalValidSubmissions();
     }
 
     updateClaims(submission, context);

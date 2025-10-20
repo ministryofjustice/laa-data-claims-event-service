@@ -29,6 +29,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.exception.ClaimCreateExcept
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.MatterStartCreateException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.SubmissionCreateException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.mapper.BulkSubmissionMapper;
+import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
 
 /** Service responsible for retrieving bulk submissions and sending them to the Claims Data API. */
 @Service
@@ -38,6 +39,7 @@ public class BulkParsingService {
 
   private final DataClaimsRestClient dataClaimsRestClient;
   private final BulkSubmissionMapper bulkSubmissionMapper;
+  private final EventServiceMetricService eventServiceMetricService;
 
   private static final int MAX_CONCURRENCY =
       Math.max(2, Runtime.getRuntime().availableProcessors());
@@ -125,6 +127,8 @@ public class BulkParsingService {
           "Failed to create submission. HTTP status: "
               + (response == null ? "null response" : response.getStatusCode()));
     }
+
+    eventServiceMetricService.incrementTotalSubmissionsCreated();
 
     String createdId = extractIdFromLocation(response);
     if (!StringUtils.hasText(createdId)) {
@@ -258,6 +262,8 @@ public class BulkParsingService {
               + ". HTTP status: "
               + (response == null ? "null response" : response.getStatusCode()));
     }
+
+    eventServiceMetricService.incrementTotalClaimsCreated();
 
     String createdId = extractIdFromLocation(response);
     if (!StringUtils.hasText(createdId)) {
