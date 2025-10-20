@@ -1274,7 +1274,7 @@
           },
           "editorMode": "code",
           "expr": "jvm_memory_max_bytes{namespace='{{ .Release.Namespace }}',container='$container',area='heap',id='Eden Space'}/1000000",
-          "legendFormat": "{{instance}}",
+          "legendFormat": "{{`{{instance}}`}}",
           "range": true,
           "refId": "A"
         }
@@ -1338,7 +1338,7 @@
           },
           "editorMode": "code",
           "expr": "jvm_memory_max_bytes{namespace='{{ .Release.Namespace }}',container='$container', area='heap', id='Survivor Space', namespace='{{ .Release.Namespace }}'} / 1000000",
-          "legendFormat": "{{instance}}",
+          "legendFormat": "{{`{{instance}}`}}",
           "range": true,
           "refId": "A"
         }
@@ -1401,7 +1401,7 @@
           },
           "editorMode": "code",
           "expr": "jvm_memory_max_bytes{namespace='{{ .Release.Namespace }}',container='$container',area='heap',id='Tenured Gen',} /1000000",
-          "legendFormat": "{{instance}}",
+          "legendFormat": "{{`{{instance}}`}}",
           "range": true,
           "refId": "A"
         }
@@ -1497,7 +1497,7 @@
           },
           "editorMode": "code",
           "expr": "jvm_memory_used_bytes{namespace='{{ .Release.Namespace }}',container='$container',area='heap',id='Eden Space'}/1000000",
-          "legendFormat": "{{instance}}",
+          "legendFormat": "{{`{{instance}}`}}",
           "range": true,
           "refId": "A"
         }
@@ -1593,7 +1593,7 @@
           },
           "editorMode": "code",
           "expr": "jvm_memory_used_bytes{namespace='{{ .Release.Namespace }}',container='$container',area='heap',id='Survivor Space'}/1000000",
-          "legendFormat": "{{instance}}",
+          "legendFormat": "{{`{{instance}}`}}",
           "range": true,
           "refId": "A"
         }
@@ -1689,7 +1689,7 @@
           },
           "editorMode": "code",
           "expr": "jvm_memory_used_bytes{namespace='{{ .Release.Namespace }}',container='$container',area='heap',id='Tenured Gen',} /1000000",
-          "legendFormat": "{{instance}}",
+          "legendFormat": "{{`{{instance}}`}}",
           "range": true,
           "refId": "A"
         }
@@ -1762,7 +1762,7 @@
           },
           "editorMode": "builder",
           "expr": "hikaricp_connections_min{namespace='{{ .Release.Namespace }}',container='$container', pool='HikariPool-1'}",
-          "legendFormat": "{{instance}}",
+          "legendFormat": "{{`{{instance}}`}}",
           "range": true,
           "refId": "A"
         }
@@ -1822,7 +1822,7 @@
           },
           "editorMode": "builder",
           "expr": "hikaricp_connections_max{namespace='{{ .Release.Namespace }}',container='$container', pool='HikariPool-1'}",
-          "legendFormat": "{{instance}}",
+          "legendFormat": "{{`{{instance}}`}}",
           "range": true,
           "refId": "A"
         }
@@ -1918,7 +1918,7 @@
           },
           "editorMode": "builder",
           "expr": "hikaricp_connections_active{namespace='{{ .Release.Namespace }}',container='$container', pool='HikariPool-1'}",
-          "legendFormat": "{{instance}}",
+          "legendFormat": "{{`{{instance}}`}}",
           "range": true,
           "refId": "A"
         }
@@ -2018,7 +2018,7 @@
           },
           "editorMode": "builder",
           "expr": "hikaricp_connections_timeout_total{namespace='{{ .Release.Namespace }}',container='$container', pool='HikariPool-1'}",
-          "legendFormat": "{{instance}}",
+          "legendFormat": "{{`{{instance}}`}}",
           "range": true,
           "refId": "A"
         }
