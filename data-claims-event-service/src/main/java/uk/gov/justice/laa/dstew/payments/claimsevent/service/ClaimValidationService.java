@@ -139,19 +139,19 @@ public class ClaimValidationService {
   private void recordClaimMetric(ClaimResponse claim, SubmissionValidationContext context) {
     Optional<ClaimValidationReport> claimReportOptional = context.getClaimReport(claim.getId());
     if (claimReportOptional.isEmpty()) {
-      eventServiceMetricService.incrementClaimValidatedAndValid();
+      eventServiceMetricService.incrementTotalClaimsValidatedAndValid();
       return;
     }
 
     // Claim could have either errors or warnings so record both
     if (claimReportOptional.get().getMessages().stream()
         .anyMatch(x -> x.getType().equals(ValidationMessageType.ERROR))) {
-      eventServiceMetricService.incrementClaimValidatedAndErrorsFound();
+      eventServiceMetricService.incrementTotalClaimsValidatedAndErrorsFound();
     }
 
     if (claimReportOptional.get().getMessages().stream()
         .anyMatch(x -> x.getType().equals(ValidationMessageType.WARNING))) {
-      eventServiceMetricService.incrementClaimValidatedAndWarningsFound();
+      eventServiceMetricService.incrementTotalClaimsValidatedAndWarningsFound();
     }
   }
 }

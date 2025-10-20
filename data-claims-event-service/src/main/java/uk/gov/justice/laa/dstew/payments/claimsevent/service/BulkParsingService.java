@@ -263,7 +263,7 @@ public class BulkParsingService {
               + (response == null ? "null response" : response.getStatusCode()));
     }
 
-    eventServiceMetricService.incrementClaimCreated();
+    eventServiceMetricService.incrementTotalClaimsCreated();
 
     String createdId = extractIdFromLocation(response);
     if (!StringUtils.hasText(createdId)) {

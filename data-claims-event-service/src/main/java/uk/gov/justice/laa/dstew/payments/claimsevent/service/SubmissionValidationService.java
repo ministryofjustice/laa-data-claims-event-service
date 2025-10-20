@@ -60,7 +60,7 @@ public class SubmissionValidationService {
     if (!context.hasSubmissionLevelErrors()) {
       claimValidationService.validateClaims(submission, context);
     } else {
-      eventServiceMetricService.incrementSubmissionValidatedWithSubmissionErrors();
+      eventServiceMetricService.incrementTotalSubmissionsValidatedWithSubmissionErrors();
     }
 
     // Update submission status after completion
@@ -73,9 +73,11 @@ public class SubmissionValidationService {
       submissionPatch
           .status(SubmissionStatus.VALIDATION_FAILED)
           .validationMessages(context.getSubmissionValidationErrors());
+      eventServiceMetricService.incrementTotalInvalidSubmissions();
     } else {
       log.debug("Validation completed for submission {} with no errors", submissionId);
       submissionPatch.status(SubmissionStatus.VALIDATION_SUCCEEDED);
+      eventServiceMetricService.incrementTotalValidSubmissions();
     }
 
     updateClaims(submission, context);
