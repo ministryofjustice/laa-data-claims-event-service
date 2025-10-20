@@ -6,6 +6,7 @@ import static org.mockserver.model.JsonBody.json;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import io.prometheus.metrics.model.registry.PrometheusRegistry;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -34,6 +35,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.support.WebClientAdapter;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
@@ -85,6 +87,8 @@ public abstract class MockServerIntegrationTest {
     log.info("Started MockServer container on port: {}", container.getFirstMappedPort());
     return container;
   }
+
+  @MockitoBean PrometheusRegistry prometheusRegistry;
 
   @AfterEach
   void tearDown() {
