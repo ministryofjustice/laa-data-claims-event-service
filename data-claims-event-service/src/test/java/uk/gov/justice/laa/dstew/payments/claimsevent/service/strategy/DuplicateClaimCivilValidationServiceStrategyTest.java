@@ -24,9 +24,11 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResultSet;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationType;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.DuplicateClaimCivilValidationServiceStrategy;
 import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponse;
@@ -65,9 +67,21 @@ class DuplicateClaimCivilValidationServiceStrategyTest
     @Test
     void whenNoExistingClaim() {
       var claimTobeProcessed =
-          createClaim("claimId1", "CIV123", "070722/001", "CLI001", ClaimStatus.READY_TO_PROCESS);
+          createClaim(
+              "claimId1",
+              "submissionId1",
+              "CIV123",
+              "070722/001",
+              "CLI001",
+              ClaimStatus.READY_TO_PROCESS);
       var otherClaim =
-          createClaim("claimId2", "CIV123", "070722/002", "CLI001", ClaimStatus.READY_TO_PROCESS);
+          createClaim(
+              "claimId2",
+              "submissionId1",
+              "CIV123",
+              "070722/002",
+              "CLI001",
+              ClaimStatus.READY_TO_PROCESS);
       var submissionClaims = List.of(claimTobeProcessed, otherClaim);
       var context = new SubmissionValidationContext();
 
@@ -117,9 +131,21 @@ class DuplicateClaimCivilValidationServiceStrategyTest
     @Test
     void whenCurrentClaimIsDisbursement() {
       var claimTobeProcessed =
-          createClaim("claimId1", "DISB01", "070722/001", "CLI001", ClaimStatus.READY_TO_PROCESS);
+          createClaim(
+              "claimId1",
+              "submissionId1",
+              "DISB01",
+              "070722/001",
+              "CLI001",
+              ClaimStatus.READY_TO_PROCESS);
       var otherClaim =
-          createClaim("claimId2", "CIV123", "070722/002", "CLI001", ClaimStatus.READY_TO_PROCESS);
+          createClaim(
+              "claimId2",
+              "submissionId1",
+              "CIV123",
+              "070722/002",
+              "CLI001",
+              ClaimStatus.READY_TO_PROCESS);
       var submissionClaims = List.of(claimTobeProcessed, otherClaim);
       var context = new SubmissionValidationContext();
 
@@ -145,9 +171,21 @@ class DuplicateClaimCivilValidationServiceStrategyTest
     @Test
     void whenDifferentClient() {
       var claimTobeProcessed =
-          createClaim("claimId1", "CIV123", "070722/001", "CLI001", ClaimStatus.READY_TO_PROCESS);
+          createClaim(
+              "claimId1",
+              "submissionId1",
+              "CIV123",
+              "070722/001",
+              "CLI001",
+              ClaimStatus.READY_TO_PROCESS);
       var otherClaim =
-          createClaim("claimId2", "CIV123", "070722/001", "CLI002", ClaimStatus.READY_TO_PROCESS);
+          createClaim(
+              "claimId2",
+              "submissionId1",
+              "CIV123",
+              "070722/001",
+              "CLI002",
+              ClaimStatus.READY_TO_PROCESS);
       var submissionClaims = List.of(claimTobeProcessed, otherClaim);
       var context = new SubmissionValidationContext();
 
@@ -170,8 +208,16 @@ class DuplicateClaimCivilValidationServiceStrategyTest
     @Test
     void whenExistingClaimInPreviousSubmission() {
       var claimTobeProcessed =
-          createClaim("claimId1", "CIV123", "070722/001", "CLI001", ClaimStatus.READY_TO_PROCESS);
-      var otherClaim = createClaim("claimId2", "CIV456", "070722/001", "CLI001", ClaimStatus.VALID);
+          createClaim(
+              "claimId1",
+              "submissionId1",
+              "CIV123",
+              "070722/001",
+              "CLI001",
+              ClaimStatus.READY_TO_PROCESS);
+      var otherClaim =
+          createClaim(
+              "claimId2", "submissionId1", "CIV456", "070722/001", "CLI001", ClaimStatus.VALID);
       var submissionClaims = List.of(claimTobeProcessed, otherClaim);
       var context = new SubmissionValidationContext();
 
@@ -192,8 +238,16 @@ class DuplicateClaimCivilValidationServiceStrategyTest
     @Test
     void whenDifferentFeeCodeOfficeUcn() {
       var claimTobeProcessed =
-          createClaim("claimId1", "CIV123", "070722/001", "CLI001", ClaimStatus.READY_TO_PROCESS);
-      var otherClaim = createClaim("claimId2", "CIV456", "070722/001", "CLI002", ClaimStatus.VALID);
+          createClaim(
+              "claimId1",
+              "submissionId1",
+              "CIV123",
+              "070722/001",
+              "CLI001",
+              ClaimStatus.READY_TO_PROCESS);
+      var otherClaim =
+          createClaim(
+              "claimId2", "submissionId1", "CIV456", "070722/001", "CLI002", ClaimStatus.VALID);
       var submissionClaims = List.of(claimTobeProcessed, otherClaim);
       var context = new SubmissionValidationContext();
 
@@ -220,13 +274,37 @@ class DuplicateClaimCivilValidationServiceStrategyTest
     @Test
     void whenExistingClaimInPreviousSubmission() {
       var claimTobeProcessed =
-          createClaim("claimId1", "CIV123", "070722/001", "CLI001", ClaimStatus.READY_TO_PROCESS);
+          createClaim(
+              "claimId1",
+              "submissionId1",
+              "CIV123",
+              "070722/001",
+              "CLI001",
+              ClaimStatus.READY_TO_PROCESS);
       var otherClaim =
-          createClaim("claimId2", "CIV123", "070722/002", "CLI001", ClaimStatus.READY_TO_PROCESS);
+          createClaim(
+              "claimId2",
+              "submissionId1",
+              "CIV123",
+              "070722/002",
+              "CLI001",
+              ClaimStatus.READY_TO_PROCESS);
       var otherClaim1 =
-          createClaim("claimId3", "CIV123", "070722/003", "CLI001", ClaimStatus.READY_TO_PROCESS);
+          createClaim(
+              "claimId3",
+              "submissionId1",
+              "CIV123",
+              "070722/003",
+              "CLI001",
+              ClaimStatus.READY_TO_PROCESS);
       var claimInPreviousSubmission =
-          createClaim("claimId4", "CIV123", "070722/003", "CLI001", ClaimStatus.READY_TO_PROCESS);
+          createClaim(
+              "claimId4",
+              "submissionIdOld",
+              "CIV123",
+              "070722/003",
+              "CLI001",
+              ClaimStatus.READY_TO_PROCESS);
       var submissionClaims = List.of(claimTobeProcessed, otherClaim, otherClaim1);
       var context = new SubmissionValidationContext();
 
@@ -243,19 +321,85 @@ class DuplicateClaimCivilValidationServiceStrategyTest
           claimTobeProcessed, submissionClaims, "2Q286D", context);
 
       assertThat(context.hasErrors()).isTrue();
+      ClaimValidationReport report =
+          context.getClaimReport(claimTobeProcessed.getId()).orElseThrow();
+      assertThat(report.getMessages())
+          .extracting(ValidationMessagePatch::getDisplayMessage)
+          .containsExactly(
+              ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_ANOTHER_SUBMISSION
+                  .getDisplayMessage());
+    }
 
-      assertThat(context.getClaimReports()).extracting("claimId").contains("claimId1");
+    // This test is to verify that we log a validation error only against the current claim which is
+    // being validated and not against the old duplicate claims.
+    @DisplayName(
+        "Validation error: When there are multiple existing civil claims with the same Office, UFN, Fee Code, "
+            + "and UCN in the previous submissions.")
+    @Test
+    void whenExistingClaimsInPreviousSubmissions() {
+      var claim1 =
+          createClaim(
+              "claimId1",
+              "submissionId1",
+              "CIV123",
+              "070722/001",
+              "CLI001",
+              ClaimStatus.READY_TO_PROCESS);
+      var claim2 =
+          createClaim(
+              "claimId2",
+              "submissionId1",
+              "CIV123",
+              "070722/002",
+              "CLI001",
+              ClaimStatus.READY_TO_PROCESS);
+      var claim3 =
+          createClaim(
+              "claimId3",
+              "submissionId1",
+              "CIV123",
+              "070722/003",
+              "CLI001",
+              ClaimStatus.READY_TO_PROCESS);
+      var claim4 =
+          createClaim(
+              "claimId4",
+              "submissionId2",
+              "CIV123",
+              "070722/003",
+              "CLI001",
+              ClaimStatus.READY_TO_PROCESS);
+      var claim5 =
+          createClaim(
+              "claimId5",
+              "submissionId2",
+              "CIV123",
+              "070722/003",
+              "CLI001",
+              ClaimStatus.READY_TO_PROCESS);
+      var submissionClaims = List.of(claim1, claim2, claim3);
+      var context = new SubmissionValidationContext();
 
-      context
-          .getClaimReport("claimId2")
-          .ifPresent(
-              claimValidationReport ->
-                  assertThat(claimValidationReport.getMessages())
-                      .extracting("displayMessage")
-                      .isEqualTo(
-                          List.of(
-                              ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_ANOTHER_SUBMISSION
-                                  .getDisplayMessage())));
+      when(mockFeeSchemePlatformRestClient.getFeeDetails(any()))
+          .thenReturn(ResponseEntity.of(Optional.of(new FeeDetailsResponse())));
+
+      when(mockDataClaimsRestClient.getClaims(
+              any(), any(), any(), any(), any(), any(), any(), any(), any()))
+          .thenReturn(
+              ResponseEntity.of(
+                  Optional.of(new ClaimResultSet().addContentItem(claim4).addContentItem(claim5))));
+
+      duplicateClaimCivilValidation.validateDuplicateClaims(
+          claim3, submissionClaims, "2Q286D", context);
+
+      assertThat(context.hasErrors()).isTrue();
+      ClaimValidationReport report = context.getClaimReport(claim3.getId()).orElseThrow();
+      assertThat(report.getMessages())
+          .extracting(ValidationMessagePatch::getDisplayMessage)
+          .containsExactly(
+              ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_ANOTHER_SUBMISSION
+                  .getDisplayMessage());
+      assertThat(context.getClaimReports().getFirst().getMessages()).hasSize(1);
     }
 
     @DisplayName(
@@ -264,11 +408,29 @@ class DuplicateClaimCivilValidationServiceStrategyTest
     @Test
     void whenExistingClaimInPreviousAndCurrentSubmission() {
       var claimTobeProcessed =
-          createClaim("claimId1", "CIV123", "070722/001", "CLI001", ClaimStatus.READY_TO_PROCESS);
+          createClaim(
+              "claimId1",
+              "submissionIdCurrent",
+              "CIV123",
+              "070722/001",
+              "CLI001",
+              ClaimStatus.READY_TO_PROCESS);
       var otherClaim =
-          createClaim("claimId2", "CIV123", "070722/001", "CLI001", ClaimStatus.READY_TO_PROCESS);
+          createClaim(
+              "claimId2",
+              "submissionIdCurrent",
+              "CIV123",
+              "070722/001",
+              "CLI001",
+              ClaimStatus.READY_TO_PROCESS);
       var claimInPreviousSubmission =
-          createClaim("claimId4", "CIV123", "070722/003", "CLI001", ClaimStatus.READY_TO_PROCESS);
+          createClaim(
+              "claimId4",
+              "submissionIdPrevious",
+              "CIV123",
+              "070722/001",
+              "CLI001",
+              ClaimStatus.READY_TO_PROCESS);
       var submissionClaims = List.of(claimTobeProcessed, otherClaim);
       var context = new SubmissionValidationContext();
 
@@ -286,30 +448,13 @@ class DuplicateClaimCivilValidationServiceStrategyTest
 
       assertThat(context.hasErrors()).isTrue();
 
-      assertThat(context.getClaimReports()).extracting("claimId").contains("claimId1");
-
-      context
-          .getClaimReport("claimId1")
-          .ifPresent(
-              claimValidationReport ->
-                  assertThat(claimValidationReport.getMessages())
-                      .extracting("displayMessage")
-                      .isEqualTo(
-                          List.of(
-                              ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_ANOTHER_SUBMISSION
-                                  .getDisplayMessage())));
-
-      context
-          .getClaimReport("claimId2")
-          .ifPresent(
-              claimValidationReport ->
-                  assertThat(claimValidationReport.getMessages())
-                      .extracting("displayMessage")
-                      .isEqualTo(
-                          List.of(
-                              ClaimValidationError
-                                  .INVALID_CLAIM_HAS_DUPLICATE_IN_EXISTING_SUBMISSION
-                                  .getDisplayMessage())));
+      ClaimValidationReport report =
+          context.getClaimReport(claimTobeProcessed.getId()).orElseThrow();
+      assertThat(report.getMessages())
+          .extracting(ValidationMessagePatch::getDisplayMessage)
+          .containsExactly(
+              ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_ANOTHER_SUBMISSION
+                  .getDisplayMessage());
     }
   }
 }

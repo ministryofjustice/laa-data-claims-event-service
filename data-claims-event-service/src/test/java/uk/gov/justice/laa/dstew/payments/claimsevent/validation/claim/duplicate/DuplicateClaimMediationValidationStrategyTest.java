@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -39,6 +38,7 @@ class DuplicateClaimMediationValidationStrategyTest
       var claimTobeProcessed =
           createClaim(
               "claimId1",
+              "submissionId1",
               "MED001",
               "070722/001",
               "CLI001",
@@ -48,6 +48,7 @@ class DuplicateClaimMediationValidationStrategyTest
       var claim2 =
           createClaim(
               "claimId2",
+              "submissionId1",
               "MED001",
               "070722/001",
               "CLI001",
@@ -77,6 +78,7 @@ class DuplicateClaimMediationValidationStrategyTest
       var claimTobeProcessed =
           createClaim(
               "claimId1",
+              "submissionId1",
               "MED001",
               "070722/001",
               "CLI001",
@@ -86,6 +88,7 @@ class DuplicateClaimMediationValidationStrategyTest
       var claim2 =
           createClaim(
               "claimId2",
+              "submissionId2",
               "MED001",
               "070722/001",
               "CLI001",
@@ -100,7 +103,7 @@ class DuplicateClaimMediationValidationStrategyTest
               ResponseEntity.of(Optional.of(new ClaimResultSet().content(List.of(claim2)))));
       // When
       duplicateClaimMediationValidationStrategy.validateDuplicateClaims(
-          claimTobeProcessed, Collections.emptyList(), "1", context);
+          claimTobeProcessed, List.of(claimTobeProcessed), "1", context);
       // Then
       assertThat(context.hasErrors()).isTrue();
       verify(dataClaimsRestClient, times(1))
@@ -115,6 +118,7 @@ class DuplicateClaimMediationValidationStrategyTest
       var claimTobeProcessed =
           createClaim(
               "claimId1",
+              "submissionId1",
               "MED001",
               "070722/001",
               "CLI001",
@@ -124,6 +128,7 @@ class DuplicateClaimMediationValidationStrategyTest
       var previousClaim =
           createClaim(
               "claimId2",
+              "submissionId2",
               "MED001",
               "070722/002",
               "CLI001",
@@ -135,11 +140,10 @@ class DuplicateClaimMediationValidationStrategyTest
       when(dataClaimsRestClient.getClaims(
               any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(
-              ResponseEntity.of(
-                  Optional.of(new ClaimResultSet().content(Collections.emptyList()))));
+              ResponseEntity.of(Optional.of(new ClaimResultSet().content(List.of(previousClaim)))));
       // When
       duplicateClaimMediationValidationStrategy.validateDuplicateClaims(
-          claimTobeProcessed, List.of(previousClaim), "1", context);
+          claimTobeProcessed, List.of(claimTobeProcessed), "1", context);
       // Then
       assertThat(context.hasErrors()).isTrue();
       verify(dataClaimsRestClient, times(1))

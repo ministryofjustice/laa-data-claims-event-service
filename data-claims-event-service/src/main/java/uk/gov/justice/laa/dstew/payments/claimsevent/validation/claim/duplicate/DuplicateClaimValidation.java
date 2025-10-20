@@ -86,7 +86,10 @@ public abstract class DuplicateClaimValidation {
         .getBody()
         .getContent()
         .stream()
-        .filter(prevClaim -> !submissionClaims.contains(prevClaim))
+        .filter(
+            prevClaim ->
+                !submissionClaims.getFirst().getSubmissionId().equals(prevClaim.getSubmissionId())
+                    && !submissionClaims.contains(prevClaim))
         .toList();
   }
 }
