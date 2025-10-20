@@ -34,9 +34,6 @@ public interface FeeSchemeMapper {
   @Mapping(target = "travelAndWaitingCosts", source = "travelWaitingCostsAmount")
   @Mapping(target = "detentionAndWaitingCosts", source = "detentionTravelWaitingCostsAmount")
   @Mapping(target = "caseConcludedDate", source = "caseConcludedDate")
-  @Mapping(
-      target = "dutySolicitor",
-      source = "isDutySolicitor") // TODO: Mismatch in types String <-> Boolean
   @Mapping(target = "schemeId", source = "schemeId")
   @Mapping(target = "uniqueFileNumber", source = "uniqueFileNumber")
   @Mapping(target = "numberOfMediationSessions", source = "mediationSessionsCount")
@@ -54,9 +51,6 @@ public interface FeeSchemeMapper {
       source = "adjournedHearingFeeAmount") // TODO: Mismatch in types Integer <-> BigDecimal
   @Mapping(target = "boltOnCmrhOral", source = "cmrhOralCount")
   @Mapping(target = "boltOnCmrhTelephone", source = "cmrhTelephoneCount")
-  @Mapping(
-      target = "boltOnAdditionalTravel",
-      constant = "1") // this field will be dropped from the FSP side, temporarily setting it to 1.
   @Mapping(target = "boltOnHomeOfficeInterview", source = "hoInterview")
   BoltOnType mapToBoltOnType(ClaimResponse claim);
 }

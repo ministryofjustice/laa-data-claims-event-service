@@ -46,7 +46,6 @@ class FeeSchemeMapperTest {
               .detentionTravelWaitingCostsAmount(BigDecimal.valueOf(1.07))
               .caseConcludedDate("2025-01-02")
               .policeStationCourtPrisonId("policeCourtOrPrisonId")
-              .isDutySolicitor(true)
               .schemeId("schemeId")
               .uniqueFileNumber("ufn")
               .mediationSessionsCount(1)
@@ -57,7 +56,6 @@ class FeeSchemeMapperTest {
               .boltOnAdjournedHearing(1)
               .boltOnCmrhOral(2)
               .boltOnCmrhTelephone(3)
-              .boltOnAdditionalTravel(1)
               .boltOnHomeOfficeInterview(5);
 
       FeeCalculationRequest expected =
@@ -80,7 +78,6 @@ class FeeSchemeMapperTest {
               .policeStationId("policeCourtOrPrisonId")
               .policeStationSchemeId("schemeId")
               .policeCourtOrPrisonId("policeCourtOrPrisonId")
-              .dutySolicitor("true") // TODO: Fix type
               .schemeId("schemeId")
               .uniqueFileNumber("ufn")
               .numberOfMediationSessions(1)
@@ -114,7 +111,6 @@ class FeeSchemeMapperTest {
               .boltOnAdjournedHearing(1)
               .boltOnCmrhOral(2)
               .boltOnCmrhTelephone(3)
-              .boltOnAdditionalTravel(1)
               .boltOnHomeOfficeInterview(5);
 
       BoltOnType actual = feeSchemeMapper.mapToBoltOnType(claim);
