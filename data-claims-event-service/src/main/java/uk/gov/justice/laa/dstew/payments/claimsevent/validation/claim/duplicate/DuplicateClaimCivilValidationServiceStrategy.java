@@ -50,13 +50,13 @@ public class DuplicateClaimCivilValidationServiceStrategy extends DuplicateClaim
                 null,
                 submissionClaims);
 
-    duplicateClaimsInPreviousSubmission.forEach(
-        duplicateClaim -> {
-          logDuplicates(duplicateClaim, duplicateClaimsInPreviousSubmission);
-          context.addClaimError(
-              currentClaim.getId(),
-              ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_ANOTHER_SUBMISSION);
-        });
+    // add an error against the currentClaim if there are any duplicates are found.
+    if (!duplicateClaimsInPreviousSubmission.isEmpty()) {
+      logDuplicates(currentClaim, duplicateClaimsInPreviousSubmission);
+      context.addClaimError(
+          currentClaim.getId(),
+          ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_ANOTHER_SUBMISSION);
+    }
   }
 
   private Boolean isDisbursementClaim(final ClaimResponse currentClaim) {

@@ -1,6 +1,5 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate;
 
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -56,6 +55,7 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
       var claimTobeProcessed =
           createClaim(
               "claimId1",
+              "submissionId1",
               "CIV123",
               "070722/001",
               "CLI001",
@@ -66,7 +66,7 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
       SubmissionValidationContext context = new SubmissionValidationContext();
       // When
       duplicateClaimValidationService.validateDuplicateClaims(
-          claimTobeProcessed, Collections.emptyList(), "1", context);
+          claimTobeProcessed, List.of(claimTobeProcessed), "1", context);
       // Then
       assertThat(context.hasErrors()).isFalse();
       verify(dataClaimsRestClient, times(0))
@@ -82,6 +82,7 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
       var claimTobeProcessed =
           createClaim(
               "claimId1",
+              "submissionId1",
               "CIV123",
               "070722/001",
               "CLI001",
@@ -98,7 +99,7 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
                   Optional.of(new ClaimResultSet().content(Collections.emptyList()))));
       // When
       duplicateClaimValidationService.validateDuplicateClaims(
-          claimTobeProcessed, Collections.emptyList(), "1", context);
+          claimTobeProcessed, List.of(claimTobeProcessed), "1", context);
       // Then
       assertThat(context.hasErrors()).isFalse();
       verify(dataClaimsRestClient, times(1))
@@ -114,6 +115,7 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
       var claimTobeProcessed =
           createClaim(
               "claimId1",
+              "submissionId1",
               "CIV123",
               "070722/001",
               "CLI001",
@@ -123,6 +125,7 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
       var previousClaim =
           createClaim(
               "claimId1",
+              "submissionId2",
               "CIV123",
               "070722/001",
               "CLI001",
@@ -153,6 +156,7 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
       var claimTobeProcessed =
           createClaim(
               "claimId1",
+              "submissionId1",
               "CIV123",
               "070722/001",
               "CLI001",
@@ -161,7 +165,8 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
               null);
       var duplicateClaimOnPreviousSubmission =
           createClaim(
-              "claimId1",
+              "claimId2",
+              "submissionId2",
               "CIV123",
               "070722/001",
               "CLI001",
@@ -180,7 +185,7 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
                           .content(singletonList(duplicateClaimOnPreviousSubmission)))));
       // When
       duplicateClaimValidationService.validateDuplicateClaims(
-          claimTobeProcessed, emptyList(), "1", context);
+          claimTobeProcessed, List.of(claimTobeProcessed), "1", context);
       // Then
       assertThat(context.hasErrors()).isFalse();
       verify(dataClaimsRestClient, times(1))
@@ -194,6 +199,7 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
       var claimTobeProcessed =
           createClaim(
               "claimId1",
+              "submissionId1",
               "CIV123",
               "070722/001",
               "CLI001",
@@ -202,7 +208,8 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
               null);
       var duplicateClaimOnPreviousSubmission =
           createClaim(
-              "claimId1",
+              "claimId2",
+              "submissionId2",
               "CIV123",
               "070722/001",
               "CLI001",
@@ -221,7 +228,7 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
                           .content(singletonList(duplicateClaimOnPreviousSubmission)))));
       // When
       duplicateClaimValidationService.validateDuplicateClaims(
-          claimTobeProcessed, emptyList(), "1", context);
+          claimTobeProcessed, List.of(claimTobeProcessed), "1", context);
       // Then
       assertThat(context.hasErrors()).isFalse();
       verify(dataClaimsRestClient, times(1))
@@ -240,6 +247,7 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
       var claimTobeProcessed =
           createClaim(
               "claimId1",
+              "submissionId1",
               "CIV123",
               "070722/001",
               "CLI001",
@@ -248,7 +256,8 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
               null);
       var duplicateClaimOnPreviousSubmission =
           createClaim(
-              "claimId1",
+              "claimId2",
+              "submissionId2",
               "CIV123",
               "070722/001",
               "CLI001",
@@ -267,7 +276,7 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
                           .content(singletonList(duplicateClaimOnPreviousSubmission)))));
       // When
       duplicateClaimValidationService.validateDuplicateClaims(
-          claimTobeProcessed, emptyList(), "1", context);
+          claimTobeProcessed, List.of(claimTobeProcessed), "1", context);
       // Then
       assertThat(context.hasErrors()).isTrue();
       verify(dataClaimsRestClient, times(1))

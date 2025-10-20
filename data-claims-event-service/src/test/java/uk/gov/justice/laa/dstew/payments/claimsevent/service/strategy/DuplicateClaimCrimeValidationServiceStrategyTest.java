@@ -205,12 +205,14 @@ class DuplicateClaimCrimeValidationServiceStrategyTest {
       ClaimResponse claim1 =
           new ClaimResponse()
               .id("claimId1")
+              .submissionId("submissionId")
               .feeCode("feeCode")
               .uniqueFileNumber("ufn")
               .status(ClaimStatus.READY_TO_PROCESS);
       ClaimResponse claim2 =
           new ClaimResponse()
               .id("claimId2")
+              .submissionId("submissionId")
               .feeCode("feeCode")
               .uniqueFileNumber("ufn")
               .status(ClaimStatus.INVALID);
@@ -248,6 +250,7 @@ class DuplicateClaimCrimeValidationServiceStrategyTest {
       ClaimResponse claim1 =
           new ClaimResponse()
               .id("claimId1")
+              .submissionId("submissionId")
               .feeCode("feeCode")
               .uniqueFileNumber("ufn")
               .status(ClaimStatus.READY_TO_PROCESS);
@@ -255,6 +258,7 @@ class DuplicateClaimCrimeValidationServiceStrategyTest {
       ClaimResponse otherClaim =
           new ClaimResponse()
               .id("claimId2")
+              .submissionId("submissionId2")
               .feeCode("feeCode")
               .uniqueFileNumber("ufn")
               .status(ClaimStatus.VALID);
@@ -293,18 +297,21 @@ class DuplicateClaimCrimeValidationServiceStrategyTest {
       ClaimResponse claim1 =
           new ClaimResponse()
               .id("claimId1")
+              .submissionId("submissionId")
               .feeCode("feeCode")
               .uniqueFileNumber("ufn")
               .status(ClaimStatus.READY_TO_PROCESS);
       ClaimResponse claim2 =
           new ClaimResponse()
               .id("claimId2")
+              .submissionId("submissionId")
               .feeCode("feeCode")
               .uniqueFileNumber("ufn")
               .status(ClaimStatus.READY_TO_PROCESS);
       ClaimResponse otherClaim =
           new ClaimResponse()
               .id("claimId2")
+              .submissionId("submissionId")
               .feeCode("feeCode")
               .uniqueFileNumber("ufn")
               .status(ClaimStatus.READY_TO_PROCESS);

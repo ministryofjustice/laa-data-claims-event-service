@@ -11,9 +11,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.strategy.AbstractDuplicateClaimValidatorStrategy;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,9 +39,21 @@ class DuplicatePreviousClaimCivilValidationServiceStrategyTest
     @Test
     void whenDuplicateDisbursementClaim() {
       var claimTobeProcessed =
-          createClaim("claimId1", "DISB01", "070722/001", "CLI001", ClaimStatus.READY_TO_PROCESS);
+          createClaim(
+              "claimId1",
+              "submissionId1",
+              "DISB01",
+              "070722/001",
+              "CLI001",
+              ClaimStatus.READY_TO_PROCESS);
       var otherClaim =
-          createClaim("claimId2", "DISB01", "070722/001", "CLI001", ClaimStatus.READY_TO_PROCESS);
+          createClaim(
+              "claimId2",
+              "submissionId1",
+              "DISB01",
+              "070722/001",
+              "CLI001",
+              ClaimStatus.READY_TO_PROCESS);
       var submissionClaims = List.of(claimTobeProcessed, otherClaim);
       var context = new SubmissionValidationContext();
 
@@ -48,19 +62,17 @@ class DuplicatePreviousClaimCivilValidationServiceStrategyTest
 
       assertThat(context.hasErrors()).isTrue();
 
-      assertThat(context.getClaimReports()).extracting("claimId").contains("claimId2");
+      assertThat(context.getClaimReports())
+          .extracting("claimId")
+          .contains(claimTobeProcessed.getId());
 
-      context
-          .getClaimReport("claimId2")
-          .ifPresent(
-              claimValidationReport ->
-                  assertThat(claimValidationReport.getMessages())
-                      .extracting("displayMessage")
-                      .isEqualTo(
-                          List.of(
-                              ClaimValidationError
-                                  .INVALID_CLAIM_HAS_DUPLICATE_IN_EXISTING_SUBMISSION
-                                  .getDisplayMessage())));
+      ClaimValidationReport report =
+          context.getClaimReport(claimTobeProcessed.getId()).orElseThrow();
+      assertThat(report.getMessages())
+          .extracting(ValidationMessagePatch::getDisplayMessage)
+          .containsExactly(
+              ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_EXISTING_SUBMISSION
+                  .getDisplayMessage());
     }
   }
 
@@ -73,11 +85,24 @@ class DuplicatePreviousClaimCivilValidationServiceStrategyTest
     @Test
     void whenExistingClaim() {
       var claimTobeProcessed =
-          createClaim("claimId1", "CIV123", "070722/001", "CLI001", ClaimStatus.READY_TO_PROCESS);
+          createClaim(
+              "claimId1",
+              "submissionId1",
+              "CIV123",
+              "070722/001",
+              "CLI001",
+              ClaimStatus.READY_TO_PROCESS);
       var otherClaim =
-          createClaim("claimId2", "CIV123", "070722/001", "CLI001", ClaimStatus.READY_TO_PROCESS);
+          createClaim(
+              "claimId2",
+              "submissionId1",
+              "CIV123",
+              "070722/001",
+              "CLI001",
+              ClaimStatus.READY_TO_PROCESS);
       var otherClaim1 =
-          createClaim("claimId3", "CIV123", "070722/001", "CLI001", ClaimStatus.VALID);
+          createClaim(
+              "claimId3", "submissionId1", "CIV123", "070722/001", "CLI001", ClaimStatus.VALID);
       var submissionClaims = List.of(claimTobeProcessed, otherClaim, otherClaim1);
       var context = new SubmissionValidationContext();
 
@@ -88,19 +113,15 @@ class DuplicatePreviousClaimCivilValidationServiceStrategyTest
 
       assertThat(context.getClaimReports())
           .extracting("claimId")
-          .containsAll(List.of("claimId2", "claimId3"));
+          .contains(claimTobeProcessed.getId());
 
-      context
-          .getClaimReport("claimId2")
-          .ifPresent(
-              claimValidationReport ->
-                  assertThat(claimValidationReport.getMessages())
-                      .extracting("displayMessage")
-                      .isEqualTo(
-                          List.of(
-                              ClaimValidationError
-                                  .INVALID_CLAIM_HAS_DUPLICATE_IN_EXISTING_SUBMISSION
-                                  .getDisplayMessage())));
+      ClaimValidationReport report =
+          context.getClaimReport(claimTobeProcessed.getId()).orElseThrow();
+      assertThat(report.getMessages())
+          .extracting(ValidationMessagePatch::getDisplayMessage)
+          .containsExactly(
+              ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_EXISTING_SUBMISSION
+                  .getDisplayMessage());
     }
   }
 }

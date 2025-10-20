@@ -44,12 +44,12 @@ public class DuplicatePreviousClaimCivilValidationServiceStrategy extends Duplic
                         duplicatePredicate.getUniqueClientNumber(),
                         currentClaim.getUniqueClientNumber()));
 
-    duplicateClaimsInThisSubmission.forEach(
-        duplicateClaim -> {
-          logDuplicates(duplicateClaim, duplicateClaimsInThisSubmission);
-          context.addClaimError(
-              duplicateClaim.getId(),
-              ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_EXISTING_SUBMISSION);
-        });
+    // add an error against the currentClaim if there are any duplicates are found.
+    if (!duplicateClaimsInThisSubmission.isEmpty()) {
+      logDuplicates(currentClaim, duplicateClaimsInThisSubmission);
+      context.addClaimError(
+          currentClaim.getId(),
+          ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_EXISTING_SUBMISSION);
+    }
   }
 }
