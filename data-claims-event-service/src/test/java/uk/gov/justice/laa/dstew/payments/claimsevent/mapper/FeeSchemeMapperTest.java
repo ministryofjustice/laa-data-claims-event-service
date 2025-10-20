@@ -39,6 +39,7 @@ class FeeSchemeMapperTest {
               .adjournedHearingFeeAmount(1)
               .cmrhOralCount(2)
               .cmrhTelephoneCount(3)
+              .isSubstantiveHearing(true)
               .isAdditionalTravelPayment(true)
               .hoInterview(5)
               .netWaitingCostsAmount(BigDecimal.valueOf(1.05))
@@ -58,7 +59,8 @@ class FeeSchemeMapperTest {
               .boltOnCmrhOral(2)
               .boltOnCmrhTelephone(3)
               .boltOnAdditionalTravel(1)
-              .boltOnHomeOfficeInterview(5);
+              .boltOnHomeOfficeInterview(5)
+              .boltOnSubstantiveHearing(true);
 
       FeeCalculationRequest expected =
           FeeCalculationRequest.builder()
@@ -75,7 +77,7 @@ class FeeSchemeMapperTest {
               .netTravelCosts(1.06)
               .netWaitingCosts(1.05)
               .travelAndWaitingCosts(1.06)
-              .detentionAndWaitingCosts(1.07)
+              .detentionTravelAndWaitingCosts(1.07)
               .caseConcludedDate(LocalDate.parse("2025-01-02"))
               .policeStationId("policeCourtOrPrisonId")
               .policeStationSchemeId("schemeId")
@@ -107,6 +109,7 @@ class FeeSchemeMapperTest {
               .cmrhOralCount(2)
               .cmrhTelephoneCount(3)
               .isAdditionalTravelPayment(true)
+              .isSubstantiveHearing(true)
               .hoInterview(5);
 
       BoltOnType expected =
@@ -115,7 +118,8 @@ class FeeSchemeMapperTest {
               .boltOnCmrhOral(2)
               .boltOnCmrhTelephone(3)
               .boltOnAdditionalTravel(1)
-              .boltOnHomeOfficeInterview(5);
+              .boltOnHomeOfficeInterview(5)
+              .boltOnSubstantiveHearing(true);
 
       BoltOnType actual = feeSchemeMapper.mapToBoltOnType(claim);
 

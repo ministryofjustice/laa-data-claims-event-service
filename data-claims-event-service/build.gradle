@@ -52,7 +52,7 @@ dependencies {
     implementation project(':reference-provider-details-api')
     implementation project(':reference-fee-scheme-platform-api')
 
-    implementation 'uk.gov.justice.laa.datastewardship.payments:data-claims-api-models:b35f485'
+    implementation 'uk.gov.justice.laa.datastewardship.payments:data-claims-api-models:1a6e8bb-SNAPSHOT'
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-registry-prometheus'
