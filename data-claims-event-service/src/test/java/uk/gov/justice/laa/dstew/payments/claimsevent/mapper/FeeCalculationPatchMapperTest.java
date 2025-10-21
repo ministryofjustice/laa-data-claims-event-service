@@ -32,7 +32,6 @@ class FeeCalculationPatchMapperTest {
             .boltOnCmrhOralFee(103.03)
             .boltOnHomeOfficeInterviewCount(4)
             .boltOnHomeOfficeInterviewFee(104.04)
-            .boltOnSubstantiveHearingCount(5)
             .boltOnSubstantiveHearingFee(105.05);
 
     FeeCalculation feeCalculationRequest =
@@ -158,9 +157,6 @@ class FeeCalculationPatchMapperTest {
           softAssertions
               .assertThat(result.getBoltOnDetails().getBoltOnHomeOfficeInterviewFee())
               .isEqualTo(BigDecimal.valueOf(104.04));
-          softAssertions
-              .assertThat(result.getBoltOnDetails().getBoltOnSubstantiveHearingCount())
-              .isEqualTo(5);
           softAssertions
               .assertThat(result.getBoltOnDetails().getBoltOnSubstantiveHearingFee())
               .isEqualTo(BigDecimal.valueOf(105.05));
