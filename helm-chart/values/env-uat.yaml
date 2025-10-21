@@ -3,3 +3,6 @@ metrics:
   mainReleaseName: uat
 
 serviceAccountName: claims-event-service-uat-irsa-serviceaccount
+
+grafana:
+  enabled: true
