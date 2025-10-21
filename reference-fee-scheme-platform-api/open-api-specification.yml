@@ -152,8 +152,6 @@ components:
         policeCourtOrPrisonId:
           type: string
           description: "ID corresponding with police, court or prison."
-        dutySolicitor:
-          type: string
         schemeId:
           type: string
           description: "Scheme Id for police station fixed fee calculation."
@@ -314,8 +312,6 @@ components:
         boltOnCmrhOral:
           type: integer
         boltOnCmrhTelephone:
-          type: integer
-        boltOnAdditionalTravel:
           type: integer
         boltOnHomeOfficeInterview:
           type: integer
