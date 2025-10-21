@@ -32,7 +32,7 @@ public interface FeeSchemeMapper {
   @Mapping(target = "netTravelCosts", source = "travelWaitingCostsAmount")
   @Mapping(target = "netWaitingCosts", source = "netWaitingCostsAmount")
   @Mapping(target = "travelAndWaitingCosts", source = "travelWaitingCostsAmount")
-  @Mapping(target = "detentionAndWaitingCosts", source = "detentionTravelWaitingCostsAmount")
+  @Mapping(target = "detentionTravelAndWaitingCosts", source = "detentionTravelWaitingCostsAmount")
   @Mapping(target = "caseConcludedDate", source = "caseConcludedDate")
   @Mapping(
       target = "dutySolicitor",
@@ -58,5 +58,6 @@ public interface FeeSchemeMapper {
       target = "boltOnAdditionalTravel",
       constant = "1") // this field will be dropped from the FSP side, temporarily setting it to 1.
   @Mapping(target = "boltOnHomeOfficeInterview", source = "hoInterview")
+  @Mapping(target = "boltOnSubstantiveHearing", source = "isSubstantiveHearing")
   BoltOnType mapToBoltOnType(ClaimResponse claim);
 }
