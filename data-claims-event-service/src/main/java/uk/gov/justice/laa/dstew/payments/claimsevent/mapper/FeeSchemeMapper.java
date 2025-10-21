@@ -32,7 +32,7 @@ public interface FeeSchemeMapper {
   @Mapping(target = "netTravelCosts", source = "travelWaitingCostsAmount")
   @Mapping(target = "netWaitingCosts", source = "netWaitingCostsAmount")
   @Mapping(target = "travelAndWaitingCosts", source = "travelWaitingCostsAmount")
-  @Mapping(target = "detentionAndWaitingCosts", source = "detentionTravelWaitingCostsAmount")
+  @Mapping(target = "detentionTravelAndWaitingCosts", source = "detentionTravelWaitingCostsAmount")
   @Mapping(target = "caseConcludedDate", source = "caseConcludedDate")
   @Mapping(target = "schemeId", source = "schemeId")
   @Mapping(target = "uniqueFileNumber", source = "uniqueFileNumber")
@@ -52,5 +52,6 @@ public interface FeeSchemeMapper {
   @Mapping(target = "boltOnCmrhOral", source = "cmrhOralCount")
   @Mapping(target = "boltOnCmrhTelephone", source = "cmrhTelephoneCount")
   @Mapping(target = "boltOnHomeOfficeInterview", source = "hoInterview")
+  @Mapping(target = "boltOnSubstantiveHearing", source = "isSubstantiveHearing")
   BoltOnType mapToBoltOnType(ClaimResponse claim);
 }

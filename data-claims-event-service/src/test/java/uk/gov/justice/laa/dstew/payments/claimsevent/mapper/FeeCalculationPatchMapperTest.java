@@ -31,7 +31,9 @@ class FeeCalculationPatchMapperTest {
             .boltOnCmrhOralCount(3)
             .boltOnCmrhOralFee(103.03)
             .boltOnHomeOfficeInterviewCount(4)
-            .boltOnHomeOfficeInterviewFee(104.04);
+            .boltOnHomeOfficeInterviewFee(104.04)
+            .boltOnSubstantiveHearingCount(5)
+            .boltOnSubstantiveHearingFee(105.05);
 
     FeeCalculation feeCalculationRequest =
         new FeeCalculation()
@@ -50,7 +52,7 @@ class FeeCalculationPatchMapperTest {
             .netTravelCostsAmount(111.11)
             .travelAndWaitingCostAmount(111.12)
             .netWaitingCosts(112.12)
-            .detentionAndWaitingCostsAmount(113.13)
+            .detentionTravelAndWaitingCostsAmount(113.13)
             .jrFormFillingAmount(114.14)
             .boltOnFeeDetails(boltOnFeeDetails);
 
@@ -122,7 +124,7 @@ class FeeCalculationPatchMapperTest {
               .assertThat(result.getNetWaitingCostsAmount())
               .isEqualTo(BigDecimal.valueOf(112.12));
           softAssertions
-              .assertThat(result.getDetentionAndWaitingCostsAmount())
+              .assertThat(result.getDetentionTravelAndWaitingCostsAmount())
               .isEqualTo(BigDecimal.valueOf(113.13));
           softAssertions
               .assertThat(result.getJrFormFillingAmount())
@@ -156,6 +158,12 @@ class FeeCalculationPatchMapperTest {
           softAssertions
               .assertThat(result.getBoltOnDetails().getBoltOnHomeOfficeInterviewFee())
               .isEqualTo(BigDecimal.valueOf(104.04));
+          softAssertions
+              .assertThat(result.getBoltOnDetails().getBoltOnSubstantiveHearingCount())
+              .isEqualTo(5);
+          softAssertions
+              .assertThat(result.getBoltOnDetails().getBoltOnSubstantiveHearingFee())
+              .isEqualTo(BigDecimal.valueOf(105.05));
 
           // Check details from FeeDetailsResponse
           softAssertions.assertThat(result.getCategoryOfLaw()).isEqualTo("categoryOfLawCode");
