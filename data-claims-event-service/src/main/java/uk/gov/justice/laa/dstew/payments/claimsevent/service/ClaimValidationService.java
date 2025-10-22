@@ -3,6 +3,7 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,8 +12,11 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionClaim;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessageType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.EventServiceIllegalArgumentException;
+import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.BasicClaimValidator;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.ClaimValidator;
@@ -33,6 +37,7 @@ public class ClaimValidationService {
   private final CategoryOfLawValidationService categoryOfLawValidationService;
   private final DataClaimsRestClient dataClaimsRestClient;
   private final FeeCalculationService feeCalculationService;
+  private final EventServiceMetricService eventServiceMetricService;
 
   private final List<ClaimValidator> claimValidator;
 
@@ -126,5 +131,27 @@ public class ClaimValidationService {
 
     // fee calculation validation - done last after every other claim validation
     feeCalculationService.validateFeeCalculation(submissionId, claim, context);
+
+    // Check claim status and record metric
+    recordClaimMetric(claim, context);
+  }
+
+  private void recordClaimMetric(ClaimResponse claim, SubmissionValidationContext context) {
+    Optional<ClaimValidationReport> claimReportOptional = context.getClaimReport(claim.getId());
+    if (claimReportOptional.isEmpty()) {
+      eventServiceMetricService.incrementTotalClaimsValidatedAndValid();
+      return;
+    }
+
+    // Claim could have either errors or warnings so record both
+    if (claimReportOptional.get().getMessages().stream()
+        .anyMatch(x -> x.getType().equals(ValidationMessageType.ERROR))) {
+      eventServiceMetricService.incrementTotalClaimsValidatedAndErrorsFound();
+    }
+
+    if (claimReportOptional.get().getMessages().stream()
+        .anyMatch(x -> x.getType().equals(ValidationMessageType.WARNING))) {
+      eventServiceMetricService.incrementTotalClaimsValidatedAndWarningsFound();
+    }
   }
 }

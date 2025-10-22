@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.strategy;
+package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate;
 
 import java.util.List;
 import java.util.function.Predicate;
@@ -27,7 +27,7 @@ public abstract class DuplicateClaimValidation {
    * @param submissionClaims the list of claims in the submission
    * @return a filtered list of claims in the submission, excluding the given claim
    */
-  protected List<ClaimResponse> filterCurrentClaimWithNonInvalidStatusAndWithinPeriod(
+  protected List<ClaimResponse> filterCurrentClaimWithValidStatusAndWithinPeriod(
       ClaimResponse currentClaim, List<ClaimResponse> submissionClaims) {
     return submissionClaims.stream()
         .filter(submissionClaim -> submissionClaim != currentClaim)
@@ -66,6 +66,7 @@ public abstract class DuplicateClaimValidation {
       final String feeCode,
       final String uniqueFileNumber,
       final String uniqueClientNumber,
+      final String uniqueCaseId,
       final List<ClaimResponse> submissionClaims) {
     return dataClaimsRestClient
         .getClaims(
@@ -74,16 +75,21 @@ public abstract class DuplicateClaimValidation {
             List.of(
                 SubmissionStatus.CREATED,
                 SubmissionStatus.VALIDATION_IN_PROGRESS,
-                SubmissionStatus.READY_FOR_VALIDATION),
+                SubmissionStatus.READY_FOR_VALIDATION,
+                SubmissionStatus.VALIDATION_SUCCEEDED),
             feeCode,
             uniqueFileNumber,
             uniqueClientNumber,
+            uniqueCaseId,
             List.of(ClaimStatus.READY_TO_PROCESS, ClaimStatus.VALID),
             null)
         .getBody()
         .getContent()
         .stream()
-        .filter(prevClaim -> !submissionClaims.contains(prevClaim))
+        .filter(
+            prevClaim ->
+                !submissionClaims.getFirst().getSubmissionId().equals(prevClaim.getSubmissionId())
+                    && !submissionClaims.contains(prevClaim))
         .toList();
   }
 }

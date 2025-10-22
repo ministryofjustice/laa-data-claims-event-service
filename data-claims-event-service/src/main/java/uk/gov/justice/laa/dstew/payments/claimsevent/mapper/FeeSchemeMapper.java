@@ -25,24 +25,15 @@ public interface FeeSchemeMapper {
   @Mapping(target = "disbursementVatAmount", source = "disbursementsVatAmount")
   @Mapping(target = "vatIndicator", source = "isVatApplicable")
   @Mapping(target = "immigrationPriorAuthorityNumber", source = "priorAuthorityReference")
-  @Mapping(
-      target = "policeStationId",
-      ignore = true) // TODO: policeStationId missing from ClaimResponse?
-  @Mapping(
-      target = "policeStationSchemeId",
-      ignore = true) // TODO: policeStationSchemeId missing from ClaimResponse?
+  @Mapping(target = "policeStationId", source = "policeStationCourtPrisonId")
+  @Mapping(target = "policeStationSchemeId", source = "schemeId")
   @Mapping(target = "policeCourtOrPrisonId", source = "policeStationCourtPrisonId")
   @Mapping(target = "boltOns", source = "claim")
-  @Mapping(
-      target = "netTravelCosts",
-      ignore = true) // TODO: netTravelCosts missing from ClaimResponse?
+  @Mapping(target = "netTravelCosts", source = "travelWaitingCostsAmount")
   @Mapping(target = "netWaitingCosts", source = "netWaitingCostsAmount")
   @Mapping(target = "travelAndWaitingCosts", source = "travelWaitingCostsAmount")
-  @Mapping(target = "detentionAndWaitingCosts", source = "detentionTravelWaitingCostsAmount")
+  @Mapping(target = "detentionTravelAndWaitingCosts", source = "detentionTravelWaitingCostsAmount")
   @Mapping(target = "caseConcludedDate", source = "caseConcludedDate")
-  @Mapping(
-      target = "dutySolicitor",
-      source = "isDutySolicitor") // TODO: Mismatch in types String <-> Boolean
   @Mapping(target = "schemeId", source = "schemeId")
   @Mapping(target = "uniqueFileNumber", source = "uniqueFileNumber")
   @Mapping(target = "numberOfMediationSessions", source = "mediationSessionsCount")
@@ -60,7 +51,7 @@ public interface FeeSchemeMapper {
       source = "adjournedHearingFeeAmount") // TODO: Mismatch in types Integer <-> BigDecimal
   @Mapping(target = "boltOnCmrhOral", source = "cmrhOralCount")
   @Mapping(target = "boltOnCmrhTelephone", source = "cmrhTelephoneCount")
-  @Mapping(target = "boltOnAdditionalTravel", ignore = true) // TODO: Missing from ClaimResponse?
   @Mapping(target = "boltOnHomeOfficeInterview", source = "hoInterview")
+  @Mapping(target = "boltOnSubstantiveHearing", source = "isSubstantiveHearing")
   BoltOnType mapToBoltOnType(ClaimResponse claim);
 }

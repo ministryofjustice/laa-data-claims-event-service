@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import io.prometheus.metrics.model.registry.PrometheusRegistry;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -15,6 +16,8 @@ import java.time.Duration;
 import java.time.YearMonth;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 import java.util.UUID;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +37,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.support.WebClientAdapter;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
@@ -87,6 +91,8 @@ public abstract class MockServerIntegrationTest {
     return container;
   }
 
+  @MockitoBean PrometheusRegistry prometheusRegistry;
+
   @AfterEach
   void tearDown() {
     mockServerClient.reset();
@@ -94,6 +100,9 @@ public abstract class MockServerIntegrationTest {
 
   @BeforeAll
   void beforeEveryTest() {
+    TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+    Locale.setDefault(Locale.UK);
+
     // Skip tests if Docker is unavailable
     Assumptions.assumeTrue(
         DockerClientFactory.instance().isDockerAvailable(),
@@ -152,7 +161,7 @@ public abstract class MockServerIntegrationTest {
                 .withBody(readJsonFromFile(expectedResponse)));
   }
 
-  protected void stubForGteFeeDetails(final String feeCode, final String expectedResponse)
+  protected void stubForGetFeeDetails(final String feeCode, final String expectedResponse)
       throws Exception {
     mockServerClient
         .when(
@@ -292,9 +301,7 @@ public abstract class MockServerIntegrationTest {
             HttpRequest.request()
                 .withMethod(HttpMethod.GET.toString())
                 .withPath(API_VERSION_0 + "submissions")
-                .withQueryStringParameters(parameters)
-                .withQueryStringParameters(
-                    Parameter.param("size", "0"), Parameter.param("page", "0")))
+                .withQueryStringParameters(parameters))
         .respond(
             HttpResponse.response()
                 .withStatusCode(200)

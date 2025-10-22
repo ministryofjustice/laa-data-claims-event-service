@@ -34,7 +34,7 @@
         "netCostOfCounselAmount": 0.1,
         "netTravelCostsAmount": 0.1,
         "netWaitingCosts": 0.1,
-        "detentionAndWaitingCostsAmount": 0.1,
+        "detentionTravelAndWaitingCostsAmount": 0.1,
         "jrFormFillingAmount": 0.1,
         "travelAndWaitingCostAmount": 0.1,
         "boltOnFeeDetails": {
@@ -46,7 +46,9 @@
           "boltOnCmrhOralCount": 0,
           "boltOnCmrhOralFee": 0.1,
           "boltOnHomeOfficeInterviewCount": 0,
-          "boltOnHomeOfficeInterviewFee": 0.1
+          "boltOnHomeOfficeInterviewFee": 0.1,
+          "boltOnSubstantiveHearingCount": 0,
+          "boltOnSubstantiveHearingFee": 0.1
         }
       }
     }

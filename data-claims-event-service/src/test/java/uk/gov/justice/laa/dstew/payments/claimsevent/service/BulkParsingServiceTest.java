@@ -9,6 +9,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationSource.EVENT_SERVICE;
 
 import java.net.URI;
 import java.util.List;
@@ -37,6 +38,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.exception.ClaimCreateExcept
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.MatterStartCreateException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.SubmissionCreateException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.mapper.BulkSubmissionMapper;
+import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
 
 @ExtendWith(MockitoExtension.class)
 class BulkParsingServiceTest {
@@ -45,6 +47,7 @@ class BulkParsingServiceTest {
 
   @Mock private DataClaimsRestClient dataClaimsRestClient;
   @Mock private BulkSubmissionMapper mapper;
+  @Mock private EventServiceMetricService eventServiceMetricService;
 
   @InjectMocks private BulkParsingService service;
 
@@ -80,6 +83,7 @@ class BulkParsingServiceTest {
 
     final MatterStartPost matterStartRequest = new MatterStartPost();
     matterStartRequest.setScheduleReference("M1");
+    matterStartRequest.setCreatedByUserId(EVENT_SERVICE);
     final List<MatterStartPost> matterStartRequests = List.of(matterStartRequest);
 
     when(dataClaimsRestClient.getBulkSubmission(bulkSubmissionId))

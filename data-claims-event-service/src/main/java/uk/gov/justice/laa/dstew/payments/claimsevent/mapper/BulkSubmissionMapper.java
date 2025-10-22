@@ -1,5 +1,7 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.mapper;
 
+import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationSource.EVENT_SERVICE;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -39,6 +41,7 @@ public interface BulkSubmissionMapper {
       qualifiedByName = "isNilSubmission")
   @Mapping(target = "numberOfClaims", source = "bulkSubmission", qualifiedByName = "countClaims")
   @Mapping(target = "providerUserId", source = "bulkSubmission.createdByUserId")
+  @Mapping(target = "createdByUserId", constant = EVENT_SERVICE)
   SubmissionPost mapToSubmissionPost(
       GetBulkSubmission200Response bulkSubmission, UUID submissionId);
 
@@ -133,6 +136,7 @@ public interface BulkSubmissionMapper {
   @Mapping(target = "client2DisabilityCode", source = "client2Disability")
   @Mapping(target = "client2IsLegallyAided", source = "client2LegallyAided")
   @Mapping(target = "isClient2PostalApplicationAccepted", source = "client2PostalApplAccp")
+  @Mapping(target = "createdByUserId", constant = EVENT_SERVICE)
   ClaimPost mapToClaimPost(BulkSubmissionOutcome outcome);
 
   List<ClaimPost> mapToClaimPosts(List<BulkSubmissionOutcome> outcomes);
@@ -140,6 +144,9 @@ public interface BulkSubmissionMapper {
   @Mapping(target = "categoryCode", source = "categoryCode")
   @Mapping(target = "accessPointCode", source = "accessPoint")
   @Mapping(target = "deliveryLocation", source = "deliveryLocation")
+  @Mapping(target = "scheduleReference", source = "scheduleRef")
+  @Mapping(target = "procurementAreaCode", source = "procurementArea")
+  @Mapping(target = "createdByUserId", constant = EVENT_SERVICE)
   MatterStartPost mapToMatterStart(BulkSubmissionMatterStart matterStart);
 
   List<MatterStartPost> mapToMatterStartRequests(List<BulkSubmissionMatterStart> matterStarts);

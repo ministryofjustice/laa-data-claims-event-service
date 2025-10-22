@@ -142,7 +142,7 @@ components:
           type: number
           format: double
           description: "Value of travel and waiting."
-        detentionAndWaitingCosts:
+        detentionTravelAndWaitingCosts:
           type: number
           format: double
           description: "Value of detention and waiting costs costs"
@@ -152,8 +152,6 @@ components:
         policeCourtOrPrisonId:
           type: string
           description: "ID corresponding with police, court or prison."
-        dutySolicitor:
-          type: string
         schemeId:
           type: string
           description: "Scheme Id for police station fixed fee calculation."
@@ -250,7 +248,7 @@ components:
           type: number
           format: double
           description: "The net waiting cost requested."
-        detentionAndWaitingCostsAmount:
+        detentionTravelAndWaitingCostsAmount:
           type: number
           format: double
           description: "The detention and waiting costs requested."
@@ -302,6 +300,9 @@ components:
         boltOnHomeOfficeInterviewFee:
           type: number
           format: double
+        boltOnSubstantiveHearingFee:
+          type: number
+          format: double
 
     BoltOnType:
       type: object
@@ -312,10 +313,10 @@ components:
           type: integer
         boltOnCmrhTelephone:
           type: integer
-        boltOnAdditionalTravel:
-          type: integer
         boltOnHomeOfficeInterview:
           type: integer
+        boltOnSubstantiveHearing:
+          type: boolean
 
     ErrorResponse:
       type: object

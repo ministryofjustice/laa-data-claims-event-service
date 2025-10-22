@@ -22,7 +22,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
-import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.strategy.DuplicateClaimCrimeValidationServiceStrategy;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.DuplicateClaimCrimeValidationServiceStrategy;
 
 @ExtendWith(MockitoExtension.class)
 class DuplicateClaimCrimeValidationServiceStrategyTest {
@@ -54,7 +54,8 @@ class DuplicateClaimCrimeValidationServiceStrategyTest {
 
       List<ClaimResponse> submissionClaims = List.of(claim1, claim2);
 
-      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any(), any()))
+      when(dataClaimsRestClient.getClaims(
+              any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
 
       SubmissionValidationContext context = new SubmissionValidationContext();
@@ -92,7 +93,8 @@ class DuplicateClaimCrimeValidationServiceStrategyTest {
 
       List<ClaimResponse> submissionClaims = List.of(claim1, claim2);
 
-      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any(), any()))
+      when(dataClaimsRestClient.getClaims(
+              any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
 
       SubmissionValidationContext context = new SubmissionValidationContext();
@@ -130,7 +132,8 @@ class DuplicateClaimCrimeValidationServiceStrategyTest {
 
       List<ClaimResponse> submissionClaims = List.of(claim1, claim2);
 
-      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any(), any()))
+      when(dataClaimsRestClient.getClaims(
+              any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
 
       SubmissionValidationContext context = new SubmissionValidationContext();
@@ -172,7 +175,8 @@ class DuplicateClaimCrimeValidationServiceStrategyTest {
       ClaimResultSet claimResultSet = new ClaimResultSet();
       claimResultSet.content(submissionClaims);
 
-      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any(), any()))
+      when(dataClaimsRestClient.getClaims(
+              any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
 
       SubmissionValidationContext context = new SubmissionValidationContext();
@@ -201,12 +205,14 @@ class DuplicateClaimCrimeValidationServiceStrategyTest {
       ClaimResponse claim1 =
           new ClaimResponse()
               .id("claimId1")
+              .submissionId("submissionId")
               .feeCode("feeCode")
               .uniqueFileNumber("ufn")
               .status(ClaimStatus.READY_TO_PROCESS);
       ClaimResponse claim2 =
           new ClaimResponse()
               .id("claimId2")
+              .submissionId("submissionId")
               .feeCode("feeCode")
               .uniqueFileNumber("ufn")
               .status(ClaimStatus.INVALID);
@@ -216,7 +222,8 @@ class DuplicateClaimCrimeValidationServiceStrategyTest {
       ClaimResultSet claimResultSet = new ClaimResultSet();
       claimResultSet.content(submissionClaims);
 
-      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any(), any()))
+      when(dataClaimsRestClient.getClaims(
+              any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(claimResultSet)));
 
       SubmissionValidationContext context = new SubmissionValidationContext();
@@ -243,6 +250,7 @@ class DuplicateClaimCrimeValidationServiceStrategyTest {
       ClaimResponse claim1 =
           new ClaimResponse()
               .id("claimId1")
+              .submissionId("submissionId")
               .feeCode("feeCode")
               .uniqueFileNumber("ufn")
               .status(ClaimStatus.READY_TO_PROCESS);
@@ -250,6 +258,7 @@ class DuplicateClaimCrimeValidationServiceStrategyTest {
       ClaimResponse otherClaim =
           new ClaimResponse()
               .id("claimId2")
+              .submissionId("submissionId2")
               .feeCode("feeCode")
               .uniqueFileNumber("ufn")
               .status(ClaimStatus.VALID);
@@ -259,7 +268,8 @@ class DuplicateClaimCrimeValidationServiceStrategyTest {
       ClaimResultSet claimResultSet = new ClaimResultSet();
       claimResultSet.content(List.of(otherClaim));
 
-      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any(), any()))
+      when(dataClaimsRestClient.getClaims(
+              any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(claimResultSet)));
 
       SubmissionValidationContext context = new SubmissionValidationContext();
@@ -287,18 +297,21 @@ class DuplicateClaimCrimeValidationServiceStrategyTest {
       ClaimResponse claim1 =
           new ClaimResponse()
               .id("claimId1")
+              .submissionId("submissionId")
               .feeCode("feeCode")
               .uniqueFileNumber("ufn")
               .status(ClaimStatus.READY_TO_PROCESS);
       ClaimResponse claim2 =
           new ClaimResponse()
               .id("claimId2")
+              .submissionId("submissionId")
               .feeCode("feeCode")
               .uniqueFileNumber("ufn")
               .status(ClaimStatus.READY_TO_PROCESS);
       ClaimResponse otherClaim =
           new ClaimResponse()
               .id("claimId2")
+              .submissionId("submissionId")
               .feeCode("feeCode")
               .uniqueFileNumber("ufn")
               .status(ClaimStatus.READY_TO_PROCESS);
@@ -308,7 +321,8 @@ class DuplicateClaimCrimeValidationServiceStrategyTest {
       ClaimResultSet claimResultSet = new ClaimResultSet();
       claimResultSet.content(List.of(otherClaim));
 
-      when(dataClaimsRestClient.getClaims(any(), any(), any(), any(), any(), any(), any(), any()))
+      when(dataClaimsRestClient.getClaims(
+              any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(claimResultSet)));
 
       SubmissionValidationContext context = new SubmissionValidationContext();

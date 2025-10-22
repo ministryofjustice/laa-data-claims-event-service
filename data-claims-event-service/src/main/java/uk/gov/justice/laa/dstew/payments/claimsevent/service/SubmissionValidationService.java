@@ -16,6 +16,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
+import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.submission.SubmissionValidator;
@@ -33,6 +34,7 @@ public class SubmissionValidationService {
   private final ClaimValidationService claimValidationService;
   private final DataClaimsRestClient dataClaimsRestClient;
   private final List<SubmissionValidator> submissionValidatorList;
+  private final EventServiceMetricService eventServiceMetricService;
 
   /**
    * Validates a claim submission inside the provided submissionResponse.
@@ -54,28 +56,32 @@ public class SubmissionValidationService {
         .sorted(Comparator.comparingInt(SubmissionValidator::priority))
         .forEach(validator -> validator.validate(submission, context));
 
-    // Only validate claims if no validation errors have been recorded.
-    if (!context.hasErrors()) {
+    // Only validate claims if no submission level validation errors have been recorded.
+    if (!context.hasSubmissionLevelErrors()) {
       claimValidationService.validateClaims(submission, context);
-
-      // TODO: Send through all claim errors in the patch request.
-      // TODO: Verify all claims have been validated, and update submission status to
-      updateClaims(submission, context);
+    } else {
+      eventServiceMetricService.incrementTotalSubmissionsValidatedWithSubmissionErrors();
     }
-
-    //  VALIDATION_SUCCEEDED or VALIDATION_FAILED
-    //  If unvalidated claims remain, re-queue message.
-    log.debug("Validation completed for submission {}", submissionId);
 
     // Update submission status after completion
-    SubmissionStatus completedStatus = SubmissionStatus.VALIDATION_SUCCEEDED;
+    SubmissionPatch submissionPatch = new SubmissionPatch().submissionId(submissionId);
     if (context.hasErrors()) {
-      completedStatus = SubmissionStatus.VALIDATION_FAILED;
+      log.debug(
+          "Validation completed for submission {} with errors: {}",
+          submissionId,
+          context.getSubmissionValidationErrors());
+      submissionPatch
+          .status(SubmissionStatus.VALIDATION_FAILED)
+          .validationMessages(context.getSubmissionValidationErrors());
+      eventServiceMetricService.incrementTotalInvalidSubmissions();
+    } else {
+      log.debug("Validation completed for submission {} with no errors", submissionId);
+      submissionPatch.status(SubmissionStatus.VALIDATION_SUCCEEDED);
+      eventServiceMetricService.incrementTotalValidSubmissions();
     }
-    SubmissionPatch submissionPatch =
-        new SubmissionPatch().submissionId(submissionId).status(completedStatus);
-    dataClaimsRestClient.updateSubmission(submissionId.toString(), submissionPatch);
 
+    updateClaims(submission, context);
+    dataClaimsRestClient.updateSubmission(submissionId.toString(), submissionPatch);
     return context;
   }
 
@@ -135,7 +141,7 @@ public class SubmissionValidationService {
   }
 
   private ClaimStatus getClaimStatus(String claimId, SubmissionValidationContext context) {
-    if (context.hasErrors(claimId)) {
+    if (context.hasSubmissionLevelErrors() || context.hasErrors(claimId)) {
       return ClaimStatus.INVALID;
     } else {
       return ClaimStatus.VALID;

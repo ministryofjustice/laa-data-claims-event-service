@@ -1,3 +1,5 @@
 replicas: 1
+metrics:
+  mainReleaseName: development
 
 serviceAccountName: claims-event-service-dev-irsa-serviceaccount

@@ -1,1 +1,4 @@
 # Not used as charts are made prod safe see values.yml
+
+grafana:
+  enabled: true

@@ -49,6 +49,9 @@
     "number_of_claims": {
       "type": "integer",
       "minimum": 0
+    },
+    "created_by_user_id": {
+      "type": "string"
     }
   },
   "required": [

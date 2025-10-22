@@ -1,3 +1,8 @@
 replicas: 1
+metrics:
+  mainReleaseName: staging
 
 serviceAccountName: claims-event-service-staging-irsa-serviceaccount
+
+grafana:
+  enabled: true
