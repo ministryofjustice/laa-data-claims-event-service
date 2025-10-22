@@ -70,6 +70,7 @@ class BulkSubmissionMapperTest {
     assertThat(claim.getCaseReferenceNumber()).isEqualTo("JI/OKUSU");
     assertThat(claim.getUniqueFileNumber()).isEqualTo("220422/013");
     assertThat(claim.getCreatedByUserId()).isEqualTo(EVENT_SERVICE);
+    assertThat(claim.getIsVatApplicable()).isFalse();
   }
 
   @Test

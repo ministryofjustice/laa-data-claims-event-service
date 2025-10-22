@@ -44,6 +44,9 @@ public enum SubmissionValidationError {
       "Submissions for after the current month (%s) are not accepted. Please submit for a previous "
           + "month.",
       null, EVENT_SERVICE, ValidationMessageType.ERROR),
+  SUBMISSION_VALIDATION_MINIMUM_PERIOD(
+      "Submissions for periods before %s are not accepted. Please submit for a period on or after %s.",
+      "null", EVENT_SERVICE, ValidationMessageType.ERROR),
   SUBMISSION_ALREADY_EXISTS(
       "Submission already exists for Office (%s), Area of Law (%s),  Period (%s)",
       null, EVENT_SERVICE, ValidationMessageType.ERROR),
