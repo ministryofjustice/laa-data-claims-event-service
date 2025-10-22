@@ -1,4 +1,4 @@
-{{- if and .Values.grafana.enabled (or (and (contains "uat" .Release.Namespace) (eq .Release.Name "main")) (and (contains "staging" .Release.Namespace)) (and (contains "prod" .Release.Namespace))) }}
+{{- if and .Values.grafana.enabled (or (contains "uat" .Release.Namespace) (contains "staging" .Release.Namespace) (contains "prod" .Release.Namespace)) }}
 
 apiVersion: v1
 kind: ConfigMap
