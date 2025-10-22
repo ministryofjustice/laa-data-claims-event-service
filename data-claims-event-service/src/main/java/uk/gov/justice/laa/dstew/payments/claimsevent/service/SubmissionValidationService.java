@@ -8,6 +8,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionErrorCode;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionPatch;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionClaim;
@@ -63,8 +66,11 @@ public class SubmissionValidationService {
       eventServiceMetricService.incrementTotalSubmissionsValidatedWithSubmissionErrors();
     }
 
-    // Update submission status after completion
+    // Update submission and bulk submission status after completion
+    var bulkSubmissionId = submission.getBulkSubmissionId();
     SubmissionPatch submissionPatch = new SubmissionPatch().submissionId(submissionId);
+    BulkSubmissionPatch bulkSubmissionPatch =
+        new BulkSubmissionPatch().bulkSubmissionId(bulkSubmissionId);
     if (context.hasErrors()) {
       log.debug(
           "Validation completed for submission {} with errors: {}",
@@ -74,14 +80,23 @@ public class SubmissionValidationService {
           .status(SubmissionStatus.VALIDATION_FAILED)
           .validationMessages(context.getSubmissionValidationErrors());
       eventServiceMetricService.incrementTotalInvalidSubmissions();
+      bulkSubmissionPatch
+          .status(BulkSubmissionStatus.VALIDATION_FAILED)
+          .errorCode(BulkSubmissionErrorCode.V100)
+          .errorDescription(
+              "Validation completed for bulk submission %s with errors"
+                  .formatted(bulkSubmissionId));
     } else {
       log.debug("Validation completed for submission {} with no errors", submissionId);
       submissionPatch.status(SubmissionStatus.VALIDATION_SUCCEEDED);
       eventServiceMetricService.incrementTotalValidSubmissions();
+      bulkSubmissionPatch.status(BulkSubmissionStatus.VALIDATION_SUCCEEDED);
     }
 
     updateClaims(submission, context);
     dataClaimsRestClient.updateSubmission(submissionId.toString(), submissionPatch);
+    dataClaimsRestClient.updateBulkSubmission(
+        String.valueOf(bulkSubmissionId), bulkSubmissionPatch);
     return context;
   }
 

@@ -24,6 +24,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionMatterStart;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionOutcome;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.CreateMatterStart201Response;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetBulkSubmission200Response;
@@ -100,6 +101,9 @@ class BulkParsingServiceTest {
         .thenReturn(ResponseEntity.created(URI.create("/matter-starts/matter-id")).build());
     when(dataClaimsRestClient.updateSubmission(eq(createdSubmissionId), any(SubmissionPatch.class)))
         .thenReturn(ResponseEntity.noContent().build());
+    when(dataClaimsRestClient.updateBulkSubmission(
+            eq(bulkSubmissionId.toString()), any(BulkSubmissionPatch.class)))
+        .thenReturn(ResponseEntity.noContent().build());
 
     service.parseData(bulkSubmissionId, submissionId);
 
@@ -140,6 +144,9 @@ class BulkParsingServiceTest {
     when(mapper.mapToMatterStartRequests(List.of())).thenReturn(List.of());
     when(dataClaimsRestClient.updateSubmission(eq(createdSubmissionId), any(SubmissionPatch.class)))
         .thenReturn(ResponseEntity.noContent().build());
+    when(dataClaimsRestClient.updateBulkSubmission(
+            eq(bulkSubmissionId.toString()), any(BulkSubmissionPatch.class)))
+        .thenReturn(ResponseEntity.noContent().build());
 
     service.parseData(bulkSubmissionId, submissionId);
 
@@ -170,9 +177,13 @@ class BulkParsingServiceTest {
 
   @Test
   void createSubmissionThrowsWhenNoLocation() {
-    final SubmissionPost submission = new SubmissionPost();
+    var bulkSubmissionId = UUID.randomUUID();
+    final SubmissionPost submission = new SubmissionPost().bulkSubmissionId(bulkSubmissionId);
     when(dataClaimsRestClient.createSubmission(submission))
         .thenReturn(ResponseEntity.created(null).build());
+    when(dataClaimsRestClient.updateBulkSubmission(
+            eq(bulkSubmissionId.toString()), any(BulkSubmissionPatch.class)))
+        .thenReturn(ResponseEntity.noContent().build());
 
     assertThatThrownBy(() -> service.createSubmission(submission))
         .isInstanceOf(SubmissionCreateException.class);
@@ -180,9 +191,13 @@ class BulkParsingServiceTest {
 
   @Test
   void createSubmissionThrowsWhenStatusNot201() {
-    SubmissionPost submission = new SubmissionPost();
+    var bulkSubmissionId = UUID.randomUUID();
+    final SubmissionPost submission = new SubmissionPost().bulkSubmissionId(bulkSubmissionId);
     when(dataClaimsRestClient.createSubmission(submission))
         .thenReturn(ResponseEntity.badRequest().build());
+    when(dataClaimsRestClient.updateBulkSubmission(
+            eq(bulkSubmissionId.toString()), any(BulkSubmissionPatch.class)))
+        .thenReturn(ResponseEntity.noContent().build());
 
     assertThatThrownBy(() -> service.createSubmission(submission))
         .isInstanceOf(SubmissionCreateException.class);
@@ -293,8 +308,8 @@ class BulkParsingServiceTest {
 
   @Test
   void createClaimsReturnsEmptyWhenNoClaims() {
-    assertThat(service.createClaims("sub1", null)).isEmpty();
-    assertThat(service.createClaims("sub1", List.of())).isEmpty();
+    assertThat(service.createClaims("bulk-sub1", "sub1", null)).isEmpty();
+    assertThat(service.createClaims("bulk-sub1", "sub1", List.of())).isEmpty();
   }
 
   @Test
@@ -302,17 +317,21 @@ class BulkParsingServiceTest {
     final BulkParsingService spyService = spy(service);
     final ClaimPost claim = new ClaimPost();
 
+    when(dataClaimsRestClient.updateBulkSubmission(
+            any(String.class), any(BulkSubmissionPatch.class)))
+        .thenReturn(ResponseEntity.noContent().build());
+
     doThrow(new ClaimCreateException("boom")).when(spyService).createClaim("sub1", claim);
 
-    assertThatThrownBy(() -> spyService.createClaims("sub1", List.of(claim)))
+    assertThatThrownBy(() -> spyService.createClaims("bulk-sub1", "sub1", List.of(claim)))
         .isInstanceOf(ClaimCreateException.class)
         .hasMessageContaining("index 0");
   }
 
   @Test
   void createMatterStartsReturnsEmptyWhenNoMatterStarts() {
-    assertThat(service.createMatterStarts("sub1", null)).isEmpty();
-    assertThat(service.createMatterStarts("sub1", List.of())).isEmpty();
+    assertThat(service.createMatterStarts("bulk-sub1", "sub1", null)).isEmpty();
+    assertThat(service.createMatterStarts("bulk-sub1", "sub1", List.of())).isEmpty();
   }
 
   @Test
@@ -320,11 +339,15 @@ class BulkParsingServiceTest {
     final BulkParsingService spyService = spy(service);
     final MatterStartPost request = new MatterStartPost();
 
+    when(dataClaimsRestClient.updateBulkSubmission(
+            any(String.class), any(BulkSubmissionPatch.class)))
+        .thenReturn(ResponseEntity.noContent().build());
+
     doThrow(new MatterStartCreateException("fail"))
         .when(spyService)
         .createMatterStart("sub1", request);
 
-    assertThatThrownBy(() -> spyService.createMatterStarts("sub1", List.of(request)))
+    assertThatThrownBy(() -> spyService.createMatterStarts("bulk-sub1", "sub1", List.of(request)))
         .isInstanceOf(MatterStartCreateException.class)
         .hasMessageContaining("index 0");
   }

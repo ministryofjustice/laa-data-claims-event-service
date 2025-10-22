@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionMatterStart;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionOutcome;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetBulkSubmission200Response;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.MatterStartPost;
@@ -50,7 +51,9 @@ public class TempService extends BulkParsingService {
     List<BulkSubmissionOutcome> outcomes =
         bulkSubmission.getDetails() != null ? bulkSubmission.getDetails().getOutcomes() : List.of();
     List<ClaimPost> claims = bulkSubmissionMapper.mapToClaimPosts(outcomes);
-    List<String> claimIds = createClaims(createdSubmissionId, claims);
+    assert bulkSubmission.getBulkSubmissionId() != null;
+    List<String> claimIds =
+        createClaims(bulkSubmission.getBulkSubmissionId().toString(), createdSubmissionId, claims);
 
     List<BulkSubmissionMatterStart> matterStarts =
         bulkSubmission.getDetails() != null
@@ -58,8 +61,11 @@ public class TempService extends BulkParsingService {
             : List.of();
     List<MatterStartPost> matterStartRequests =
         bulkSubmissionMapper.mapToMatterStartRequests(matterStarts);
-    createMatterStarts(createdSubmissionId, matterStartRequests);
+    createMatterStarts(
+        bulkSubmission.getBulkSubmissionId().toString(), createdSubmissionId, matterStartRequests);
 
     updateSubmissionStatus(createdSubmissionId, claimIds.size());
+    updateBulkSubmissionStatus(
+        bulkSubmission.getBulkSubmissionId().toString(), BulkSubmissionStatus.PARSING_COMPLETED);
   }
 }

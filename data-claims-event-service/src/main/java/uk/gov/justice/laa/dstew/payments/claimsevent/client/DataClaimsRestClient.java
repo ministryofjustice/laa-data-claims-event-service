@@ -15,6 +15,7 @@ import org.springframework.web.service.annotation.GetExchange;
 import org.springframework.web.service.annotation.HttpExchange;
 import org.springframework.web.service.annotation.PatchExchange;
 import org.springframework.web.service.annotation.PostExchange;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
@@ -47,6 +48,17 @@ public interface DataClaimsRestClient {
    */
   @GetExchange("/bulk-submissions/{id}")
   ResponseEntity<GetBulkSubmission200Response> getBulkSubmission(@PathVariable("id") UUID id);
+
+  /**
+   * Update (patch) an existing bulk submission's fields (typically status).
+   *
+   * @param id bulk submission UUID string
+   * @param bulkSubmissionPatch payload shaped like {@code BulkSubmissionPatch}
+   * @return 204 No Content on success
+   */
+  @PatchExchange("/bulk-submissions/{id}")
+  ResponseEntity<Void> updateBulkSubmission(
+      @PathVariable("id") String id, @RequestBody BulkSubmissionPatch bulkSubmissionPatch);
 
   /**
    * Create a new submission.
