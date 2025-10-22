@@ -76,3 +76,6 @@ env:
       secretKeyRef:
         name: laa-data-claims-event-service-secrets
         key: BULK_CLAIM_QUEUE_NAME
+
+grafana:
+  enabled: true
