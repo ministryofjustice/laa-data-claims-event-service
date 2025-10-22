@@ -76,9 +76,8 @@ class SubmissionPeriodValidatorTest {
   @DisplayName("Should have no errors when claim month before this month")
   void shouldHaveNoErrorsWhenClaimMonthBeforeThisMonth() {
     // Given
-    String submissionPeriod = SUBMISSION_VALIDATION_MINIMUM_PERIOD;
     SubmissionResponse submissionResponse =
-        SubmissionResponse.builder().submissionPeriod(submissionPeriod).build();
+        SubmissionResponse.builder().submissionPeriod(SUBMISSION_VALIDATION_MINIMUM_PERIOD).build();
     SubmissionValidationContext submissionValidationContext = new SubmissionValidationContext();
     // When
     validator.validate(submissionResponse, submissionValidationContext);
