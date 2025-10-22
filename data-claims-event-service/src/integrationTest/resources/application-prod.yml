@@ -1,12 +1,3 @@
-laa:
-  bulk-claim-queue:
-    name: prod-queue-name
-spring:
-  cloud:
-    aws:
-      region:
-        static: us-east-1
-
 submission:
   validation:
     minimum-period: APR-2025
