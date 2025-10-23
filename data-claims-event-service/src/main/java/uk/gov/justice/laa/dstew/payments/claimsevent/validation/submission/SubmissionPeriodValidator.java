@@ -37,8 +37,7 @@ public class SubmissionPeriodValidator implements SubmissionValidator {
    */
   public SubmissionPeriodValidator(
       DateUtil dateUtil,
-      @Value("${submission.validation.minimum-period:JAN-2018}")
-          String submissionValidationMinimumPeriod) {
+      @Value("${submission.validation.minimum-period}") String submissionValidationMinimumPeriod) {
     this.dateUtil = dateUtil;
     DateTimeFormatterBuilder builder = new DateTimeFormatterBuilder();
     formatter =
