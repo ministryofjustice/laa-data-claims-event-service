@@ -37,7 +37,11 @@ public class JsonSchemaValidator {
     }
     JsonNode data = mapper.valueToTree(object);
 
-    return schema.validate(data).stream().map(vm -> toValidationMessagePatch(vm, data)).toList();
+    return schema.validate(data).stream().map(vm -> {
+      String name = vm.getInstanceLocation().getName(0);
+      String desc = schemas.get(schemaName).getSchemaNode().get("properties").get(name).get(vm.getType()+"Display").asText();
+      return toValidationMessagePatch(vm, data);
+    }).toList();
   }
 
   private ValidationMessagePatch toValidationMessagePatch(ValidationMessage vm, JsonNode data) {

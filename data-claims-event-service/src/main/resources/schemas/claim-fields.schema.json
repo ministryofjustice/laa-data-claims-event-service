@@ -25,7 +25,9 @@
     "case_reference_number": {
       "type": "string",
       "pattern": "^[a-zA-Z0-9/.\\-\\s]+$",
-      "maxLength": 30
+      "maxLength": 30,
+      "patternDisplay": "Case reference should be in this format",
+      "maxLengthDisplay": "Case reference should be less than X characters"
     },
     "unique_file_number": {
       "type": "string",
