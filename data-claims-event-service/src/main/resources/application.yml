@@ -53,3 +53,7 @@ laa:
     accessToken: ${FEE_SCHEME_PLATFORM_API_ACCESS_TOKEN}
   bulk-claim-queue:
     name: ${BULK_CLAIM_QUEUE_NAME}
+
+submission:
+  validation:
+    minimum-period: ${SUBMISSION_VALIDATION_MINIMUM_PERIOD}
