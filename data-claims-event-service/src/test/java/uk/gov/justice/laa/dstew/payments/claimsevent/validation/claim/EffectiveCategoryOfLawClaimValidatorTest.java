@@ -21,8 +21,8 @@ import reactor.core.publisher.Mono;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
-import uk.gov.justice.laa.dstew.payments.claimsevent.service.CategoryOfLawResult;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.CategoryOfLawValidationService;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.FeeDetailsResponseWrapper;
 import uk.gov.justice.laa.dstew.payments.claimsevent.util.ClaimEffectiveDateUtil;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.provider.model.FirmOfficeContractAndScheduleDetails;
@@ -59,7 +59,7 @@ class EffectiveCategoryOfLawClaimValidatorTest {
             .matterTypeCode("ab:cd");
     List<String> providerCategoriesOfLaw = List.of("categoryOfLaw1");
 
-    Map<String, CategoryOfLawResult> categoryOfLawLookup = Collections.emptyMap();
+    Map<String, FeeDetailsResponseWrapper> feeDetailsResponseMap = Collections.emptyMap();
 
     ProviderFirmOfficeContractAndScheduleDto data =
         new ProviderFirmOfficeContractAndScheduleDto()
@@ -77,11 +77,11 @@ class EffectiveCategoryOfLawClaimValidatorTest {
 
     SubmissionValidationContext context = new SubmissionValidationContext();
 
-    validator.validate(claim, context, "CIVIL", "officeAccountNumber", categoryOfLawLookup);
+    validator.validate(claim, context, "CIVIL", "officeAccountNumber", feeDetailsResponseMap);
 
     verify(claimEffectiveDateUtil, times(1)).getEffectiveDate(claim);
 
     verify(categoryOfLawValidationService, times(1))
-        .validateCategoryOfLaw(claim, categoryOfLawLookup, providerCategoriesOfLaw, context);
+        .validateCategoryOfLaw(claim, feeDetailsResponseMap, providerCategoriesOfLaw, context);
   }
 }

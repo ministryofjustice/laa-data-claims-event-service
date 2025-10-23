@@ -21,14 +21,11 @@ public class DuplicateClaimCivilValidationServiceStrategy extends DuplicateClaim
   private static final String DISBURSEMENT_FEE_TYPE =
       FeeCalculationType.DISBURSEMENT_ONLY.toString();
 
-  private final FeeSchemePlatformRestClient feeSchemePlatformRestClient;
-
   @Autowired
   public DuplicateClaimCivilValidationServiceStrategy(
       final DataClaimsRestClient dataClaimsRestClient,
       final FeeSchemePlatformRestClient feeSchemePlatformRestClient) {
     super(dataClaimsRestClient);
-    this.feeSchemePlatformRestClient = feeSchemePlatformRestClient;
   }
 
   @Override
@@ -36,11 +33,12 @@ public class DuplicateClaimCivilValidationServiceStrategy extends DuplicateClaim
       final ClaimResponse currentClaim,
       final List<ClaimResponse> submissionClaims,
       final String officeCode,
-      final SubmissionValidationContext context) {
+      final SubmissionValidationContext context,
+      final String feeType) {
 
     // Don't check other claims if the current claim is a disbursement claim
     List<ClaimResponse> duplicateClaimsInPreviousSubmission =
-        isDisbursementClaim(currentClaim)
+        isDisbursementClaim(feeType)
             ? Collections.emptyList()
             : getDuplicateClaimsInPreviousSubmission(
                 officeCode,
@@ -59,11 +57,7 @@ public class DuplicateClaimCivilValidationServiceStrategy extends DuplicateClaim
     }
   }
 
-  private Boolean isDisbursementClaim(final ClaimResponse currentClaim) {
-    return Objects.equals(
-        Objects.requireNonNull(
-                feeSchemePlatformRestClient.getFeeDetails(currentClaim.getFeeCode()).getBody())
-            .getFeeType(),
-        DISBURSEMENT_FEE_TYPE);
+  private Boolean isDisbursementClaim(final String feeType) {
+    return Objects.equals(feeType, DISBURSEMENT_FEE_TYPE);
   }
 }

@@ -10,12 +10,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.mapper.FeeSchemeMapper;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationRequest;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationResponse;
+import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponse;
 import uk.gov.justice.laa.fee.scheme.model.ValidationMessagesInner;
 
 /**
@@ -37,9 +39,13 @@ public class FeeCalculationService {
    * @param submissionId the ID of the submission to validate
    * @param claim the submitted claim
    * @param context the validation context to add errors to
+   * @param feeDetailsResponse the fee details response for the feeCode associate with the claim
    */
   public void validateFeeCalculation(
-      UUID submissionId, ClaimResponse claim, SubmissionValidationContext context) {
+      UUID submissionId,
+      ClaimResponse claim,
+      SubmissionValidationContext context,
+      FeeDetailsResponse feeDetailsResponse) {
     log.debug("Validating fee calculation for claim {}", claim.getId());
     if (!context.isFlaggedForRetry(claim.getId())) {
       FeeCalculationRequest feeCalculationRequest =
@@ -58,7 +64,7 @@ public class FeeCalculationService {
 
         // Patch claim with fee calculation response
         feeCalculationUpdaterService.updateClaimWithFeeCalculationDetails(
-            submissionId, claim, feeCalculationResponse);
+            submissionId, claim, feeCalculationResponse, feeDetailsResponse);
 
         List<ValidationMessagesInner> validationMessages =
             feeCalculationResponse.getValidationMessages();
@@ -74,25 +80,47 @@ public class FeeCalculationService {
             }
           }
         }
-
-      } catch (WebClientResponseException.BadRequest ex) {
-        log.error("Fee calculation request failed with 400: {}", ex.getResponseBodyAsString(), ex);
-        context.addClaimError(
-            claim.getId(), ClaimValidationError.INVALID_FEE_CALCULATION_VALIDATION_FAILED);
-
       } catch (WebClientResponseException ex) {
-        log.error(
-            "Fee calculation request failed with status {}: {}",
-            ex.getStatusCode(),
-            ex.getResponseBodyAsString(),
-            ex);
-        context.flagForRetry(claim.getId());
-
+        handleWebClientError(ex, claim, context);
       } catch (Exception ex) {
-        log.error("Unexpected error during fee calculation", ex);
-        context.flagForRetry(claim.getId());
+        handleUnexpectedError(ex, claim, context);
       }
     }
     log.debug("Fee calculation validation completed for claim {}", claim.getId());
+  }
+
+  private void handleUnexpectedError(
+      Exception ex, ClaimResponse claim, SubmissionValidationContext context) {
+    log.error("Unexpected error during fee calculation", ex);
+    context.addClaimMessages(
+        claim.getId(),
+        getValidationMessagePatches(
+            ex, ClaimValidationError.TECHNICAL_ERROR_FEE_CALCULATION_SERVICE));
+  }
+
+  private void handleWebClientError(
+      WebClientResponseException ex, ClaimResponse claim, SubmissionValidationContext context) {
+    ClaimValidationError errorType =
+        (ex instanceof WebClientResponseException.BadRequest)
+            ? ClaimValidationError.INVALID_FEE_CALCULATION_VALIDATION_FAILED
+            : ClaimValidationError.TECHNICAL_ERROR_FEE_CALCULATION_SERVICE;
+
+    log.error(
+        "Fee calculation request failed with status {}: {}",
+        ex.getStatusCode(),
+        ex.getResponseBodyAsString(),
+        ex);
+
+    context.addClaimMessages(claim.getId(), getValidationMessagePatches(ex, errorType));
+  }
+
+  private static List<ValidationMessagePatch> getValidationMessagePatches(
+      Exception ex, ClaimValidationError claimValidationError) {
+    return List.of(
+        new ValidationMessagePatch()
+            .displayMessage(claimValidationError.getDisplayMessage())
+            .technicalMessage(ex.getMessage())
+            .source(claimValidationError.getSource())
+            .type(claimValidationError.getType()));
   }
 }

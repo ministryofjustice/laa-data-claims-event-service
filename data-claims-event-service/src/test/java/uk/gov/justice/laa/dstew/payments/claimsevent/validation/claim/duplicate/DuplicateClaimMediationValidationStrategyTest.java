@@ -1,7 +1,6 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -17,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResultSet;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.strategy.AbstractDuplicateClaimValidatorStrategy;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
@@ -63,7 +63,11 @@ class DuplicateClaimMediationValidationStrategyTest
               ResponseEntity.of(Optional.of(new ClaimResultSet().content(List.of(claim2)))));
       // When
       duplicateClaimMediationValidationStrategy.validateDuplicateClaims(
-          claimTobeProcessed, List.of(claimTobeProcessed, claim2), "1", context);
+          claimTobeProcessed,
+          List.of(claimTobeProcessed, claim2),
+          "1",
+          context,
+          FeeCalculationType.FIXED.toString());
 
       // Then
       assertThat(context.hasErrors()).isFalse();
@@ -103,7 +107,11 @@ class DuplicateClaimMediationValidationStrategyTest
               ResponseEntity.of(Optional.of(new ClaimResultSet().content(List.of(claim2)))));
       // When
       duplicateClaimMediationValidationStrategy.validateDuplicateClaims(
-          claimTobeProcessed, List.of(claimTobeProcessed), "1", context);
+          claimTobeProcessed,
+          List.of(claimTobeProcessed),
+          "1",
+          context,
+          FeeCalculationType.FIXED.toString());
       // Then
       assertThat(context.hasErrors()).isTrue();
       verify(dataClaimsRestClient, times(1))
@@ -143,7 +151,11 @@ class DuplicateClaimMediationValidationStrategyTest
               ResponseEntity.of(Optional.of(new ClaimResultSet().content(List.of(previousClaim)))));
       // When
       duplicateClaimMediationValidationStrategy.validateDuplicateClaims(
-          claimTobeProcessed, List.of(claimTobeProcessed), "1", context);
+          claimTobeProcessed,
+          List.of(claimTobeProcessed),
+          "1",
+          context,
+          FeeCalculationType.FIXED.toString());
       // Then
       assertThat(context.hasErrors()).isTrue();
       verify(dataClaimsRestClient, times(1))

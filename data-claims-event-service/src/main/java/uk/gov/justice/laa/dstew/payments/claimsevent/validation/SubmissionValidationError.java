@@ -46,8 +46,7 @@ public enum SubmissionValidationError {
       null, EVENT_SERVICE, ValidationMessageType.ERROR),
   SUBMISSION_ALREADY_EXISTS(
       "Submission already exists for Office (%s), Area of Law (%s),  Period (%s)",
-      null, EVENT_SERVICE, ValidationMessageType.ERROR),
-  ;
+      null, EVENT_SERVICE, ValidationMessageType.ERROR);
 
   final String displayMessage;
   final String technicalMessage;
