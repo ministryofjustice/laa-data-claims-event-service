@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionMatterStart;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionOutcome;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionStatus;
@@ -51,7 +52,7 @@ public class TempService extends BulkParsingService {
     List<BulkSubmissionOutcome> outcomes =
         bulkSubmission.getDetails() != null ? bulkSubmission.getDetails().getOutcomes() : List.of();
     List<ClaimPost> claims = bulkSubmissionMapper.mapToClaimPosts(outcomes);
-    assert bulkSubmission.getBulkSubmissionId() != null;
+    Assert.notNull(bulkSubmission.getBulkSubmissionId(), "Bulk submission id must not be null");
     List<String> claimIds =
         createClaims(bulkSubmission.getBulkSubmissionId().toString(), createdSubmissionId, claims);
 
