@@ -76,3 +76,8 @@ env:
       secretKeyRef:
         name: laa-data-claims-event-service-secrets
         key: BULK_CLAIM_QUEUE_NAME
+  - name: SUBMISSION_VALIDATION_MINIMUM_PERIOD
+    valueFrom:
+      secretKeyRef:
+        name: laa-data-claims-event-service-secrets
+        key: SUBMISSION_VALIDATION_MINIMUM_PERIOD
