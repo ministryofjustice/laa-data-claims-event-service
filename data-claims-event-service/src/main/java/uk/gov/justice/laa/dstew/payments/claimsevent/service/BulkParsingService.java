@@ -17,6 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionMatterStart;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionOutcome;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionPatch;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetBulkSubmission200Response;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.MatterStartPost;
@@ -25,6 +27,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.BulkSubmissionRetrievalException;
+import uk.gov.justice.laa.dstew.payments.claimsevent.exception.BulkSubmissionUpdateException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.ClaimCreateException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.MatterStartCreateException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.SubmissionCreateException;
@@ -63,7 +66,7 @@ public class BulkParsingService {
             ? bulkSubmission.getDetails().getOutcomes()
             : Collections.emptyList();
     List<ClaimPost> claims = bulkSubmissionMapper.mapToClaimPosts(outcomes);
-    List<String> claimIds = createClaims(createdSubmissionId, claims);
+    List<String> claimIds = createClaims(bulkSubmissionId.toString(), createdSubmissionId, claims);
 
     List<BulkSubmissionMatterStart> matterStarts =
         bulkSubmission.getDetails() != null
@@ -71,9 +74,10 @@ public class BulkParsingService {
             : List.of();
     List<MatterStartPost> matterStartRequests =
         bulkSubmissionMapper.mapToMatterStartRequests(matterStarts);
-    createMatterStarts(createdSubmissionId, matterStartRequests);
+    createMatterStarts(bulkSubmissionId.toString(), createdSubmissionId, matterStartRequests);
 
     updateSubmissionStatus(createdSubmissionId, claimIds.size());
+    updateBulkSubmissionStatus(bulkSubmissionId.toString(), BulkSubmissionStatus.PARSING_COMPLETED);
   }
 
   /**
@@ -119,10 +123,12 @@ public class BulkParsingService {
     ResponseEntity<Void> response = dataClaimsRestClient.createSubmission(submission);
 
     if (response == null || response.getStatusCode().value() != 201) {
+      var bulkSubmissionId = submission.getBulkSubmissionId().toString();
       log.error(
           "Failed to create submission for bulkSubmissionId [{}]. HTTP status: {}",
-          submission.getBulkSubmissionId(),
+          bulkSubmissionId,
           response == null ? "null response" : response.getStatusCode());
+      updateBulkSubmissionStatus(bulkSubmissionId, BulkSubmissionStatus.PARSING_FAILED);
       throw new SubmissionCreateException(
           "Failed to create submission. HTTP status: "
               + (response == null ? "null response" : response.getStatusCode()));
@@ -132,9 +138,11 @@ public class BulkParsingService {
 
     String createdId = extractIdFromLocation(response);
     if (!StringUtils.hasText(createdId)) {
+      var bulkSubmissionId = submission.getBulkSubmissionId().toString();
       log.error(
           "Submission created for bulkSubmissionId [{}] but Location header missing or invalid",
-          submission.getBulkSubmissionId());
+          bulkSubmissionId);
+      updateBulkSubmissionStatus(bulkSubmissionId, BulkSubmissionStatus.PARSING_FAILED);
       throw new SubmissionCreateException(
           "Submission created but Location header was missing or invalid");
     }
@@ -146,11 +154,13 @@ public class BulkParsingService {
   /**
    * Post multiple claims and return their created IDs in order.
    *
+   * @param bulkSubmissionId string containing the id of the bulk submission
    * @param submissionId parent submission UUID
    * @param claims list of ClaimPost payloads
    * @return list of created claim UUIDs
    */
-  protected List<String> createClaims(String submissionId, List<ClaimPost> claims) {
+  protected List<String> createClaims(
+      String bulkSubmissionId, String submissionId, List<ClaimPost> claims) {
     if (claims == null || claims.isEmpty()) {
       return Collections.emptyList();
     }
@@ -180,6 +190,8 @@ public class BulkParsingService {
                     return new Result(index, id);
                   } catch (RuntimeException ex) {
                     String ln = (claim != null ? String.valueOf(claim.getLineNumber()) : "null");
+                    updateBulkSubmissionStatus(
+                        bulkSubmissionId, BulkSubmissionStatus.PARSING_FAILED);
                     throw new ClaimCreateException(
                         "Failed to create claim at index "
                             + index
@@ -216,6 +228,7 @@ public class BulkParsingService {
       if (cause instanceof ClaimCreateException cce) {
         throw cce;
       }
+      updateBulkSubmissionStatus(bulkSubmissionId, BulkSubmissionStatus.PARSING_FAILED);
       throw new ClaimCreateException("Failed to create claims: " + cause.getMessage(), cause);
     } finally {
       pool.shutdown();
@@ -275,7 +288,7 @@ public class BulkParsingService {
   }
 
   protected List<String> createMatterStarts(
-      String submissionId, List<MatterStartPost> matterStarts) {
+      String bulkSubmissionId, String submissionId, List<MatterStartPost> matterStarts) {
     if (matterStarts == null || matterStarts.isEmpty()) {
       return Collections.emptyList();
     }
@@ -285,6 +298,7 @@ public class BulkParsingService {
       try {
         createdIds.add(createMatterStart(submissionId, ms));
       } catch (RuntimeException ex) {
+        updateBulkSubmissionStatus(bulkSubmissionId, BulkSubmissionStatus.PARSING_FAILED);
         throw new MatterStartCreateException(
             "Failed to create matter start at index " + index + ": " + ex.getMessage(), ex);
       } finally {
@@ -345,6 +359,24 @@ public class BulkParsingService {
         "Submission [{}] marked as READY_FOR_VALIDATION with {} claims",
         submissionId,
         numberOfClaims);
+  }
+
+  protected void updateBulkSubmissionStatus(
+      String bulkSubmissionId, BulkSubmissionStatus bulkSubmissionStatus) {
+    BulkSubmissionPatch patch = new BulkSubmissionPatch();
+    patch.setStatus(bulkSubmissionStatus);
+
+    ResponseEntity<Void> response =
+        dataClaimsRestClient.updateBulkSubmission(bulkSubmissionId, patch);
+
+    if (response == null || !response.getStatusCode().is2xxSuccessful()) {
+      throw new BulkSubmissionUpdateException(
+          "Failed to update bulk submission status for bulk submission "
+              + bulkSubmissionId
+              + ". HTTP status: "
+              + (response == null ? "null response" : response.getStatusCode()));
+    }
+    log.info("Bulk submission [{}] marked as [{}]", bulkSubmissionId, bulkSubmissionStatus.name());
   }
 
   /**
