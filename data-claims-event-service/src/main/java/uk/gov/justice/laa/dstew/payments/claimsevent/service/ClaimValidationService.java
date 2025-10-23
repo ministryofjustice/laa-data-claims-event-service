@@ -118,7 +118,9 @@ public class ClaimValidationService {
     FeeDetailsResponseWrapper feeDetailsResponseWrapper =
         feeDetailsResponseMap.get(claim.getFeeCode());
     if (feeDetailsResponseWrapper.isError()) {
-      log.error("Fee Scheme Platform API has returned an unexpected error for feeCode: {}", claim.getFeeCode());
+      log.error(
+          "Fee Scheme Platform API has returned an unexpected error for feeCode: {}",
+          claim.getFeeCode());
       context.addClaimError(
           claim.getId(),
           ClaimValidationError.TECHNICAL_ERROR_FEE_CALCULATION_SERVICE,
