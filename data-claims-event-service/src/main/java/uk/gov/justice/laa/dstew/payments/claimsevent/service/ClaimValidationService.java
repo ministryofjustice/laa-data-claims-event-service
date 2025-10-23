@@ -117,8 +117,16 @@ public class ClaimValidationService {
     // - Effective category of law
     FeeDetailsResponseWrapper feeDetailsResponseWrapper =
         feeDetailsResponseMap.get(claim.getFeeCode());
-    if (feeDetailsResponseWrapper == null
-        || feeDetailsResponseWrapper.getFeeDetailsResponse() == null) {
+    if (feeDetailsResponseWrapper.isError()) {
+      log.error("Fee Scheme Platform API has returned an unexpected error for feeCode: {}", claim.getFeeCode());
+      context.addClaimError(
+          claim.getId(),
+          ClaimValidationError.TECHNICAL_ERROR_FEE_CALCULATION_SERVICE,
+          claim.getFeeCode());
+      return;
+    }
+    if (feeDetailsResponseWrapper.getFeeDetailsResponse() == null) {
+      log.error("Fee details response returned null for fee code: {}", claim.getFeeCode());
       context.addClaimError(
           claim.getId(),
           ClaimValidationError.INVALID_CATEGORY_OF_LAW_AND_FEE_CODE,

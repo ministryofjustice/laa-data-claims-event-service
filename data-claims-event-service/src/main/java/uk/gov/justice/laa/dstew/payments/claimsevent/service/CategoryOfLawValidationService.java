@@ -91,11 +91,11 @@ public class CategoryOfLawValidationService {
       return FeeDetailsResponseWrapper.withFeeDetailsResponse(response);
 
     } catch (WebClientResponseException ex) {
-      log.info("Get fee details returned {} for fee code: {}", ex.getStatusCode(), feeCode);
+      log.error("Get fee details returned {} for fee code: {}", ex.getStatusCode(), feeCode);
       return FeeDetailsResponseWrapper.withFeeDetailsResponse(null);
 
     } catch (Exception ex) {
-      log.debug("Get fee details resulted in error for fee code {}", feeCode, ex);
+      log.error("Get fee details resulted in error for fee code {}", feeCode, ex);
       return FeeDetailsResponseWrapper.error();
     }
   }
