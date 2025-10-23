@@ -126,9 +126,7 @@ class BulkParsingServiceTest {
     verify(dataClaimsRestClient)
         .updateBulkSubmission(
             eq(bulkSubmissionId.toString()),
-            argThat(
-                patch ->
-                    patch.getStatus() == BulkSubmissionStatus.PARSING_COMPLETED));
+            argThat(patch -> patch.getStatus() == BulkSubmissionStatus.PARSING_COMPLETED));
   }
 
   @Test
@@ -198,9 +196,7 @@ class BulkParsingServiceTest {
     verify(dataClaimsRestClient)
         .updateBulkSubmission(
             eq(bulkSubmissionId.toString()),
-            argThat(
-                patch ->
-                    patch.getStatus() == BulkSubmissionStatus.PARSING_FAILED));
+            argThat(patch -> patch.getStatus() == BulkSubmissionStatus.PARSING_FAILED));
   }
 
   @Test
@@ -218,9 +214,7 @@ class BulkParsingServiceTest {
     verify(dataClaimsRestClient)
         .updateBulkSubmission(
             eq(bulkSubmissionId.toString()),
-            argThat(
-                patch ->
-                    patch.getStatus() == BulkSubmissionStatus.PARSING_FAILED));
+            argThat(patch -> patch.getStatus() == BulkSubmissionStatus.PARSING_FAILED));
   }
 
   @Test
@@ -349,9 +343,7 @@ class BulkParsingServiceTest {
     verify(dataClaimsRestClient)
         .updateBulkSubmission(
             any(String.class),
-            argThat(
-                patch ->
-                    patch.getStatus() == BulkSubmissionStatus.PARSING_FAILED));
+            argThat(patch -> patch.getStatus() == BulkSubmissionStatus.PARSING_FAILED));
   }
 
   @Test
@@ -379,9 +371,7 @@ class BulkParsingServiceTest {
     verify(dataClaimsRestClient)
         .updateBulkSubmission(
             any(String.class),
-            argThat(
-                patch ->
-                    patch.getStatus() == BulkSubmissionStatus.PARSING_FAILED));
+            argThat(patch -> patch.getStatus() == BulkSubmissionStatus.PARSING_FAILED));
   }
 
   @Test
@@ -452,10 +442,7 @@ class BulkParsingServiceTest {
 
     verify(dataClaimsRestClient)
         .updateBulkSubmission(
-            eq("bulk-sub1"),
-            argThat(
-                p ->
-                    p.getStatus() == BulkSubmissionStatus.PARSING_COMPLETED));
+            eq("bulk-sub1"), argThat(p -> p.getStatus() == BulkSubmissionStatus.PARSING_COMPLETED));
   }
 
   @Test
@@ -463,9 +450,13 @@ class BulkParsingServiceTest {
     when(dataClaimsRestClient.updateBulkSubmission(eq("bulk-sub1"), any(BulkSubmissionPatch.class)))
         .thenReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
 
-    assertThatThrownBy(() -> service.updateBulkSubmissionStatus("bulk-sub1", BulkSubmissionStatus.PARSING_COMPLETED))
+    assertThatThrownBy(
+            () ->
+                service.updateBulkSubmissionStatus(
+                    "bulk-sub1", BulkSubmissionStatus.PARSING_COMPLETED))
         .isInstanceOf(BulkSubmissionUpdateException.class)
-        .hasMessageContaining("Failed to update bulk submission status for bulk submission bulk-sub1. HTTP status: 500");
+        .hasMessageContaining(
+            "Failed to update bulk submission status for bulk submission bulk-sub1. HTTP status: 500");
   }
 
   @Test
@@ -473,8 +464,12 @@ class BulkParsingServiceTest {
     when(dataClaimsRestClient.updateBulkSubmission(eq("bulk-sub1"), any(BulkSubmissionPatch.class)))
         .thenReturn(null);
 
-    assertThatThrownBy(() -> service.updateBulkSubmissionStatus("bulk-sub1", BulkSubmissionStatus.PARSING_COMPLETED))
+    assertThatThrownBy(
+            () ->
+                service.updateBulkSubmissionStatus(
+                    "bulk-sub1", BulkSubmissionStatus.PARSING_COMPLETED))
         .isInstanceOf(BulkSubmissionUpdateException.class)
-        .hasMessageContaining("Failed to update bulk submission status for bulk submission bulk-sub1. HTTP status: null response");
+        .hasMessageContaining(
+            "Failed to update bulk submission status for bulk submission bulk-sub1. HTTP status: null response");
   }
 }
