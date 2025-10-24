@@ -39,7 +39,8 @@ public class DuplicateClaimValidator implements ClaimValidator {
       final SubmissionValidationContext context,
       final String areaOfLaw,
       final String officeCode,
-      final List<ClaimResponse> submissionClaims) {
+      final List<ClaimResponse> submissionClaims,
+      final String feeType) {
 
     final Predicate<DuplicateClaimValidationStrategy> areaOfLawPredicate =
         x -> x.compatibleStrategies().contains(areaOfLaw);
@@ -52,7 +53,9 @@ public class DuplicateClaimValidator implements ClaimValidator {
     }
 
     compatibleStrategies.forEach(
-        strategy -> strategy.validateDuplicateClaims(claim, submissionClaims, officeCode, context));
+        strategy ->
+            strategy.validateDuplicateClaims(
+                claim, submissionClaims, officeCode, context, feeType));
   }
 
   @Override

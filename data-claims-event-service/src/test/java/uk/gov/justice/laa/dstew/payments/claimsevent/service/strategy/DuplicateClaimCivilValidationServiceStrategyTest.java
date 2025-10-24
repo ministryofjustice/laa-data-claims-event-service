@@ -2,7 +2,6 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.service.strategy;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -31,7 +30,6 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationE
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.DuplicateClaimCivilValidationServiceStrategy;
-import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponse;
 
 @ExtendWith(MockitoExtension.class)
 class DuplicateClaimCivilValidationServiceStrategyTest
@@ -85,15 +83,12 @@ class DuplicateClaimCivilValidationServiceStrategyTest
       var submissionClaims = List.of(claimTobeProcessed, otherClaim);
       var context = new SubmissionValidationContext();
 
-      when(mockFeeSchemePlatformRestClient.getFeeDetails(any()))
-          .thenReturn(ResponseEntity.of(Optional.of(new FeeDetailsResponse())));
-
       when(mockDataClaimsRestClient.getClaims(
               any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
 
       duplicateClaimCivilValidation.validateDuplicateClaims(
-          claimTobeProcessed, submissionClaims, "2Q286D", context);
+          claimTobeProcessed, submissionClaims, "2Q286D", context, "feeType");
 
       verify(mockDataClaimsRestClient)
           .getClaims(
@@ -149,15 +144,8 @@ class DuplicateClaimCivilValidationServiceStrategyTest
       var submissionClaims = List.of(claimTobeProcessed, otherClaim);
       var context = new SubmissionValidationContext();
 
-      when(mockFeeSchemePlatformRestClient.getFeeDetails(eq("DISB01")))
-          .thenReturn(
-              ResponseEntity.of(
-                  Optional.of(new FeeDetailsResponse().feeType(DISBURSEMENT_FEE_TYPE))));
-
       duplicateClaimCivilValidation.validateDuplicateClaims(
-          claimTobeProcessed, submissionClaims, "2Q286D", context);
-
-      verify(mockFeeSchemePlatformRestClient).getFeeDetails(eq("DISB01"));
+          claimTobeProcessed, submissionClaims, "2Q286D", context, DISBURSEMENT_FEE_TYPE);
 
       verify(mockDataClaimsRestClient, times(0))
           .getClaims(any(), any(), any(), any(), any(), any(), any(), any(), any());
@@ -189,15 +177,12 @@ class DuplicateClaimCivilValidationServiceStrategyTest
       var submissionClaims = List.of(claimTobeProcessed, otherClaim);
       var context = new SubmissionValidationContext();
 
-      when(mockFeeSchemePlatformRestClient.getFeeDetails(any()))
-          .thenReturn(ResponseEntity.of(Optional.of(new FeeDetailsResponse())));
-
       when(mockDataClaimsRestClient.getClaims(
               any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
 
       duplicateClaimCivilValidation.validateDuplicateClaims(
-          claimTobeProcessed, submissionClaims, "2Q286D", context);
+          claimTobeProcessed, submissionClaims, "2Q286D", context, "feeType");
 
       assertThat(context.hasErrors()).isFalse();
     }
@@ -221,15 +206,12 @@ class DuplicateClaimCivilValidationServiceStrategyTest
       var submissionClaims = List.of(claimTobeProcessed, otherClaim);
       var context = new SubmissionValidationContext();
 
-      when(mockFeeSchemePlatformRestClient.getFeeDetails(any()))
-          .thenReturn(ResponseEntity.of(Optional.of(new FeeDetailsResponse())));
-
       when(mockDataClaimsRestClient.getClaims(
               any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
 
       duplicateClaimCivilValidation.validateDuplicateClaims(
-          claimTobeProcessed, submissionClaims, "2Q286D", context);
+          claimTobeProcessed, submissionClaims, "2Q286D", context, "feeType");
 
       assertThat(context.hasErrors()).isFalse();
     }
@@ -251,15 +233,12 @@ class DuplicateClaimCivilValidationServiceStrategyTest
       var submissionClaims = List.of(claimTobeProcessed, otherClaim);
       var context = new SubmissionValidationContext();
 
-      when(mockFeeSchemePlatformRestClient.getFeeDetails(any()))
-          .thenReturn(ResponseEntity.of(Optional.of(new FeeDetailsResponse())));
-
       when(mockDataClaimsRestClient.getClaims(
               any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
 
       duplicateClaimCivilValidation.validateDuplicateClaims(
-          claimTobeProcessed, submissionClaims, "2Q286D", context);
+          claimTobeProcessed, submissionClaims, "2Q286D", context, "feeType");
 
       assertThat(context.hasErrors()).isFalse();
     }
@@ -308,9 +287,6 @@ class DuplicateClaimCivilValidationServiceStrategyTest
       var submissionClaims = List.of(claimTobeProcessed, otherClaim, otherClaim1);
       var context = new SubmissionValidationContext();
 
-      when(mockFeeSchemePlatformRestClient.getFeeDetails(any()))
-          .thenReturn(ResponseEntity.of(Optional.of(new FeeDetailsResponse())));
-
       when(mockDataClaimsRestClient.getClaims(
               any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(
@@ -318,7 +294,7 @@ class DuplicateClaimCivilValidationServiceStrategyTest
                   Optional.of(new ClaimResultSet().addContentItem(claimInPreviousSubmission))));
 
       duplicateClaimCivilValidation.validateDuplicateClaims(
-          claimTobeProcessed, submissionClaims, "2Q286D", context);
+          claimTobeProcessed, submissionClaims, "2Q286D", context, "feeType");
 
       assertThat(context.hasErrors()).isTrue();
       ClaimValidationReport report =
@@ -380,9 +356,6 @@ class DuplicateClaimCivilValidationServiceStrategyTest
       var submissionClaims = List.of(claim1, claim2, claim3);
       var context = new SubmissionValidationContext();
 
-      when(mockFeeSchemePlatformRestClient.getFeeDetails(any()))
-          .thenReturn(ResponseEntity.of(Optional.of(new FeeDetailsResponse())));
-
       when(mockDataClaimsRestClient.getClaims(
               any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(
@@ -390,7 +363,7 @@ class DuplicateClaimCivilValidationServiceStrategyTest
                   Optional.of(new ClaimResultSet().addContentItem(claim4).addContentItem(claim5))));
 
       duplicateClaimCivilValidation.validateDuplicateClaims(
-          claim3, submissionClaims, "2Q286D", context);
+          claim3, submissionClaims, "2Q286D", context, "feeType");
 
       assertThat(context.hasErrors()).isTrue();
       ClaimValidationReport report = context.getClaimReport(claim3.getId()).orElseThrow();
@@ -434,9 +407,6 @@ class DuplicateClaimCivilValidationServiceStrategyTest
       var submissionClaims = List.of(claimTobeProcessed, otherClaim);
       var context = new SubmissionValidationContext();
 
-      when(mockFeeSchemePlatformRestClient.getFeeDetails(any()))
-          .thenReturn(ResponseEntity.of(Optional.of(new FeeDetailsResponse())));
-
       when(mockDataClaimsRestClient.getClaims(
               any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(
@@ -444,7 +414,7 @@ class DuplicateClaimCivilValidationServiceStrategyTest
                   Optional.of(new ClaimResultSet().addContentItem(claimInPreviousSubmission))));
 
       duplicateClaimCivilValidation.validateDuplicateClaims(
-          claimTobeProcessed, submissionClaims, "2Q286D", context);
+          claimTobeProcessed, submissionClaims, "2Q286D", context, "feeType");
 
       assertThat(context.hasErrors()).isTrue();
 

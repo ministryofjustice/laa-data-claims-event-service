@@ -52,8 +52,8 @@ class ClaimValidationReportTest {
               "claimId", List.of(INVALID_CATEGORY_OF_LAW_NOT_AUTHORISED_FOR_PROVIDER.toPatch()));
 
       // When
-      claimValidationReport.addErrors(
-          List.of(INVALID_AREA_OF_LAW_FOR_PROVIDER, INVALID_CATEGORY_OF_LAW_AND_FEE_CODE));
+      claimValidationReport.addError(INVALID_AREA_OF_LAW_FOR_PROVIDER);
+      claimValidationReport.addError(INVALID_CATEGORY_OF_LAW_AND_FEE_CODE, "feeCode");
 
       // Then
       assertThat(claimValidationReport.getMessages()).hasSize(3);
@@ -62,7 +62,7 @@ class ClaimValidationReportTest {
           .containsExactlyInAnyOrder(
               INVALID_CATEGORY_OF_LAW_NOT_AUTHORISED_FOR_PROVIDER.getDisplayMessage(),
               INVALID_AREA_OF_LAW_FOR_PROVIDER.getDisplayMessage(),
-              INVALID_CATEGORY_OF_LAW_AND_FEE_CODE.getDisplayMessage());
+              INVALID_CATEGORY_OF_LAW_AND_FEE_CODE.getDisplayMessage().formatted("feeCode"));
     }
   }
 

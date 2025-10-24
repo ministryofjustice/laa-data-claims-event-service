@@ -32,8 +32,8 @@ public class ClaimValidationReport {
   }
 
   /** Add an error from enum. */
-  public void addError(ClaimValidationError error) {
-    messages.add(error.toPatch());
+  public void addError(ClaimValidationError error, Object... params) {
+    messages.add(error.toPatch(params));
   }
 
   /** Bulk add errors from enums. */

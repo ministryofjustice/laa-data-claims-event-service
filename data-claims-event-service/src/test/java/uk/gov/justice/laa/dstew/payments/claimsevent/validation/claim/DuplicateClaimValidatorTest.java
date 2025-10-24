@@ -16,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.CivilDuplicateClaimValidationStrategy;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.CrimeDuplicateClaimValidationStrategy;
@@ -60,12 +61,18 @@ class DuplicateClaimValidatorTest {
     SubmissionValidationContext context = new SubmissionValidationContext();
 
     // When
-    validator.validate(claim, context, "CIVIL", "officeAccountNumber", singletonList(claim));
+    validator.validate(
+        claim,
+        context,
+        "CIVIL",
+        "officeAccountNumber",
+        singletonList(claim),
+        FeeCalculationType.FIXED.toString());
 
     // Then
-    verify(mockCivilValidationStrategy).validateDuplicateClaims(any(), any(), any(), any());
+    verify(mockCivilValidationStrategy).validateDuplicateClaims(any(), any(), any(), any(), any());
     verify(mockCrimeValidationStrategy, times(0))
-        .validateDuplicateClaims(any(), any(), any(), any());
+        .validateDuplicateClaims(any(), any(), any(), any(), any());
   }
 
   @Test
@@ -75,12 +82,18 @@ class DuplicateClaimValidatorTest {
     SubmissionValidationContext context = new SubmissionValidationContext();
 
     // When
-    validator.validate(claim, context, "LEGAL HELP", "officeAccountNumber", singletonList(claim));
+    validator.validate(
+        claim,
+        context,
+        "LEGAL HELP",
+        "officeAccountNumber",
+        singletonList(claim),
+        FeeCalculationType.FIXED.toString());
 
     // Then
-    verify(mockCivilValidationStrategy).validateDuplicateClaims(any(), any(), any(), any());
+    verify(mockCivilValidationStrategy).validateDuplicateClaims(any(), any(), any(), any(), any());
     verify(mockCrimeValidationStrategy, times(0))
-        .validateDuplicateClaims(any(), any(), any(), any());
+        .validateDuplicateClaims(any(), any(), any(), any(), any());
   }
 
   @Test
@@ -90,13 +103,20 @@ class DuplicateClaimValidatorTest {
     SubmissionValidationContext context = new SubmissionValidationContext();
 
     // When
-    validator.validate(claim, context, "CRIME LOWER", "officeAccountNumber", singletonList(claim));
+    validator.validate(
+        claim,
+        context,
+        "CRIME LOWER",
+        "officeAccountNumber",
+        singletonList(claim),
+        FeeCalculationType.FIXED.toString());
 
     // Then
     verify(mockCrimeValidationStrategy)
-        .validateDuplicateClaims(claim, claims, "officeAccountNumber", context);
+        .validateDuplicateClaims(
+            claim, claims, "officeAccountNumber", context, FeeCalculationType.FIXED.toString());
     verify(mockCivilValidationStrategy, times(0))
-        .validateDuplicateClaims(any(), any(), any(), any());
+        .validateDuplicateClaims(any(), any(), any(), any(), any());
   }
 
   @Test
@@ -106,12 +126,19 @@ class DuplicateClaimValidatorTest {
     SubmissionValidationContext context = new SubmissionValidationContext();
 
     // When
-    validator.validate(claim, context, "CRIME", "officeAccountNumber", singletonList(claim));
+    validator.validate(
+        claim,
+        context,
+        "CRIME",
+        "officeAccountNumber",
+        singletonList(claim),
+        FeeCalculationType.FIXED.toString());
 
     // Then
     verify(mockCrimeValidationStrategy)
-        .validateDuplicateClaims(claim, claims, "officeAccountNumber", context);
+        .validateDuplicateClaims(
+            claim, claims, "officeAccountNumber", context, FeeCalculationType.FIXED.toString());
     verify(mockCivilValidationStrategy, times(0))
-        .validateDuplicateClaims(any(), any(), any(), any());
+        .validateDuplicateClaims(any(), any(), any(), any(), any());
   }
 }

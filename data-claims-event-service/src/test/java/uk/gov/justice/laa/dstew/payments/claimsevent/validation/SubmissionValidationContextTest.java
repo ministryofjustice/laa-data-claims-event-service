@@ -148,7 +148,8 @@ class SubmissionValidationContextTest {
       ClaimValidationReport claimValidationReport2 =
           new ClaimValidationReport(
               "claimId2",
-              List.of(ClaimValidationError.INVALID_CATEGORY_OF_LAW_AND_FEE_CODE.toPatch()));
+              List.of(
+                  ClaimValidationError.INVALID_CATEGORY_OF_LAW_AND_FEE_CODE.toPatch("feeCode")));
       submissionValidationContext.addClaimReports(
           List.of(claimValidationReport1, claimValidationReport2));
 
@@ -179,7 +180,8 @@ class SubmissionValidationContextTest {
       ClaimValidationReport claimValidationReport2 =
           new ClaimValidationReport(
               "claimId2",
-              List.of(ClaimValidationError.INVALID_CATEGORY_OF_LAW_AND_FEE_CODE.toPatch()));
+              List.of(
+                  ClaimValidationError.INVALID_CATEGORY_OF_LAW_AND_FEE_CODE.toPatch("feeCode")));
       submissionValidationContext.addClaimReports(
           List.of(claimValidationReport1, claimValidationReport2));
 

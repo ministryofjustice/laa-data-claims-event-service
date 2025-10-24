@@ -9,8 +9,8 @@ import org.springframework.stereotype.Component;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.EventServiceIllegalArgumentException;
-import uk.gov.justice.laa.dstew.payments.claimsevent.service.CategoryOfLawResult;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.CategoryOfLawValidationService;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.FeeDetailsResponseWrapper;
 import uk.gov.justice.laa.dstew.payments.claimsevent.util.ClaimEffectiveDateUtil;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.provider.model.FirmOfficeContractAndScheduleDetails;
@@ -45,21 +45,22 @@ public class EffectiveCategoryOfLawClaimValidator implements ClaimValidator {
    * @param context the validation context to add errors to
    * @param areaOfLaw the area of law
    * @param officeCode the office code
-   * @param categoryOfLawLookup the category of law lookup
+   * @param feeDetailsResponseMap a map containing FeeDetailsResponse and their corresponding
+   *     feeCodes
    */
   public void validate(
       ClaimResponse claim,
       SubmissionValidationContext context,
       String areaOfLaw,
       String officeCode,
-      Map<String, CategoryOfLawResult> categoryOfLawLookup) {
+      Map<String, FeeDetailsResponseWrapper> feeDetailsResponseMap) {
     try {
       LocalDate effectiveDate = claimEffectiveDateUtil.getEffectiveDate(claim);
       List<String> effectiveCategoriesOfLaw =
           getEffectiveCategoriesOfLaw(officeCode, areaOfLaw, effectiveDate);
       // Get effective category of law lookup
       categoryOfLawValidationService.validateCategoryOfLaw(
-          claim, categoryOfLawLookup, effectiveCategoriesOfLaw, context);
+          claim, feeDetailsResponseMap, effectiveCategoriesOfLaw, context);
     } catch (EventServiceIllegalArgumentException e) {
       log.debug(
           "Error getting effective date for category of law validation: {}. Continuing with claim"

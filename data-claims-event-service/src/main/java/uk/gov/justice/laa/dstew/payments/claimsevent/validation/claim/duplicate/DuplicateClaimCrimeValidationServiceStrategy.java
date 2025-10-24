@@ -25,7 +25,8 @@ public class DuplicateClaimCrimeValidationServiceStrategy extends DuplicateClaim
       ClaimResponse claim,
       List<ClaimResponse> submissionClaims,
       String officeCode,
-      SubmissionValidationContext context) {
+      SubmissionValidationContext context,
+      String feeType) {
     log.debug("Validating duplicates for claim {}", claim.getId());
     if (!context.isFlaggedForRetry(claim.getId())) {
       List<ClaimResponse> claimsToCompare =

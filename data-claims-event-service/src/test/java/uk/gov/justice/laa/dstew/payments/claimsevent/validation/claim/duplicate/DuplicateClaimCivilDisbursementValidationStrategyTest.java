@@ -27,7 +27,6 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRes
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.strategy.AbstractDuplicateClaimValidatorStrategy;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
-import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponse;
 
 @ExtendWith(MockitoExtension.class)
 class DuplicateClaimCivilDisbursementValidationStrategyTest
@@ -37,13 +36,6 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
   @Mock DataClaimsRestClient dataClaimsRestClient;
 
   @InjectMocks DuplicateClaimCivilDisbursementValidationStrategy duplicateClaimValidationService;
-
-  void stubIsDisbursementClaim(boolean isDisbursement) {
-    FeeCalculationType feeType =
-        isDisbursement ? FeeCalculationType.DISBURSEMENT_ONLY : FeeCalculationType.FIXED;
-    when(feeSchemePlatformRestClient.getFeeDetails(any()))
-        .thenReturn(ResponseEntity.ok(new FeeDetailsResponse().feeType(feeType.toString())));
-  }
 
   @Nested
   class ValidClaim {
@@ -62,11 +54,14 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
               ClaimStatus.READY_TO_PROCESS,
               "MAY-2025",
               null);
-      stubIsDisbursementClaim(false);
       SubmissionValidationContext context = new SubmissionValidationContext();
       // When
       duplicateClaimValidationService.validateDuplicateClaims(
-          claimTobeProcessed, List.of(claimTobeProcessed), "1", context);
+          claimTobeProcessed,
+          List.of(claimTobeProcessed),
+          "1",
+          context,
+          FeeCalculationType.FIXED.toString());
       // Then
       assertThat(context.hasErrors()).isFalse();
       verify(dataClaimsRestClient, times(0))
@@ -89,7 +84,6 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
               ClaimStatus.READY_TO_PROCESS,
               "MAY-2025",
               null);
-      stubIsDisbursementClaim(true);
       SubmissionValidationContext context = new SubmissionValidationContext();
 
       when(dataClaimsRestClient.getClaims(
@@ -99,7 +93,11 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
                   Optional.of(new ClaimResultSet().content(Collections.emptyList()))));
       // When
       duplicateClaimValidationService.validateDuplicateClaims(
-          claimTobeProcessed, List.of(claimTobeProcessed), "1", context);
+          claimTobeProcessed,
+          List.of(claimTobeProcessed),
+          "1",
+          context,
+          FeeCalculationType.DISBURSEMENT_ONLY.toString());
       // Then
       assertThat(context.hasErrors()).isFalse();
       verify(dataClaimsRestClient, times(1))
@@ -132,7 +130,6 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
               ClaimStatus.READY_TO_PROCESS,
               "MAY-2025",
               null);
-      stubIsDisbursementClaim(true);
       SubmissionValidationContext context = new SubmissionValidationContext();
 
       when(dataClaimsRestClient.getClaims(
@@ -142,7 +139,11 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
                   Optional.of(new ClaimResultSet().content(Collections.emptyList()))));
       // When
       duplicateClaimValidationService.validateDuplicateClaims(
-          claimTobeProcessed, List.of(previousClaim), "1", context);
+          claimTobeProcessed,
+          List.of(previousClaim),
+          "1",
+          context,
+          FeeCalculationType.DISBURSEMENT_ONLY.toString());
       // Then
       assertThat(context.hasErrors()).isFalse();
       verify(dataClaimsRestClient, times(1))
@@ -173,7 +174,6 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
               ClaimStatus.READY_TO_PROCESS,
               "FEB-2025",
               null);
-      stubIsDisbursementClaim(true);
       SubmissionValidationContext context = new SubmissionValidationContext();
 
       when(dataClaimsRestClient.getClaims(
@@ -185,7 +185,11 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
                           .content(singletonList(duplicateClaimOnPreviousSubmission)))));
       // When
       duplicateClaimValidationService.validateDuplicateClaims(
-          claimTobeProcessed, List.of(claimTobeProcessed), "1", context);
+          claimTobeProcessed,
+          List.of(claimTobeProcessed),
+          "1",
+          context,
+          FeeCalculationType.DISBURSEMENT_ONLY.toString());
       // Then
       assertThat(context.hasErrors()).isFalse();
       verify(dataClaimsRestClient, times(1))
@@ -216,7 +220,6 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
               ClaimStatus.READY_TO_PROCESS,
               "MAY-2024",
               null);
-      stubIsDisbursementClaim(true);
       SubmissionValidationContext context = new SubmissionValidationContext();
 
       when(dataClaimsRestClient.getClaims(
@@ -228,7 +231,11 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
                           .content(singletonList(duplicateClaimOnPreviousSubmission)))));
       // When
       duplicateClaimValidationService.validateDuplicateClaims(
-          claimTobeProcessed, List.of(claimTobeProcessed), "1", context);
+          claimTobeProcessed,
+          List.of(claimTobeProcessed),
+          "1",
+          context,
+          FeeCalculationType.DISBURSEMENT_ONLY.toString());
       // Then
       assertThat(context.hasErrors()).isFalse();
       verify(dataClaimsRestClient, times(1))
@@ -264,7 +271,6 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
               ClaimStatus.READY_TO_PROCESS,
               "MAR-2025",
               null);
-      stubIsDisbursementClaim(true);
       SubmissionValidationContext context = new SubmissionValidationContext();
 
       when(dataClaimsRestClient.getClaims(
@@ -276,7 +282,11 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
                           .content(singletonList(duplicateClaimOnPreviousSubmission)))));
       // When
       duplicateClaimValidationService.validateDuplicateClaims(
-          claimTobeProcessed, List.of(claimTobeProcessed), "1", context);
+          claimTobeProcessed,
+          List.of(claimTobeProcessed),
+          "1",
+          context,
+          FeeCalculationType.DISBURSEMENT_ONLY.toString());
       // Then
       assertThat(context.hasErrors()).isTrue();
       verify(dataClaimsRestClient, times(1))

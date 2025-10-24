@@ -16,7 +16,8 @@ public interface DuplicateClaimValidationStrategy {
       ClaimResponse claim,
       List<ClaimResponse> submissionClaims,
       String officeCode,
-      SubmissionValidationContext context);
+      SubmissionValidationContext context,
+      String feeType);
 
   /**
    * Log the duplicate claims found for a given claim.

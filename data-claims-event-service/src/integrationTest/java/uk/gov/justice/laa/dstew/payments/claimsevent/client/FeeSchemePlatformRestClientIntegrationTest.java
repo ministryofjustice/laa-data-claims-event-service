@@ -41,7 +41,7 @@ class FeeSchemePlatformRestClientIntegrationTest extends MockServerIntegrationTe
 
   @Nested
   @DisplayName("GET: /fee-details/{feeCode} tests")
-  class GetCategoryOfLawTests {
+  class GetFeeDetailsByFeeCodeTests {
 
     @Test
     @DisplayName("Should handle 200 response")

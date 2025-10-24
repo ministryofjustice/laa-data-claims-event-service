@@ -27,8 +27,6 @@ public class DuplicateClaimCivilDisbursementValidationStrategy extends Duplicate
       FeeCalculationType.DISBURSEMENT_ONLY.toString();
   private static final int MAXIMUM_MONTHS_DIFFERENCE = 3;
 
-  private final FeeSchemePlatformRestClient feeSchemePlatformRestClient;
-
   private final DateTimeFormatter formatter;
 
   /**
@@ -42,7 +40,6 @@ public class DuplicateClaimCivilDisbursementValidationStrategy extends Duplicate
       final DataClaimsRestClient dataClaimsRestClient,
       final FeeSchemePlatformRestClient feeSchemePlatformRestClient) {
     super(dataClaimsRestClient);
-    this.feeSchemePlatformRestClient = feeSchemePlatformRestClient;
     formatter =
         new DateTimeFormatterBuilder()
             .parseCaseInsensitive()
@@ -55,11 +52,12 @@ public class DuplicateClaimCivilDisbursementValidationStrategy extends Duplicate
       final ClaimResponse currentClaim,
       final List<ClaimResponse> submissionClaims,
       final String officeCode,
-      final SubmissionValidationContext context) {
+      final SubmissionValidationContext context,
+      final String feeType) {
 
     // Don't check if current claim is not a disbursement, this validation strategy only applies
     //  to disbursement claims.
-    if (!isDisbursementClaim(currentClaim)) {
+    if (!isDisbursementClaim(feeType)) {
       return;
     }
 
@@ -100,11 +98,7 @@ public class DuplicateClaimCivilDisbursementValidationStrategy extends Duplicate
     return monthsDifference < MAXIMUM_MONTHS_DIFFERENCE;
   }
 
-  private Boolean isDisbursementClaim(final ClaimResponse currentClaim) {
-    return Objects.equals(
-        Objects.requireNonNull(
-                feeSchemePlatformRestClient.getFeeDetails(currentClaim.getFeeCode()).getBody())
-            .getFeeType(),
-        DISBURSEMENT_FEE_TYPE);
+  private Boolean isDisbursementClaim(String feeType) {
+    return Objects.equals(feeType, DISBURSEMENT_FEE_TYPE);
   }
 }

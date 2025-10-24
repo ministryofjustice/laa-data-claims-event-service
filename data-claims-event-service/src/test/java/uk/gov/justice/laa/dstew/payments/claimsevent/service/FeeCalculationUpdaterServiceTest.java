@@ -12,7 +12,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.ResponseEntity;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationPatch;
@@ -44,8 +43,7 @@ class FeeCalculationUpdaterServiceTest {
 
     final FeeDetailsResponse feeDetailsResponse =
         new FeeDetailsResponse().feeCodeDescription("feeCodeDescription");
-    when(feeSchemePlatformRestClient.getFeeDetails("feeCode"))
-        .thenReturn(ResponseEntity.ok(feeDetailsResponse));
+
     final FeeCalculationPatch feeCalculationPatch = new FeeCalculationPatch().claimId(claimId);
     when(feeCalculationPatchMapper.mapToFeeCalculationPatch(
             feeCalculationResponse, feeDetailsResponse))
@@ -53,7 +51,7 @@ class FeeCalculationUpdaterServiceTest {
 
     // When
     feeCalculationUpdaterService.updateClaimWithFeeCalculationDetails(
-        submissionId, claimResponse, feeCalculationResponse);
+        submissionId, claimResponse, feeCalculationResponse, feeDetailsResponse);
 
     // Then
     verify(dataClaimsRestClient, times(1))
