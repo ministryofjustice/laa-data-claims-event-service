@@ -70,6 +70,7 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
       // Given
       stubForGetSubmission(submissionId, "data-claims/get-submission/get-submission-MAR-25.json");
       stubForUpdateSubmission(submissionId);
+      stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
 
       getStubForGetSubmissionByCriteria(
           List.of(
