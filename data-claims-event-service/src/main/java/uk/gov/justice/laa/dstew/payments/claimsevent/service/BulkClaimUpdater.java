@@ -47,7 +47,6 @@ public class BulkClaimUpdater {
     AtomicInteger claimsUpdated = new AtomicInteger();
     AtomicInteger claimsFlaggedForRetry = new AtomicInteger();
 
-    // Flag any claims that have been flagged for retry
     List<SubmissionClaim> claims =
         Optional.ofNullable(submission.getClaims()).orElse(Collections.emptyList());
 
