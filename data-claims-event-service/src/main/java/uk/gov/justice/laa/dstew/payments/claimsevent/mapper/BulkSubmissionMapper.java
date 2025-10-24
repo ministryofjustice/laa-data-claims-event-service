@@ -136,6 +136,7 @@ public interface BulkSubmissionMapper {
   @Mapping(target = "client2DisabilityCode", source = "client2Disability")
   @Mapping(target = "client2IsLegallyAided", source = "client2LegallyAided")
   @Mapping(target = "isClient2PostalApplicationAccepted", source = "client2PostalApplAccp")
+  @Mapping(target = "stageReachedCode", source = "stageReached")
   @Mapping(target = "createdByUserId", constant = EVENT_SERVICE)
   ClaimPost mapToClaimPost(BulkSubmissionOutcome outcome);
 
