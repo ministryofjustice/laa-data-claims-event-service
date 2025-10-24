@@ -53,3 +53,9 @@ laa:
     accessToken: ${FEE_SCHEME_PLATFORM_API_ACCESS_TOKEN}
   bulk-claim-queue:
     name: ${BULK_CLAIM_QUEUE_NAME}
+
+
+submission:
+  areaOfLaw:
+    enum:
+      error: Area of Law must be one of MEDIATION, CRIME LOWER, or LEGAL HELP
