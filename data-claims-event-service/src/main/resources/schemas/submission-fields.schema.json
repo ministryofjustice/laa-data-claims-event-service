@@ -22,7 +22,7 @@
     "area_of_law": {
       "type": "string",
       "enum": ["CIVIL", "CRIME", "MEDIATION", "CRIME LOWER", "LEGAL HELP"],
-      "enumDisplay": "Area of Law must be one of: MEDIATION, CRIME LOWER, or LEGAL HELP"
+      "enumDisplay": "submission.areaOfLaw.enum.error"
     },
     "status": {
       "type": "string",

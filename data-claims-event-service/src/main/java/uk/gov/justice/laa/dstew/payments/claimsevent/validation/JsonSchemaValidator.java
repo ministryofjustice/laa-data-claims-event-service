@@ -9,6 +9,7 @@ import com.networknt.schema.ValidationMessage;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessageType;
@@ -21,6 +22,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessageType;
 public class JsonSchemaValidator {
 
   private final ObjectMapper mapper;
+  private final Environment environment;
 
   // Map of schema names to JsonSchema objects
   private final Map<String, JsonSchema> schemas;
@@ -53,7 +55,7 @@ public class JsonSchemaValidator {
     return new ValidationMessagePatch()
         .type(ValidationMessageType.ERROR)
         .source(EVENT_SERVICE)
-        .displayMessage(desc)
+        .displayMessage(environment.getProperty(desc))
         .technicalMessage(enrichValidationMessage(data, vm));
   }
 
