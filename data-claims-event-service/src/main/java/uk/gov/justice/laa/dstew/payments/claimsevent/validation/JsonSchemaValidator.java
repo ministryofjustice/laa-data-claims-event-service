@@ -13,7 +13,9 @@ import org.springframework.stereotype.Component;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessageType;
 
-/** Class responsible for validating objects against predefined JSON schemas. */
+/**
+ * Class responsible for validating objects against predefined JSON schemas.
+ */
 @Component
 @RequiredArgsConstructor
 public class JsonSchemaValidator {
@@ -27,7 +29,7 @@ public class JsonSchemaValidator {
    * Validate an object against the schema identified by schemaName.
    *
    * @param schemaName key in the schemas map
-   * @param object any object that can be converted to JSON
+   * @param object     any object that can be converted to JSON
    * @return list of enriched validation messages
    */
   public List<ValidationMessagePatch> validate(String schemaName, Object object) {
@@ -38,17 +40,20 @@ public class JsonSchemaValidator {
     JsonNode data = mapper.valueToTree(object);
 
     return schema.validate(data).stream().map(vm -> {
-      String name = vm.getInstanceLocation().getName(0);
-      String desc = schemas.get(schemaName).getSchemaNode().get("properties").get(name).get(vm.getType()+"Display").asText();
-      return toValidationMessagePatch(vm, data);
+      return toValidationMessagePatch(vm, data, schemaName);
     }).toList();
   }
 
-  private ValidationMessagePatch toValidationMessagePatch(ValidationMessage vm, JsonNode data) {
+  private ValidationMessagePatch toValidationMessagePatch(ValidationMessage vm, JsonNode data,
+      String schemaName) {
+    String name = vm.getInstanceLocation().getName(0);
+    String desc = schemas.get(schemaName).getSchemaNode().get("properties").get(name)
+        .get(vm.getType() + "Display").asText();
+
     return new ValidationMessagePatch()
         .type(ValidationMessageType.ERROR)
         .source(EVENT_SERVICE)
-        .displayMessage(enrichValidationMessage(data, vm))
+        .displayMessage(desc)
         .technicalMessage(enrichValidationMessage(data, vm));
   }
 
