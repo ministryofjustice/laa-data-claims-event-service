@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -119,23 +120,41 @@ public class SubmissionValidationService {
     log.debug("Updating claims for submission {}", submission.getSubmissionId().toString());
     AtomicInteger claimsUpdated = new AtomicInteger();
     AtomicInteger claimsFlaggedForRetry = new AtomicInteger();
-    // Get submission claims in a null safe way
-    Optional.ofNullable(submission.getClaims()).stream()
-        .flatMap(List::stream)
+
+    // Flag any claims that have been flagged for retry
+    List<SubmissionClaim> claims =
+        Optional.ofNullable(submission.getClaims()).orElse(Collections.emptyList());
+
+    // Check if any claims are invalid
+    boolean invalidClaimExists =
+        claims.stream()
+            .filter(claim -> ClaimStatus.READY_TO_PROCESS.equals(claim.getStatus()))
+            .anyMatch(
+                claim ->
+                    context.isFlaggedForRetry(claim.getClaimId().toString())
+                        || ClaimStatus.INVALID.equals(claim.getStatus())
+                        || getClaimStatus(claim.getClaimId().toString(), context)
+                            == ClaimStatus.INVALID);
+
+    claims.stream()
         .filter(claim -> ClaimStatus.READY_TO_PROCESS.equals(claim.getStatus()))
-        .peek(
-            claim -> {
-              if (context.isFlaggedForRetry(claim.getClaimId().toString())) {
-                log.debug("Claim {} is flagged for retry. Skipping update.", claim.getClaimId());
-                claimsFlaggedForRetry.incrementAndGet();
-              }
-            })
-        .filter(claim -> !context.isFlaggedForRetry(claim.getClaimId().toString()))
         .forEach(
             claim -> {
+              // Get claim ID
               String claimId = claim.getClaimId().toString();
-              ClaimStatus claimStatus = getClaimStatus(claimId, context);
+
+              // Skip claims flagger for retry
+              if (context.isFlaggedForRetry(claimId)) {
+                log.debug("Claim {} is flagged for retry. Skipping update.", claim.getClaimId());
+                claimsFlaggedForRetry.incrementAndGet();
+                return;
+              }
+
+              // If a claim was found to be invalid, make the rest of the claims invalid
+              ClaimStatus claimStatus =
+                  invalidClaimExists ? ClaimStatus.INVALID : ClaimStatus.VALID;
               List<ValidationMessagePatch> claimMessages = getClaimMessages(claimId, context);
+
               ClaimPatch claimPatch =
                   ClaimPatch.builder()
                       .id(claimId)
