@@ -35,6 +35,8 @@ public class DuplicateClaimsTest extends MockServerIntegrationTest {
       List.of("CREATED", "VALIDATION_IN_PROGRESS", "READY_FOR_VALIDATION");
   private static final List<String> CLAIM_STATUSES = List.of("READY_TO_PROCESS", "VALID");
   public static final UUID SUBMISSION_ID = UUID.fromString("00000000-0000-0001-0000-000000000001");
+  public static final UUID BULK_SUBMISSION_ID =
+      UUID.fromString("3fa85f64-5717-4562-b3fc-2c963f66afa6");
 
   @Autowired protected SubmissionValidationService submissionValidationService;
 
@@ -44,12 +46,10 @@ public class DuplicateClaimsTest extends MockServerIntegrationTest {
     @DisplayName("Civil Duplicate Claim Validation: Should not have any validation errors")
     @Test
     void testCivilDuplicateClaimValidation() throws Exception {
-      UUID submissionId = new UUID(1, 1);
-
       // submission
-      stubForGetSubmission(submissionId, "data-claims/get-submission/get-submission-civil.json");
+      stubForGetSubmission(SUBMISSION_ID, "data-claims/get-submission/get-submission-civil.json");
 
-      stubForPathSubmissionWithClaimsId(submissionId, CLAIM_ID);
+      stubForPathSubmissionWithClaimsId(SUBMISSION_ID, CLAIM_ID);
 
       // claims
       stubForGetClaim(
@@ -73,6 +73,8 @@ public class DuplicateClaimsTest extends MockServerIntegrationTest {
       stubForPostFeeCalculation("fee-scheme/post-fee-calculation-200.json");
       // Stub patch submission
       stubForUpdateSubmission(SUBMISSION_ID);
+      // Stub patch bulk submission
+      stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
 
       getStubForGetSubmissionByCriteria(
           List.of(
@@ -81,7 +83,7 @@ public class DuplicateClaimsTest extends MockServerIntegrationTest {
               Parameter.param("submission_period", SUBMISSION_PERIOD)),
           "data-claims/get-submission/get-submissions-by-filter_no_content.json");
 
-      var actualValidationContext = submissionValidationService.validateSubmission(submissionId);
+      var actualValidationContext = submissionValidationService.validateSubmission(SUBMISSION_ID);
 
       Assertions.assertTrue(actualValidationContext.getSubmissionValidationErrors().isEmpty());
     }
