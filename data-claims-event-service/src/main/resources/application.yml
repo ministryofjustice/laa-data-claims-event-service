@@ -56,4 +56,4 @@ laa:
 
 submission:
   validation:
-    minimum-period: ${SUBMISSION_VALIDATION_MINIMUM_PERIOD}
+    minimum-period: ${SUBMISSION_VALIDATION_MINIMUM_PERIOD:APR-2025}
