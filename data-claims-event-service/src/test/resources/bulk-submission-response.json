@@ -49,7 +49,7 @@
         "mht_ref_number": null,
         "no_of_suspects": null,
         "rep_order_date": null,
-        "stage_reached": null,
+        "stage_reached": "PROK",
         "transfer_date": null,
         "type_of_advice": null,
         "unique_case_id": null,
