@@ -1,6 +1,7 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.config;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.networknt.schema.JsonSchema;
@@ -8,9 +9,16 @@ import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion.VersionFlag;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.Resource;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.model.ValidationErrorMessage;
 
 /**
  * Configuration class for setting up and managing JSON Schema validation. This class loads JSON
@@ -22,6 +30,9 @@ import org.springframework.context.annotation.Configuration;
 public class SchemaValidationConfig {
 
   private final ObjectMapper mapper;
+
+  @Value("classpath:schemas/claim-fields.schema.json")
+  Resource resourceFile;
 
   /**
    * Constructs a new {@code SchemaValidationConfig} with the given {@link ObjectMapper}.
@@ -65,6 +76,56 @@ public class SchemaValidationConfig {
 
         // Add more schemas here if needed
         );
+  }
+
+  /**
+   * Generates a map of schema validation error messages based on a JSON schema's validation error
+   * definitions. The method reads a schema file, parses its fields, and collects validation error
+   * messages for each field where defined.
+   *
+   * @return A map where the keys are field names from the JSON schema and the values are lists of
+   *     {@link ValidationErrorMessage} objects representing validation error messages for each
+   *     corresponding field. If a field does not have validation error messages, it is excluded
+   *     from the map.
+   * @throws IOException If an error occurs while reading or parsing the schema file.
+   */
+  @Bean
+  public Map<String, Set<ValidationErrorMessage>> schemaValidationErrorMessages()
+      throws IOException {
+    // TODO: Need to tidy up this messy code
+    JsonNode schemaNode =
+        mapper.readTree(
+            (Files.readString(resourceFile.getFile().toPath(), StandardCharsets.UTF_8)));
+
+    // Get the properties node which contains all fields
+    JsonNode propertiesNode = schemaNode.get("properties");
+
+    Map<String, Set<ValidationErrorMessage>> result = new HashMap<>();
+
+    // Iterate through all fields in the schema
+    propertiesNode
+        .fields()
+        .forEachRemaining(
+            field -> {
+              String fieldName = field.getKey();
+              JsonNode fieldNode = field.getValue();
+
+              // Check if the field has validation error messages
+              JsonNode messagesNode = fieldNode.get("validationErrorMessages");
+              if (messagesNode != null && messagesNode.isArray()) {
+                try {
+                  // Convert the messages array to List<ValidationErrorMessage>
+                  Set<ValidationErrorMessage> messages =
+                      mapper.convertValue(messagesNode, new TypeReference<>() {});
+                  result.put(fieldName, messages);
+                } catch (Exception e) {
+                  throw new RuntimeException(
+                      "Error parsing validation messages for field: " + fieldName, e);
+                }
+              }
+            });
+
+    return result;
   }
 
   public JsonSchema submissionSchema() throws IOException {
