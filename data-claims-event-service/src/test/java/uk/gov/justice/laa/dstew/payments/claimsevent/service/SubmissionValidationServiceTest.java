@@ -38,6 +38,8 @@ class SubmissionValidationServiceTest {
 
   @Mock private ClaimValidationService claimValidationService;
 
+  @Mock private BulkClaimUpdater bulkClaimUpdater;
+
   @Mock private DataClaimsRestClient dataClaimsRestClient;
 
   @Mock private SubmissionValidator submissionValidator;
@@ -51,6 +53,7 @@ class SubmissionValidationServiceTest {
     submissionValidationService =
         new SubmissionValidationService(
             claimValidationService,
+            bulkClaimUpdater,
             dataClaimsRestClient,
             singletonList(submissionValidator),
             eventServiceMetricService);
@@ -87,7 +90,7 @@ class SubmissionValidationServiceTest {
           submissionValidationContext, SubmissionValidationError.SUBMISSION_PERIOD_MISSING);
       verify(claimValidationService, times(0)).validateClaims(any(), any());
       // we need to update and mark the claims as invalid when the submission is invalid.
-      verify(dataClaimsRestClient, times(1)).updateClaim(any(), any(), any());
+      verify(bulkClaimUpdater, times(1)).updateClaims(submission, submissionValidationContext);
     }
 
     @Test
@@ -95,39 +98,25 @@ class SubmissionValidationServiceTest {
     void testNoValidationErrors() {
       boolean isNilSubmission = false;
       ClaimStatus claimStatus = ClaimStatus.VALID;
-      boolean expectsValidationError = false;
       // Given
       UUID submissionId = new UUID(0, 0);
       UUID claimId =
           claimStatus != null ? new UUID(1, 1) : null; // only create claimId if there is a claim
-      String officeAccountNumber = "officeAccountNumber";
-      String areaOfLaw = "areaOfLaw";
-
       SubmissionResponse submission = buildSubmission(submissionId, claimId, isNilSubmission);
 
       when(dataClaimsRestClient.getSubmission(submissionId))
           .thenReturn(ResponseEntity.of(Optional.of(submission)));
 
-      SubmissionPatch submissionPatch = buildSubmissionPatch(submissionId);
-
       SubmissionValidationContext result;
 
       if (claimId != null) {
         ClaimPatch claimPatch = new ClaimPatch().id(claimId.toString()).status(claimStatus);
-        mockClaimUpdate(submissionId, claimId, claimPatch);
 
         // When
         result = submissionValidationService.validateSubmission(submissionId);
 
         // Then
-        verifyCommonInteractions(
-            submissionId,
-            claimId,
-            officeAccountNumber,
-            areaOfLaw,
-            submission,
-            submissionPatch,
-            claimPatch);
+        verifyCommonInteractions(submission, result);
       } else {
         // When
         result = submissionValidationService.validateSubmission(submission.getSubmissionId());
@@ -155,23 +144,12 @@ class SubmissionValidationServiceTest {
           .status(SubmissionStatus.VALIDATION_IN_PROGRESS);
     }
 
-    private void mockClaimUpdate(UUID submissionId, UUID claimId, ClaimPatch patch) {
-      when(dataClaimsRestClient.updateClaim(submissionId, claimId, patch))
-          .thenReturn(ResponseEntity.ok().build());
-    }
-
     private void verifyCommonInteractions(
-        UUID submissionId,
-        UUID claimId,
-        String officeAccountNumber,
-        String areaOfLaw,
-        SubmissionResponse submissionResponse,
-        SubmissionPatch submissionPatch,
-        ClaimPatch claimPatch) {
+        SubmissionResponse submissionResponse, SubmissionValidationContext context) {
       verify(claimValidationService, times(1)).validateClaims(eq(submissionResponse), any());
       verify(claimValidationService, times(1))
           .validateClaims(eq(submissionResponse), any(SubmissionValidationContext.class));
-      verify(dataClaimsRestClient, times(1)).updateClaim(submissionId, claimId, claimPatch);
+      verify(bulkClaimUpdater, times(1)).updateClaims(submissionResponse, context);
     }
   }
 
