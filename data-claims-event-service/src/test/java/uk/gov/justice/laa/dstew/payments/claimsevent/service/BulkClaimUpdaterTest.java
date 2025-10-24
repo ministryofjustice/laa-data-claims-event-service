@@ -10,6 +10,8 @@ import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -74,12 +76,34 @@ class BulkClaimUpdaterTest {
     assertThat(capturedPatch.getStatus()).isEqualTo(ClaimStatus.VALID);
   }
 
+  @ParameterizedTest
+  @EnumSource(
+      value = ClaimStatus.class,
+      names = {"VALID", "INVALID"})
+  @DisplayName("Should not update one claim when status not READY_TO_PROCESS")
+  void shouldNotUpdateOneClaimWhenStatusNotReadyToProcess(ClaimStatus claimStatus) {
+    // Given
+    UUID claimId = new UUID(1, 1);
+    SubmissionResponse build =
+        SubmissionResponse.builder()
+            .submissionId(SUBMISSION_ID)
+            .build()
+            .addClaimsItem(SubmissionClaim.builder().claimId(claimId).status(claimStatus).build());
+    SubmissionValidationContext context = new SubmissionValidationContext();
+    // When
+    bulkClaimUpdater.updateClaims(build, context);
+    // Then
+
+    ArgumentCaptor<ClaimPatch> claimPatchCaptor = ArgumentCaptor.forClass(ClaimPatch.class);
+    verify(dataClaimsRestClient, times(0)).updateClaim(any(), any(), claimPatchCaptor.capture());
+  }
+
   @Test
   @DisplayName("Should update two claims to valid when no errors")
   void shouldUpdateTwoClaimToValidWhenNoErrors() {
     // Given
     UUID claimId = new UUID(1, 1);
-    UUID claimIdTwo = new UUID(1, 1);
+    UUID claimIdTwo = new UUID(1, 2);
     SubmissionResponse build =
         SubmissionResponse.builder()
             .submissionId(SUBMISSION_ID)
@@ -110,41 +134,11 @@ class BulkClaimUpdaterTest {
   }
 
   @Test
-  @DisplayName("Should update one claim to invalid when other claim has invalid status")
+  @DisplayName("Should update one claim to invalid when one claim has errors in context")
   void shouldUpdateOneClaimToInvalidWhenOtherClaimHasInvalidStatus() {
     // Given
     UUID claimId = new UUID(1, 1);
-    UUID claimIdTwo = new UUID(1, 1);
-    SubmissionResponse build =
-        SubmissionResponse.builder()
-            .submissionId(SUBMISSION_ID)
-            .build()
-            .addClaimsItem(
-                SubmissionClaim.builder().status(ClaimStatus.INVALID).claimId(claimId).build())
-            .addClaimsItem(
-                SubmissionClaim.builder()
-                    .status(ClaimStatus.READY_TO_PROCESS)
-                    .claimId(claimIdTwo)
-                    .build());
-
-    SubmissionValidationContext context = new SubmissionValidationContext();
-    // When
-    bulkClaimUpdater.updateClaims(build, context);
-    // Then
-    ArgumentCaptor<ClaimPatch> claimPatchCaptor = ArgumentCaptor.forClass(ClaimPatch.class);
-    // Should skip INVALID claim so only claim two exists
-    verify(dataClaimsRestClient, times(1)).updateClaim(any(), any(), claimPatchCaptor.capture());
-    ClaimPatch capturedPatch = claimPatchCaptor.getAllValues().getFirst();
-    assertThat(capturedPatch.getId()).isEqualTo(claimIdTwo.toString());
-    assertThat(capturedPatch.getStatus()).isEqualTo(ClaimStatus.INVALID);
-  }
-
-  @Test
-  @DisplayName("Should update two claims to invalid when claim errors found in context")
-  void shouldUpdateTwoClaimsToInvalidWhenClaimErrorsFoundInContext() {
-    // Given
-    UUID claimId = new UUID(1, 1);
-    UUID claimIdTwo = new UUID(1, 1);
+    UUID claimIdTwo = new UUID(1, 2);
     SubmissionResponse build =
         SubmissionResponse.builder()
             .submissionId(SUBMISSION_ID)
@@ -168,12 +162,13 @@ class BulkClaimUpdaterTest {
     bulkClaimUpdater.updateClaims(build, context);
     // Then
     ArgumentCaptor<ClaimPatch> claimPatchCaptor = ArgumentCaptor.forClass(ClaimPatch.class);
+    // Should skip INVALID claim so only claim two exists
     verify(dataClaimsRestClient, times(2)).updateClaim(any(), any(), claimPatchCaptor.capture());
     ClaimPatch capturedPatch = claimPatchCaptor.getAllValues().getFirst();
     assertThat(capturedPatch.getId()).isEqualTo(claimId.toString());
     assertThat(capturedPatch.getStatus()).isEqualTo(ClaimStatus.INVALID);
-    ClaimPatch capturedPatchTwo = claimPatchCaptor.getAllValues().getFirst();
+    ClaimPatch capturedPatchTwo = claimPatchCaptor.getAllValues().get(1);
     assertThat(capturedPatchTwo.getId()).isEqualTo(claimIdTwo.toString());
-    assertThat(capturedPatchTwo.getStatus()).isEqualTo(ClaimStatus.INVALID);
+    assertThat(capturedPatchTwo.getStatus()).isEqualTo(ClaimStatus.VALID);
   }
 }

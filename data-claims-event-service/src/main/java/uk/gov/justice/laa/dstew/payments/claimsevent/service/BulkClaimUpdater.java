@@ -35,9 +35,8 @@ public class BulkClaimUpdater {
    * <ul>
    *   <li>If validation errors have been recorded, update the claim status to INVALID and send
    *       through the errors.
-   *   <li>If no errors have been recorded, update the claim status to VALID
-   *   <li>If the context has errors, or the submission has a previous claim which is INVALID, then
-   *       mark all claims as INVALID.
+   *   <li>If no errors have been recorded, update the claim status to VALID.
+   *   <li>If the context has a claim errors, then mark the claim as INVALID.
    * </ul>
    *
    * @param submission the claim submission
@@ -51,11 +50,6 @@ public class BulkClaimUpdater {
     // Flag any claims that have been flagged for retry
     List<SubmissionClaim> claims =
         Optional.ofNullable(submission.getClaims()).orElse(Collections.emptyList());
-
-    // Check if any claims are invalid
-    boolean invalidClaimExists =
-        claims.stream().anyMatch(claim -> ClaimStatus.INVALID.equals(claim.getStatus()))
-            || context.hasClaimLevelErrors();
 
     claims.stream()
         .filter(claim -> ClaimStatus.READY_TO_PROCESS.equals(claim.getStatus()))
@@ -72,8 +66,7 @@ public class BulkClaimUpdater {
               }
 
               // If a claim was found to be invalid, make the rest of the claims invalid
-              ClaimStatus claimStatus =
-                  invalidClaimExists ? ClaimStatus.INVALID : ClaimStatus.VALID;
+              ClaimStatus claimStatus = getClaimStatus(claimId, context);
               List<ValidationMessagePatch> claimMessages = getClaimMessages(claimId, context);
 
               ClaimPatch claimPatch =
@@ -101,5 +94,13 @@ public class BulkClaimUpdater {
         .map(ClaimValidationReport::getMessages)
         .flatMap(List::stream)
         .toList();
+  }
+
+  private ClaimStatus getClaimStatus(String claimId, SubmissionValidationContext context) {
+    if (context.hasSubmissionLevelErrors() || context.hasErrors(claimId)) {
+      return ClaimStatus.INVALID;
+    } else {
+      return ClaimStatus.VALID;
+    }
   }
 }
