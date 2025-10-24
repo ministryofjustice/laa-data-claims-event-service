@@ -86,7 +86,7 @@ class BulkSubmissionMapperTest {
     MatterStartPost matterStartPost = matterStartPosts.getFirst();
     assertThat(matterStartPost.getAccessPointCode()).isEqualTo("AP00137");
     assertThat(matterStartPost.getScheduleReference()).isEqualTo("0U733A/2018/02");
-    assertThat(matterStartPost.getCategoryCode()).isEqualTo("CAT1");
+    assertThat(matterStartPost.getCategoryCode()).isEqualTo(CategoryCode.COM);
     assertThat(matterStartPost.getCreatedByUserId()).isEqualTo(EVENT_SERVICE);
     assertThat(matterStartPost.getDeliveryLocation()).isEqualTo("test-loc");
     assertThat(matterStartPost.getProcurementAreaCode()).isEqualTo("PA00136");

@@ -81,3 +81,6 @@ env:
       secretKeyRef:
         name: laa-data-claims-event-service-secrets
         key: SUBMISSION_VALIDATION_MINIMUM_PERIOD
+
+grafana:
+  enabled: true

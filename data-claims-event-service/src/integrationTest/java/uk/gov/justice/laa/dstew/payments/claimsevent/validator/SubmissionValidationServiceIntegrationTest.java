@@ -3,6 +3,7 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.validator;
 import static org.assertj.core.api.Assertions.assertThat;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.ContextUtil.assertContextClaimError;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.ContextUtil.assertContextHasNoErrors;
+import static uk.gov.justice.laa.dstew.payments.claimsevent.service.DuplicateClaimsTest.BULK_SUBMISSION_ID;
 
 import java.util.List;
 import java.util.UUID;
@@ -46,6 +47,7 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
       stubForGetSubmission(submissionId, "data-claims/get-submission/get-submission-APR-25.json");
       stubForUpdateSubmission(submissionId);
       stubReturnNoClaims(submissionId);
+      stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
 
       getStubForGetSubmissionByCriteria(
           List.of(
@@ -95,6 +97,7 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
       // Given
       stubForGetSubmission(submissionId, "data-claims/get-submission/get-submission-MAY-25.json");
       stubForUpdateSubmission(submissionId);
+      stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
 
       getStubForGetSubmissionByCriteria(
           List.of(
@@ -121,6 +124,7 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
       // Given
       stubForGetSubmission(submissionId, "data-claims/get-submission/get-submission-SEP-25.json");
       stubForUpdateSubmission(submissionId);
+      stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
 
       getStubForGetSubmissionByCriteria(
           List.of(
@@ -150,6 +154,7 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
       stubForGetSubmission(submissionId, "data-claims/get-submission/get-submission-APR-25.json");
       stubForUpdateSubmission(submissionId);
       stubReturnNoClaims(submissionId);
+      stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
 
       getStubForGetSubmissionByCriteria(
           List.of(

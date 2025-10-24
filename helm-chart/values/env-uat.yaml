@@ -4,5 +4,18 @@ metrics:
 
 serviceAccountName: claims-event-service-uat-irsa-serviceaccount
 
+resources:
+  limits:
+    memory: "2Gi" # 2GB (INCREASE from ~1GB)
+    cpu: "1000m"  # 1 core (same as previous)
+  requests:
+    memory: "1Gi" # 1GB (SIGNIFICANT INCREASE from 100Mi)
+    cpu: "500m"   # 0.5 CPU cores (SIGNIFICANT INCREASE from 0.01)
+
+# JVM arguments to fix OutOfMemoryError: Cannot reserve direct buffer memory
+extraEnvVars:
+  - name: JAVA_OPTS
+    value: "-XX:MaxDirectMemorySize=128m -Xmx1536m"
+
 grafana:
   enabled: true
