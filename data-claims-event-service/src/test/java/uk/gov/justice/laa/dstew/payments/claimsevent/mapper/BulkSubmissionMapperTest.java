@@ -71,6 +71,7 @@ class BulkSubmissionMapperTest {
     assertThat(claim.getUniqueFileNumber()).isEqualTo("220422/013");
     assertThat(claim.getStageReachedCode()).isEqualTo("PROK");
     assertThat(claim.getCreatedByUserId()).isEqualTo(EVENT_SERVICE);
+    assertThat(claim.getIsVatApplicable()).isFalse();
   }
 
   @Test

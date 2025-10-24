@@ -24,6 +24,8 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 @DisplayName("Submission Period Validator Test")
 class SubmissionPeriodValidatorTest {
 
+  private static final String SUBMISSION_VALIDATION_MINIMUM_PERIOD = "APR-2025";
+
   @Mock DateUtil dateUtil;
 
   SubmissionPeriodValidator validator;
@@ -31,7 +33,7 @@ class SubmissionPeriodValidatorTest {
   @BeforeEach
   void beforeEach() {
     // Create validator
-    validator = new SubmissionPeriodValidator(dateUtil);
+    validator = new SubmissionPeriodValidator(dateUtil, SUBMISSION_VALIDATION_MINIMUM_PERIOD);
     // Fixed date for testing
     YearMonth fixedMonth = YearMonth.of(2025, 5);
 
@@ -74,14 +76,32 @@ class SubmissionPeriodValidatorTest {
   @DisplayName("Should have no errors when claim month before this month")
   void shouldHaveNoErrorsWhenClaimMonthBeforeThisMonth() {
     // Given
-    String submissionPeriod = "APR-2025";
+    SubmissionResponse submissionResponse =
+        SubmissionResponse.builder().submissionPeriod(SUBMISSION_VALIDATION_MINIMUM_PERIOD).build();
+    SubmissionValidationContext submissionValidationContext = new SubmissionValidationContext();
+    // When
+    validator.validate(submissionResponse, submissionValidationContext);
+    // Then
+    assertFalse(submissionValidationContext.hasErrors());
+  }
+
+  @Test
+  @DisplayName("Should have errors when claim month is before this month")
+  void shouldHaveErrorsWhenClaimMonthIsBeforeThisMonth() {
+    // Given
+    String submissionPeriod = "MAR-2025";
     SubmissionResponse submissionResponse =
         SubmissionResponse.builder().submissionPeriod(submissionPeriod).build();
     SubmissionValidationContext submissionValidationContext = new SubmissionValidationContext();
     // When
     validator.validate(submissionResponse, submissionValidationContext);
     // Then
-    assertFalse(submissionValidationContext.hasErrors());
+    assertTrue(submissionValidationContext.hasErrors());
+    assertContextClaimError(
+        submissionValidationContext,
+        SubmissionValidationError.SUBMISSION_VALIDATION_MINIMUM_PERIOD,
+        SUBMISSION_VALIDATION_MINIMUM_PERIOD,
+        SUBMISSION_VALIDATION_MINIMUM_PERIOD);
   }
 
   @Test

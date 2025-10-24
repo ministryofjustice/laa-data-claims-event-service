@@ -7,6 +7,7 @@ import java.time.format.DateTimeParseException;
 import java.util.Locale;
 import java.util.Objects;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.util.DateUtil;
@@ -23,6 +24,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 public class SubmissionPeriodValidator implements SubmissionValidator {
 
   private final DateUtil dateUtil;
+  private final String submissionValidationMinimumPeriod;
 
   private DateTimeFormatter formatter;
 
@@ -31,12 +33,16 @@ public class SubmissionPeriodValidator implements SubmissionValidator {
    * the current month.
    *
    * @param dateUtil the {@code DateUtil} instance to use to get the current month.
+   * @param submissionValidationMinimumPeriod the minimum submission period allowed
    */
-  public SubmissionPeriodValidator(DateUtil dateUtil) {
+  public SubmissionPeriodValidator(
+      DateUtil dateUtil,
+      @Value("${submission.validation.minimum-period}") String submissionValidationMinimumPeriod) {
     this.dateUtil = dateUtil;
     DateTimeFormatterBuilder builder = new DateTimeFormatterBuilder();
     formatter =
         builder.parseCaseInsensitive().appendPattern("MMM-yyyy").toFormatter(Locale.ENGLISH);
+    this.submissionValidationMinimumPeriod = submissionValidationMinimumPeriod;
   }
 
   /**
@@ -65,6 +71,12 @@ public class SubmissionPeriodValidator implements SubmissionValidator {
       } else if (enteredSubmissionPeriod.isAfter(currentMonth)) {
         context.addSubmissionValidationError(
             SubmissionValidationError.SUBMISSION_PERIOD_FUTURE_MONTH, getReadableCurrentMonth());
+      } else if (enteredSubmissionPeriod.isBefore(
+          YearMonth.parse(submissionValidationMinimumPeriod, formatter))) {
+        context.addSubmissionValidationError(
+            SubmissionValidationError.SUBMISSION_VALIDATION_MINIMUM_PERIOD,
+            submissionValidationMinimumPeriod,
+            submissionValidationMinimumPeriod);
       }
     } catch (DateTimeParseException e) {
       // Add error if date format is incorrect

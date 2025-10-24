@@ -11,3 +11,7 @@ spring:
         secret-key: dummy-secret-key
       region:
         static: us-east-1
+
+submission:
+  validation:
+    minimum-period: JAN-2018
