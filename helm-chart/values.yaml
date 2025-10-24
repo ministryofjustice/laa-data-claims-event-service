@@ -1,3 +1,5 @@
+replicas: 2
+
 clusterDomain: apps.live.cloud-platform.service.justice.gov.uk
 metrics:
   mainReleaseName: production
@@ -79,3 +81,18 @@ env:
 
 grafana:
   enabled: true
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 8
+  targetCPUUtilizationPercentage: 60
+  targetMemoryUtilizationPercentage: 70
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1G
+  requests:
+    cpu: 25m
+    memory: 1G

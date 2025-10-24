@@ -7,7 +7,9 @@ metadata:
     app.kubernetes.io/name: {{ .Release.Name }}-{{ .Chart.Name }}
     appVersion: {{ .Chart.AppVersion }}
 spec:
+  {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicas | default 1 }}
+  {{- end }}
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ .Release.Name }}-{{ .Chart.Name }}

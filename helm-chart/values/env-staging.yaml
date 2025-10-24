@@ -1,4 +1,4 @@
-replicas: 1
+replicas: 2
 metrics:
   mainReleaseName: staging
 
@@ -6,3 +6,18 @@ serviceAccountName: claims-event-service-staging-irsa-serviceaccount
 
 grafana:
   enabled: true
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 8
+  targetCPUUtilizationPercentage: 60
+  targetMemoryUtilizationPercentage: 70
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1G
+  requests:
+    cpu: 25m
+    memory: 1G
