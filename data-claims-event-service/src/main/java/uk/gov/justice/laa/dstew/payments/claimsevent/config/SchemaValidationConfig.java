@@ -31,8 +31,7 @@ public class SchemaValidationConfig {
 
   private final ObjectMapper mapper;
 
-  @Value("classpath:schemas/claim-fields.schema.json")
-  Resource resourceFile;
+  private final Resource resourceFile;
 
   /**
    * Constructs a new {@code SchemaValidationConfig} with the given {@link ObjectMapper}.
@@ -44,9 +43,12 @@ public class SchemaValidationConfig {
    * @param mapper the Jackson {@link ObjectMapper} to configure and use for schema validation; must
    *     not be {@code null}
    */
-  public SchemaValidationConfig(ObjectMapper mapper) {
+  public SchemaValidationConfig(
+      ObjectMapper mapper,
+      @Value("classpath:schemas/claim-fields.schema.json") Resource resourceFile) {
     mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL); // exclude nulls
     this.mapper = mapper;
+    this.resourceFile = resourceFile;
   }
 
   private JsonSchema loadSchema(String path) throws IOException {

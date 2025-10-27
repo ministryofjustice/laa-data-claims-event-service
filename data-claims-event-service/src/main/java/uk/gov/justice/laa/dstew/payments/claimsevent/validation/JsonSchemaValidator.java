@@ -6,19 +6,17 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.ValidationMessage;
-
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessageType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.model.ValidationErrorMessage;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.Objects;
-
 
 /** Class responsible for validating objects against predefined JSON schemas. */
 @Component
@@ -29,8 +27,8 @@ public class JsonSchemaValidator {
 
   // Map of schema names to JsonSchema objects
   private final Map<String, JsonSchema> schemas;
-  //TODO: uncomment this when schemaValidationErrorMessages is used
-  //private final Map<String, Set<ValidationErrorMessage>> schemaValidationErrorMessages;
+
+  private final Map<String, Set<ValidationErrorMessage>> schemaValidationErrorMessages;
 
   /**
    * Validate an object against the schema identified by schemaName.
@@ -63,23 +61,19 @@ public class JsonSchemaValidator {
     String field = vm.getMessage().split(":")[0].replaceFirst("^\\$\\.", "");
     JsonNode valueNode = data.get(field);
     String value = valueNode == null || valueNode.isNull() ? "null" : valueNode.asText();
-    //TODO: Use getValidationErrorMessageFromSchema
-   /* return getValidationErrorMessageFromSchema(field)
-            .orElse(
-                    String.format(
-                            "%s: %s (provided value: %s)",
-                            field, message.substring(message.indexOf(':') + 1).trim(), value));*/
-    return String.format(
-            "%s: %s (provided value: %s)",
-            field, message.substring(message.indexOf(':') + 1).trim(), value);
+    return getValidationErrorMessageFromSchema(field)
+        .orElse(
+            String.format(
+                "%s: %s (provided value: %s)",
+                field, message.substring(message.indexOf(':') + 1).trim(), value));
   }
 
-  //TODO: uncomment this method
-  /*
   private Optional<String> getValidationErrorMessageFromSchema(final String field) {
-    return schemaValidationErrorMessages.get(field).stream()
+    return Optional.ofNullable(schemaValidationErrorMessages.get(field))
+        .orElse(new HashSet<>())
+        .stream()
         .filter(validationErrorMessage -> Objects.equals(validationErrorMessage.key(), "ALL"))
         .map(ValidationErrorMessage::value)
         .findFirst();
-  }*/
+  }
 }

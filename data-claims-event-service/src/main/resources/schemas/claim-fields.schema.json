@@ -294,7 +294,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Case Stage/Level Code must be  valid "
+          "value": "Case Stage/Level Code must be valid"
         }
       ]
     },
