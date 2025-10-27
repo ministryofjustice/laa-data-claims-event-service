@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.UUID;
-import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
@@ -266,7 +265,7 @@ public abstract class MockServerIntegrationTest {
     mockServerClient
         .when(
             HttpRequest.request()
-                .withMethod("PATCH")
+                .withMethod(HttpMethod.PATCH.toString())
                 .withPath(API_VERSION_0 + "submissions/" + submissionId.toString()))
         .respond(
             HttpResponse.response()
@@ -290,12 +289,6 @@ public abstract class MockServerIntegrationTest {
 
   protected void getStubForGetSubmissionByCriteria(
       final List<Parameter> parameters, final String expectedResponse) throws Exception {
-    List<Parameter> allParameters =
-        Stream.concat(
-                parameters.stream(),
-                Stream.of(Parameter.param("size", "0"), Parameter.param("page", "0")))
-            .toList();
-
     mockServerClient
         .when(
             HttpRequest.request()
@@ -309,26 +302,26 @@ public abstract class MockServerIntegrationTest {
                 .withBody(json(readJsonFromFile(expectedResponse))));
   }
 
-  protected void getStubForGetSubmissionByCriteriaExtraParameters(
-      final List<Parameter> parameters, final String expectedResponse) throws Exception {
-    List<Parameter> allParameters =
-        Stream.concat(
-                parameters.stream(),
-                Stream.of(Parameter.param("size", "0"), Parameter.param("page", "0")))
-            .toList();
-
-    mockServerClient
-        .when(
-            HttpRequest.request()
-                .withMethod(HttpMethod.GET.toString())
-                .withPath(API_VERSION_0 + "submissions")
-                .withQueryStringParameters(allParameters))
-        .respond(
-            HttpResponse.response()
-                .withStatusCode(200)
-                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
-                .withBody(json(readJsonFromFile(expectedResponse))));
-  }
+  //  protected void getStubForGetSubmissionByCriteriaExtraParameters(
+  //      final List<Parameter> parameters, final String expectedResponse) throws Exception {
+  //    List<Parameter> allParameters =
+  //        Stream.concat(
+  //                parameters.stream(),
+  //                Stream.of(Parameter.param("size", "0"), Parameter.param("page", "0")))
+  //            .toList();
+  //
+  //    mockServerClient
+  //        .when(
+  //            HttpRequest.request()
+  //                .withMethod(HttpMethod.GET.toString())
+  //                .withPath(API_VERSION_0 + "submissions")
+  //                .withQueryStringParameters(allParameters))
+  //        .respond(
+  //            HttpResponse.response()
+  //                .withStatusCode(200)
+  //                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
+  //                .withBody(json(readJsonFromFile(expectedResponse))));
+  //  }
 
   @TestConfiguration
   public static class ClaimsConfiguration {

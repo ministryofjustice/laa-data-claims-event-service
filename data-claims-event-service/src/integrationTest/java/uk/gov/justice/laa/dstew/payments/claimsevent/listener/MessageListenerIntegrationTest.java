@@ -3,6 +3,7 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.listener;
 import static org.awaitility.Awaitility.await;
 import static org.mockserver.model.HttpRequest.request;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.awspring.cloud.sqs.operations.SqsTemplate;
 import java.time.Duration;
@@ -34,14 +35,15 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
   private static final String OFFICE_CODE = "AQ2B3C";
   private static final String AREA_OF_LAW = "CIVIL";
   private static final String API_VERSION_0 = "/api/v0/";
+  private static final UUID submissionId = UUID.fromString("0561d67b-30ed-412e-8231-f6296a53538d");
+  private static final UUID claimId = UUID.fromString("f6bde766-a0a3-483b-bf13-bef888b4f06e");
 
   @Autowired private SqsTemplate sqsTemplate;
   @Autowired private ObjectMapper objectMapper;
 
   @Test
-  void sendMessage() throws Exception {
-    UUID submissionId = UUID.fromString("0561d67b-30ed-412e-8231-f6296a53538d");
-    // Given
+  void sendMessage_noErrors_noClaims() throws Exception {
+    // Given a submission with no claims mocked
     stubForGetSubmission(submissionId, "data-claims/get-submission/get-submission-APR-25.json");
     SubmissionPatch patchBodyInProgress =
         SubmissionPatch.builder()
@@ -57,13 +59,73 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
     stubForUpdateSubmissionWithBody(submissionId, patchBodySucceeded);
     stubReturnNoClaims(submissionId);
 
-    getStubForGetSubmissionByCriteriaExtraParameters(
+    getStubForGetSubmissionByCriteria(
         List.of(
             Parameter.param("offices", OFFICE_CODE),
-            Parameter.param("area-of-law", AREA_OF_LAW),
-            Parameter.param("submission-period", "APR-2025")),
+            Parameter.param("area_of_law", AREA_OF_LAW),
+            Parameter.param("submission_period", "APR-2025")),
         "data-claims/get-submission/get-submissions-by-filter_no_content.json");
 
+    verifyRequests();
+  }
+
+  @Test
+  void sendMessage_noErrors_withClaims() throws Exception {
+    // Given a submission with a claim
+    stubForGetSubmission(submissionId, "data-claims/get-submission/get-submission-with-claim.json");
+    SubmissionPatch patchBodyInProgress =
+        SubmissionPatch.builder()
+            .submissionId(submissionId)
+            .status(SubmissionStatus.VALIDATION_IN_PROGRESS)
+            .build();
+    stubForUpdateSubmissionWithBody(submissionId, patchBodyInProgress);
+    SubmissionPatch patchBodySucceeded =
+        SubmissionPatch.builder()
+            .submissionId(submissionId)
+            .status(SubmissionStatus.VALIDATION_SUCCEEDED)
+            .build();
+    stubForUpdateSubmissionWithBody(submissionId, patchBodySucceeded);
+    stubForGetClaim(submissionId, claimId, "data-claims/get-claim/get-claim-1.json");
+
+    getStubForGetSubmissionByCriteria(
+        List.of(
+            Parameter.param("offices", OFFICE_CODE),
+            Parameter.param("area_of_law", AREA_OF_LAW),
+            Parameter.param("submission_period", "APR-2025")),
+        "data-claims/get-submission/get-submissions-by-filter_no_content.json");
+
+    verifyRequests();
+  }
+
+  @Test
+  void sendMessage_validationFailedDuplicate() throws Exception {
+    // Given Validation failed for submission
+    stubForGetSubmission(submissionId, "data-claims/get-submission/get-submission-APR-25.json");
+    SubmissionPatch patchBodyInProgress =
+        SubmissionPatch.builder()
+            .submissionId(submissionId)
+            .status(SubmissionStatus.VALIDATION_IN_PROGRESS)
+            .build();
+    stubForUpdateSubmissionWithBody(submissionId, patchBodyInProgress);
+    SubmissionPatch patchBodySucceeded =
+        SubmissionPatch.builder()
+            .submissionId(submissionId)
+            .status(SubmissionStatus.VALIDATION_FAILED)
+            .build();
+    stubForUpdateSubmissionWithBody(submissionId, patchBodySucceeded);
+    stubReturnNoClaims(submissionId);
+
+    getStubForGetSubmissionByCriteria(
+        List.of(
+            Parameter.param("offices", OFFICE_CODE),
+            Parameter.param("area_of_law", AREA_OF_LAW),
+            Parameter.param("submission_period", "APR-2025")),
+        "data-claims/get-submission/get-submissions-by-filter.json");
+
+    verifyRequests();
+  }
+
+  private void verifyRequests() throws JsonProcessingException {
     String messageBody = objectMapper.writeValueAsString(Map.of("submission_id", submissionId));
 
     sqsTemplate.send(

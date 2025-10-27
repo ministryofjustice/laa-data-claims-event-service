@@ -17,9 +17,6 @@ import org.testcontainers.utility.DockerImageName;
 public class MessageListenerBase {
   protected static final String queueName = "test-queue-name";
 
-  protected static final DockerImageName SQS_IMAGE =
-      DockerImageName.parse("localstack/localstack:3.4");
-
   @Container
   static LocalStackContainer localStack =
       new LocalStackContainer(DockerImageName.parse("localstack/localstack:3.4"));
