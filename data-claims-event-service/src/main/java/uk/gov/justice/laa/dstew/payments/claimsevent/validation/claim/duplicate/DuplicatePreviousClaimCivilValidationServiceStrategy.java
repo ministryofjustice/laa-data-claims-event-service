@@ -27,7 +27,8 @@ public class DuplicatePreviousClaimCivilValidationServiceStrategy extends Duplic
       final ClaimResponse currentClaim,
       final List<ClaimResponse> submissionClaims,
       final String officeCode,
-      final SubmissionValidationContext context) {
+      final SubmissionValidationContext context,
+      final String feeType) {
 
     List<ClaimResponse> otherClaimsWithValidStatus =
         filterCurrentClaimWithValidStatusAndWithinPeriod(currentClaim, submissionClaims);

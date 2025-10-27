@@ -65,6 +65,34 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
     }
 
     @Test
+    @DisplayName("Should have one error with submission period before APR-2025")
+    void shouldHaveOneErrorWithSubmissionPeriodIsBeforeMinimumPeriod() throws Exception {
+      // Given
+      stubForGetSubmission(submissionId, "data-claims/get-submission/get-submission-MAR-25.json");
+      stubForUpdateSubmission(submissionId);
+      stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
+
+      getStubForGetSubmissionByCriteria(
+          List.of(
+              Parameter.param("offices", OFFICE_CODE),
+              Parameter.param("area_of_law", AREA_OF_LAW),
+              Parameter.param("submission_period", "MAR-2025")),
+          "data-claims/get-submission/get-submissions-by-filter_no_content.json");
+
+      // When
+      SubmissionValidationContext submissionValidationContext =
+          submissionValidationService.validateSubmission(submissionId);
+
+      // Then
+      assertThat(submissionValidationContext.getSubmissionValidationErrors().size()).isEqualTo(1);
+      assertContextClaimError(
+          submissionValidationContext,
+          SubmissionValidationError.SUBMISSION_VALIDATION_MINIMUM_PERIOD,
+          "APR-2025",
+          "APR-2025");
+    }
+
+    @Test
     @DisplayName("Should have one error with submission period in same month as current")
     void shouldHaveOneErrorWithSubmissionPeriodInSameMonthAsCurrent() throws Exception {
       // Given
