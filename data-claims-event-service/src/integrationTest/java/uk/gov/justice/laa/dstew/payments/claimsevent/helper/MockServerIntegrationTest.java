@@ -251,12 +251,12 @@ public abstract class MockServerIntegrationTest {
     mockServerClient
         .when(
             HttpRequest.request()
-                .withMethod("GET")
+                .withMethod(HttpMethod.GET.toString())
                 .withPath(API_VERSION_0 + "claims")
                 .withQueryStringParameter("submissionId", submissionId.toString()))
         .respond(
             HttpResponse.response()
-                .withStatusCode(200)
+                .withStatusCode(HttpStatusCode.OK)
                 .withHeader("Content-Type", "application/json")
                 .withBody(expectedBody));
   }
@@ -269,7 +269,19 @@ public abstract class MockServerIntegrationTest {
                 .withPath(API_VERSION_0 + "submissions/" + submissionId.toString()))
         .respond(
             HttpResponse.response()
-                .withStatusCode(204)
+                .withStatusCode(HttpStatusCode.NO_CONTENT)
+                .withHeader("Content-Type", "application/json"));
+  }
+
+  protected void stubForUpdateBulkSubmission(UUID bulkSubmissionId) {
+    mockServerClient
+        .when(
+            HttpRequest.request()
+                .withMethod(HttpMethod.PATCH.toString())
+                .withPath(API_VERSION_0 + "bulk-submissions/" + bulkSubmissionId.toString()))
+        .respond(
+            HttpResponse.response()
+                .withStatusCode(HttpStatusCode.NO_CONTENT)
                 .withHeader("Content-Type", "application/json"));
   }
 
@@ -297,7 +309,7 @@ public abstract class MockServerIntegrationTest {
                 .withQueryStringParameters(parameters))
         .respond(
             HttpResponse.response()
-                .withStatusCode(200)
+                .withStatusCode(HttpStatusCode.OK)
                 .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
                 .withBody(json(readJsonFromFile(expectedResponse))));
   }

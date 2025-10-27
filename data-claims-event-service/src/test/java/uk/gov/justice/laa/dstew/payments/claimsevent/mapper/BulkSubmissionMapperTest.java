@@ -69,6 +69,8 @@ class BulkSubmissionMapperTest {
     assertThat(claim.getScheduleReference()).isEqualTo("01/2Q286D/2024/01");
     assertThat(claim.getCaseReferenceNumber()).isEqualTo("JI/OKUSU");
     assertThat(claim.getUniqueFileNumber()).isEqualTo("220422/013");
+    assertThat(claim.getRepresentationOrderDate()).isEqualTo("2024-05-15");
+    assertThat(claim.getStageReachedCode()).isEqualTo("PROK");
     assertThat(claim.getCreatedByUserId()).isEqualTo(EVENT_SERVICE);
   }
 
@@ -85,7 +87,7 @@ class BulkSubmissionMapperTest {
     MatterStartPost matterStartPost = matterStartPosts.getFirst();
     assertThat(matterStartPost.getAccessPointCode()).isEqualTo("AP00137");
     assertThat(matterStartPost.getScheduleReference()).isEqualTo("0U733A/2018/02");
-    assertThat(matterStartPost.getCategoryCode()).isEqualTo("CAT1");
+    assertThat(matterStartPost.getCategoryCode()).isEqualTo(CategoryCode.COM);
     assertThat(matterStartPost.getCreatedByUserId()).isEqualTo(EVENT_SERVICE);
     assertThat(matterStartPost.getDeliveryLocation()).isEqualTo("test-loc");
     assertThat(matterStartPost.getProcurementAreaCode()).isEqualTo("PA00136");
