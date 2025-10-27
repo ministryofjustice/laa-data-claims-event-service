@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.mapper;
 
+import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.AreaOfLaw.CRIME_LOWER;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationSource.EVENT_SERVICE;
 
 import java.util.List;
@@ -22,7 +23,6 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetBulkSubmission200Re
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.MatterStartPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
-import uk.gov.justice.laa.dstew.payments.claimsevent.validation.AreaOfLaw;
 
 /** Maps bulk submission payloads into requests for the Claims Data API. */
 @Mapper(
@@ -158,7 +158,7 @@ public interface BulkSubmissionMapper {
       @MappingTarget ClaimPost claimPost,
       BulkSubmissionOutcome outcome,
       @Context String areaOfLaw) {
-    if (AreaOfLaw.CRIME_LOWER.getValue().equals(areaOfLaw)) {
+    if (CRIME_LOWER.getValue().equals(areaOfLaw)) {
       claimPost.setStageReachedCode(outcome.getMatterType());
       claimPost.setMatterTypeCode(null);
     }

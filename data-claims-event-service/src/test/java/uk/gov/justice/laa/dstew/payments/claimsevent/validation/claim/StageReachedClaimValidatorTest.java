@@ -3,6 +3,8 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.ValidationServiceTestUtils.getClaimMessages;
+import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.AreaOfLaw.CRIME_LOWER;
+import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.AreaOfLaw.LEGAL_HELP;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.StageReachedClaimValidator.STAGE_REACHED_CRIME_LOWER_PATTERN;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.StageReachedClaimValidator.STAGE_REACHED_LEGAL_HELP_PATTERN;
 
@@ -14,7 +16,6 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
-import uk.gov.justice.laa.dstew.payments.claimsevent.validation.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
 @DisplayName("Stage reached claim validator test")
@@ -87,7 +88,7 @@ class StageReachedClaimValidatorTest {
     SubmissionValidationContext context = new SubmissionValidationContext();
 
     // Run validation
-    validator.validate(claim, context, AreaOfLaw.CRIME_LOWER.getValue());
+    validator.validate(claim, context, CRIME_LOWER.getValue());
     assertThat(getClaimMessages(context, claimId.toString()).isEmpty()).isTrue();
   }
 
@@ -109,7 +110,7 @@ class StageReachedClaimValidatorTest {
   }
 
   private String getRegex(String areaOfLaw) {
-    return areaOfLaw.equals(AreaOfLaw.LEGAL_HELP.getValue())
+    return areaOfLaw.equals(LEGAL_HELP.getValue())
         ? STAGE_REACHED_LEGAL_HELP_PATTERN
         : STAGE_REACHED_CRIME_LOWER_PATTERN;
   }

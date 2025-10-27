@@ -1,6 +1,8 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.mapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.AreaOfLaw.CRIME_LOWER;
+import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.AreaOfLaw.LEGAL_HELP;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationSource.EVENT_SERVICE;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -14,7 +16,6 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.*;
-import uk.gov.justice.laa.dstew.payments.claimsevent.validation.AreaOfLaw;
 
 class BulkSubmissionMapperTest {
 
@@ -63,8 +64,7 @@ class BulkSubmissionMapperTest {
         objectMapper.readValue(json, GetBulkSubmission200Response.class);
 
     var claims =
-        mapper.mapToClaimPosts(
-            bulkSubmission.getDetails().getOutcomes(), AreaOfLaw.LEGAL_HELP.getValue());
+        mapper.mapToClaimPosts(bulkSubmission.getDetails().getOutcomes(), LEGAL_HELP.getValue());
 
     assertThat(claims).hasSize(1);
     ClaimPost claim = claims.get(0);
@@ -85,8 +85,7 @@ class BulkSubmissionMapperTest {
         objectMapper.readValue(json, GetBulkSubmission200Response.class);
 
     var claims =
-        mapper.mapToClaimPosts(
-            bulkSubmission.getDetails().getOutcomes(), AreaOfLaw.CRIME_LOWER.getValue());
+        mapper.mapToClaimPosts(bulkSubmission.getDetails().getOutcomes(), CRIME_LOWER.getValue());
 
     assertThat(claims).hasSize(1);
     ClaimPost claim = claims.getFirst();
