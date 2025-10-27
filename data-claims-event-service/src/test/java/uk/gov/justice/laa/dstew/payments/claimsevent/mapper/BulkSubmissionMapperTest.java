@@ -91,7 +91,7 @@ class BulkSubmissionMapperTest {
     ClaimPost claim = claims.getFirst();
     assertThat(claim.getStatus()).isEqualTo(ClaimStatus.READY_TO_PROCESS);
     assertThat(claim.getStageReachedCode()).isEqualTo("FAMX");
-    assertThat(claim.getMatterTypeCode()).isEqualTo(null);
+    assertThat(claim.getMatterTypeCode()).isEqualTo("FAMX");
     assertThat(claim.getCreatedByUserId()).isEqualTo(EVENT_SERVICE);
   }
 

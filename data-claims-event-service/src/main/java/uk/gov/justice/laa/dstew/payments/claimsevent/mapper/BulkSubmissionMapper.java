@@ -146,8 +146,7 @@ public interface BulkSubmissionMapper {
 
   /**
    * Adjusts the matter type and stage reached codes for crime lower claims after the initial
-   * mapping. For crime lower claims, the matter type is used as the stage reached code and the
-   * matter type code is set to null.
+   * mapping. For crime lower claims, the matter type is used as the stage reached code.
    *
    * @param claimPost the target claim post object being mapped
    * @param outcome the source bulk submission outcome
@@ -160,7 +159,6 @@ public interface BulkSubmissionMapper {
       @Context String areaOfLaw) {
     if (CRIME_LOWER.getValue().equals(areaOfLaw)) {
       claimPost.setStageReachedCode(outcome.getMatterType());
-      claimPost.setMatterTypeCode(null);
     }
   }
 
