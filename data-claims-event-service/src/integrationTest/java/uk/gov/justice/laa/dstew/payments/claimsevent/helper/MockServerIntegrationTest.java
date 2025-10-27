@@ -314,27 +314,6 @@ public abstract class MockServerIntegrationTest {
                 .withBody(json(readJsonFromFile(expectedResponse))));
   }
 
-  //  protected void getStubForGetSubmissionByCriteriaExtraParameters(
-  //      final List<Parameter> parameters, final String expectedResponse) throws Exception {
-  //    List<Parameter> allParameters =
-  //        Stream.concat(
-  //                parameters.stream(),
-  //                Stream.of(Parameter.param("size", "0"), Parameter.param("page", "0")))
-  //            .toList();
-  //
-  //    mockServerClient
-  //        .when(
-  //            HttpRequest.request()
-  //                .withMethod(HttpMethod.GET.toString())
-  //                .withPath(API_VERSION_0 + "submissions")
-  //                .withQueryStringParameters(allParameters))
-  //        .respond(
-  //            HttpResponse.response()
-  //                .withStatusCode(200)
-  //                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
-  //                .withBody(json(readJsonFromFile(expectedResponse))));
-  //  }
-
   @TestConfiguration
   public static class ClaimsConfiguration {
 
