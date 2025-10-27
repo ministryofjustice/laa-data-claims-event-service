@@ -94,7 +94,7 @@ class BulkSubmissionMapperTest {
     assertThat(claim.getStageReachedCode()).isEqualTo("FAMX");
     assertThat(claim.getMatterTypeCode()).isEqualTo("FAMX");
     assertThat(claim.getCreatedByUserId()).isEqualTo(EVENT_SERVICE);
-    assertThat(claim.getIsVatApplicable()).isFalse();
+    assertThat(claim.getIsVatApplicable()).isTrue();
   }
 
   @Test
