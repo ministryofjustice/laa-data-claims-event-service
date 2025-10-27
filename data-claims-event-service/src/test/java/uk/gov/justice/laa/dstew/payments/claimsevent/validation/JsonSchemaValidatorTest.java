@@ -1302,6 +1302,10 @@ class JsonSchemaValidatorTest {
   }
 
   public String convertCamelCaseToSnakeCase(String value) {
-    return value.replaceAll("([a-z])([A-Z])", "$1_$2").toLowerCase();
+    return value
+        .replaceAll("([a-z])([A-Z])", "$1_$2")
+        .replaceAll("([A-Za-z])([0-9])", "$1_$2")
+        .replaceAll("([0-9])([A-Za-z])", "$1_$2")
+        .toLowerCase();
   }
 }
