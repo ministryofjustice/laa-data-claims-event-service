@@ -16,7 +16,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
  */
 @Component
 public class ClientDateOfBirthClaimValidator extends AbstractDateValidator
-    implements ClaimValidator, BasicClaimValidator {
+    implements BasicClaimValidator {
 
   public static final String MIN_BIRTH_DATE = "1900-01-01";
 

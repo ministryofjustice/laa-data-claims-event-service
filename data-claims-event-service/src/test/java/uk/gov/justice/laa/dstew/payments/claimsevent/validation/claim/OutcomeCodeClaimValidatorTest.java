@@ -6,7 +6,9 @@ import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.Out
 import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.OutcomeCodeClaimValidator.OUTCOME_CODE_CRIME_PATTERN;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.OutcomeCodeClaimValidator.OUTCOME_CODE_MEDIATION_PATTERN;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -17,7 +19,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 @DisplayName("Outcome code claim validator test")
 class OutcomeCodeClaimValidatorTest {
 
-  OutcomeCodeClaimValidator validator = new OutcomeCodeClaimValidator();
+  OutcomeCodeClaimValidator validator = new OutcomeCodeClaimValidator(new HashMap<>());
 
   private final Map<String, String> outcomeCodePatterns =
       Map.of(

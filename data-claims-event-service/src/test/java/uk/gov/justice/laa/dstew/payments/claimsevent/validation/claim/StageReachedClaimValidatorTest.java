@@ -8,6 +8,7 @@ import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.AreaOfLaw
 import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.StageReachedClaimValidator.STAGE_REACHED_CRIME_LOWER_PATTERN;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.StageReachedClaimValidator.STAGE_REACHED_LEGAL_HELP_PATTERN;
 
+import java.util.HashMap;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,7 +22,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 @DisplayName("Stage reached claim validator test")
 class StageReachedClaimValidatorTest {
 
-  StageReachedClaimValidator validator = new StageReachedClaimValidator();
+  StageReachedClaimValidator validator = new StageReachedClaimValidator(new HashMap<>());
 
   @ParameterizedTest(
       name =

@@ -30,13 +30,18 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
  */
 @Component
 @Slf4j
-@RequiredArgsConstructor
-public class MandatoryFieldClaimValidator implements ClaimValidator, ClaimWithAreaOfLawValidator {
+public class MandatoryFieldClaimValidator implements ClaimWithAreaOfLawValidator, ClaimValidator {
 
   public static final String FEE_CALCULATION_TYPE_DISB_ONLY = "DISB_ONLY";
   private final MandatoryFieldsRegistry mandatoryFieldsRegistry;
-
   private final ExclusionsRegistry exclusionsRegistry;
+
+  protected MandatoryFieldClaimValidator(MandatoryFieldsRegistry mandatoryFieldsRegistry,
+      ExclusionsRegistry exclusionsRegistry) {
+    this.exclusionsRegistry = exclusionsRegistry;
+    this.mandatoryFieldsRegistry = mandatoryFieldsRegistry;
+  }
+
 
   @Override
   public void validate(

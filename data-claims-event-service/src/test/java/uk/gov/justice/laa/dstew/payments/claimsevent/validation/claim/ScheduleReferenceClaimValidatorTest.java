@@ -3,6 +3,7 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.ValidationServiceTestUtils.getClaimMessages;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -16,7 +17,8 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 @DisplayName("Schedule reference claim validator test")
 class ScheduleReferenceClaimValidatorTest {
 
-  private ScheduleReferenceClaimValidator validator = new ScheduleReferenceClaimValidator();
+  private ScheduleReferenceClaimValidator validator =
+      new ScheduleReferenceClaimValidator(new HashMap<>());
 
   @ParameterizedTest(
       name =

@@ -12,6 +12,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 
 @DisplayName("Client date of birth claim validator test")
 class ClientDateOfBirthClaimValidatorTest {
+
   private final ClientDateOfBirthClaimValidator validator = new ClientDateOfBirthClaimValidator();
 
   @Test

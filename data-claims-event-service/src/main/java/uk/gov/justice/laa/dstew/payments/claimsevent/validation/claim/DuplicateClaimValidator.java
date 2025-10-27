@@ -2,7 +2,6 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim;
 
 import java.util.List;
 import java.util.function.Predicate;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
@@ -18,10 +17,13 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.
  */
 @Component
 @Slf4j
-@RequiredArgsConstructor
 public class DuplicateClaimValidator implements ClaimValidator {
 
   private final List<DuplicateClaimValidationStrategy> strategyList;
+
+  protected DuplicateClaimValidator(List<DuplicateClaimValidationStrategy> strategyList) {
+    this.strategyList = strategyList;
+  }
 
   /**
    * Validates a claim to ensure it is not a duplicate of another claim, based on the provided

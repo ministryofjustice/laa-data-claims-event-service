@@ -1,7 +1,6 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim;
 
 import java.util.List;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
@@ -17,10 +16,13 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
  * @see BasicClaimValidator
  */
 @Component
-@RequiredArgsConstructor
-public class ClaimSchemaValidator implements ClaimValidator, BasicClaimValidator {
+public class ClaimSchemaValidator implements BasicClaimValidator, ClaimValidator {
 
   private final JsonSchemaValidator jsonSchemaValidator;
+
+  protected ClaimSchemaValidator(JsonSchemaValidator jsonSchemaValidator) {
+    this.jsonSchemaValidator = jsonSchemaValidator;
+  }
 
   @Override
   public void validate(ClaimResponse claim, SubmissionValidationContext context) {

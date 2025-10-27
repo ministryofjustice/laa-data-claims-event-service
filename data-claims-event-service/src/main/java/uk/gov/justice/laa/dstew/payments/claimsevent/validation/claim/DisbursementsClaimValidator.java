@@ -16,7 +16,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
  * @see ClaimWithAreaOfLawValidator
  */
 @Component
-public class DisbursementsClaimValidator implements ClaimValidator, ClaimWithAreaOfLawValidator {
+public class DisbursementsClaimValidator implements ClaimWithAreaOfLawValidator, ClaimValidator {
 
   @Override
   public void validate(ClaimResponse claim, SubmissionValidationContext context, String areaOfLaw) {

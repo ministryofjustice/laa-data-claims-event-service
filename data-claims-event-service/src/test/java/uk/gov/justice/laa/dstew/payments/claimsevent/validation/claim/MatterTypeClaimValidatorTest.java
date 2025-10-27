@@ -3,6 +3,7 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.ValidationServiceTestUtils.getClaimMessages;
 
+import java.util.HashMap;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -13,7 +14,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 @DisplayName("Matter type claim with area of law validator test")
 class MatterTypeClaimValidatorTest {
 
-  MatterTypeClaimValidator validator = new MatterTypeClaimValidator();
+  MatterTypeClaimValidator validator = new MatterTypeClaimValidator(new HashMap<>());
 
   @ParameterizedTest(
       name = "{index} => claimId={0}, matterType={1}, areaOfLaw={2}, regex={3}, expectError={4}")
