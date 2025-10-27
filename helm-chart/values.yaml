@@ -83,6 +83,8 @@ env:
       secretKeyRef:
         name: laa-data-claims-event-service-secrets
         key: SUBMISSION_VALIDATION_MINIMUM_PERIOD
+  - name: JAVA_TOOL_OPTIONS
+    value: "${JAVA_TOOL_OPTIONS} -XX:MaxDirectMemorySize=256m"
 
 grafana:
   enabled: true
