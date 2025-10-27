@@ -3,14 +3,19 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.ValidationServiceTestUtils.getClaimMessages;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.springframework.core.io.ClassPathResource;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
+import uk.gov.justice.laa.dstew.payments.claimsevent.config.SchemaValidationConfig;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
@@ -20,9 +25,18 @@ class ScheduleReferenceClaimValidatorTest {
   private ScheduleReferenceClaimValidator validator =
       new ScheduleReferenceClaimValidator(new HashMap<>());
 
+  @BeforeEach
+  void beforeEach() throws IOException {
+    SchemaValidationConfig config =
+        new SchemaValidationConfig(
+            new ObjectMapper(), new ClassPathResource("schemas/claim-fields.schema.json"));
+    validator = new ScheduleReferenceClaimValidator(config.schemaValidationErrorMessages());
+  }
+
   @ParameterizedTest(
       name =
-          "{index} => claimId={0}, matterType={1}, areaOfLaw={2}, caseReferenceNumber={3}, scheduleReference={4}, regex={6}, expectError={7}")
+          "{index} => claimId={0}, matterType={1}, areaOfLaw={2}, caseReferenceNumber={3}, "
+              + "scheduleReference={4}, regex={6}, expectError={7}")
   @CsvSource({
     "1, ab12:bc24, CIVIL, 123, SCH123, '^[a-zA-Z0-9/.\\-]{1,20}$', false",
     "2, ab12:bc24, CIVIL, 123, ABCDEFGHIJKLMNOPQRST123, '^[a-zA-Z0-9/.\\-]{1,20}$', true",
@@ -62,12 +76,17 @@ class ScheduleReferenceClaimValidatorTest {
     validator.validate(claim, context, "CIVIL");
 
     if (expectError) {
-      String expectedMessage =
+      String expectedTechnical =
           String.format(
               "schedule_reference (%s): does not match the regex pattern %s (provided value: %s)",
               areaOfLaw, regex, scheduleReference);
+      String expectedDisplay =
+          "Schedule Reference must be a maximum of 20 characters and contain only letters, "
+              + "numbers, forward slashes, periods, and hyphens";
       assertThat(getClaimMessages(context, claimId.toString()).getFirst().getTechnicalMessage())
-          .isEqualTo(expectedMessage);
+          .isEqualTo(expectedTechnical);
+      assertThat(getClaimMessages(context, claimId.toString()).getFirst().getDisplayMessage())
+          .isEqualTo(expectedDisplay);
     } else {
       assertThat(getClaimMessages(context, claimId.toString()).isEmpty()).isTrue();
     }

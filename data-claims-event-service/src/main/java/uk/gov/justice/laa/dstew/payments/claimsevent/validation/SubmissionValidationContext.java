@@ -81,12 +81,24 @@ public class SubmissionValidationContext {
    * @param message the error message to add
    */
   public void addClaimError(String claimId, String message, String source) {
+    addClaimError(claimId, message, message, source);
+  }
+
+  /**
+   * Adds a claim-level error message for a specific claim.
+   *
+   * @param claimId the ID of the claim
+   * @param technicalMessage the technical message to add
+   * @param displayMessage the display message to add
+   */
+  public void addClaimError(
+      String claimId, String technicalMessage, String displayMessage, String source) {
     addClaimMessages(
         claimId,
         List.of(
             new ValidationMessagePatch()
-                .displayMessage(message)
-                .technicalMessage(message)
+                .displayMessage(displayMessage)
+                .technicalMessage(technicalMessage)
                 .source(source)
                 .type(ValidationMessageType.ERROR)));
   }

@@ -44,15 +44,14 @@ public abstract class RegexClaimValidator extends SchemaValidator implements Cla
       String fieldName,
       String regex,
       SubmissionValidationContext context) {
-    String errorMessage =
-        getValidationErrorMessageFromSchema(
-            fieldName,
-            areaOfLaw,
-            String.format(
-                "%s (%s): does not match the regex pattern %s (provided value: %s)",
-                fieldName, areaOfLaw, regex, fieldValue));
+    String technicalMessage =
+        String.format(
+            "%s (%s): does not match the regex pattern %s (provided value: %s)",
+            fieldName, areaOfLaw, regex, fieldValue);
+    String displayMessage =
+        getValidationErrorMessageFromSchema(fieldName, areaOfLaw, technicalMessage);
     if (regex != null && fieldValue != null && !fieldValue.matches(regex)) {
-      context.addClaimError(claim.getId(), errorMessage, EVENT_SERVICE);
+      context.addClaimError(claim.getId(), technicalMessage, displayMessage, EVENT_SERVICE);
     }
   }
 }
