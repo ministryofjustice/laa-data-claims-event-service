@@ -54,7 +54,7 @@
         "type_of_advice": null,
         "unique_case_id": null,
         "value_of_costs": null,
-        "vat_indicator": true,
+        "vat_indicator": null,
         "case_ref_number": "JI/OKUSU",
         "case_start_date": "2022-04-22",
         "client_2_gender": null,

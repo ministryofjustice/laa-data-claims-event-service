@@ -72,6 +72,7 @@ class BulkSubmissionMapperTest {
     assertThat(claim.getRepresentationOrderDate()).isEqualTo("2024-05-15");
     assertThat(claim.getStageReachedCode()).isEqualTo("PROK");
     assertThat(claim.getCreatedByUserId()).isEqualTo(EVENT_SERVICE);
+    assertThat(claim.getIsVatApplicable()).isFalse();
   }
 
   @Test

@@ -113,7 +113,7 @@ public interface BulkSubmissionMapper {
   @Mapping(target = "jrFormFillingAmount", source = "jrFormFilling")
   @Mapping(target = "costsDamagesRecoveredAmount", source = "costsDamagesRecovered")
   @Mapping(target = "adjournedHearingFeeAmount", source = "adjournedHearingFee")
-  @Mapping(target = "isVatApplicable", source = "vatIndicator")
+  @Mapping(target = "isVatApplicable", source = "vatIndicator", defaultValue = "false")
   @Mapping(target = "isLondonRate", source = "londonNonlondonRate")
   @Mapping(target = "isAdditionalTravelPayment", source = "additionalTravelPayment")
   @Mapping(target = "cmrhOralCount", source = "cmrhOral")
