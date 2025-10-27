@@ -16,7 +16,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.model.Validation
  * @see BasicClaimValidator
  */
 @Component
-public class OutcomeCodeClaimValidator extends RegexClaimValidator
+public final class OutcomeCodeClaimValidator extends RegexClaimValidator
     implements ClaimWithAreaOfLawValidator {
 
   public static final String OUTCOME_CODE_CIVIL_PATTERN = "^[A-Za-z0-9-]{2}$";
@@ -24,7 +24,7 @@ public class OutcomeCodeClaimValidator extends RegexClaimValidator
       "(?i)^(CP(0[1-9]|1[0-9]|2[0-8])|CN(0[1-9]|1[0-3])|PL(0[1-9]|1[0-4]))?$";
   public static final String OUTCOME_CODE_MEDIATION_PATTERN = "(?i)^(A|B|S|C|P)?$";
 
-  protected OutcomeCodeClaimValidator(
+  public OutcomeCodeClaimValidator(
       Map<String, Set<ValidationErrorMessage>> schemaValidationErrorMessages) {
     super(schemaValidationErrorMessages);
   }

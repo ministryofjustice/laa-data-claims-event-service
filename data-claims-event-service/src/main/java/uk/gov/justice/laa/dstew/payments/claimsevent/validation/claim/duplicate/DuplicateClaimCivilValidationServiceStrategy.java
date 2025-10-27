@@ -16,7 +16,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 /** Validation service for civil duplicate claims. */
 @Slf4j
 @Service
-public class DuplicateClaimCivilValidationServiceStrategy extends DuplicateClaimValidation
+public final class DuplicateClaimCivilValidationServiceStrategy extends DuplicateClaimValidation
     implements CivilDuplicateClaimValidationStrategy {
   private static final String DISBURSEMENT_FEE_TYPE =
       FeeCalculationType.DISBURSEMENT_ONLY.toString();

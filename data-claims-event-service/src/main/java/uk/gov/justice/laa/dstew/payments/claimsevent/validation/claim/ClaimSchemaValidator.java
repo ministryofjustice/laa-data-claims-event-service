@@ -16,11 +16,11 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
  * @see BasicClaimValidator
  */
 @Component
-public class ClaimSchemaValidator implements BasicClaimValidator, ClaimValidator {
+public final class ClaimSchemaValidator implements BasicClaimValidator, ClaimValidator {
 
   private final JsonSchemaValidator jsonSchemaValidator;
 
-  protected ClaimSchemaValidator(JsonSchemaValidator jsonSchemaValidator) {
+  public ClaimSchemaValidator(JsonSchemaValidator jsonSchemaValidator) {
     this.jsonSchemaValidator = jsonSchemaValidator;
   }
 

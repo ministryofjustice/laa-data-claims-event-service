@@ -25,13 +25,20 @@ import uk.gov.justice.laa.provider.model.ProviderFirmOfficeContractAndScheduleDt
  */
 @Component
 @Slf4j
-public class EffectiveCategoryOfLawClaimValidator implements ClaimValidator {
+public final class EffectiveCategoryOfLawClaimValidator implements ClaimValidator {
 
   private final CategoryOfLawValidationService categoryOfLawValidationService;
   private final ClaimEffectiveDateUtil claimEffectiveDateUtil;
   private final ProviderDetailsRestClient providerDetailsRestClient;
 
-  protected EffectiveCategoryOfLawClaimValidator(
+  /**
+   * Constructs an instance of {@link EffectiveCategoryOfLawClaimValidator}.
+   *
+   * @param categoryOfLawValidationService the category of law validation service
+   * @param claimEffectiveDateUtil the claim effective date util
+   * @param providerDetailsRestClient the provider details rest client
+   */
+  public EffectiveCategoryOfLawClaimValidator(
       CategoryOfLawValidationService categoryOfLawValidationService,
       ClaimEffectiveDateUtil claimEffectiveDateUtil,
       ProviderDetailsRestClient providerDetailsRestClient) {

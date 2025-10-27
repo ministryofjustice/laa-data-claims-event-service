@@ -16,13 +16,13 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.model.Validation
  * @see ClaimWithAreaOfLawValidator
  */
 @Component
-public class MatterTypeClaimValidator extends RegexClaimValidator
+public final class MatterTypeClaimValidator extends RegexClaimValidator
     implements ClaimWithAreaOfLawValidator {
 
   private static final String MATTER_TYPE_CIVIL_PATTERN = "^[a-zA-Z0-9]{1,4}[-:][a-zA-Z0-9]{1,4}$";
   private static final String MATTER_TYPE_MEDIATION_PATTERN = "^[A-Z]{4}[-:][A-Z]{4}$";
 
-  protected MatterTypeClaimValidator(
+  public MatterTypeClaimValidator(
       Map<String, Set<ValidationErrorMessage>> schemaValidationErrorMessages) {
     super(schemaValidationErrorMessages);
   }
@@ -31,7 +31,7 @@ public class MatterTypeClaimValidator extends RegexClaimValidator
   public void validate(ClaimResponse claim, SubmissionValidationContext context, String areaOfLaw) {
     String regex =
         switch (areaOfLaw) {
-          case "CIVIL" -> MATTER_TYPE_CIVIL_PATTERN;
+          case "CIVIL", "LEGAL HELP" -> MATTER_TYPE_CIVIL_PATTERN;
           case "MEDIATION" -> MATTER_TYPE_MEDIATION_PATTERN;
           default -> null;
         };

@@ -42,8 +42,8 @@ class StageReachedClaimValidatorTest {
               + "expectError={3}, displayMessage={4}")
   @CsvSource({
     "1, AABB, LEGAL HELP, true, Stage Reached Code must be exactly 2 alphanumeric characters for Civil claims\"",
-    "2, AZ, LEGAL HELP, false, NA",
-    "3, C9, LEGAL HELP, false, NA",
+      "2, AZ, LEGAL HELP, false, NA",
+      "3, C9, LEGAL HELP, false, NA",
     "4, A!, LEGAL HELP, true, Stage Reached Code must be exactly 2 alphanumeric characters for Civil claims\"",
     "5, A1, CRIME LOWER, true, Stage Reached Code must be exactly 4 uppercase letters for Crime claims",
     "6, A-CD, CRIME LOWER, true, Stage Reached Code must be exactly 4 uppercase letters for Crime claims",

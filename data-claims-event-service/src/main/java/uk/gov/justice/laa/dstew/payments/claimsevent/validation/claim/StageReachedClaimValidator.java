@@ -17,7 +17,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.model.Validation
  * @see BasicClaimValidator
  */
 @Component
-public class StageReachedClaimValidator extends RegexClaimValidator
+public final class StageReachedClaimValidator extends RegexClaimValidator
     implements ClaimWithAreaOfLawValidator {
 
   public static final String STAGE_REACHED_LEGAL_HELP_PATTERN = "^[a-zA-Z0-9]{2}$";

@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.StrategyTypes;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.model.ValidationErrorMessage;
 
 /**
@@ -51,9 +52,25 @@ public abstract class SchemaValidator {
     return Optional.ofNullable(schemaValidationErrorMessages.get(field))
         .orElse(new HashSet<>())
         .stream()
-        .filter(validationErrorMessage -> Objects.equals(validationErrorMessage.key(), areaOfLaw))
+        .filter(
+            validationErrorMessage ->
+                Objects.equals(validationErrorMessage.key(), simplifyAreaOfLaw(areaOfLaw)))
         .map(ValidationErrorMessage::value)
         .findFirst()
         .orElse(defaultMessage);
+  }
+
+  private static String simplifyAreaOfLaw(String areaOfLaw) {
+    if (StrategyTypes.CRIME.contains(areaOfLaw)) {
+      return "CRIME";
+    } else if (StrategyTypes.CIVIL.contains(areaOfLaw)) {
+      return "CIVIL";
+    } else if (StrategyTypes.MEDIATION.contains(areaOfLaw)) {
+      return "MEDIATION";
+    } else if ("ALL".equals(areaOfLaw)) {
+      return "ALL";
+    }
+
+    throw new IllegalArgumentException("Invalid area of law: " + areaOfLaw);
   }
 }

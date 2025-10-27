@@ -17,11 +17,11 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.
  */
 @Component
 @Slf4j
-public class DuplicateClaimValidator implements ClaimValidator {
+public final class DuplicateClaimValidator implements ClaimValidator {
 
   private final List<DuplicateClaimValidationStrategy> strategyList;
 
-  protected DuplicateClaimValidator(List<DuplicateClaimValidationStrategy> strategyList) {
+  public DuplicateClaimValidator(List<DuplicateClaimValidationStrategy> strategyList) {
     this.strategyList = strategyList;
   }
 
