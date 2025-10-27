@@ -72,6 +72,7 @@ public interface BulkSubmissionMapper {
   @Mapping(target = "uniqueFileNumber", source = "ufn")
   @Mapping(target = "caseStartDate", source = "caseStartDate")
   @Mapping(target = "caseConcludedDate", source = "workConcludedDate")
+  @Mapping(target = "representationOrderDate", source = "repOrderDate")
   @Mapping(target = "matterTypeCode", source = "matterType")
   @Mapping(target = "crimeMatterTypeCode", source = "crimeMatterType")
   @Mapping(target = "feeSchemeCode", source = "feeScheme")
