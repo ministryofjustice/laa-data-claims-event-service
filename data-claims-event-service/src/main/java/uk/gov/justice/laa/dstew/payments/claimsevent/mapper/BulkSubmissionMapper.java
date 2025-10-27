@@ -23,6 +23,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetBulkSubmission200Re
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.MatterStartPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.AreaOfLaw;
 
 /** Maps bulk submission payloads into requests for the Claims Data API. */
 @Mapper(
@@ -143,7 +144,7 @@ public interface BulkSubmissionMapper {
   @Mapping(target = "isClient2PostalApplicationAccepted", source = "client2PostalApplAccp")
   @Mapping(target = "stageReachedCode", source = "stageReached")
   @Mapping(target = "createdByUserId", constant = EVENT_SERVICE)
-  ClaimPost mapToClaimPost(BulkSubmissionOutcome outcome, @Context String areaOfLaw);
+  ClaimPost mapToClaimPost(BulkSubmissionOutcome outcome, @Context AreaOfLaw areaOfLaw);
 
   /**
    * Adjusts the matter type and stage reached codes for crime lower claims after the initial
@@ -157,13 +158,14 @@ public interface BulkSubmissionMapper {
   default void adjustMatterTypeTarget(
       @MappingTarget ClaimPost claimPost,
       BulkSubmissionOutcome outcome,
-      @Context String areaOfLaw) {
-    if (CRIME_LOWER.getValue().equals(areaOfLaw)) {
+      @Context AreaOfLaw areaOfLaw) {
+    if (CRIME_LOWER.equals(areaOfLaw)) {
       claimPost.setStageReachedCode(outcome.getMatterType());
     }
   }
 
-  List<ClaimPost> mapToClaimPosts(List<BulkSubmissionOutcome> outcomes, @Context String areaOfLaw);
+  List<ClaimPost> mapToClaimPosts(
+      List<BulkSubmissionOutcome> outcomes, @Context AreaOfLaw areaOfLaw);
 
   @Mapping(target = "categoryCode", source = "categoryCode")
   @Mapping(target = "accessPointCode", source = "accessPoint")
