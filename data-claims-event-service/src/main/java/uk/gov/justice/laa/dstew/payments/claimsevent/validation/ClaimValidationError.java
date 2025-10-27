@@ -18,10 +18,8 @@ public enum ClaimValidationError {
       EVENT_SERVICE,
       ValidationMessageType.ERROR),
   INVALID_CATEGORY_OF_LAW_AND_FEE_CODE(
-      "A category of law could not be found for the provided fee code",
-      null,
-      EVENT_SERVICE,
-      ValidationMessageType.ERROR),
+      "A category of law could not be found for the provided fee code: %s",
+      null, EVENT_SERVICE, ValidationMessageType.ERROR),
   INVALID_CATEGORY_OF_LAW_NOT_AUTHORISED_FOR_PROVIDER(
       "The provider is not contracted for the category of law associated with the fee code",
       null,
@@ -34,6 +32,11 @@ public enum ClaimValidationError {
       ValidationMessageType.ERROR),
   INVALID_FEE_CALCULATION_VALIDATION_FAILED(
       "A validation error occurred when attempting to calculate the fee for this claim",
+      null,
+      FEE_SERVICE,
+      ValidationMessageType.ERROR),
+  TECHNICAL_ERROR_FEE_CALCULATION_SERVICE(
+      "A technical error occurred when attempting to make a request to the fee calculation service",
       null,
       FEE_SERVICE,
       ValidationMessageType.ERROR),
@@ -54,9 +57,9 @@ public enum ClaimValidationError {
   final ValidationMessageType type;
 
   /** Convert this enum into a ValidationMessagePatch. */
-  public ValidationMessagePatch toPatch() {
+  public ValidationMessagePatch toPatch(Object... params) {
     return new ValidationMessagePatch()
-        .displayMessage(displayMessage)
+        .displayMessage(displayMessage.formatted(params))
         .technicalMessage(technicalMessage)
         .source(source)
         .type(type);

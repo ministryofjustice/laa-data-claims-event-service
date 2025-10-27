@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResultSet;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
@@ -67,7 +68,7 @@ class DuplicateClaimCrimeValidationServiceStrategyTest {
 
       // When
       duplicateClaimValidationService.validateDuplicateClaims(
-          claim1, submissionClaims, "officeCode", context);
+          claim1, submissionClaims, "officeCode", context, FeeCalculationType.FIXED.toString());
 
       // Then
       assertThat(context.hasErrors()).isFalse();
@@ -106,7 +107,7 @@ class DuplicateClaimCrimeValidationServiceStrategyTest {
 
       // When
       duplicateClaimValidationService.validateDuplicateClaims(
-          claim1, submissionClaims, "officeCode", context);
+          claim1, submissionClaims, "officeCode", context, FeeCalculationType.FIXED.toString());
 
       // Then
       assertThat(context.hasErrors()).isFalse();
@@ -145,7 +146,7 @@ class DuplicateClaimCrimeValidationServiceStrategyTest {
 
       // When
       duplicateClaimValidationService.validateDuplicateClaims(
-          claim1, submissionClaims, "officeCode", context);
+          claim1, submissionClaims, "officeCode", context, FeeCalculationType.FIXED.toString());
 
       // Then
       assertThat(context.hasErrors()).isFalse();
@@ -188,7 +189,7 @@ class DuplicateClaimCrimeValidationServiceStrategyTest {
 
       // When
       duplicateClaimValidationService.validateDuplicateClaims(
-          claim1, submissionClaims, "officeCode", context);
+          claim1, submissionClaims, "officeCode", context, FeeCalculationType.FIXED.toString());
 
       // Then
       assertThat(context.hasErrors(claim1.getId())).isTrue();
@@ -235,7 +236,7 @@ class DuplicateClaimCrimeValidationServiceStrategyTest {
 
       // When
       duplicateClaimValidationService.validateDuplicateClaims(
-          claim1, submissionClaims, "officeCode", context);
+          claim1, submissionClaims, "officeCode", context, FeeCalculationType.FIXED.toString());
 
       // Then
       assertThat(context.hasErrors()).isFalse();
@@ -280,7 +281,7 @@ class DuplicateClaimCrimeValidationServiceStrategyTest {
 
       // When
       duplicateClaimValidationService.validateDuplicateClaims(
-          claim1, submissionClaims, "officeCode", context);
+          claim1, submissionClaims, "officeCode", context, FeeCalculationType.FIXED.toString());
 
       // Then
       assertThat(context.hasErrors(claim1.getId())).isTrue();
@@ -333,7 +334,7 @@ class DuplicateClaimCrimeValidationServiceStrategyTest {
 
       // When
       duplicateClaimValidationService.validateDuplicateClaims(
-          claim1, submissionClaims, "officeCode", context);
+          claim1, submissionClaims, "officeCode", context, FeeCalculationType.FIXED.toString());
 
       // Then
       assertContextClaimError(

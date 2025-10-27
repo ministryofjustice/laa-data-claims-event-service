@@ -28,6 +28,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.ClaimValid
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.ClaimWithAreaOfLawValidator;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.DuplicateClaimValidator;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.EffectiveCategoryOfLawClaimValidator;
+import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponse;
 
 @ExtendWith(MockitoExtension.class)
 class ClaimValidationServiceTest {
@@ -88,18 +89,27 @@ class ClaimValidationServiceTest {
     SubmissionValidationContext context = new SubmissionValidationContext();
 
     ClaimResponse claimOne =
-        new ClaimResponse().id(claimId.toString()).status(ClaimStatus.READY_TO_PROCESS);
+        new ClaimResponse()
+            .id(claimId.toString())
+            .feeCode("feeCode1")
+            .status(ClaimStatus.READY_TO_PROCESS);
     when(dataClaimsRestClient.getClaim(submissionId, claimId))
         .thenReturn(ResponseEntity.ok(claimOne));
     ClaimResponse claimTwo =
-        new ClaimResponse().id(claimIdTwo.toString()).status(ClaimStatus.READY_TO_PROCESS);
+        new ClaimResponse()
+            .id(claimIdTwo.toString())
+            .feeCode("feeCode1")
+            .status(ClaimStatus.READY_TO_PROCESS);
     when(dataClaimsRestClient.getClaim(submissionId, claimIdTwo))
         .thenReturn(ResponseEntity.ok(claimTwo));
-    HashMap<String, CategoryOfLawResult> categoryOfLawLookup = new HashMap<>();
-    categoryOfLawLookup.put("feeCode1", CategoryOfLawResult.withCategoryOfLaw("categoryOfLaw1"));
+    HashMap<String, FeeDetailsResponseWrapper> feeDetailsResponseMap = new HashMap<>();
+    FeeDetailsResponse feeDetailsResponse =
+        new FeeDetailsResponse().categoryOfLawCode("categoryOfLaw1").feeType("feeType");
+    feeDetailsResponseMap.put(
+        "feeCode1", FeeDetailsResponseWrapper.withFeeDetailsResponse(feeDetailsResponse));
     List<ClaimResponse> claimsList = Arrays.asList(claimOne, claimTwo);
-    when(categoryOfLawValidationService.getCategoryOfLawLookup(claimsList))
-        .thenReturn(categoryOfLawLookup);
+    when(categoryOfLawValidationService.getFeeDetailsResponseForAllFeeCodesInClaims(claimsList))
+        .thenReturn(feeDetailsResponseMap);
 
     // When
     claimValidationService.validateClaims(submissionResponse, context);
@@ -110,15 +120,17 @@ class ClaimValidationServiceTest {
     verify(claimWithAreaOfLawValidator, times(1)).validate(claimOne, context, "CIVIL");
     verify(claimWithAreaOfLawValidator, times(1)).validate(claimTwo, context, "CIVIL");
     verify(effectiveCategoryOfLawClaimValidator, times(1))
-        .validate(claimOne, context, "CIVIL", "officeAccountNumber", categoryOfLawLookup);
+        .validate(claimOne, context, "CIVIL", "officeAccountNumber", feeDetailsResponseMap);
     verify(effectiveCategoryOfLawClaimValidator, times(1))
-        .validate(claimTwo, context, "CIVIL", "officeAccountNumber", categoryOfLawLookup);
+        .validate(claimTwo, context, "CIVIL", "officeAccountNumber", feeDetailsResponseMap);
     verify(duplicateClaimValidator, times(1))
-        .validate(claimOne, context, "CIVIL", "officeAccountNumber", claimsList);
+        .validate(claimOne, context, "CIVIL", "officeAccountNumber", claimsList, "feeType");
     verify(duplicateClaimValidator, times(1))
-        .validate(claimTwo, context, "CIVIL", "officeAccountNumber", claimsList);
+        .validate(claimTwo, context, "CIVIL", "officeAccountNumber", claimsList, "feeType");
 
-    verify(feeCalculationService, times(1)).validateFeeCalculation(submissionId, claimOne, context);
-    verify(feeCalculationService, times(1)).validateFeeCalculation(submissionId, claimTwo, context);
+    verify(feeCalculationService, times(1))
+        .validateFeeCalculation(submissionId, claimOne, context, feeDetailsResponse);
+    verify(feeCalculationService, times(1))
+        .validateFeeCalculation(submissionId, claimTwo, context, feeDetailsResponse);
   }
 }
