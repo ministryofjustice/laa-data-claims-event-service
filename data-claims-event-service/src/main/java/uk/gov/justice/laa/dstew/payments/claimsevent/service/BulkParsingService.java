@@ -65,7 +65,8 @@ public class BulkParsingService {
         bulkSubmission.getDetails() != null
             ? bulkSubmission.getDetails().getOutcomes()
             : Collections.emptyList();
-    List<ClaimPost> claims = bulkSubmissionMapper.mapToClaimPosts(outcomes);
+    List<ClaimPost> claims =
+        bulkSubmissionMapper.mapToClaimPosts(outcomes, submissionPost.getAreaOfLaw());
     List<String> claimIds = createClaims(bulkSubmissionId.toString(), createdSubmissionId, claims);
 
     List<BulkSubmissionMatterStart> matterStarts =

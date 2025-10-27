@@ -14,6 +14,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.*;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.AreaOfLaw;
 
 class BulkSubmissionMapperTest {
 
@@ -61,7 +62,9 @@ class BulkSubmissionMapperTest {
     GetBulkSubmission200Response bulkSubmission =
         objectMapper.readValue(json, GetBulkSubmission200Response.class);
 
-    var claims = mapper.mapToClaimPosts(bulkSubmission.getDetails().getOutcomes());
+    var claims =
+        mapper.mapToClaimPosts(
+            bulkSubmission.getDetails().getOutcomes(), AreaOfLaw.LEGAL_HELP.getValue());
 
     assertThat(claims).hasSize(1);
     ClaimPost claim = claims.get(0);
@@ -70,6 +73,26 @@ class BulkSubmissionMapperTest {
     assertThat(claim.getCaseReferenceNumber()).isEqualTo("JI/OKUSU");
     assertThat(claim.getUniqueFileNumber()).isEqualTo("220422/013");
     assertThat(claim.getStageReachedCode()).isEqualTo("PROK");
+    assertThat(claim.getMatterTypeCode()).isEqualTo("FAMX:FAPP");
+    assertThat(claim.getCreatedByUserId()).isEqualTo(EVENT_SERVICE);
+  }
+
+  @Test
+  void shouldMapOutcomesToClaimPostsAndMapMatterTypeToStageReachedCode() throws IOException {
+    String json =
+        Files.readString(Path.of("src/test/resources/bulk-submission-response-crime-lower.json"));
+    GetBulkSubmission200Response bulkSubmission =
+        objectMapper.readValue(json, GetBulkSubmission200Response.class);
+
+    var claims =
+        mapper.mapToClaimPosts(
+            bulkSubmission.getDetails().getOutcomes(), AreaOfLaw.CRIME_LOWER.getValue());
+
+    assertThat(claims).hasSize(1);
+    ClaimPost claim = claims.getFirst();
+    assertThat(claim.getStatus()).isEqualTo(ClaimStatus.READY_TO_PROCESS);
+    assertThat(claim.getStageReachedCode()).isEqualTo("FAMX");
+    assertThat(claim.getMatterTypeCode()).isEqualTo(null);
     assertThat(claim.getCreatedByUserId()).isEqualTo(EVENT_SERVICE);
   }
 
