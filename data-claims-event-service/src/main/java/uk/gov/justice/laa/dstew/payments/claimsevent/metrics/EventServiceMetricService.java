@@ -1,9 +1,12 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.metrics;
 
 import io.prometheus.metrics.core.metrics.Counter;
+import io.prometheus.metrics.core.metrics.Histogram;
 import io.prometheus.metrics.model.registry.PrometheusRegistry;
 import lombok.Getter;
 import org.springframework.stereotype.Component;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessageType;
 
 /**
  * Service for publishing metrics to Prometheus.
@@ -23,6 +26,15 @@ public class EventServiceMetricService {
   private final Counter totalValidSubmissionsCounter;
   private final Counter totalInvalidSubmissionsCounter;
 
+  private final Counter warningTypeCounter;
+  private final Counter errorTypeCounter;
+
+  private final Histogram submissionValidationTimeHistogram;
+  private final Histogram claimValidationTimeHistogram;
+  private final Histogram fspValidationTimeHistogram;
+
+  private final String METRIC_NAMESPACE = "claims_event_service_";
+
   /**
    * Constructor.
    *
@@ -30,45 +42,71 @@ public class EventServiceMetricService {
    */
   public EventServiceMetricService(PrometheusRegistry meterRegistry) {
     this.totalSubmissionsCreatedCounter =
-        io.prometheus.metrics.core.metrics.Counter.builder()
-            .name("claims_event_service_submissions_added")
+        Counter.builder()
+            .name(METRIC_NAMESPACE + "submissions_added")
             .help("Total number of submissions created from message queue")
             .register(meterRegistry);
     this.totalClaimsCreatedCounter =
-        io.prometheus.metrics.core.metrics.Counter.builder()
-            .name("claims_event_service_claims_added")
+        Counter.builder()
+            .name(METRIC_NAMESPACE + "claims_added")
             .help("Total number of claims created from submission read in message queue")
             .register(meterRegistry);
     this.totalSubmissionsValidatedWithErrorsCounter =
-        io.prometheus.metrics.core.metrics.Counter.builder()
-            .name("claims_event_service_submissions_with_errors")
+        Counter.builder()
+            .name(METRIC_NAMESPACE + "submissions_with_errors")
             .help("Total number submissions with validation errors")
             .register(meterRegistry);
     this.totalClaimsValidatedAndValidCounter =
-        io.prometheus.metrics.core.metrics.Counter.builder()
-            .name("claims_event_service_claims_validated_and_valid")
+        Counter.builder()
+            .name(METRIC_NAMESPACE + "claims_validated_and_valid")
             .help("Total number of claims validated and valid")
             .register(meterRegistry);
     this.totalClaimsValidatedAndWarningsFoundCounter =
-        io.prometheus.metrics.core.metrics.Counter.builder()
-            .name("claims_event_service_claims_validated_and_warnings_found")
+        Counter.builder()
+            .name(METRIC_NAMESPACE + "claims_validated_and_warnings_found")
             .help("Total number of claims validated and have warnings")
             .register(meterRegistry);
     this.totalClaimsValidatedAndErrorsFoundCounter =
-        io.prometheus.metrics.core.metrics.Counter.builder()
-            .name("claims_event_service_claims_validated_and_invalid")
+        Counter.builder()
+            .name(METRIC_NAMESPACE + "claims_validated_and_invalid")
             .help("Total number of claims validated and invalid")
             .register(meterRegistry);
     this.totalValidSubmissionsCounter =
-        io.prometheus.metrics.core.metrics.Counter.builder()
-            .name("claims_event_service_valid_submissions")
+        Counter.builder()
+            .name(METRIC_NAMESPACE + "valid_submissions")
             .help("Total number submissions which are valid")
             .register(meterRegistry);
     this.totalInvalidSubmissionsCounter =
-        io.prometheus.metrics.core.metrics.Counter.builder()
-            .name("claims_event_service_invalid_submissions")
+        Counter.builder()
+            .name(METRIC_NAMESPACE + "invalid_submissions")
             .help("Total number submissions which are invalid")
             .register(meterRegistry);
+
+    this.errorTypeCounter =
+        Counter.builder()
+            .name(METRIC_NAMESPACE + "messages_errors")
+            .help("Different types of messages found by the event service")
+            .labelNames("error_source", "type", "message")
+            .register(meterRegistry);
+    this.warningTypeCounter =
+        Counter.builder()
+            .name(METRIC_NAMESPACE + "messages_warnings")
+            .help("Different types of warning messages found by the event service")
+            .labelNames("error_source", "type", "message")
+            .register(meterRegistry);
+
+    this.submissionValidationTimeHistogram = Histogram.builder()
+        .name(METRIC_NAMESPACE + "submission_validation_time")
+        .help("Total time taken to validate claim (Include FSP validation time)")
+        .register(meterRegistry);
+    this.claimValidationTimeHistogram = Histogram.builder()
+        .name(METRIC_NAMESPACE + "claim_validation_time")
+        .help("Total time taken to validate claim (Including FSP validation time)")
+        .register(meterRegistry);
+    this.fspValidationTimeHistogram = Histogram.builder()
+        .name(METRIC_NAMESPACE + "fsp_validation_time")
+        .help("Total time taken to perform fee scheme platform calculation")
+        .register(meterRegistry);
   }
 
   /**
@@ -133,5 +171,24 @@ public class EventServiceMetricService {
    */
   public void incrementTotalInvalidSubmissions() {
     totalInvalidSubmissionsCounter.inc();
+  }
+
+  public void recordValidationMessage(ValidationMessagePatch validationMessagePatch, boolean isClaim) {
+    String type = Boolean.TRUE.equals(isClaim) ? "Claim" : "Submission";
+    if (validationMessagePatch.getType() == ValidationMessageType.ERROR) {
+      incrementErrorType(
+          validationMessagePatch.getSource(), type, validationMessagePatch.getTechnicalMessage());
+    } else {
+      incrementWarningType(
+          validationMessagePatch.getSource(), type, validationMessagePatch.getTechnicalMessage());
+    }
+  }
+
+  private void incrementWarningType(String source, String type, String warningType) {
+    warningTypeCounter.labelValues(source, type, warningType).inc();
+  }
+
+  private void incrementErrorType(String source,  String type, String errorType) {
+    errorTypeCounter.labelValues(source, type, errorType).inc();
   }
 }

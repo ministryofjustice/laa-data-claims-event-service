@@ -12,6 +12,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionClaim;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessageType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.EventServiceIllegalArgumentException;
@@ -83,12 +84,12 @@ public class ClaimValidationService {
    * errors encountered during the validation process are added to the submission validation
    * context.
    *
-   * @param submissionId the ID of the submission to which the claim belongs
-   * @param claim the claim object to validate
+   * @param submissionId          the ID of the submission to which the claim belongs
+   * @param claim                 the claim object to validate
    * @param feeDetailsResponseMap a map containing FeeDetailsResponse and their corresponding
-   *     feeCodes
-   * @param areaOfLaw the area of law for the parent submission: some validations change depending
-   *     on the area of law.
+   *                              feeCodes
+   * @param areaOfLaw             the area of law for the parent submission: some validations change
+   *                              depending on the area of law.
    */
   private void validateClaim(
       UUID submissionId,
@@ -145,17 +146,15 @@ public class ClaimValidationService {
                 case BasicClaimValidator validator -> validator.validate(claim, context);
                 case ClaimWithAreaOfLawValidator validator ->
                     validator.validate(claim, context, areaOfLaw, feeCalculationType);
-                case EffectiveCategoryOfLawClaimValidator validator ->
-                    validator.validate(
-                        claim, context, areaOfLaw, officeCode, feeDetailsResponseMap);
-                case DuplicateClaimValidator validator ->
-                    validator.validate(
-                        claim,
-                        context,
-                        areaOfLaw,
-                        officeCode,
-                        submissionClaims,
-                        feeCalculationType);
+                case EffectiveCategoryOfLawClaimValidator validator -> validator.validate(
+                    claim, context, areaOfLaw, officeCode, feeDetailsResponseMap);
+                case DuplicateClaimValidator validator -> validator.validate(
+                    claim,
+                    context,
+                    areaOfLaw,
+                    officeCode,
+                    submissionClaims,
+                    feeCalculationType);
                 default -> throw new EventServiceIllegalArgumentException("Unknown validator used");
               }
             });
@@ -165,23 +164,28 @@ public class ClaimValidationService {
         submissionId, claim, context, feeDetailsResponseWrapper.getFeeDetailsResponse());
 
     // Check claim status and record metric
-    recordClaimMetric(claim, context);
+    recordClaimMetrics(claim, context);
   }
 
-  private void recordClaimMetric(ClaimResponse claim, SubmissionValidationContext context) {
+  private void recordClaimMetrics(ClaimResponse claim, SubmissionValidationContext context) {
     Optional<ClaimValidationReport> claimReportOptional = context.getClaimReport(claim.getId());
     if (claimReportOptional.isEmpty()) {
       eventServiceMetricService.incrementTotalClaimsValidatedAndValid();
       return;
     }
 
+    List<ValidationMessagePatch> messages = claimReportOptional.get().getMessages();
+
+    // Record all messages (Helps track most common errors found)
+    messages.forEach(x -> eventServiceMetricService.recordValidationMessage(x, true));
+
     // Claim could have either errors or warnings so record both
-    if (claimReportOptional.get().getMessages().stream()
+    if (messages.stream()
         .anyMatch(x -> x.getType().equals(ValidationMessageType.ERROR))) {
       eventServiceMetricService.incrementTotalClaimsValidatedAndErrorsFound();
     }
 
-    if (claimReportOptional.get().getMessages().stream()
+    if (messages.stream()
         .anyMatch(x -> x.getType().equals(ValidationMessageType.WARNING))) {
       eventServiceMetricService.incrementTotalClaimsValidatedAndWarningsFound();
     }

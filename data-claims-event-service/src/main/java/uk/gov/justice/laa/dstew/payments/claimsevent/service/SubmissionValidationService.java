@@ -90,6 +90,10 @@ public class SubmissionValidationService {
       bulkSubmissionPatch.status(BulkSubmissionStatus.VALIDATION_SUCCEEDED);
     }
 
+    // Record what submission errors were found
+    context.getSubmissionValidationErrors()
+        .forEach(x -> eventServiceMetricService.recordValidationMessage(x, false));
+
     bulkClaimUpdater.updateClaims(submission, context);
     dataClaimsRestClient.updateSubmission(submissionId.toString(), submissionPatch);
     dataClaimsRestClient.updateBulkSubmission(
