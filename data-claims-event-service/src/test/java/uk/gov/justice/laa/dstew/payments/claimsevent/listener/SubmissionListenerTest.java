@@ -32,20 +32,15 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.service.SubmissionValidatio
 @ExtendWith(MockitoExtension.class)
 public class SubmissionListenerTest {
 
-  @Mock
-  BulkParsingService bulkParsingService;
+  @Mock BulkParsingService bulkParsingService;
 
-  @Mock
-  SubmissionValidationService submissionValidationService;
+  @Mock SubmissionValidationService submissionValidationService;
 
-  @Mock
-  EventServiceMetricService eventServiceMetricService;
+  @Mock EventServiceMetricService eventServiceMetricService;
 
-  @Mock
-  ObjectMapper objectMapper;
+  @Mock ObjectMapper objectMapper;
 
-  @InjectMocks
-  SubmissionListener submissionListener;
+  @InjectMocks SubmissionListener submissionListener;
 
   @Nested
   @DisplayName("receiveSubmissionEvent")

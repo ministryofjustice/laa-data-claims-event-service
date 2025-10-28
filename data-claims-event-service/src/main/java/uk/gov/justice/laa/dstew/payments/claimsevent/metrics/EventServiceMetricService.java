@@ -216,19 +216,19 @@ public class EventServiceMetricService {
    * Records a validation message which has been found with a claim or submission.
    *
    * @param validationMessagePatch the validation message to record
-   * @param isClaim                whether the message is for a claim or a submission
+   * @param isClaim whether the message is for a claim or a submission
    */
   public void recordValidationMessage(
       ValidationMessagePatch validationMessagePatch, boolean isClaim) {
     String type = isClaim ? "Claim" : "Submission";
-    String message = StringUtils.isEmpty(validationMessagePatch.getTechnicalMessage()) ?
-        validationMessagePatch.getDisplayMessage() : validationMessagePatch.getTechnicalMessage();
+    String message =
+        StringUtils.isEmpty(validationMessagePatch.getTechnicalMessage())
+            ? validationMessagePatch.getDisplayMessage()
+            : validationMessagePatch.getTechnicalMessage();
     if (validationMessagePatch.getType() == ValidationMessageType.ERROR) {
-      incrementErrorType(
-          validationMessagePatch.getSource(), type, message);
+      incrementErrorType(validationMessagePatch.getSource(), type, message);
     } else {
-      incrementWarningType(
-          validationMessagePatch.getSource(), type, message);
+      incrementWarningType(validationMessagePatch.getSource(), type, message);
     }
   }
 
