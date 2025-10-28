@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import software.amazon.awssdk.services.sqs.model.Message;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.SubmissionEventProcessingException;
+import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.model.BulkSubmissionMessage;
 import uk.gov.justice.laa.dstew.payments.claimsevent.model.SubmissionEventType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.model.SubmissionValidationMessage;
@@ -34,6 +35,7 @@ public class SubmissionListener {
   private final BulkParsingService bulkParsingService;
   private final SubmissionValidationService submissionValidationService;
   private final ObjectMapper objectMapper;
+  private final EventServiceMetricService eventServiceMetricService;
 
   /**
    * Construct a new {@code SubmissionListener}.
@@ -45,9 +47,11 @@ public class SubmissionListener {
   public SubmissionListener(
       BulkParsingService bulkParsingService,
       SubmissionValidationService submissionValidationService,
+      EventServiceMetricService eventServiceMetricService,
       @Qualifier("submissionEventMapper") ObjectMapper objectMapper) {
     this.bulkParsingService = bulkParsingService;
     this.submissionValidationService = submissionValidationService;
+    this.eventServiceMetricService = eventServiceMetricService;
     this.objectMapper = objectMapper;
   }
 
@@ -59,6 +63,9 @@ public class SubmissionListener {
    */
   @SqsListener("${laa.bulk-claim-queue.name}")
   public void receiveSubmissionEvent(Message message) {
+
+    UUID timerRef = UUID.randomUUID();
+    eventServiceMetricService.startFileParsingTimer(timerRef);
     SubmissionEventType submissionEventType = getSubmissionEventType(message);
 
     switch (submissionEventType) {
@@ -68,6 +75,8 @@ public class SubmissionListener {
           throw new SubmissionEventProcessingException(
               "Unsupported submission event type: " + submissionEventType);
     }
+
+    eventServiceMetricService.stopFileParsingTimer(timerRef);
   }
 
   private SubmissionEventType getSubmissionEventType(Message message) {

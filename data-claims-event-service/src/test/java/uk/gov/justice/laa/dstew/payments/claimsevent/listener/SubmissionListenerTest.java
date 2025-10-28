@@ -22,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.sqs.model.Message;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.SubmissionEventProcessingException;
+import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.model.BulkSubmissionMessage;
 import uk.gov.justice.laa.dstew.payments.claimsevent.model.SubmissionEventType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.model.SubmissionValidationMessage;
@@ -31,13 +32,20 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.service.SubmissionValidatio
 @ExtendWith(MockitoExtension.class)
 public class SubmissionListenerTest {
 
-  @Mock BulkParsingService bulkParsingService;
+  @Mock
+  BulkParsingService bulkParsingService;
 
-  @Mock SubmissionValidationService submissionValidationService;
+  @Mock
+  SubmissionValidationService submissionValidationService;
 
-  @Mock ObjectMapper objectMapper;
+  @Mock
+  EventServiceMetricService eventServiceMetricService;
 
-  @InjectMocks SubmissionListener submissionListener;
+  @Mock
+  ObjectMapper objectMapper;
+
+  @InjectMocks
+  SubmissionListener submissionListener;
 
   @Nested
   @DisplayName("receiveSubmissionEvent")

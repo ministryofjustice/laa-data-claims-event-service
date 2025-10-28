@@ -34,6 +34,8 @@ public class EventServiceMetricService {
   private final Counter warningTypeCounter;
   private final Counter errorTypeCounter;
 
+  private final Summary fileParsingSummary;
+  private final HashMap<UUID, TimerLifecycle> fileParsingTimers;
   private final Summary submissionValidationTimeSummary;
   private final HashMap<UUID, TimerLifecycle> submissionValidationTimers;
   private final Summary claimValidationTimeSummary;
@@ -103,13 +105,23 @@ public class EventServiceMetricService {
             .labelNames("error_source", "type", "message")
             .register(meterRegistry);
 
+    this.fileParsingSummary =
+        Summary.builder()
+            .name(METRIC_NAMESPACE + "file_parsing_time")
+            .help("Total time taken to parse bulk upload file")
+            .quantile(0.5, 0.05) // P50 with 5% error tolerance
+            .quantile(0.9, 0.02) // P90 with 2% error tolerance
+            .quantile(0.95, 0.01) // P95 with 1% error tolerance
+            .quantile(0.99, 0.001) // P99 with 0.1% error tolerance
+            .register(meterRegistry);
+    this.fileParsingTimers = new HashMap<>();
     this.submissionValidationTimeSummary =
         Summary.builder()
             .name(METRIC_NAMESPACE + "submission_validation_time")
             .help("Total time taken to validate claim (Include FSP validation time)")
-            .quantile(0.5, 0.05)   // P50 with 5% error tolerance
-            .quantile(0.9, 0.02)   // P90 with 2% error tolerance
-            .quantile(0.95, 0.01)  // P95 with 1% error tolerance
+            .quantile(0.5, 0.05) // P50 with 5% error tolerance
+            .quantile(0.9, 0.02) // P90 with 2% error tolerance
+            .quantile(0.95, 0.01) // P95 with 1% error tolerance
             .quantile(0.99, 0.001) // P99 with 0.1% error tolerance
             .register(meterRegistry);
     this.submissionValidationTimers = new HashMap<>();
@@ -117,9 +129,9 @@ public class EventServiceMetricService {
         Summary.builder()
             .name(METRIC_NAMESPACE + "claim_validation_time")
             .help("Total time taken to validate claim (Including FSP validation time)")
-            .quantile(0.5, 0.05)   // P50 with 5% error tolerance
-            .quantile(0.9, 0.02)   // P90 with 2% error tolerance
-            .quantile(0.95, 0.01)  // P95 with 1% error tolerance
+            .quantile(0.5, 0.05) // P50 with 5% error tolerance
+            .quantile(0.9, 0.02) // P90 with 2% error tolerance
+            .quantile(0.95, 0.01) // P95 with 1% error tolerance
             .quantile(0.99, 0.001) // P99 with 0.1% error tolerance
             .register(meterRegistry);
     this.claimValidationTimers = new HashMap<>();
@@ -127,9 +139,9 @@ public class EventServiceMetricService {
         Summary.builder()
             .name(METRIC_NAMESPACE + "fsp_validation_time")
             .help("Total time taken to perform fee scheme platform calculation")
-            .quantile(0.5, 0.05)   // P50 with 5% error tolerance
-            .quantile(0.9, 0.02)   // P90 with 2% error tolerance
-            .quantile(0.95, 0.01)  // P95 with 1% error tolerance
+            .quantile(0.5, 0.05) // P50 with 5% error tolerance
+            .quantile(0.9, 0.02) // P90 with 2% error tolerance
+            .quantile(0.95, 0.01) // P95 with 1% error tolerance
             .quantile(0.99, 0.001) // P99 with 0.1% error tolerance
             .register(meterRegistry);
     this.fspValidationTimers = new HashMap<>();
@@ -226,6 +238,40 @@ public class EventServiceMetricService {
   }
 
   /**
+   * Starts a timer for a file parsing. If a timer was already started for this file, the old timer
+   * is removed.
+   *
+   * @param parsingReference the reference used for file parsing
+   */
+  public void startFileParsingTimer(UUID parsingReference) {
+    if (fileParsingTimers.containsKey(parsingReference)) {
+      log.warn(
+          "Timer already started for bulk submission {}, old timer will be removed",
+          parsingReference);
+    }
+    fileParsingTimers.put(
+        parsingReference,
+        new TimerLifecycle(this.fileParsingSummary.startTimer(), System.currentTimeMillis()));
+  }
+
+  /**
+   * Stops a timer for a file parsing and records the timer value.
+   *
+   * @param parsingReference the reference used for file parsing
+   */
+  public void stopFileParsingTimer(UUID parsingReference) {
+    TimerLifecycle timer = fileParsingTimers.remove(parsingReference);
+    if (!Objects.isNull(timer) && !Objects.isNull(timer.timer())) {
+      try (var timerResource = timer.timer()) {
+        double v = timerResource.observeDuration();
+        if (v > 2) {
+          log.warn("File parsing took {} seconds for claim {}", v, parsingReference);
+        }
+      }
+    }
+  }
+
+  /**
    * Starts a timer for a submission validation. If a timer was already started for this submission,
    * the old timer is removed.
    *
@@ -249,9 +295,11 @@ public class EventServiceMetricService {
   public void stopSubmissionValidationTimer(UUID claimId) {
     TimerLifecycle timer = submissionValidationTimers.remove(claimId);
     if (!Objects.isNull(timer) && !Objects.isNull(timer.timer())) {
-      double v = timer.timer().observeDuration();
-      if (v > 2) {
-        log.warn("Submission validation took {} seconds for claim {}", v, claimId);
+      try (var timerResource = timer.timer()) {
+        double v = timerResource.observeDuration();
+        if (v > 2) {
+          log.warn("Submission validation took {} seconds for claim {}", v, claimId);
+        }
       }
     }
   }
@@ -280,9 +328,11 @@ public class EventServiceMetricService {
   public void stopClaimValidationTimer(UUID claimId) {
     TimerLifecycle timer = claimValidationTimers.remove(claimId);
     if (!Objects.isNull(timer) && !Objects.isNull(timer.timer())) {
-      double v = timer.timer().observeDuration();
-      if (v > 2) {
-        log.warn("Claim validation took {} seconds for claim {}", v, claimId);
+      try (var timerResource = timer.timer()) {
+        double v = timerResource.observeDuration();
+        if (v > 2) {
+          log.warn("Claim validation took {} seconds for claim {}", v, claimId);
+        }
       }
     }
   }
@@ -299,8 +349,7 @@ public class EventServiceMetricService {
     }
     fspValidationTimers.put(
         claimId,
-        new TimerLifecycle(
-            this.fspValidationTimeSummary.startTimer(), System.currentTimeMillis()));
+        new TimerLifecycle(this.fspValidationTimeSummary.startTimer(), System.currentTimeMillis()));
   }
 
   /**
@@ -311,9 +360,11 @@ public class EventServiceMetricService {
   public void stopFspValidationTimer(UUID claimId) {
     TimerLifecycle timer = fspValidationTimers.remove(claimId);
     if (!Objects.isNull(timer) && !Objects.isNull(timer.timer())) {
-      double v = timer.timer().observeDuration();
-      if (v > 2) {
-        log.warn("FSP calculation and validation took {} seconds for claim {}", v, claimId);
+      try (var timerResource = timer.timer()) {
+        double v = timerResource.observeDuration();
+        if (v > 2) {
+          log.warn("FSP calculation and validation took {} seconds for claim {}", v, claimId);
+        }
       }
     }
   }
@@ -325,18 +376,16 @@ public class EventServiceMetricService {
    */
   public void removeAllTimersOlderThanTotalMinutes(int minutes) {
     long currentTime = System.currentTimeMillis();
-    for (TimerLifecycle timer : submissionValidationTimers.values()) {
-      if (currentTime - timer.startTime() > (long) minutes * 60 * 1000) {
-        timer.timer().close();
-      }
-    }
-    for (TimerLifecycle timer : claimValidationTimers.values()) {
-      if (currentTime - timer.startTime() > (long) minutes * 60 * 1000) {
-        timer.timer().close();
-      }
-    }
-    for (TimerLifecycle timer : fspValidationTimers.values()) {
-      if (currentTime - timer.startTime() > (long) minutes * 60 * 1000) {
+    stopAllTimersForSet(fileParsingTimers, currentTime, minutes);
+    stopAllTimersForSet(submissionValidationTimers, currentTime, minutes);
+    stopAllTimersForSet(claimValidationTimers, currentTime, minutes);
+    stopAllTimersForSet(fspValidationTimers, currentTime, minutes);
+  }
+
+  private void stopAllTimersForSet(
+      HashMap<UUID, TimerLifecycle> fileParsingTimers, long currentTime, long minutes) {
+    for (TimerLifecycle timer : fileParsingTimers.values()) {
+      if (currentTime - timer.startTime() > minutes * 60 * 1000) {
         timer.timer().close();
       }
     }
