@@ -220,6 +220,15 @@ class JsonSchemaValidatorTest {
               "$: required property '" + jsonField + "' not found (provided value: null)");
     }
 
+    @Test
+    void validateNoErrorForMissingCaseStartDateInClaimResponse() {
+      Object claim = getMinimumValidClaim();
+      String fieldName = toCamelCase("case_start_date");
+      setField(claim, fieldName, null);
+      final List<ValidationMessagePatch> errors = jsonSchemaValidator.validate("claim", claim);
+      assertThat(errors).isEmpty();
+    }
+
     /**
      * Validates that an error is returned when a field in the JSON object contains an invalid data
      * type. The method performs validation against a JSON schema for a given field, using invalid
