@@ -73,6 +73,11 @@ class BulkSubmissionMapperTest {
     assertThat(claim.getUniqueFileNumber()).isEqualTo("220422/013");
     assertThat(claim.getRepresentationOrderDate()).isEqualTo("2024-05-15");
     assertThat(claim.getStageReachedCode()).isEqualTo("PROK");
+    assertThat(claim.getCaseStageCode()).isEqualTo("FPC01");
+    assertThat(claim.getStandardFeeCategoryCode()).isEqualTo("1A-LSF");
+    assertThat(claim.getMedicalReportsCount()).isEqualTo(3);
+    assertThat(claim.getSurgeryClientsCount()).isEqualTo(4);
+    assertThat(claim.getSurgeryMattersCount()).isEqualTo(2);
     assertThat(claim.getMatterTypeCode()).isEqualTo("FAMX:FAPP");
     assertThat(claim.getCreatedByUserId()).isEqualTo(EVENT_SERVICE);
   }
