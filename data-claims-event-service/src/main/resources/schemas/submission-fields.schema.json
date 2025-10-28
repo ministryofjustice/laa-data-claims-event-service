@@ -25,7 +25,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Area of Law must be one of: MEDIATION, CRIME LOWER, or LEGAL HELP "
+          "value": "Area of Law must be one of: MEDIATION, CRIME LOWER, or LEGAL HELP"
         }
       ]
     },

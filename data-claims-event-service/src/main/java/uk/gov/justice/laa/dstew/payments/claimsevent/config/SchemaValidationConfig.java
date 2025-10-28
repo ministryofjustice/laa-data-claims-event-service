@@ -9,15 +9,15 @@ import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion.VersionFlag;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
+import uk.gov.justice.laa.dstew.payments.claimsevent.exception.EventServiceIllegalArgumentException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.model.ValidationErrorMessage;
 
 /**
@@ -26,12 +26,14 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.model.Validation
  * configuration relies on the Jackson ObjectMapper for deserialization of schema JSON files, with
  * null values excluded during serialization by default.
  */
+@Slf4j
 @Configuration
 public class SchemaValidationConfig {
 
   private final ObjectMapper mapper;
 
-  private final Resource resourceFile;
+  private final Resource submissionSchema;
+  private final Resource claimSchema;
 
   /**
    * Constructs a new {@code SchemaValidationConfig} with the given {@link ObjectMapper}.
@@ -45,10 +47,12 @@ public class SchemaValidationConfig {
    */
   public SchemaValidationConfig(
       ObjectMapper mapper,
-      @Value("classpath:schemas/claim-fields.schema.json") Resource resourceFile) {
+      @Value("classpath:schemas/submission-fields.schema.json") Resource submissionSchema,
+      @Value("classpath:schemas/claim-fields.schema.json") Resource claimSchema) {
     mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL); // exclude nulls
     this.mapper = mapper;
-    this.resourceFile = resourceFile;
+    this.submissionSchema = submissionSchema;
+    this.claimSchema = claimSchema;
   }
 
   private JsonSchema loadSchema(String path) throws IOException {
@@ -94,20 +98,32 @@ public class SchemaValidationConfig {
   @Bean
   public Map<String, Set<ValidationErrorMessage>> schemaValidationErrorMessages()
       throws IOException {
-    // TODO: Need to tidy up this messy code
-    JsonNode schemaNode =
-        mapper.readTree(
-            (Files.readString(resourceFile.getFile().toPath(), StandardCharsets.UTF_8)));
-
-    // Get the properties node which contains all fields
-    JsonNode propertiesNode = schemaNode.get("properties");
 
     Map<String, Set<ValidationErrorMessage>> result = new HashMap<>();
 
+    addMessagesFromSchema(result, submissionSchema);
+    addMessagesFromSchema(result, claimSchema);
+
+    return result;
+  }
+
+  private void addMessagesFromSchema(
+      Map<String, Set<ValidationErrorMessage>> result, Resource schema) throws IOException {
+
+    // Read JSON
+    JsonNode schemaNode = mapper.readTree(schema.getInputStream());
+
+    // Get the properties node which contains all fields
+    JsonNode propertiesNode = schemaNode.get("properties");
+    if (propertiesNode == null) {
+      log.warn("No properties node found in schema: {}", schema.getFilename());
+      return;
+    }
+
     // Iterate through all fields in the schema
     propertiesNode
-        .fields()
-        .forEachRemaining(
+        .properties()
+        .forEach(
             field -> {
               String fieldName = field.getKey();
               JsonNode fieldNode = field.getValue();
@@ -121,13 +137,11 @@ public class SchemaValidationConfig {
                       mapper.convertValue(messagesNode, new TypeReference<>() {});
                   result.put(fieldName, messages);
                 } catch (Exception e) {
-                  throw new RuntimeException(
-                      "Error parsing validation messages for field: " + fieldName, e);
+                  throw new EventServiceIllegalArgumentException(
+                      "Error parsing validation messages for field: " + fieldName);
                 }
               }
             });
-
-    return result;
   }
 
   public JsonSchema submissionSchema() throws IOException {

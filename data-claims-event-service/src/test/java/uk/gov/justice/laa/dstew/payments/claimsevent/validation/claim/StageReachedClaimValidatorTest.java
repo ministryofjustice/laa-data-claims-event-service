@@ -32,7 +32,9 @@ class StageReachedClaimValidatorTest {
   void beforeEach() throws IOException {
     SchemaValidationConfig config =
         new SchemaValidationConfig(
-            new ObjectMapper(), new ClassPathResource("schemas/claim-fields.schema.json"));
+            new ObjectMapper(),
+            new ClassPathResource("schemas/submission-fields.schema.json"),
+            new ClassPathResource("schemas/claim-fields.schema.json"));
     validator = new StageReachedClaimValidator(config.schemaValidationErrorMessages());
   }
 

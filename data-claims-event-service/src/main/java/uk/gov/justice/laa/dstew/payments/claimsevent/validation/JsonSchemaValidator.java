@@ -61,19 +61,22 @@ public class JsonSchemaValidator extends SchemaValidator {
     return new ValidationMessagePatch()
         .type(ValidationMessageType.ERROR)
         .source(EVENT_SERVICE)
-        .displayMessage(enrichValidationMessage(data, vm))
-        .technicalMessage(enrichValidationMessage(data, vm));
+        .displayMessage(getDisplayMessage(data, vm))
+        .technicalMessage(getTechnicalMessage(data, vm));
   }
 
-  private String enrichValidationMessage(JsonNode data, ValidationMessage vm) {
+  private String getTechnicalMessage(JsonNode data, ValidationMessage vm) {
     String message = vm.getMessage();
     String field = vm.getMessage().split(":")[0].replaceFirst("^\\$\\.", "");
     JsonNode valueNode = data.get(field);
     String value = valueNode == null || valueNode.isNull() ? "null" : valueNode.asText();
-    return getValidationErrorMessageFromSchema(
-        field,
-        String.format(
-            "%s: %s (provided value: %s)",
-            field, message.substring(message.indexOf(':') + 1).trim(), value));
+    return String.format(
+        "%s: %s (provided value: %s)",
+        field, message.substring(message.indexOf(':') + 1).trim(), value);
+  }
+
+  private String getDisplayMessage(JsonNode data, ValidationMessage vm) {
+    String field = vm.getMessage().split(":")[0].replaceFirst("^\\$\\.", "");
+    return getValidationErrorMessageFromSchema(field, getTechnicalMessage(data, vm));
   }
 }
