@@ -141,8 +141,10 @@ class MandatoryFieldClaimValidatorTest {
         "netProfitCostsAmount",
         "isVatApplicable"
       })
-  @DisplayName("Should have no errors when excluded fields missing for disbursement only claims")
-  void shouldHaveNoErrorWhenExcludedFieldsMissingForDisbursementOnlyClaims(String mandatoryField) {
+  @DisplayName(
+      "Should have no errors when excluded fields missing for disbursement only legal help claims")
+  void shouldHaveNoErrorWhenExcludedFieldsMissingForDisbursementOnlyLegalHelpClaims(
+      String mandatoryField) {
     // Define the map for the test
     Map<String, List<String>> civilMandatoryFields = Map.of("CIVIL", List.of(mandatoryField));
 
@@ -156,7 +158,7 @@ class MandatoryFieldClaimValidatorTest {
 
     SubmissionValidationContext context = new SubmissionValidationContext();
 
-    validator.validate(claim, context, "CIVIL", FEE_CALCULATION_TYPE_DISB_ONLY);
+    validator.validate(claim, context, "LEGAL HELP", FEE_CALCULATION_TYPE_DISB_ONLY);
 
     assertThat(getClaimMessages(context, claimId.toString()).isEmpty()).isTrue();
   }
