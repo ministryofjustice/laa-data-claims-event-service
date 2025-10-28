@@ -8,6 +8,7 @@ import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionClaim;
@@ -84,12 +85,12 @@ public class ClaimValidationService {
    * errors encountered during the validation process are added to the submission validation
    * context.
    *
-   * @param submissionId          the ID of the submission to which the claim belongs
-   * @param claim                 the claim object to validate
+   * @param submissionId the ID of the submission to which the claim belongs
+   * @param claim the claim object to validate
    * @param feeDetailsResponseMap a map containing FeeDetailsResponse and their corresponding
-   *                              feeCodes
-   * @param areaOfLaw             the area of law for the parent submission: some validations change
-   *                              depending on the area of law.
+   *     feeCodes
+   * @param areaOfLaw the area of law for the parent submission: some validations change depending
+   *     on the area of law.
    */
   private void validateClaim(
       UUID submissionId,
@@ -100,22 +101,9 @@ public class ClaimValidationService {
       String officeCode,
       SubmissionValidationContext context) {
 
-    // Includes:
-    // - JSON scheme validation
-    // - Mandatory field validations
-    // - UFN
-    // - Stage reached validation
-    // - Schedule Reference Claim
-    // - Disbursements VAT amount
-    // - Claim dates:
-    // -- Case start date
-    // -- Case concluded date
-    // -- Transfer date
-    // -- Representation order date
-    // - Client dates
-    // -- Client date of birth
-    // - Matter Type Code
-    // - Effective category of law
+    Assert.notNull(claim.getId(), "Claim ID must not be null");
+    eventServiceMetricService.startClaimValidationTimer(UUID.fromString(claim.getId()));
+
     FeeDetailsResponseWrapper feeDetailsResponseWrapper =
         feeDetailsResponseMap.get(claim.getFeeCode());
     if (feeDetailsResponseWrapper.isError()) {
@@ -136,6 +124,23 @@ public class ClaimValidationService {
           claim.getFeeCode());
       return;
     }
+
+    // Includes:
+    // - JSON scheme validation
+    // - Mandatory field validations
+    // - UFN
+    // - Stage reached validation
+    // - Schedule Reference Claim
+    // - Disbursements VAT amount
+    // - Claim dates:
+    // -- Case start date
+    // -- Case concluded date
+    // -- Transfer date
+    // -- Representation order date
+    // - Client dates
+    // -- Client date of birth
+    // - Matter Type Code
+    // - Effective category of law
     String feeCalculationType = feeDetailsResponseWrapper.getFeeDetailsResponse().getFeeType();
     claimValidator.stream()
         .sorted(
@@ -146,22 +151,28 @@ public class ClaimValidationService {
                 case BasicClaimValidator validator -> validator.validate(claim, context);
                 case ClaimWithAreaOfLawValidator validator ->
                     validator.validate(claim, context, areaOfLaw, feeCalculationType);
-                case EffectiveCategoryOfLawClaimValidator validator -> validator.validate(
-                    claim, context, areaOfLaw, officeCode, feeDetailsResponseMap);
-                case DuplicateClaimValidator validator -> validator.validate(
-                    claim,
-                    context,
-                    areaOfLaw,
-                    officeCode,
-                    submissionClaims,
-                    feeCalculationType);
+                case EffectiveCategoryOfLawClaimValidator validator ->
+                    validator.validate(
+                        claim, context, areaOfLaw, officeCode, feeDetailsResponseMap);
+                case DuplicateClaimValidator validator ->
+                    validator.validate(
+                        claim,
+                        context,
+                        areaOfLaw,
+                        officeCode,
+                        submissionClaims,
+                        feeCalculationType);
                 default -> throw new EventServiceIllegalArgumentException("Unknown validator used");
               }
             });
 
+    eventServiceMetricService.stopClaimValidationTimer(UUID.fromString(claim.getId()));
+
     // fee calculation validation - done last after every other claim validation
+    eventServiceMetricService.startFspValidationTimer(UUID.fromString(claim.getId()));
     feeCalculationService.validateFeeCalculation(
         submissionId, claim, context, feeDetailsResponseWrapper.getFeeDetailsResponse());
+    eventServiceMetricService.stopFspValidationTimer(UUID.fromString(claim.getId()));
 
     // Check claim status and record metric
     recordClaimMetrics(claim, context);
@@ -180,13 +191,11 @@ public class ClaimValidationService {
     messages.forEach(x -> eventServiceMetricService.recordValidationMessage(x, true));
 
     // Claim could have either errors or warnings so record both
-    if (messages.stream()
-        .anyMatch(x -> x.getType().equals(ValidationMessageType.ERROR))) {
+    if (messages.stream().anyMatch(x -> x.getType().equals(ValidationMessageType.ERROR))) {
       eventServiceMetricService.incrementTotalClaimsValidatedAndErrorsFound();
     }
 
-    if (messages.stream()
-        .anyMatch(x -> x.getType().equals(ValidationMessageType.WARNING))) {
+    if (messages.stream().anyMatch(x -> x.getType().equals(ValidationMessageType.WARNING))) {
       eventServiceMetricService.incrementTotalClaimsValidatedAndWarningsFound();
     }
   }

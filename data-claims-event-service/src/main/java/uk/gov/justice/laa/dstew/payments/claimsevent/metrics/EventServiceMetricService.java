@@ -3,7 +3,11 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.metrics;
 import io.prometheus.metrics.core.metrics.Counter;
 import io.prometheus.metrics.core.metrics.Histogram;
 import io.prometheus.metrics.model.registry.PrometheusRegistry;
+import java.util.HashMap;
+import java.util.Objects;
+import java.util.UUID;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessageType;
@@ -13,6 +17,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessageType;
  *
  * @author Jamie Briggs
  */
+@Slf4j
 @Getter
 @Component
 public class EventServiceMetricService {
@@ -30,10 +35,13 @@ public class EventServiceMetricService {
   private final Counter errorTypeCounter;
 
   private final Histogram submissionValidationTimeHistogram;
+  private final HashMap<UUID, TimerLifecycle> submissionValidationTimers;
   private final Histogram claimValidationTimeHistogram;
+  private final HashMap<UUID, TimerLifecycle> claimValidationTimers;
   private final Histogram fspValidationTimeHistogram;
+  private final HashMap<UUID, TimerLifecycle> fspValidationTimers;
 
-  private final String METRIC_NAMESPACE = "claims_event_service_";
+  private static final String METRIC_NAMESPACE = "claims_event_service_";
 
   /**
    * Constructor.
@@ -95,18 +103,24 @@ public class EventServiceMetricService {
             .labelNames("error_source", "type", "message")
             .register(meterRegistry);
 
-    this.submissionValidationTimeHistogram = Histogram.builder()
-        .name(METRIC_NAMESPACE + "submission_validation_time")
-        .help("Total time taken to validate claim (Include FSP validation time)")
-        .register(meterRegistry);
-    this.claimValidationTimeHistogram = Histogram.builder()
-        .name(METRIC_NAMESPACE + "claim_validation_time")
-        .help("Total time taken to validate claim (Including FSP validation time)")
-        .register(meterRegistry);
-    this.fspValidationTimeHistogram = Histogram.builder()
-        .name(METRIC_NAMESPACE + "fsp_validation_time")
-        .help("Total time taken to perform fee scheme platform calculation")
-        .register(meterRegistry);
+    this.submissionValidationTimeHistogram =
+        Histogram.builder()
+            .name(METRIC_NAMESPACE + "submission_validation_time")
+            .help("Total time taken to validate claim (Include FSP validation time)")
+            .register(meterRegistry);
+    this.submissionValidationTimers = new HashMap<>();
+    this.claimValidationTimeHistogram =
+        Histogram.builder()
+            .name(METRIC_NAMESPACE + "claim_validation_time")
+            .help("Total time taken to validate claim (Including FSP validation time)")
+            .register(meterRegistry);
+    this.claimValidationTimers = new HashMap<>();
+    this.fspValidationTimeHistogram =
+        Histogram.builder()
+            .name(METRIC_NAMESPACE + "fsp_validation_time")
+            .help("Total time taken to perform fee scheme platform calculation")
+            .register(meterRegistry);
+    this.fspValidationTimers = new HashMap<>();
   }
 
   /**
@@ -173,8 +187,15 @@ public class EventServiceMetricService {
     totalInvalidSubmissionsCounter.inc();
   }
 
-  public void recordValidationMessage(ValidationMessagePatch validationMessagePatch, boolean isClaim) {
-    String type = Boolean.TRUE.equals(isClaim) ? "Claim" : "Submission";
+  /**
+   * Records a validation message which has been found with a claim or submission.
+   *
+   * @param validationMessagePatch the validation message to record
+   * @param isClaim whether the message is for a claim or a submission
+   */
+  public void recordValidationMessage(
+      ValidationMessagePatch validationMessagePatch, boolean isClaim) {
+    String type = isClaim ? "Claim" : "Submission";
     if (validationMessagePatch.getType() == ValidationMessageType.ERROR) {
       incrementErrorType(
           validationMessagePatch.getSource(), type, validationMessagePatch.getTechnicalMessage());
@@ -188,7 +209,124 @@ public class EventServiceMetricService {
     warningTypeCounter.labelValues(source, type, warningType).inc();
   }
 
-  private void incrementErrorType(String source,  String type, String errorType) {
+  private void incrementErrorType(String source, String type, String errorType) {
     errorTypeCounter.labelValues(source, type, errorType).inc();
+  }
+
+  /**
+   * Starts a timer for a submission validation. If a timer was already started for this submission,
+   * the old timer is removed.
+   *
+   * @param submissionId the ID of the submission to start the timer for
+   */
+  public void startSubmissionValidationTimer(UUID submissionId) {
+    if (submissionValidationTimers.containsKey(submissionId)) {
+      log.warn("Timer already started for submission {}, old timer will be removed", submissionId);
+    }
+    submissionValidationTimers.put(
+        submissionId,
+        new TimerLifecycle(
+            this.submissionValidationTimeHistogram.startTimer(), System.currentTimeMillis()));
+  }
+
+  /**
+   * Stops a timer for a submission validation and records the timer value.
+   *
+   * @param claimId the ID of the claim the timer was started for.
+   */
+  public void stopSubmissionValidationTimer(UUID claimId) {
+    TimerLifecycle timer = submissionValidationTimers.remove(claimId);
+    if (!Objects.isNull(timer) && !Objects.isNull(timer.timer())) {
+      double v = timer.timer().observeDuration();
+      if (v > 2) {
+        log.warn("Submission validation took {} seconds for claim {}", v, claimId);
+      }
+    }
+  }
+
+  /**
+   * Starts a timer for a claim validation. If a timer was already started for this claim, the old
+   * timer is removed.
+   *
+   * @param claimId the ID of the claim to start the timer for
+   */
+  public void startClaimValidationTimer(UUID claimId) {
+    if (submissionValidationTimers.containsKey(claimId)) {
+      log.warn("Timer already started for claim {}, old timer will be removed", claimId);
+    }
+    claimValidationTimers.put(
+        claimId,
+        new TimerLifecycle(
+            this.claimValidationTimeHistogram.startTimer(), System.currentTimeMillis()));
+  }
+
+  /**
+   * Stops a timer for a claim validation and records the timer value.
+   *
+   * @param claimId the ID of the claim the timer was started for.
+   */
+  public void stopClaimValidationTimer(UUID claimId) {
+    TimerLifecycle timer = claimValidationTimers.remove(claimId);
+    if (!Objects.isNull(timer) && !Objects.isNull(timer.timer())) {
+      double v = timer.timer().observeDuration();
+      if (v > 2) {
+        log.warn("Claim validation took {} seconds for claim {}", v, claimId);
+      }
+    }
+  }
+
+  /**
+   * Starts a timer for a FSP validation. If a timer was already started for this claim, the old
+   * timer is removed.
+   *
+   * @param claimId the ID of the claim to start the timer for
+   */
+  public void startFspValidationTimer(UUID claimId) {
+    if (submissionValidationTimers.containsKey(claimId)) {
+      log.warn("Timer already started for claim {}, old timer will be removed", claimId);
+    }
+    fspValidationTimers.put(
+        claimId,
+        new TimerLifecycle(
+            this.fspValidationTimeHistogram.startTimer(), System.currentTimeMillis()));
+  }
+
+  /**
+   * Stops a timer for a FSP validation and records the timer value.
+   *
+   * @param claimId the ID of the claim the timer was started for.
+   */
+  public void stopFspValidationTimer(UUID claimId) {
+    TimerLifecycle timer = fspValidationTimers.remove(claimId);
+    if (!Objects.isNull(timer) && !Objects.isNull(timer.timer())) {
+      double v = timer.timer().observeDuration();
+      if (v > 2) {
+        log.warn("FSP calculation and validation took {} seconds for claim {}", v, claimId);
+      }
+    }
+  }
+
+  /**
+   * Removes all timers older than the specified number of minutes.
+   *
+   * @param minutes total minutes timer should be kept alive for
+   */
+  public void removeAllTimersOlderThanTotalMinutes(int minutes) {
+    long currentTime = System.currentTimeMillis();
+    for (TimerLifecycle timer : submissionValidationTimers.values()) {
+      if (currentTime - timer.startTime() > (long) minutes * 60 * 1000) {
+        timer.timer().close();
+      }
+    }
+    for (TimerLifecycle timer : claimValidationTimers.values()) {
+      if (currentTime - timer.startTime() > (long) minutes * 60 * 1000) {
+        timer.timer().close();
+      }
+    }
+    for (TimerLifecycle timer : fspValidationTimers.values()) {
+      if (currentTime - timer.startTime() > (long) minutes * 60 * 1000) {
+        timer.timer().close();
+      }
+    }
   }
 }
