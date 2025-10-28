@@ -117,8 +117,8 @@ class ClaimValidationServiceTest {
     // Then
     verify(basicClaimValidator, times(1)).validate(claimOne, context);
     verify(basicClaimValidator, times(1)).validate(claimTwo, context);
-    verify(claimWithAreaOfLawValidator, times(1)).validate(claimOne, context, "CIVIL");
-    verify(claimWithAreaOfLawValidator, times(1)).validate(claimTwo, context, "CIVIL");
+    verify(claimWithAreaOfLawValidator, times(1)).validate(claimOne, context, "CIVIL", "feeType");
+    verify(claimWithAreaOfLawValidator, times(1)).validate(claimTwo, context, "CIVIL", "feeType");
     verify(effectiveCategoryOfLawClaimValidator, times(1))
         .validate(claimOne, context, "CIVIL", "officeAccountNumber", feeDetailsResponseMap);
     verify(effectiveCategoryOfLawClaimValidator, times(1))

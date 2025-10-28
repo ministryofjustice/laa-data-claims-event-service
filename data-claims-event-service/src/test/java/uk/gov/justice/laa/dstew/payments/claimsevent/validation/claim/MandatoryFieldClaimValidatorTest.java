@@ -3,6 +3,7 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.Mockito.lenient;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.ValidationServiceTestUtils.getClaimMessages;
+import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.MandatoryFieldClaimValidator.FEE_CALCULATION_TYPE_DISB_ONLY;
 
 import java.util.List;
 import java.util.Map;
@@ -17,6 +18,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationType;
+import uk.gov.justice.laa.dstew.payments.claimsevent.config.ExclusionsRegistry;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.MandatoryFieldsRegistry;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
@@ -25,12 +28,13 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 class MandatoryFieldClaimValidatorTest {
 
   @Mock MandatoryFieldsRegistry mandatoryFieldsRegistry;
+  ExclusionsRegistry exclusionsRegistry = new ExclusionsRegistry();
 
   MandatoryFieldClaimValidator validator;
 
   @BeforeEach
   void beforeEach() {
-    validator = new MandatoryFieldClaimValidator(mandatoryFieldsRegistry);
+    validator = new MandatoryFieldClaimValidator(mandatoryFieldsRegistry, exclusionsRegistry);
   }
 
   @Test
@@ -119,10 +123,41 @@ class MandatoryFieldClaimValidatorTest {
 
     SubmissionValidationContext context = new SubmissionValidationContext();
 
-    validator.validate(claim, context, "CIVIL");
+    validator.validate(claim, context, "CIVIL", FeeCalculationType.FIXED.getValue());
 
     assertThat(getClaimMessages(context, claimId.toString()).isEmpty()).isFalse();
     assertThat(getClaimMessages(context, claimId.toString()).getFirst().getDisplayMessage())
         .isEqualTo("%s is required for area of law: CIVIL".formatted(mandatoryField));
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "travelWaitingCostsAmount",
+        "adviceTime",
+        "travelTime",
+        "waitingTime",
+        "netCounselCostsAmount",
+        "netProfitCostsAmount",
+        "isVatApplicable"
+      })
+  @DisplayName("Should have no errors when excluded fields missing for disbursement only claims")
+  void shouldHaveNoErrorWhenExcludedFieldsMissingForDisbursementOnlyClaims(String mandatoryField) {
+    // Define the map for the test
+    Map<String, List<String>> civilMandatoryFields = Map.of("CIVIL", List.of(mandatoryField));
+
+    lenient()
+        .when(mandatoryFieldsRegistry.getMandatoryFieldsByAreaOfLaw())
+        .thenReturn(civilMandatoryFields);
+
+    UUID claimId = new UUID(1, 1);
+    ClaimResponse claim =
+        new ClaimResponse().id(claimId.toString()).status(ClaimStatus.READY_TO_PROCESS);
+
+    SubmissionValidationContext context = new SubmissionValidationContext();
+
+    validator.validate(claim, context, "CIVIL", FEE_CALCULATION_TYPE_DISB_ONLY);
+
+    assertThat(getClaimMessages(context, claimId.toString()).isEmpty()).isTrue();
   }
 }

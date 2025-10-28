@@ -12,12 +12,22 @@ public interface DuplicateClaimValidationStrategy {
 
   Logger log = org.slf4j.LoggerFactory.getLogger(DuplicateClaimValidationStrategy.class);
 
-  void validateDuplicateClaims(
+  default void validateDuplicateClaims(
+      ClaimResponse claim,
+      List<ClaimResponse> submissionClaims,
+      String officeCode,
+      SubmissionValidationContext context) {
+    // Default implementation does nothing, overridden methods will be called.
+  }
+
+  default void validateDuplicateClaims(
       ClaimResponse claim,
       List<ClaimResponse> submissionClaims,
       String officeCode,
       SubmissionValidationContext context,
-      String feeType);
+      String feeCalculationType) {
+    validateDuplicateClaims(claim, submissionClaims, officeCode, context);
+  }
 
   /**
    * Log the duplicate claims found for a given claim.

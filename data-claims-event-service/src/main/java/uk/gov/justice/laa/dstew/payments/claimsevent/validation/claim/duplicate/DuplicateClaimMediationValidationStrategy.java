@@ -22,8 +22,7 @@ public class DuplicateClaimMediationValidationStrategy extends DuplicateClaimVal
       ClaimResponse claim,
       List<ClaimResponse> submissionClaims,
       String officeCode,
-      SubmissionValidationContext context,
-      String feeType) {
+      SubmissionValidationContext context) {
     List<ClaimResponse> claimsWithValidStatus =
         filterCurrentClaimWithValidStatusAndWithinPeriod(claim, submissionClaims);
     String feeCode = claim.getFeeCode();

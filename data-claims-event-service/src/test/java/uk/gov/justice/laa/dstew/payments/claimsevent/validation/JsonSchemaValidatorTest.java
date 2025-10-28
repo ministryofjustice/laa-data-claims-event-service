@@ -206,7 +206,6 @@ class JsonSchemaValidatorTest {
       "line_number",
       "disbursements_vat_amount",
       "net_disbursement_amount",
-      "is_vat_applicable",
       "fee_code",
     })
     void validateErrorForMissingRequiredClaimResponse(String jsonField) {
