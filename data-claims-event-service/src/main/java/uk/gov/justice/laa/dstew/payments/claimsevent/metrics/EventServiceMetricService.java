@@ -1,7 +1,7 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.metrics;
 
 import io.prometheus.metrics.core.metrics.Counter;
-import io.prometheus.metrics.core.metrics.Histogram;
+import io.prometheus.metrics.core.metrics.Summary;
 import io.prometheus.metrics.model.registry.PrometheusRegistry;
 import java.util.HashMap;
 import java.util.Objects;
@@ -34,11 +34,11 @@ public class EventServiceMetricService {
   private final Counter warningTypeCounter;
   private final Counter errorTypeCounter;
 
-  private final Histogram submissionValidationTimeHistogram;
+  private final Summary submissionValidationTimeSummary;
   private final HashMap<UUID, TimerLifecycle> submissionValidationTimers;
-  private final Histogram claimValidationTimeHistogram;
+  private final Summary claimValidationTimeSummary;
   private final HashMap<UUID, TimerLifecycle> claimValidationTimers;
-  private final Histogram fspValidationTimeHistogram;
+  private final Summary fspValidationTimeSummary;
   private final HashMap<UUID, TimerLifecycle> fspValidationTimers;
 
   private static final String METRIC_NAMESPACE = "claims_event_service_";
@@ -103,22 +103,34 @@ public class EventServiceMetricService {
             .labelNames("error_source", "type", "message")
             .register(meterRegistry);
 
-    this.submissionValidationTimeHistogram =
-        Histogram.builder()
+    this.submissionValidationTimeSummary =
+        Summary.builder()
             .name(METRIC_NAMESPACE + "submission_validation_time")
             .help("Total time taken to validate claim (Include FSP validation time)")
+            .quantile(0.5, 0.05)   // P50 with 5% error tolerance
+            .quantile(0.9, 0.02)   // P90 with 2% error tolerance
+            .quantile(0.95, 0.01)  // P95 with 1% error tolerance
+            .quantile(0.99, 0.001) // P99 with 0.1% error tolerance
             .register(meterRegistry);
     this.submissionValidationTimers = new HashMap<>();
-    this.claimValidationTimeHistogram =
-        Histogram.builder()
+    this.claimValidationTimeSummary =
+        Summary.builder()
             .name(METRIC_NAMESPACE + "claim_validation_time")
             .help("Total time taken to validate claim (Including FSP validation time)")
+            .quantile(0.5, 0.05)   // P50 with 5% error tolerance
+            .quantile(0.9, 0.02)   // P90 with 2% error tolerance
+            .quantile(0.95, 0.01)  // P95 with 1% error tolerance
+            .quantile(0.99, 0.001) // P99 with 0.1% error tolerance
             .register(meterRegistry);
     this.claimValidationTimers = new HashMap<>();
-    this.fspValidationTimeHistogram =
-        Histogram.builder()
+    this.fspValidationTimeSummary =
+        Summary.builder()
             .name(METRIC_NAMESPACE + "fsp_validation_time")
             .help("Total time taken to perform fee scheme platform calculation")
+            .quantile(0.5, 0.05)   // P50 with 5% error tolerance
+            .quantile(0.9, 0.02)   // P90 with 2% error tolerance
+            .quantile(0.95, 0.01)  // P95 with 1% error tolerance
+            .quantile(0.99, 0.001) // P99 with 0.1% error tolerance
             .register(meterRegistry);
     this.fspValidationTimers = new HashMap<>();
   }
@@ -226,7 +238,7 @@ public class EventServiceMetricService {
     submissionValidationTimers.put(
         submissionId,
         new TimerLifecycle(
-            this.submissionValidationTimeHistogram.startTimer(), System.currentTimeMillis()));
+            this.submissionValidationTimeSummary.startTimer(), System.currentTimeMillis()));
   }
 
   /**
@@ -257,7 +269,7 @@ public class EventServiceMetricService {
     claimValidationTimers.put(
         claimId,
         new TimerLifecycle(
-            this.claimValidationTimeHistogram.startTimer(), System.currentTimeMillis()));
+            this.claimValidationTimeSummary.startTimer(), System.currentTimeMillis()));
   }
 
   /**
@@ -288,7 +300,7 @@ public class EventServiceMetricService {
     fspValidationTimers.put(
         claimId,
         new TimerLifecycle(
-            this.fspValidationTimeHistogram.startTimer(), System.currentTimeMillis()));
+            this.fspValidationTimeSummary.startTimer(), System.currentTimeMillis()));
   }
 
   /**
