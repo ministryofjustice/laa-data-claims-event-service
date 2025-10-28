@@ -43,16 +43,19 @@ class StageReachedClaimValidatorTest {
           "{index} => claimId={0}, stageReachedCode={1}, areaOfLaw={2}, "
               + "expectError={3}, displayMessage={4}")
   @CsvSource({
-    "1, AABB, LEGAL HELP, true, Stage Reached Code must be exactly 2 alphanumeric characters for Civil claims\"",
-      "2, AZ, LEGAL HELP, false, NA",
-      "3, C9, LEGAL HELP, false, NA",
-    "4, A!, LEGAL HELP, true, Stage Reached Code must be exactly 2 alphanumeric characters for Civil claims\"",
+    "1, AABB, LEGAL HELP, true, Stage Reached Code must be exactly 2 alphanumeric characters for Civil claims",
+    "2, AZ, LEGAL HELP, false, NA",
+    "3, C9, LEGAL HELP, false, NA",
+    "4, A!, LEGAL HELP, true, Stage Reached Code must be exactly 2 alphanumeric characters for Civil claims",
     "5, A1, CRIME LOWER, true, Stage Reached Code must be exactly 4 uppercase letters for Crime claims",
     "6, A-CD, CRIME LOWER, true, Stage Reached Code must be exactly 4 uppercase letters for Crime claims",
     "7, ABCD, CRIME LOWER, true, Stage Reached Code must be exactly 4 uppercase letters for Crime claims"
   })
   void checkStageReachedCode(
-      int claimIdBit, String stageReachedCode, String areaOfLaw, boolean expectError,
+      int claimIdBit,
+      String stageReachedCode,
+      String areaOfLaw,
+      boolean expectError,
       String expectedErrorMsg) {
     UUID claimId = new UUID(claimIdBit, claimIdBit);
     ClaimResponse claim =
