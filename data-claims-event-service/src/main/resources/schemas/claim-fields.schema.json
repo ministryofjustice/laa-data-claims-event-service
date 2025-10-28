@@ -453,7 +453,6 @@
   "required": [
     "status",
     "line_number",
-    "case_start_date",
     "net_disbursement_amount",
     "disbursements_vat_amount",
     "is_vat_applicable",
