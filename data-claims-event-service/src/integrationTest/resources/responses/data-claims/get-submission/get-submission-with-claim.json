@@ -3,7 +3,7 @@
   "bulk_submission_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
   "office_account_number": "AQ2B3C",
   "submission_period": "APR-2025",
-  "area_of_law": "CIVIL",
+  "area_of_law": "LEGAL HELP",
   "status": "READY_FOR_VALIDATION",
   "crime_schedule_number": "23456",
   "previous_submission_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
@@ -13,7 +13,7 @@
   "claims": [
     {
       "claim_id": "f6bde766-a0a3-483b-bf13-bef888b4f06e",
-      "status": "VALID"
+      "status": "READY_TO_PROCESS"
     }
   ],
   "matter_starts": [

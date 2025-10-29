@@ -273,6 +273,23 @@ public abstract class MockServerIntegrationTest {
                 .withHeader("Content-Type", "application/json"));
   }
 
+  protected void stubForUpdateClaim(UUID submissionId, UUID claimId) {
+    mockServerClient
+        .when(
+            HttpRequest.request()
+                .withMethod(HttpMethod.PATCH.toString())
+                .withPath(
+                    API_VERSION_0
+                        + "submissions/"
+                        + submissionId.toString()
+                        + "/claims/"
+                        + claimId.toString()))
+        .respond(
+            HttpResponse.response()
+                .withStatusCode(HttpStatusCode.NO_CONTENT)
+                .withHeader("Content-Type", "application/json"));
+  }
+
   protected void stubForUpdateBulkSubmission(UUID bulkSubmissionId) {
     mockServerClient
         .when(

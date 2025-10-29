@@ -2,11 +2,13 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.listener;
 
 import static org.awaitility.Awaitility.await;
 import static org.mockserver.model.HttpRequest.request;
+import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.AreaOfLaw.LEGAL_HELP;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.awspring.cloud.sqs.operations.SqsTemplate;
 import java.time.Duration;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -35,8 +37,10 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
   private static final String OFFICE_CODE = "AQ2B3C";
   private static final String AREA_OF_LAW = "CIVIL";
   private static final String API_VERSION_0 = "/api/v0/";
-  private static final UUID submissionId = UUID.fromString("0561d67b-30ed-412e-8231-f6296a53538d");
-  private static final UUID claimId = UUID.fromString("f6bde766-a0a3-483b-bf13-bef888b4f06e");
+  private static final UUID SUBMISSION_ID = UUID.fromString("0561d67b-30ed-412e-8231-f6296a53538d");
+  private static final UUID BULK_SUBMISSION_ID =
+      UUID.fromString("3fa85f64-5717-4562-b3fc-2c963f66afa6");
+  private static final UUID CLAIM_ID = UUID.fromString("f6bde766-a0a3-483b-bf13-bef888b4f06e");
 
   @Autowired private SqsTemplate sqsTemplate;
   @Autowired private ObjectMapper objectMapper;
@@ -44,20 +48,20 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
   @Test
   void sendMessage_noErrors_noClaims() throws Exception {
     // Given a submission with no claims mocked
-    stubForGetSubmission(submissionId, "data-claims/get-submission/get-submission-APR-25.json");
+    stubForGetSubmission(SUBMISSION_ID, "data-claims/get-submission/get-submission-APR-25.json");
     SubmissionPatch patchBodyInProgress =
         SubmissionPatch.builder()
-            .submissionId(submissionId)
+            .submissionId(SUBMISSION_ID)
             .status(SubmissionStatus.VALIDATION_IN_PROGRESS)
             .build();
-    stubForUpdateSubmissionWithBody(submissionId, patchBodyInProgress);
+    stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodyInProgress);
     SubmissionPatch patchBodySucceeded =
         SubmissionPatch.builder()
-            .submissionId(submissionId)
+            .submissionId(SUBMISSION_ID)
             .status(SubmissionStatus.VALIDATION_SUCCEEDED)
             .build();
-    stubForUpdateSubmissionWithBody(submissionId, patchBodySucceeded);
-    stubReturnNoClaims(submissionId);
+    stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodySucceeded);
+    stubReturnNoClaims(SUBMISSION_ID);
 
     getStubForGetSubmissionByCriteria(
         List.of(
@@ -66,54 +70,79 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
             Parameter.param("submission_period", "APR-2025")),
         "data-claims/get-submission/get-submissions-by-filter_no_content.json");
 
-    verifyRequests();
+    // when
+    sendSubmissionValidationMessage();
+
+    // then
+    verifySubmissionRequests();
   }
 
   @Test
   void sendMessage_noErrors_withClaims() throws Exception {
     // Given a submission with a claim
-    stubForGetSubmission(submissionId, "data-claims/get-submission/get-submission-with-claim.json");
+    stubForGetSubmission(
+        SUBMISSION_ID, "data-claims/get-submission/get-submission-with-claim.json");
     SubmissionPatch patchBodyInProgress =
         SubmissionPatch.builder()
-            .submissionId(submissionId)
+            .submissionId(SUBMISSION_ID)
             .status(SubmissionStatus.VALIDATION_IN_PROGRESS)
             .build();
-    stubForUpdateSubmissionWithBody(submissionId, patchBodyInProgress);
+    stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodyInProgress);
     SubmissionPatch patchBodySucceeded =
         SubmissionPatch.builder()
-            .submissionId(submissionId)
+            .submissionId(SUBMISSION_ID)
             .status(SubmissionStatus.VALIDATION_SUCCEEDED)
             .build();
-    stubForUpdateSubmissionWithBody(submissionId, patchBodySucceeded);
-    stubForGetClaim(submissionId, claimId, "data-claims/get-claim/get-claim-1.json");
+    stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodySucceeded);
+    stubForGetClaim(SUBMISSION_ID, CLAIM_ID, "data-claims/get-claim/get-claim-2.json");
 
     getStubForGetSubmissionByCriteria(
         List.of(
             Parameter.param("offices", OFFICE_CODE),
-            Parameter.param("area_of_law", AREA_OF_LAW),
+            Parameter.param("area_of_law", "LEGAL HELP"),
             Parameter.param("submission_period", "APR-2025")),
         "data-claims/get-submission/get-submissions-by-filter_no_content.json");
+    stubForGetFeeDetails("CAPA", "fee-scheme/get-fee-details-200.json");
+    stubForGetProviderOffice(
+        OFFICE_CODE,
+        List.of(new Parameter("areaOfLaw", LEGAL_HELP.getValue())),
+        "provider-details/get-firm-schedules-openapi-200.json");
 
-    verifyRequests();
+    stubForGetClaims(Collections.emptyList(), "data-claims/get-claims/no-claims.json");
+    // fee-calculation
+    stubForPostFeeCalculation("fee-scheme/post-fee-calculation-200.json");
+    // Stub patch claim
+    stubForUpdateClaim(SUBMISSION_ID, CLAIM_ID);
+    // Stub patch submission
+    stubForUpdateSubmission(SUBMISSION_ID);
+    // Stub patch bulk submission
+    stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
+
+    // when
+    sendSubmissionValidationMessage();
+
+    // then
+    verifySubmissionRequests();
+    verifyClaimRequests();
   }
 
   @Test
   void sendMessage_validationFailedDuplicate() throws Exception {
     // Given Validation failed for submission
-    stubForGetSubmission(submissionId, "data-claims/get-submission/get-submission-APR-25.json");
+    stubForGetSubmission(SUBMISSION_ID, "data-claims/get-submission/get-submission-APR-25.json");
     SubmissionPatch patchBodyInProgress =
         SubmissionPatch.builder()
-            .submissionId(submissionId)
+            .submissionId(SUBMISSION_ID)
             .status(SubmissionStatus.VALIDATION_IN_PROGRESS)
             .build();
-    stubForUpdateSubmissionWithBody(submissionId, patchBodyInProgress);
+    stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodyInProgress);
     SubmissionPatch patchBodySucceeded =
         SubmissionPatch.builder()
-            .submissionId(submissionId)
+            .submissionId(SUBMISSION_ID)
             .status(SubmissionStatus.VALIDATION_FAILED)
             .build();
-    stubForUpdateSubmissionWithBody(submissionId, patchBodySucceeded);
-    stubReturnNoClaims(submissionId);
+    stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodySucceeded);
+    stubReturnNoClaims(SUBMISSION_ID);
 
     getStubForGetSubmissionByCriteria(
         List.of(
@@ -122,35 +151,55 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
             Parameter.param("submission_period", "APR-2025")),
         "data-claims/get-submission/get-submissions-by-filter.json");
 
-    verifyRequests();
+    // when
+    sendSubmissionValidationMessage();
+
+    // then
+    verifySubmissionRequests();
   }
 
-  private void verifyRequests() throws JsonProcessingException {
-    String messageBody = objectMapper.writeValueAsString(Map.of("submission_id", submissionId));
-
+  private void sendSubmissionValidationMessage() throws JsonProcessingException {
+    String messageBody = objectMapper.writeValueAsString(Map.of("submission_id", SUBMISSION_ID));
     sqsTemplate.send(
         toQueue ->
             toQueue
                 .queue("test-queue-name")
                 .payload(messageBody)
                 .header("SubmissionEventType", SubmissionEventType.VALIDATE_SUBMISSION.toString()));
+  }
 
+  private void verifySubmissionRequests() {
     await()
         .pollInterval(Duration.ofMillis(500))
-        .atMost(Duration.ofSeconds(100))
+        .atMost(Duration.ofSeconds(20))
         .untilAsserted(
             () -> {
               mockServerClient.verify(
                   request()
                       .withMethod("GET")
-                      .withPath(API_VERSION_0 + "submissions/" + submissionId));
+                      .withPath(API_VERSION_0 + "submissions/" + SUBMISSION_ID));
               mockServerClient.verify(
                   request().withMethod("GET").withPath(API_VERSION_0 + "submissions"));
               mockServerClient.verify(
                   request()
                       .withMethod("PATCH")
-                      .withPath(API_VERSION_0 + "submissions/" + submissionId),
+                      .withPath(API_VERSION_0 + "submissions/" + SUBMISSION_ID),
                   VerificationTimes.exactly(2));
+            });
+  }
+
+  private void verifyClaimRequests() {
+    await()
+        .pollInterval(Duration.ofMillis(500))
+        .atMost(Duration.ofSeconds(20))
+        .untilAsserted(
+            () -> {
+              mockServerClient.verify(
+                  request()
+                      .withMethod("PATCH")
+                      .withPath(
+                          API_VERSION_0 + "submissions/" + SUBMISSION_ID + "/claims/" + CLAIM_ID),
+                  VerificationTimes.exactly(1));
             });
   }
 }
