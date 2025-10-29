@@ -59,7 +59,7 @@ class MandatoryFieldClaimValidatorTest {
 
     SubmissionValidationContext context = new SubmissionValidationContext();
 
-    validator.validate(claim, context, "CIVIL");
+    validator.validate(claim, context, "CIVIL", "TYPE");
 
     assertThat(getClaimMessages(context, claimId.toString()).isEmpty()).isTrue();
   }
@@ -94,7 +94,7 @@ class MandatoryFieldClaimValidatorTest {
 
     SubmissionValidationContext context = new SubmissionValidationContext();
 
-    validator.validate(claim, context, "CIVIL");
+    validator.validate(claim, context, "CIVIL", "TYPE");
 
     assertThat(getClaimMessages(context, claimId.toString()).isEmpty()).isTrue();
   }

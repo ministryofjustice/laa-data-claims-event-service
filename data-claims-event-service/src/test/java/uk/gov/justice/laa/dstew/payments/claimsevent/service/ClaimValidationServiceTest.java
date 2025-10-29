@@ -28,6 +28,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.ClaimValid
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.ClaimWithAreaOfLawValidator;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.DuplicateClaimValidator;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.EffectiveCategoryOfLawClaimValidator;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.MandatoryFieldClaimValidator;
 import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponse;
 
 @ExtendWith(MockitoExtension.class)
@@ -48,6 +49,7 @@ class ClaimValidationServiceTest {
   @Mock StubClaimWithAreaOfLawValidator claimWithAreaOfLawValidator;
   @Mock EffectiveCategoryOfLawClaimValidator effectiveCategoryOfLawClaimValidator;
   @Mock EventServiceMetricService eventServiceMetricService;
+  @Mock MandatoryFieldClaimValidator mandatoryFieldClaimValidator;
   @Mock DuplicateClaimValidator duplicateClaimValidator;
 
   @BeforeEach
@@ -62,6 +64,7 @@ class ClaimValidationServiceTest {
                 basicClaimValidator,
                 claimWithAreaOfLawValidator,
                 effectiveCategoryOfLawClaimValidator,
+                mandatoryFieldClaimValidator,
                 duplicateClaimValidator));
 
     lenient().when(basicClaimValidator.priority()).thenReturn(1);
@@ -117,8 +120,10 @@ class ClaimValidationServiceTest {
     // Then
     verify(basicClaimValidator, times(1)).validate(claimOne, context);
     verify(basicClaimValidator, times(1)).validate(claimTwo, context);
-    verify(claimWithAreaOfLawValidator, times(1)).validate(claimOne, context, "CIVIL", "feeType");
-    verify(claimWithAreaOfLawValidator, times(1)).validate(claimTwo, context, "CIVIL", "feeType");
+    verify(claimWithAreaOfLawValidator, times(1)).validate(claimOne, context, "CIVIL");
+    verify(claimWithAreaOfLawValidator, times(1)).validate(claimTwo, context, "CIVIL");
+    verify(mandatoryFieldClaimValidator, times(1)).validate(claimOne, context, "CIVIL", "feeType");
+    verify(mandatoryFieldClaimValidator, times(1)).validate(claimTwo, context, "CIVIL", "feeType");
     verify(effectiveCategoryOfLawClaimValidator, times(1))
         .validate(claimOne, context, "CIVIL", "officeAccountNumber", feeDetailsResponseMap);
     verify(effectiveCategoryOfLawClaimValidator, times(1))

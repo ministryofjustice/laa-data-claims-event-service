@@ -9,7 +9,6 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
@@ -30,21 +29,26 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
  */
 @Component
 @Slf4j
-public final class MandatoryFieldClaimValidator
-    implements ClaimWithAreaOfLawValidator, ClaimValidator {
+public final class MandatoryFieldClaimValidator implements ClaimValidator {
 
   public static final String FEE_CALCULATION_TYPE_DISB_ONLY = "DISB_ONLY";
   private final MandatoryFieldsRegistry mandatoryFieldsRegistry;
   private final ExclusionsRegistry exclusionsRegistry;
 
-  public MandatoryFieldClaimValidator(MandatoryFieldsRegistry mandatoryFieldsRegistry,
-      ExclusionsRegistry exclusionsRegistry) {
+  public MandatoryFieldClaimValidator(
+      MandatoryFieldsRegistry mandatoryFieldsRegistry, ExclusionsRegistry exclusionsRegistry) {
     this.exclusionsRegistry = exclusionsRegistry;
     this.mandatoryFieldsRegistry = mandatoryFieldsRegistry;
   }
 
-
-  @Override
+  /**
+   * Validates mandatory fields for a given area of law.
+   *
+   * @param claim the claim to validate
+   * @param context the validation context to add errors to
+   * @param areaOfLaw the area of law to validate
+   * @param feeCalculationType the fee calculation type to validate
+   */
   public void validate(
       ClaimResponse claim,
       SubmissionValidationContext context,

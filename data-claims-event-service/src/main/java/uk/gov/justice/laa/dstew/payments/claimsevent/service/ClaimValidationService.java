@@ -24,6 +24,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.ClaimValid
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.ClaimWithAreaOfLawValidator;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.DuplicateClaimValidator;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.EffectiveCategoryOfLawClaimValidator;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.MandatoryFieldClaimValidator;
 
 /**
  * A service for validating submitted claims that are ready to process. Validation errors will
@@ -144,10 +145,12 @@ public class ClaimValidationService {
               switch (x) {
                 case BasicClaimValidator validator -> validator.validate(claim, context);
                 case ClaimWithAreaOfLawValidator validator ->
-                    validator.validate(claim, context, areaOfLaw, feeCalculationType);
+                    validator.validate(claim, context, areaOfLaw);
                 case EffectiveCategoryOfLawClaimValidator validator ->
                     validator.validate(
                         claim, context, areaOfLaw, officeCode, feeDetailsResponseMap);
+                case MandatoryFieldClaimValidator validator ->
+                    validator.validate(claim, context, areaOfLaw, feeCalculationType);
                 case DuplicateClaimValidator validator ->
                     validator.validate(
                         claim,
