@@ -10,9 +10,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
+import uk.gov.justice.laa.dstew.payments.claimsevent.config.ExclusionsRegistry;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.MandatoryFieldsRegistry;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
 /**
@@ -26,20 +29,38 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
  * @see ClaimWithAreaOfLawValidator
  */
 @Component
+@Slf4j
 @RequiredArgsConstructor
 public class MandatoryFieldClaimValidator implements ClaimValidator, ClaimWithAreaOfLawValidator {
 
+  public static final String FEE_CALCULATION_TYPE_DISB_ONLY = "DISB_ONLY";
   private final MandatoryFieldsRegistry mandatoryFieldsRegistry;
 
+  private final ExclusionsRegistry exclusionsRegistry;
+
   @Override
-  public void validate(ClaimResponse claim, SubmissionValidationContext context, String areaOfLaw) {
+  public void validate(
+      ClaimResponse claim,
+      SubmissionValidationContext context,
+      String areaOfLaw,
+      String feeCalculationType) {
     Map<String, List<String>> mandatoryFieldsByAreaOfLaw =
         mandatoryFieldsRegistry.getMandatoryFieldsByAreaOfLaw();
     List<String> mandatoryFields = mandatoryFieldsByAreaOfLaw.get(areaOfLaw);
     if (Objects.isNull(mandatoryFields)) {
       return;
     }
+    boolean isDisbursementLegalHelpClaim =
+        FEE_CALCULATION_TYPE_DISB_ONLY.equals(feeCalculationType)
+            && AreaOfLaw.LEGAL_HELP.getValue().equals(areaOfLaw);
+    List<String> disbursementExclusions = exclusionsRegistry.getDisbursementOnlyExclusions();
+
     for (String fieldName : mandatoryFields) {
+      if (isDisbursementLegalHelpClaim && disbursementExclusions.contains(fieldName)) {
+        // Skip validation for excluded fields when disbursement-only
+        log.debug("Skipping validation for excluded field: {}", fieldName);
+        continue;
+      }
       try {
         // Look up getter method for the property
         PropertyDescriptor pd = new PropertyDescriptor(fieldName, ClaimResponse.class);

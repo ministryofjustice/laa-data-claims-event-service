@@ -455,7 +455,6 @@
     "line_number",
     "net_disbursement_amount",
     "disbursements_vat_amount",
-    "is_vat_applicable",
     "fee_code"
   ]
 }

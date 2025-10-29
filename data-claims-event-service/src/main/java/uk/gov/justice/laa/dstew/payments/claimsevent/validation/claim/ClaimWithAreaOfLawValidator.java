@@ -21,7 +21,26 @@ public interface ClaimWithAreaOfLawValidator {
    * @param context the validation context to add errors to
    * @param areaOfLaw the area of law for the claim
    */
-  void validate(final ClaimResponse claim, SubmissionValidationContext context, String areaOfLaw);
+  default void validate(
+      final ClaimResponse claim, SubmissionValidationContext context, String areaOfLaw) {
+    // Default implementation does nothing, overridden methods will be called.
+  }
+
+  /**
+   * Validates a claim with fee calculation type.
+   *
+   * @param claim the claim to validate
+   * @param context the validation context to add errors to
+   * @param areaOfLaw the area of law for the claim
+   * @param feeCalculationType the fee calculation type for the claim
+   */
+  default void validate(
+      final ClaimResponse claim,
+      SubmissionValidationContext context,
+      String areaOfLaw,
+      String feeCalculationType) {
+    validate(claim, context, areaOfLaw);
+  }
 
   /**
    * Validates a specific field of a claim using a provided regex pattern. If the field value does

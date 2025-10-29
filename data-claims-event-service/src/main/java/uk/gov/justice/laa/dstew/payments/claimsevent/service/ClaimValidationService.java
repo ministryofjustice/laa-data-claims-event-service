@@ -135,6 +135,7 @@ public class ClaimValidationService {
           claim.getFeeCode());
       return;
     }
+    String feeCalculationType = feeDetailsResponseWrapper.getFeeDetailsResponse().getFeeType();
     claimValidator.stream()
         .sorted(
             Comparator.comparingInt(ClaimValidator::priority)) // Ensure validators are run in order
@@ -143,7 +144,7 @@ public class ClaimValidationService {
               switch (x) {
                 case BasicClaimValidator validator -> validator.validate(claim, context);
                 case ClaimWithAreaOfLawValidator validator ->
-                    validator.validate(claim, context, areaOfLaw);
+                    validator.validate(claim, context, areaOfLaw, feeCalculationType);
                 case EffectiveCategoryOfLawClaimValidator validator ->
                     validator.validate(
                         claim, context, areaOfLaw, officeCode, feeDetailsResponseMap);
@@ -154,7 +155,7 @@ public class ClaimValidationService {
                         areaOfLaw,
                         officeCode,
                         submissionClaims,
-                        feeDetailsResponseWrapper.getFeeDetailsResponse().getFeeType());
+                        feeCalculationType);
                 default -> throw new EventServiceIllegalArgumentException("Unknown validator used");
               }
             });

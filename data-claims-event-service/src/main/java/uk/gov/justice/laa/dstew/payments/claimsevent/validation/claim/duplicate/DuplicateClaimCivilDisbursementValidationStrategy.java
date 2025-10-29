@@ -13,7 +13,6 @@ import org.springframework.stereotype.Component;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
-import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
@@ -33,12 +32,10 @@ public class DuplicateClaimCivilDisbursementValidationStrategy extends Duplicate
    * Creates a new {@code DuplicateClaimCivilDisbursementValidationStrategy}.
    *
    * @param dataClaimsRestClient the data claims rest client
-   * @param feeSchemePlatformRestClient the fee scheme platform rest client
    */
   @Autowired
   public DuplicateClaimCivilDisbursementValidationStrategy(
-      final DataClaimsRestClient dataClaimsRestClient,
-      final FeeSchemePlatformRestClient feeSchemePlatformRestClient) {
+      final DataClaimsRestClient dataClaimsRestClient) {
     super(dataClaimsRestClient);
     formatter =
         new DateTimeFormatterBuilder()
