@@ -70,8 +70,8 @@ public class SubmissionValidationContext {
    * @param claimId the ID of the claim
    * @param error the validation error to add
    */
-  public void addClaimError(String claimId, ClaimValidationError error) {
-    addClaimMessages(claimId, List.of(error.toPatch()));
+  public void addClaimError(String claimId, ClaimValidationError error, Object... params) {
+    addClaimMessages(claimId, List.of(error.toPatch(params)));
   }
 
   /**

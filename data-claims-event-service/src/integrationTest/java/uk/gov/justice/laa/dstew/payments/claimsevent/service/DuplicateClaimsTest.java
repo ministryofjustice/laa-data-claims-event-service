@@ -1,5 +1,7 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
+import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.AreaOfLaw.LEGAL_HELP;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -25,15 +27,9 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MockServerIntegratio
 public class DuplicateClaimsTest extends MockServerIntegrationTest {
 
   private static final String OFFICE_CODE = "AQ2B3C";
-  private static final String AREA_OF_LAW = "CIVIL";
   private static final String FEE_CODE = "432EC";
   private static final String SUBMISSION_PERIOD = "APR-2025";
-  private static final String UNIQUE_FILE_NUMBER = "060925/010";
-  private static final String UNIQUE_CLIENT_NUMBER = "29384";
   private static final String CLAIM_ID = "6850db96-fbb7-4859-a5a5-fc111cd205b2";
-  private static final List<String> SUBMISSION_STATUS =
-      List.of("CREATED", "VALIDATION_IN_PROGRESS", "READY_FOR_VALIDATION");
-  private static final List<String> CLAIM_STATUSES = List.of("READY_TO_PROCESS", "VALID");
   public static final UUID SUBMISSION_ID = UUID.fromString("00000000-0000-0001-0000-000000000001");
   public static final UUID BULK_SUBMISSION_ID =
       UUID.fromString("3fa85f64-5717-4562-b3fc-2c963f66afa6");
@@ -65,7 +61,7 @@ public class DuplicateClaimsTest extends MockServerIntegrationTest {
       // provider-details
       stubForGetProviderOffice(
           OFFICE_CODE,
-          List.of(new Parameter("areaOfLaw", AREA_OF_LAW)),
+          List.of(new Parameter("areaOfLaw", LEGAL_HELP.getValue())),
           "provider-details/get-firm-schedules-openapi-200.json");
       // fee-details
       stubForGetFeeDetails(FEE_CODE, "fee-scheme/get-fee-details-200.json");
@@ -79,7 +75,7 @@ public class DuplicateClaimsTest extends MockServerIntegrationTest {
       getStubForGetSubmissionByCriteria(
           List.of(
               Parameter.param("offices", OFFICE_CODE),
-              Parameter.param("area_of_law", AREA_OF_LAW),
+              Parameter.param("area_of_law", LEGAL_HELP.getValue()),
               Parameter.param("submission_period", SUBMISSION_PERIOD)),
           "data-claims/get-submission/get-submissions-by-filter_no_content.json");
 

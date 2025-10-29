@@ -16,6 +16,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessageType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.EventServiceIllegalArgumentException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.BasicClaimValidator;
@@ -57,8 +58,10 @@ public class ClaimValidationService {
                     dataClaimsRestClient.getClaim(submission.getSubmissionId(), claimId).getBody())
             .toList();
 
-    Map<String, CategoryOfLawResult> categoryOfLawLookup =
-        categoryOfLawValidationService.getCategoryOfLawLookup(submissionClaims);
+    Map<String, FeeDetailsResponseWrapper> feeDetailsResponseMap =
+        categoryOfLawValidationService.getFeeDetailsResponseForAllFeeCodesInClaims(
+            submissionClaims);
+
     submissionClaims.stream()
         .filter(claim -> ClaimStatus.READY_TO_PROCESS.equals(claim.getStatus()))
         .forEach(
@@ -67,7 +70,7 @@ public class ClaimValidationService {
                     submission.getSubmissionId(),
                     claim,
                     submissionClaims,
-                    categoryOfLawLookup,
+                    feeDetailsResponseMap,
                     submission.getAreaOfLaw(),
                     submission.getOfficeAccountNumber(),
                     context));
@@ -82,8 +85,8 @@ public class ClaimValidationService {
    *
    * @param submissionId the ID of the submission to which the claim belongs
    * @param claim the claim object to validate
-   * @param categoryOfLawLookup a map containing category of law codes and their corresponding
-   *     descriptions
+   * @param feeDetailsResponseMap a map containing FeeDetailsResponse and their corresponding
+   *     feeCodes
    * @param areaOfLaw the area of law for the parent submission: some validations change depending
    *     on the area of law.
    */
@@ -91,7 +94,7 @@ public class ClaimValidationService {
       UUID submissionId,
       ClaimResponse claim,
       List<ClaimResponse> submissionClaims,
-      Map<String, CategoryOfLawResult> categoryOfLawLookup,
+      Map<String, FeeDetailsResponseWrapper> feeDetailsResponseMap,
       String areaOfLaw,
       String officeCode,
       SubmissionValidationContext context) {
@@ -112,6 +115,27 @@ public class ClaimValidationService {
     // -- Client date of birth
     // - Matter Type Code
     // - Effective category of law
+    FeeDetailsResponseWrapper feeDetailsResponseWrapper =
+        feeDetailsResponseMap.get(claim.getFeeCode());
+    if (feeDetailsResponseWrapper.isError()) {
+      log.error(
+          "Fee Scheme Platform API has returned an unexpected error for feeCode: {}",
+          claim.getFeeCode());
+      context.addClaimError(
+          claim.getId(),
+          ClaimValidationError.TECHNICAL_ERROR_FEE_CALCULATION_SERVICE,
+          claim.getFeeCode());
+      return;
+    }
+    if (feeDetailsResponseWrapper.getFeeDetailsResponse() == null) {
+      log.error("Fee details response returned null for fee code: {}", claim.getFeeCode());
+      context.addClaimError(
+          claim.getId(),
+          ClaimValidationError.INVALID_CATEGORY_OF_LAW_AND_FEE_CODE,
+          claim.getFeeCode());
+      return;
+    }
+    String feeCalculationType = feeDetailsResponseWrapper.getFeeDetailsResponse().getFeeType();
     claimValidator.stream()
         .sorted(
             Comparator.comparingInt(ClaimValidator::priority)) // Ensure validators are run in order
@@ -120,17 +144,25 @@ public class ClaimValidationService {
               switch (x) {
                 case BasicClaimValidator validator -> validator.validate(claim, context);
                 case ClaimWithAreaOfLawValidator validator ->
-                    validator.validate(claim, context, areaOfLaw);
+                    validator.validate(claim, context, areaOfLaw, feeCalculationType);
                 case EffectiveCategoryOfLawClaimValidator validator ->
-                    validator.validate(claim, context, areaOfLaw, officeCode, categoryOfLawLookup);
+                    validator.validate(
+                        claim, context, areaOfLaw, officeCode, feeDetailsResponseMap);
                 case DuplicateClaimValidator validator ->
-                    validator.validate(claim, context, areaOfLaw, officeCode, submissionClaims);
+                    validator.validate(
+                        claim,
+                        context,
+                        areaOfLaw,
+                        officeCode,
+                        submissionClaims,
+                        feeCalculationType);
                 default -> throw new EventServiceIllegalArgumentException("Unknown validator used");
               }
             });
 
     // fee calculation validation - done last after every other claim validation
-    feeCalculationService.validateFeeCalculation(submissionId, claim, context);
+    feeCalculationService.validateFeeCalculation(
+        submissionId, claim, context, feeDetailsResponseWrapper.getFeeDetailsResponse());
 
     // Check claim status and record metric
     recordClaimMetric(claim, context);

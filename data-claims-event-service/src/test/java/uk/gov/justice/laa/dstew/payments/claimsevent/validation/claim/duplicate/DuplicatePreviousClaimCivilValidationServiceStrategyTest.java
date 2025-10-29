@@ -11,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationType;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.strategy.AbstractDuplicateClaimValidatorStrategy;
@@ -58,7 +59,11 @@ class DuplicatePreviousClaimCivilValidationServiceStrategyTest
       var context = new SubmissionValidationContext();
 
       duplicateClaimCivilValidation.validateDuplicateClaims(
-          claimTobeProcessed, submissionClaims, "2Q286D", context);
+          claimTobeProcessed,
+          submissionClaims,
+          "2Q286D",
+          context,
+          FeeCalculationType.FIXED.toString());
 
       assertThat(context.hasErrors()).isTrue();
 
@@ -107,7 +112,11 @@ class DuplicatePreviousClaimCivilValidationServiceStrategyTest
       var context = new SubmissionValidationContext();
 
       duplicateClaimCivilValidation.validateDuplicateClaims(
-          claimTobeProcessed, submissionClaims, "2Q286D", context);
+          claimTobeProcessed,
+          submissionClaims,
+          "2Q286D",
+          context,
+          FeeCalculationType.FIXED.toString());
 
       assertThat(context.hasErrors()).isTrue();
 

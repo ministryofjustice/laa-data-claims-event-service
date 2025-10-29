@@ -57,7 +57,7 @@ class FeeCalculationServiceTest {
       SubmissionValidationContext context = new SubmissionValidationContext();
       context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
 
-      feeCalculationService.validateFeeCalculation(new UUID(1, 1), claim, context);
+      feeCalculationService.validateFeeCalculation(new UUID(1, 1), claim, context, null);
 
       verify(feeSchemePlatformRestClient, times(1)).calculateFee(feeCalculationRequest);
       assertThat(context.hasErrors()).isFalse();
@@ -88,11 +88,11 @@ class FeeCalculationServiceTest {
       context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
 
       UUID submissionId = new UUID(1, 1);
-      feeCalculationService.validateFeeCalculation(submissionId, claim, context);
+      feeCalculationService.validateFeeCalculation(submissionId, claim, context, null);
 
       verify(feeSchemePlatformRestClient, times(1)).calculateFee(feeCalculationRequest);
       verify(feeCalculationUpdaterService, times(1))
-          .updateClaimWithFeeCalculationDetails(submissionId, claim, feeCalculationResponse);
+          .updateClaimWithFeeCalculationDetails(submissionId, claim, feeCalculationResponse, null);
 
       assertThat(context.hasErrors(claim.getId())).isTrue();
     }
@@ -112,7 +112,7 @@ class FeeCalculationServiceTest {
       SubmissionValidationContext context = new SubmissionValidationContext();
       context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
 
-      feeCalculationService.validateFeeCalculation(new UUID(1, 1), claim, context);
+      feeCalculationService.validateFeeCalculation(new UUID(1, 1), claim, context, null);
 
       verify(feeSchemePlatformRestClient, times(1)).calculateFee(feeCalculationRequest);
 
@@ -134,7 +134,7 @@ class FeeCalculationServiceTest {
       SubmissionValidationContext context = new SubmissionValidationContext();
       context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
 
-      feeCalculationService.validateFeeCalculation(new UUID(1, 1), claim, context);
+      feeCalculationService.validateFeeCalculation(new UUID(1, 1), claim, context, null);
 
       verify(feeSchemePlatformRestClient, times(1)).calculateFee(feeCalculationRequest);
 
@@ -154,7 +154,7 @@ class FeeCalculationServiceTest {
       context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
       context.flagForRetry(claim.getId());
 
-      feeCalculationService.validateFeeCalculation(new UUID(1, 1), claim, context);
+      feeCalculationService.validateFeeCalculation(new UUID(1, 1), claim, context, null);
 
       verifyNoInteractions(feeSchemeMapper);
       verifyNoInteractions(feeSchemePlatformRestClient);

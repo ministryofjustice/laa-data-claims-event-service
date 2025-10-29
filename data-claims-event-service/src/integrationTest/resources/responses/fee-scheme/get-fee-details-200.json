@@ -1,5 +1,5 @@
 {
   "categoryOfLawCode": "string",
-  "feeCodeDescription": "string",
-  "feeType": "string"
+  "feeCodeDescription": "test description",
+  "feeType": "HOURLY"
 }

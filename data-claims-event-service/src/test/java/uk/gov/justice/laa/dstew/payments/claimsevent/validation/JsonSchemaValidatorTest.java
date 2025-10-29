@@ -206,7 +206,6 @@ class JsonSchemaValidatorTest {
       "line_number",
       "disbursements_vat_amount",
       "net_disbursement_amount",
-      "is_vat_applicable",
       "fee_code",
     })
     void validateErrorForMissingRequiredClaimResponse(String jsonField) {
@@ -218,6 +217,15 @@ class JsonSchemaValidatorTest {
           .extracting(ValidationMessagePatch::getDisplayMessage)
           .containsExactlyInAnyOrder(
               "$: required property '" + jsonField + "' not found (provided value: null)");
+    }
+
+    @Test
+    void validateNoErrorForMissingCaseStartDateInClaimResponse() {
+      Object claim = getMinimumValidClaim();
+      String fieldName = toCamelCase("case_start_date");
+      setField(claim, fieldName, null);
+      final List<ValidationMessagePatch> errors = jsonSchemaValidator.validate("claim", claim);
+      assertThat(errors).isEmpty();
     }
 
     /**
@@ -515,9 +523,8 @@ class JsonSchemaValidatorTest {
       "caseReferenceNumber, \"ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890X\", 'case_reference_number: must be at most 30 characters long (provided value: \"ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890X\")'",
       "caseReferenceNumber, 'Case:Ref:123', 'case_reference_number: does not match the regex pattern ^[a-zA-Z0-9/.\\-\\s]+$ (provided value: Case:Ref:123)'",
       "procurementAreaCode, 'Area/Code/123', 'procurement_area_code: does not match the regex pattern ^[A-Z]{2}[0-9]{5}$ (provided value: Area/Code/123)'",
-      "crimeMatterTypeCode, 'AB', 'crime_matter_type_code: does not match the regex pattern ^[0-9][0-9]$ (provided value: AB)'",
-      "crimeMatterTypeCode, '123', 'crime_matter_type_code: does not match the regex pattern ^[0-9][0-9]$ (provided value: 123)'",
-      "crimeMatterTypeCode, '3', 'crime_matter_type_code: does not match the regex pattern ^[0-9][0-9]$ (provided value: 3)'",
+      "crimeMatterTypeCode, 'AB', 'crime_matter_type_code: does not match the regex pattern ^[0-9]{1,2}$ (provided value: AB)'",
+      "crimeMatterTypeCode, '123', 'crime_matter_type_code: does not match the regex pattern ^[0-9]{1,2}$ (provided value: 123)'",
       "accessPointCode, 'AB12345', 'access_point_code: does not match the regex pattern ^AP[0-9]{5}$ (provided value: AB12345)'",
       "accessPointCode, 'AP1234', 'access_point_code: does not match the regex pattern ^AP[0-9]{5}$ (provided value: AP1234)'",
       "accessPointCode, 'AP123456', 'access_point_code: does not match the regex pattern ^AP[0-9]{5}$ (provided value: AP123456)'",
@@ -689,6 +696,7 @@ class JsonSchemaValidatorTest {
       "caseReferenceNumber, 'CASE 123'",
       "uniqueFileNumber, '010123/001'",
       "crimeMatterTypeCode, '87'",
+      "crimeMatterTypeCode, '8'",
       "accessPointCode, 'AP12345'",
       "deliveryLocation, 'XY12345'",
       "policeStationCourtPrisonId, 'C123'",

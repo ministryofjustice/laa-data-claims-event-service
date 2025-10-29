@@ -37,11 +37,11 @@ public class FeeCalculationUpdaterService {
   public void updateClaimWithFeeCalculationDetails(
       final UUID submissionId,
       final ClaimResponse claim,
-      final FeeCalculationResponse feeCalculationResponse) {
-    FeeDetailsResponse feeDetails =
-        feeSchemePlatformRestClient.getFeeDetails(claim.getFeeCode()).getBody();
+      final FeeCalculationResponse feeCalculationResponse,
+      final FeeDetailsResponse feeDetailsResponse) {
     FeeCalculationPatch feeCalculationPatch =
-        feeCalculationPatchMapper.mapToFeeCalculationPatch(feeCalculationResponse, feeDetails);
+        feeCalculationPatchMapper.mapToFeeCalculationPatch(
+            feeCalculationResponse, feeDetailsResponse);
     ClaimPatch claimPatch =
         ClaimPatch.builder()
             .id(claim.getId())

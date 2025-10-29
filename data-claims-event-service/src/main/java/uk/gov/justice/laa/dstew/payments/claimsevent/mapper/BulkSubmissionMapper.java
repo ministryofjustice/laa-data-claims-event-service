@@ -1,12 +1,16 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.mapper;
 
+import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.AreaOfLaw.CRIME_LOWER;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationSource.EVENT_SERVICE;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.mapstruct.AfterMapping;
+import org.mapstruct.Context;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
 import org.springframework.util.StringUtils;
@@ -19,6 +23,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetBulkSubmission200Re
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.MatterStartPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.AreaOfLaw;
 
 /** Maps bulk submission payloads into requests for the Claims Data API. */
 @Mapper(
@@ -113,7 +118,7 @@ public interface BulkSubmissionMapper {
   @Mapping(target = "jrFormFillingAmount", source = "jrFormFilling")
   @Mapping(target = "costsDamagesRecoveredAmount", source = "costsDamagesRecovered")
   @Mapping(target = "adjournedHearingFeeAmount", source = "adjournedHearingFee")
-  @Mapping(target = "isVatApplicable", source = "vatIndicator")
+  @Mapping(target = "isVatApplicable", source = "vatIndicator", defaultValue = "false")
   @Mapping(target = "isLondonRate", source = "londonNonlondonRate")
   @Mapping(target = "isAdditionalTravelPayment", source = "additionalTravelPayment")
   @Mapping(target = "cmrhOralCount", source = "cmrhOral")
@@ -138,10 +143,34 @@ public interface BulkSubmissionMapper {
   @Mapping(target = "client2IsLegallyAided", source = "client2LegallyAided")
   @Mapping(target = "isClient2PostalApplicationAccepted", source = "client2PostalApplAccp")
   @Mapping(target = "stageReachedCode", source = "stageReached")
+  @Mapping(target = "caseStageCode", source = "caseStageLevel")
+  @Mapping(target = "standardFeeCategoryCode", source = "standardFeeCat")
+  @Mapping(target = "medicalReportsCount", source = "medicalReportsClaimed")
+  @Mapping(target = "surgeryClientsCount", source = "noOfClients")
+  @Mapping(target = "surgeryMattersCount", source = "noOfSurgeryClients")
   @Mapping(target = "createdByUserId", constant = EVENT_SERVICE)
-  ClaimPost mapToClaimPost(BulkSubmissionOutcome outcome);
+  ClaimPost mapToClaimPost(BulkSubmissionOutcome outcome, @Context AreaOfLaw areaOfLaw);
 
-  List<ClaimPost> mapToClaimPosts(List<BulkSubmissionOutcome> outcomes);
+  /**
+   * Adjusts the matter type and stage reached codes for crime lower claims after the initial
+   * mapping. For crime lower claims, the matter type is used as the stage reached code.
+   *
+   * @param claimPost the target claim post object being mapped
+   * @param outcome the source bulk submission outcome
+   * @param areaOfLaw the area of law context for this mapping
+   */
+  @AfterMapping
+  default void adjustMatterTypeTarget(
+      @MappingTarget ClaimPost claimPost,
+      BulkSubmissionOutcome outcome,
+      @Context AreaOfLaw areaOfLaw) {
+    if (CRIME_LOWER.equals(areaOfLaw)) {
+      claimPost.setStageReachedCode(outcome.getMatterType());
+    }
+  }
+
+  List<ClaimPost> mapToClaimPosts(
+      List<BulkSubmissionOutcome> outcomes, @Context AreaOfLaw areaOfLaw);
 
   @Mapping(target = "categoryCode", source = "categoryCode")
   @Mapping(target = "accessPointCode", source = "accessPoint")

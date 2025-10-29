@@ -18,8 +18,9 @@ public class ValidationServiceTestUtils {
   public static void assertContextClaimError(
       SubmissionValidationContext context,
       String claimId,
-      ClaimValidationError claimValidationError) {
-    ValidationMessagePatch messagePatch = claimValidationError.toPatch();
+      ClaimValidationError claimValidationError,
+      Object... args) {
+    ValidationMessagePatch messagePatch = claimValidationError.toPatch(args);
     assertThat(context.getClaimReport(claimId))
         .isPresent()
         .get()

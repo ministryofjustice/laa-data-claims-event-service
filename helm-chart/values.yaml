@@ -78,6 +78,13 @@ env:
       secretKeyRef:
         name: laa-data-claims-event-service-secrets
         key: BULK_CLAIM_QUEUE_NAME
+  - name: SUBMISSION_VALIDATION_MINIMUM_PERIOD
+    valueFrom:
+      secretKeyRef:
+        name: laa-data-claims-event-service-secrets
+        key: SUBMISSION_VALIDATION_MINIMUM_PERIOD
+  - name: JAVA_TOOL_OPTIONS
+    value: "-XX:MaxDirectMemorySize=128m"
 
 grafana:
   enabled: true
