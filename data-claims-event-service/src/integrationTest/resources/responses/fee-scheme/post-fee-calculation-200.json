@@ -1,7 +1,7 @@
 {
-  "feeCode": "string",
-  "schemeId": "string",
-  "claimId": "string",
+  "feeCode": "CAPA",
+  "schemeId": "CAPA_FS2013",
+  "claimId": "f6bde766-a0a3-483b-bf13-bef888b4f06e",
   "validationMessages": [],
   "escapeCaseFlag": true,
   "feeCalculation": {

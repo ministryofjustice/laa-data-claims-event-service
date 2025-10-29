@@ -2,6 +2,7 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.listener;
 
 import static org.awaitility.Awaitility.await;
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.JsonBody.json;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.AreaOfLaw.LEGAL_HELP;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -21,6 +22,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.context.ImportTestcontainers;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPatch;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MessageListenerBase;
@@ -122,8 +126,7 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
     sendSubmissionValidationMessage();
 
     // then
-    verifySubmissionRequests();
-    verifyClaimRequests();
+    verifySubmissionAndClaimRequests();
   }
 
   @Test
@@ -172,34 +175,48 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
     await()
         .pollInterval(Duration.ofMillis(500))
         .atMost(Duration.ofSeconds(20))
-        .untilAsserted(
-            () -> {
-              mockServerClient.verify(
-                  request()
-                      .withMethod("GET")
-                      .withPath(API_VERSION_0 + "submissions/" + SUBMISSION_ID));
-              mockServerClient.verify(
-                  request().withMethod("GET").withPath(API_VERSION_0 + "submissions"));
-              mockServerClient.verify(
-                  request()
-                      .withMethod("PATCH")
-                      .withPath(API_VERSION_0 + "submissions/" + SUBMISSION_ID),
-                  VerificationTimes.exactly(2));
-            });
+        .untilAsserted(this::verifySubmissionRequestInvocation);
   }
 
-  private void verifyClaimRequests() {
+  private void verifySubmissionAndClaimRequests() {
     await()
         .pollInterval(Duration.ofMillis(500))
         .atMost(Duration.ofSeconds(20))
         .untilAsserted(
             () -> {
-              mockServerClient.verify(
-                  request()
-                      .withMethod("PATCH")
-                      .withPath(
-                          API_VERSION_0 + "submissions/" + SUBMISSION_ID + "/claims/" + CLAIM_ID),
-                  VerificationTimes.exactly(1));
+              verifySubmissionRequestInvocation();
+              verifyClaimRequestInvocation();
             });
+  }
+
+  private void verifySubmissionRequestInvocation() {
+    mockServerClient.verify(
+        request().withMethod("GET").withPath(API_VERSION_0 + "submissions/" + SUBMISSION_ID));
+    mockServerClient.verify(request().withMethod("GET").withPath(API_VERSION_0 + "submissions"));
+    mockServerClient.verify(
+        request().withMethod("PATCH").withPath(API_VERSION_0 + "submissions/" + SUBMISSION_ID),
+        VerificationTimes.exactly(2));
+  }
+
+  private void verifyClaimRequestInvocation() throws JsonProcessingException {
+    ClaimPatch validClaimPatch =
+        ClaimPatch.builder().id(CLAIM_ID.toString()).status(ClaimStatus.VALID).build();
+    ClaimPatch feeCalculationPatch =
+        ClaimPatch.builder()
+            .id(CLAIM_ID.toString())
+            .feeCalculationResponse(FeeCalculationPatch.builder().claimId(CLAIM_ID).build())
+            .build();
+    mockServerClient.verify(
+        request()
+            .withMethod("PATCH")
+            .withPath(API_VERSION_0 + "submissions/" + SUBMISSION_ID + "/claims/" + CLAIM_ID)
+            .withBody(json(objectMapper.writeValueAsString(feeCalculationPatch))),
+        VerificationTimes.exactly(1));
+    mockServerClient.verify(
+        request()
+            .withMethod("PATCH")
+            .withPath(API_VERSION_0 + "submissions/" + SUBMISSION_ID + "/claims/" + CLAIM_ID)
+            .withBody(json(objectMapper.writeValueAsString(validClaimPatch))),
+        VerificationTimes.exactly(1));
   }
 }
