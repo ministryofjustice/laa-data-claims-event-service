@@ -3,6 +3,7 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.helper;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockserver.model.JsonBody.json;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -44,6 +45,7 @@ import org.testcontainers.containers.MockServerContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 import software.amazon.awssdk.http.HttpStatusCode;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.ApiProperties;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.DataClaimsApiProperties;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.FeeSchemePlatformApiProperties;
@@ -271,6 +273,23 @@ public abstract class MockServerIntegrationTest {
                 .withHeader("Content-Type", "application/json"));
   }
 
+  protected void stubForUpdateClaim(UUID submissionId, UUID claimId) {
+    mockServerClient
+        .when(
+            HttpRequest.request()
+                .withMethod(HttpMethod.PATCH.toString())
+                .withPath(
+                    API_VERSION_0
+                        + "submissions/"
+                        + submissionId.toString()
+                        + "/claims/"
+                        + claimId.toString()))
+        .respond(
+            HttpResponse.response()
+                .withStatusCode(HttpStatusCode.NO_CONTENT)
+                .withHeader("Content-Type", "application/json"));
+  }
+
   protected void stubForUpdateBulkSubmission(UUID bulkSubmissionId) {
     mockServerClient
         .when(
@@ -280,6 +299,20 @@ public abstract class MockServerIntegrationTest {
         .respond(
             HttpResponse.response()
                 .withStatusCode(HttpStatusCode.NO_CONTENT)
+                .withHeader("Content-Type", "application/json"));
+  }
+
+  protected void stubForUpdateSubmissionWithBody(UUID submissionId, SubmissionPatch patch)
+      throws JsonProcessingException {
+    mockServerClient
+        .when(
+            HttpRequest.request()
+                .withMethod("PATCH")
+                .withPath(API_VERSION_0 + "submissions/" + submissionId.toString())
+                .withBody(json(objectMapper.writeValueAsString(patch))))
+        .respond(
+            HttpResponse.response()
+                .withStatusCode(204)
                 .withHeader("Content-Type", "application/json"));
   }
 
