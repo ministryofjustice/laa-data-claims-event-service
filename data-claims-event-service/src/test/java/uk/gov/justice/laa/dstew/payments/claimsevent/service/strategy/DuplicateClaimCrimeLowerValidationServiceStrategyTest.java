@@ -23,22 +23,22 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
-import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.DuplicateClaimCrimeValidationServiceStrategy;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.DuplicateClaimCrimeLowerValidationServiceStrategy;
 
 @ExtendWith(MockitoExtension.class)
-class DuplicateClaimCrimeValidationServiceStrategyTest {
+class DuplicateClaimCrimeLowerValidationServiceStrategyTest {
 
   @Mock DataClaimsRestClient dataClaimsRestClient;
 
-  @InjectMocks DuplicateClaimCrimeValidationServiceStrategy duplicateClaimValidationService;
+  @InjectMocks DuplicateClaimCrimeLowerValidationServiceStrategy duplicateClaimValidationService;
 
   @Nested
   @DisplayName("validateDuplicateClaims")
   class ValidateDuplicateClaimsTests {
 
     @Test
-    @DisplayName("Crime claims - successful validation does not update context")
-    void crimeClaimSuccessfulValidation() {
+    @DisplayName("Crime Lower claims - successful validation does not update context")
+    void crimeLowerClaimSuccessfulValidation() {
       // Given
       ClaimResponse claim1 =
           new ClaimResponse()
@@ -76,8 +76,8 @@ class DuplicateClaimCrimeValidationServiceStrategyTest {
 
     @Test
     @DisplayName(
-        "Crime claims - different fee code but the same unique file number passes validation")
-    void crimeClaimDifferentFeeCodeButSameUfnPassesValidation() {
+        "Crime Lower claims - different fee code but the same unique file number passes validation")
+    void crimeLowerClaimDifferentFeeCodeButSameUfnPassesValidation() {
       // Given
       ClaimResponse claim1 =
           new ClaimResponse()
@@ -115,8 +115,8 @@ class DuplicateClaimCrimeValidationServiceStrategyTest {
 
     @Test
     @DisplayName(
-        "Crime claims - different unique file number but the same fee code passes validation")
-    void crimeClaimDifferentUfnButSameFeeCodePassesValidation() {
+        "Crime Lower claims - different unique file number but the same fee code passes validation")
+    void crimeLowerClaimDifferentUfnButSameFeeCodePassesValidation() {
       // Given
       ClaimResponse claim1 =
           new ClaimResponse()
@@ -154,9 +154,9 @@ class DuplicateClaimCrimeValidationServiceStrategyTest {
 
     @Test
     @DisplayName(
-        "Crime claims - duplicate claims in submission results in claim error added to validation "
+        "Crime Lower claims - duplicate claims in submission results in claim error added to validation "
             + "context")
-    void crimeClaimDuplicateInSubmissionResultsInClaimErrorAddedToContext() {
+    void crimeLowerClaimDuplicateInSubmissionResultsInClaimErrorAddedToContext() {
       // Given
       ClaimResponse claim1 =
           new ClaimResponse()
@@ -200,8 +200,8 @@ class DuplicateClaimCrimeValidationServiceStrategyTest {
     }
 
     @Test
-    @DisplayName("Crime claims - duplicate validation ignores invalid claims")
-    void crimeClaimDuplicateValidationIgnoresInvalidClaims() {
+    @DisplayName("Crime Lower claims - duplicate validation ignores invalid claims")
+    void crimeLowerClaimDuplicateValidationIgnoresInvalidClaims() {
       // Given
       ClaimResponse claim1 =
           new ClaimResponse()
@@ -244,9 +244,9 @@ class DuplicateClaimCrimeValidationServiceStrategyTest {
 
     @Test
     @DisplayName(
-        "Crime claims - duplicate claims in another submission results in claim error added to "
+        "Crime Lower claims - duplicate claims in another submission results in claim error added to "
             + "validation context")
-    void crimeClaimDuplicateInAnotherSubmissionResultsInClaimErrorAddedToContext() {
+    void crimeLowerClaimDuplicateInAnotherSubmissionResultsInClaimErrorAddedToContext() {
       // Given
       ClaimResponse claim1 =
           new ClaimResponse()
@@ -292,8 +292,8 @@ class DuplicateClaimCrimeValidationServiceStrategyTest {
     }
 
     @Test
-    @DisplayName("Crime claims - does not reprocess submission claims")
-    void crimeClaimDuplicateDoesNotReprocessSubmissionClaims() {
+    @DisplayName("Crime Lower claims - does not reprocess submission claims")
+    void crimeLowerClaimDuplicateDoesNotReprocessSubmissionClaims() {
       // Given
       ClaimResponse claim1 =
           new ClaimResponse()

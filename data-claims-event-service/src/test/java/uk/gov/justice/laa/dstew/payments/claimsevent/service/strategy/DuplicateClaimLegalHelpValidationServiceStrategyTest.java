@@ -29,10 +29,10 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRes
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
-import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.DuplicateClaimCivilValidationServiceStrategy;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.DuplicateClaimLegalHelpValidationServiceStrategy;
 
 @ExtendWith(MockitoExtension.class)
-class DuplicateClaimCivilValidationServiceStrategyTest
+class DuplicateClaimLegalHelpValidationServiceStrategyTest
     extends AbstractDuplicateClaimValidatorStrategy {
 
   private static final String DISBURSEMENT_FEE_TYPE =
@@ -42,7 +42,8 @@ class DuplicateClaimCivilValidationServiceStrategyTest
 
   @Mock private FeeSchemePlatformRestClient mockFeeSchemePlatformRestClient;
 
-  @InjectMocks private DuplicateClaimCivilValidationServiceStrategy duplicateClaimCivilValidation;
+  @InjectMocks
+  private DuplicateClaimLegalHelpValidationServiceStrategy duplicateClaimLegalHelpValidation;
 
   @Captor private ArgumentCaptor<String> officeCodeArgumentCaptor;
 
@@ -60,7 +61,7 @@ class DuplicateClaimCivilValidationServiceStrategyTest
   class ValidClaim {
 
     @DisplayName(
-        "No validation error: When there is no existing civil claim with the same Office, UFN, "
+        "No validation error: When there is no existing legal help claim with the same Office, UFN, "
             + "Fee Code, and UCN in the same submission or previous submission")
     @Test
     void whenNoExistingClaim() {
@@ -87,7 +88,7 @@ class DuplicateClaimCivilValidationServiceStrategyTest
               any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
 
-      duplicateClaimCivilValidation.validateDuplicateClaims(
+      duplicateClaimLegalHelpValidation.validateDuplicateClaims(
           claimTobeProcessed, submissionClaims, "2Q286D", context, "feeType");
 
       verify(mockDataClaimsRestClient)
@@ -144,7 +145,7 @@ class DuplicateClaimCivilValidationServiceStrategyTest
       var submissionClaims = List.of(claimTobeProcessed, otherClaim);
       var context = new SubmissionValidationContext();
 
-      duplicateClaimCivilValidation.validateDuplicateClaims(
+      duplicateClaimLegalHelpValidation.validateDuplicateClaims(
           claimTobeProcessed, submissionClaims, "2Q286D", context, DISBURSEMENT_FEE_TYPE);
 
       verify(mockDataClaimsRestClient, times(0))
@@ -181,7 +182,7 @@ class DuplicateClaimCivilValidationServiceStrategyTest
               any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
 
-      duplicateClaimCivilValidation.validateDuplicateClaims(
+      duplicateClaimLegalHelpValidation.validateDuplicateClaims(
           claimTobeProcessed, submissionClaims, "2Q286D", context, "feeType");
 
       assertThat(context.hasErrors()).isFalse();
@@ -210,7 +211,7 @@ class DuplicateClaimCivilValidationServiceStrategyTest
               any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
 
-      duplicateClaimCivilValidation.validateDuplicateClaims(
+      duplicateClaimLegalHelpValidation.validateDuplicateClaims(
           claimTobeProcessed, submissionClaims, "2Q286D", context, "feeType");
 
       assertThat(context.hasErrors()).isFalse();
@@ -237,7 +238,7 @@ class DuplicateClaimCivilValidationServiceStrategyTest
               any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
 
-      duplicateClaimCivilValidation.validateDuplicateClaims(
+      duplicateClaimLegalHelpValidation.validateDuplicateClaims(
           claimTobeProcessed, submissionClaims, "2Q286D", context, "feeType");
 
       assertThat(context.hasErrors()).isFalse();
@@ -248,7 +249,7 @@ class DuplicateClaimCivilValidationServiceStrategyTest
   class InvalidClaim {
 
     @DisplayName(
-        "Validation error: When there is an existing civil claim with the same Office, UFN, Fee Code, "
+        "Validation error: When there is an existing legal help claim with the same Office, UFN, Fee Code, "
             + "and UCN in the previous submission")
     @Test
     void whenExistingClaimInPreviousSubmission() {
@@ -293,7 +294,7 @@ class DuplicateClaimCivilValidationServiceStrategyTest
               ResponseEntity.of(
                   Optional.of(new ClaimResultSet().addContentItem(claimInPreviousSubmission))));
 
-      duplicateClaimCivilValidation.validateDuplicateClaims(
+      duplicateClaimLegalHelpValidation.validateDuplicateClaims(
           claimTobeProcessed, submissionClaims, "2Q286D", context, "feeType");
 
       assertThat(context.hasErrors()).isTrue();
@@ -309,7 +310,7 @@ class DuplicateClaimCivilValidationServiceStrategyTest
     // This test is to verify that we log a validation error only against the current claim which is
     // being validated and not against the old duplicate claims.
     @DisplayName(
-        "Validation error: When there are multiple existing civil claims with the same Office, UFN, Fee Code, "
+        "Validation error: When there are multiple existing legal help claims with the same Office, UFN, Fee Code, "
             + "and UCN in the previous submissions.")
     @Test
     void whenExistingClaimsInPreviousSubmissions() {
@@ -362,7 +363,7 @@ class DuplicateClaimCivilValidationServiceStrategyTest
               ResponseEntity.of(
                   Optional.of(new ClaimResultSet().addContentItem(claim4).addContentItem(claim5))));
 
-      duplicateClaimCivilValidation.validateDuplicateClaims(
+      duplicateClaimLegalHelpValidation.validateDuplicateClaims(
           claim3, submissionClaims, "2Q286D", context, "feeType");
 
       assertThat(context.hasErrors()).isTrue();
@@ -376,7 +377,7 @@ class DuplicateClaimCivilValidationServiceStrategyTest
     }
 
     @DisplayName(
-        "Validation error: When there is an existing civil claim with the same Office, UFN, Fee Code, "
+        "Validation error: When there is an existing legal help claim with the same Office, UFN, Fee Code, "
             + "and UCN in the previous and current submission")
     @Test
     void whenExistingClaimInPreviousAndCurrentSubmission() {
@@ -413,7 +414,7 @@ class DuplicateClaimCivilValidationServiceStrategyTest
               ResponseEntity.of(
                   Optional.of(new ClaimResultSet().addContentItem(claimInPreviousSubmission))));
 
-      duplicateClaimCivilValidation.validateDuplicateClaims(
+      duplicateClaimLegalHelpValidation.validateDuplicateClaims(
           claimTobeProcessed, submissionClaims, "2Q286D", context, "feeType");
 
       assertThat(context.hasErrors()).isTrue();

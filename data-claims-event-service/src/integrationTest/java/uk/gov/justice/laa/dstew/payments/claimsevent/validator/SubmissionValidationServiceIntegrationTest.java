@@ -14,6 +14,7 @@ import org.mockserver.model.Parameter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionAreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MockServerIntegrationTest;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.SubmissionValidationService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
@@ -30,7 +31,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 public class SubmissionValidationServiceIntegrationTest extends MockServerIntegrationTest {
 
   private static final String OFFICE_CODE = "AQ2B3C";
-  private static final String AREA_OF_LAW = "CIVIL";
+  private static final String AREA_OF_LAW = BulkSubmissionAreaOfLaw.LEGAL_HELP.getValue();
 
   @Autowired protected SubmissionValidationService submissionValidationService;
 

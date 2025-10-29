@@ -3,8 +3,6 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.ValidationServiceTestUtils.getClaimMessages;
-import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.AreaOfLaw.CRIME_LOWER;
-import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.AreaOfLaw.LEGAL_HELP;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.StageReachedClaimValidator.STAGE_REACHED_CRIME_LOWER_PATTERN;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.StageReachedClaimValidator.STAGE_REACHED_LEGAL_HELP_PATTERN;
 
@@ -14,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionAreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
@@ -28,16 +27,19 @@ class StageReachedClaimValidatorTest {
           "{index} => claimId={0}, stageReachedCode={1}, areaOfLaw={2}, regex={3}, "
               + "expectError={4}")
   @CsvSource({
-    "1, AABB, LEGAL HELP, true",
-    "2, AZ, LEGAL HELP, false",
-    "3, C9, LEGAL HELP, false",
-    "4, A!, LEGAL HELP, true",
-    "5, A1, CRIME LOWER, true",
-    "6, A-CD, CRIME LOWER, true",
-    "7, ABCD, CRIME LOWER, true"
+    "1, AABB, LEGAL_HELP, true",
+    "2, AZ, LEGAL_HELP, false",
+    "3, C9, LEGAL_HELP, false",
+    "4, A!, LEGAL_HELP, true",
+    "5, A1, CRIME_LOWER, true",
+    "6, A-CD, CRIME_LOWER, true",
+    "7, ABCD, CRIME_LOWER, true"
   })
   void checkStageReachedCode(
-      int claimIdBit, String stageReachedCode, String areaOfLaw, boolean expectError) {
+      int claimIdBit,
+      String stageReachedCode,
+      BulkSubmissionAreaOfLaw areaOfLaw,
+      boolean expectError) {
     UUID claimId = new UUID(claimIdBit, claimIdBit);
     ClaimResponse claim =
         new ClaimResponse()
@@ -88,7 +90,7 @@ class StageReachedClaimValidatorTest {
     SubmissionValidationContext context = new SubmissionValidationContext();
 
     // Run validation
-    validator.validate(claim, context, CRIME_LOWER.getValue());
+    validator.validate(claim, context, BulkSubmissionAreaOfLaw.CRIME_LOWER);
     assertThat(getClaimMessages(context, claimId.toString()).isEmpty()).isTrue();
   }
 
@@ -101,16 +103,14 @@ class StageReachedClaimValidatorTest {
 
     // Run validation
     assertThatThrownBy(
-            () -> {
-              validator.validate(claim, context, "CIVIL");
-            })
+            () -> validator.validate(claim, context, BulkSubmissionAreaOfLaw.valueOf("INVALID")))
         .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("Unknown area of law: CIVIL")
+        .hasMessageContaining("No enum constant")
         .hasNoCause();
   }
 
-  private String getRegex(String areaOfLaw) {
-    return areaOfLaw.equals(LEGAL_HELP.getValue())
+  private String getRegex(BulkSubmissionAreaOfLaw areaOfLaw) {
+    return BulkSubmissionAreaOfLaw.LEGAL_HELP.equals(areaOfLaw)
         ? STAGE_REACHED_LEGAL_HELP_PATTERN
         : STAGE_REACHED_CRIME_LOWER_PATTERN;
   }

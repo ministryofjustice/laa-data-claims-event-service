@@ -2,6 +2,7 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionAreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
@@ -18,13 +19,14 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 public class ScheduleReferenceClaimValidator
     implements ClaimWithAreaOfLawValidator, ClaimValidator {
 
-  private static final String CIVIL_SCHEDULE_REFERENCE_PATTERN = "^[a-zA-Z0-9/.\\-]{1,20}$";
+  private static final String LEGAL_HELP_SCHEDULE_REFERENCE_PATTERN = "^[a-zA-Z0-9/.\\-]{1,20}$";
 
   @Override
-  public void validate(ClaimResponse claim, SubmissionValidationContext context, String areaOfLaw) {
+  public void validate(
+      ClaimResponse claim, SubmissionValidationContext context, BulkSubmissionAreaOfLaw areaOfLaw) {
     String regex = null;
-    if (areaOfLaw.equals("CIVIL")) {
-      regex = CIVIL_SCHEDULE_REFERENCE_PATTERN;
+    if (BulkSubmissionAreaOfLaw.LEGAL_HELP.equals(areaOfLaw)) {
+      regex = LEGAL_HELP_SCHEDULE_REFERENCE_PATTERN;
     }
     validateFieldWithRegex(
         claim, areaOfLaw, claim.getScheduleReference(), "schedule_reference", regex, context);

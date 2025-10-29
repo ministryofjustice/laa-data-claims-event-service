@@ -33,7 +33,6 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.exception.MatterStartCreate
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.SubmissionCreateException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.mapper.BulkSubmissionMapper;
 import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
-import uk.gov.justice.laa.dstew.payments.claimsevent.validation.AreaOfLaw;
 
 /** Service responsible for retrieving bulk submissions and sending them to the Claims Data API. */
 @Service
@@ -67,8 +66,7 @@ public class BulkParsingService {
             ? bulkSubmission.getDetails().getOutcomes()
             : Collections.emptyList();
     List<ClaimPost> claims =
-        bulkSubmissionMapper.mapToClaimPosts(
-            outcomes, AreaOfLaw.fromValue(submissionPost.getAreaOfLaw()));
+        bulkSubmissionMapper.mapToClaimPosts(outcomes, submissionPost.getAreaOfLaw());
     List<String> claimIds = createClaims(bulkSubmissionId.toString(), createdSubmissionId, claims);
 
     List<BulkSubmissionMatterStart> matterStarts =

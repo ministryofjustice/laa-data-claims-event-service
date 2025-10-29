@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.Getter;
 import org.springframework.stereotype.Component;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionAreaOfLaw;
 
 /**
  * Registry holding mappings of mandatory field names grouped by area of law.
@@ -14,7 +15,7 @@ import org.springframework.stereotype.Component;
 @Getter
 public class MandatoryFieldsRegistry {
 
-  private final List<String> civilMandatoryFields =
+  private final List<String> legalHelpMandatoryFields =
       List.of(
           "uniqueFileNumber",
           "caseStartDate",
@@ -39,7 +40,7 @@ public class MandatoryFieldsRegistry {
           "matterTypeCode",
           "netProfitCostsAmount");
 
-  private final List<String> crimeMandatoryFields =
+  private final List<String> crimeLowerMandatoryFields =
       List.of(
           "caseConcludedDate",
           "stageReachedCode",
@@ -66,12 +67,9 @@ public class MandatoryFieldsRegistry {
           "matterTypeCode",
           "uniqueCaseId");
 
-  private final Map<String, List<String>> mandatoryFieldsByAreaOfLaw =
+  private final Map<BulkSubmissionAreaOfLaw, List<String>> mandatoryFieldsByAreaOfLaw =
       Map.of(
-          "CIVIL", civilMandatoryFields,
-          "LEGAL HELP", civilMandatoryFields, // Same fields are mandatory for CIVIL and LEGAL HELP
-          "CRIME", crimeMandatoryFields,
-          "CRIME LOWER",
-              crimeMandatoryFields, // Same fields are mandatory for CRIME and CRIME LOWER
-          "MEDIATION", mediationMandatoryFields);
+          BulkSubmissionAreaOfLaw.LEGAL_HELP, legalHelpMandatoryFields,
+          BulkSubmissionAreaOfLaw.CRIME_LOWER, crimeLowerMandatoryFields,
+          BulkSubmissionAreaOfLaw.MEDIATION, mediationMandatoryFields);
 }

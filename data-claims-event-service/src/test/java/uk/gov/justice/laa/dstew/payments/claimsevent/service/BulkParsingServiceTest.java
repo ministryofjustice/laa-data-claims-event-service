@@ -9,7 +9,6 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.AreaOfLaw.LEGAL_HELP;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationSource.EVENT_SERVICE;
 
 import java.net.URI;
@@ -23,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionAreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionMatterStart;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionOutcome;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionPatch;
@@ -79,7 +79,7 @@ class BulkParsingServiceTest {
     final SubmissionPost submissionPost =
         new SubmissionPost()
             .bulkSubmissionId(bulkSubmissionId)
-            .areaOfLaw(LEGAL_HELP.getValue())
+            .areaOfLaw(BulkSubmissionAreaOfLaw.LEGAL_HELP)
             .providerUserId(BULK_SUBMISSION_CREATED_BY_USER_ID);
     final ClaimPost claimPost = new ClaimPost();
     claimPost.setScheduleReference("S1");
@@ -97,7 +97,8 @@ class BulkParsingServiceTest {
     when(dataClaimsRestClient.createSubmission(submissionPost))
         .thenReturn(
             ResponseEntity.created(URI.create("/submissions/" + createdSubmissionId)).build());
-    when(mapper.mapToClaimPosts(outcomes, LEGAL_HELP)).thenReturn(claimPosts);
+    when(mapper.mapToClaimPosts(outcomes, BulkSubmissionAreaOfLaw.LEGAL_HELP))
+        .thenReturn(claimPosts);
     when(dataClaimsRestClient.createClaim(eq(createdSubmissionId), eq(claimPost)))
         .thenReturn(ResponseEntity.created(URI.create("/claims/claim-id")).build());
     when(mapper.mapToMatterStartRequests(matterStarts)).thenReturn(matterStartRequests);
@@ -114,7 +115,7 @@ class BulkParsingServiceTest {
     verify(dataClaimsRestClient).getBulkSubmission(bulkSubmissionId);
     verify(mapper).mapToSubmissionPost(bulkSubmission, submissionId);
     verify(dataClaimsRestClient).createSubmission(submissionPost);
-    verify(mapper).mapToClaimPosts(outcomes, LEGAL_HELP);
+    verify(mapper).mapToClaimPosts(outcomes, BulkSubmissionAreaOfLaw.LEGAL_HELP);
     verify(dataClaimsRestClient).createClaim(eq(createdSubmissionId), eq(claimPost));
     verify(mapper).mapToMatterStartRequests(matterStarts);
     verify(dataClaimsRestClient).createMatterStart(eq(createdSubmissionId), eq(matterStartRequest));
@@ -140,7 +141,8 @@ class BulkParsingServiceTest {
     final GetBulkSubmission200Response bulkSubmission =
         new GetBulkSubmission200Response().bulkSubmissionId(bulkSubmissionId).details(null);
 
-    final SubmissionPost submissionPost = new SubmissionPost().areaOfLaw(LEGAL_HELP.getValue());
+    final SubmissionPost submissionPost =
+        new SubmissionPost().areaOfLaw(BulkSubmissionAreaOfLaw.LEGAL_HELP);
 
     when(dataClaimsRestClient.getBulkSubmission(bulkSubmissionId))
         .thenReturn(ResponseEntity.ok(bulkSubmission));
@@ -148,7 +150,8 @@ class BulkParsingServiceTest {
     when(dataClaimsRestClient.createSubmission(submissionPost))
         .thenReturn(
             ResponseEntity.created(URI.create("/submissions/" + createdSubmissionId)).build());
-    when(mapper.mapToClaimPosts(List.of(), LEGAL_HELP)).thenReturn(List.of());
+    when(mapper.mapToClaimPosts(List.of(), BulkSubmissionAreaOfLaw.LEGAL_HELP))
+        .thenReturn(List.of());
     when(mapper.mapToMatterStartRequests(List.of())).thenReturn(List.of());
     when(dataClaimsRestClient.updateSubmission(eq(createdSubmissionId), any(SubmissionPatch.class)))
         .thenReturn(ResponseEntity.noContent().build());
@@ -161,7 +164,7 @@ class BulkParsingServiceTest {
     verify(dataClaimsRestClient).getBulkSubmission(bulkSubmissionId);
     verify(mapper).mapToSubmissionPost(bulkSubmission, submissionId);
     verify(dataClaimsRestClient).createSubmission(submissionPost);
-    verify(mapper).mapToClaimPosts(List.of(), LEGAL_HELP);
+    verify(mapper).mapToClaimPosts(List.of(), BulkSubmissionAreaOfLaw.LEGAL_HELP);
     verify(mapper).mapToMatterStartRequests(List.of());
     verify(dataClaimsRestClient)
         .updateSubmission(

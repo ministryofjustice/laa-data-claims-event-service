@@ -20,17 +20,18 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationR
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
 @ExtendWith(MockitoExtension.class)
-class DuplicatePreviousClaimCivilValidationServiceStrategyTest
+class DuplicatePreviousClaimLegalHelpValidationServiceStrategyTest
     extends AbstractDuplicateClaimValidatorStrategy {
 
   @Mock private DataClaimsRestClient mockDataClaimsRestClient;
 
-  private DuplicatePreviousClaimCivilValidationServiceStrategy duplicateClaimCivilValidation;
+  private DuplicatePreviousClaimLegalHelpValidationServiceStrategy
+      duplicateClaimLegalHelpValidation;
 
   @BeforeEach
   void beforeEach() {
-    duplicateClaimCivilValidation =
-        new DuplicatePreviousClaimCivilValidationServiceStrategy(mockDataClaimsRestClient);
+    duplicateClaimLegalHelpValidation =
+        new DuplicatePreviousClaimLegalHelpValidationServiceStrategy(mockDataClaimsRestClient);
   }
 
   @Nested
@@ -58,7 +59,7 @@ class DuplicatePreviousClaimCivilValidationServiceStrategyTest
       var submissionClaims = List.of(claimTobeProcessed, otherClaim);
       var context = new SubmissionValidationContext();
 
-      duplicateClaimCivilValidation.validateDuplicateClaims(
+      duplicateClaimLegalHelpValidation.validateDuplicateClaims(
           claimTobeProcessed,
           submissionClaims,
           "2Q286D",
@@ -85,7 +86,7 @@ class DuplicatePreviousClaimCivilValidationServiceStrategyTest
   class InvalidClaim {
 
     @DisplayName(
-        "Validation error: When there an exist a civil claim with the same Office, UFN, Fee Code,"
+        "Validation error: When there an exist a legal help claim with the same Office, UFN, Fee Code,"
             + " and UCN in the same submission")
     @Test
     void whenExistingClaim() {
@@ -111,7 +112,7 @@ class DuplicatePreviousClaimCivilValidationServiceStrategyTest
       var submissionClaims = List.of(claimTobeProcessed, otherClaim, otherClaim1);
       var context = new SubmissionValidationContext();
 
-      duplicateClaimCivilValidation.validateDuplicateClaims(
+      duplicateClaimLegalHelpValidation.validateDuplicateClaims(
           claimTobeProcessed,
           submissionClaims,
           "2Q286D",

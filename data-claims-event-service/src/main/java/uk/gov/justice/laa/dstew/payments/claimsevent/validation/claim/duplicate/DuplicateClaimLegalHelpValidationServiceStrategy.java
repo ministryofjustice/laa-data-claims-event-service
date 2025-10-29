@@ -13,16 +13,16 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRes
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
-/** Validation service for civil duplicate claims. */
+/** Validation service for legal help duplicate claims. */
 @Slf4j
 @Service
-public class DuplicateClaimCivilValidationServiceStrategy extends DuplicateClaimValidation
-    implements CivilDuplicateClaimValidationStrategy {
+public class DuplicateClaimLegalHelpValidationServiceStrategy extends DuplicateClaimValidation
+    implements LegalHelpDuplicateClaimValidationStrategy {
   private static final String DISBURSEMENT_FEE_TYPE =
       FeeCalculationType.DISBURSEMENT_ONLY.toString();
 
   @Autowired
-  public DuplicateClaimCivilValidationServiceStrategy(
+  public DuplicateClaimLegalHelpValidationServiceStrategy(
       final DataClaimsRestClient dataClaimsRestClient,
       final FeeSchemePlatformRestClient feeSchemePlatformRestClient) {
     super(dataClaimsRestClient);

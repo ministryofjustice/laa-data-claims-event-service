@@ -1477,8 +1477,8 @@
       }
     ],
     "schedule": {
-      "area_of_law": "LEGAL HELP",
-      "schedule_num": "0U733A/CIVIL",
+      "area_of_law": "LEGAL_HELP",
+      "schedule_num": "0U733A/LEGAL_HELP",
       "submission_period": "MAR-2020"
     },
     "matter_starts": [

@@ -1,8 +1,6 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.mapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.AreaOfLaw.CRIME_LOWER;
-import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.AreaOfLaw.LEGAL_HELP;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationSource.EVENT_SERVICE;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -63,10 +61,12 @@ class BulkSubmissionMapperTest {
     GetBulkSubmission200Response bulkSubmission =
         objectMapper.readValue(json, GetBulkSubmission200Response.class);
 
-    var claims = mapper.mapToClaimPosts(bulkSubmission.getDetails().getOutcomes(), LEGAL_HELP);
+    var claims =
+        mapper.mapToClaimPosts(
+            bulkSubmission.getDetails().getOutcomes(), BulkSubmissionAreaOfLaw.LEGAL_HELP);
 
     assertThat(claims).hasSize(1);
-    ClaimPost claim = claims.get(0);
+    ClaimPost claim = claims.getFirst();
     assertThat(claim.getStatus()).isEqualTo(ClaimStatus.READY_TO_PROCESS);
     assertThat(claim.getScheduleReference()).isEqualTo("01/2Q286D/2024/01");
     assertThat(claim.getCaseReferenceNumber()).isEqualTo("JI/OKUSU");
@@ -89,7 +89,9 @@ class BulkSubmissionMapperTest {
     GetBulkSubmission200Response bulkSubmission =
         objectMapper.readValue(json, GetBulkSubmission200Response.class);
 
-    var claims = mapper.mapToClaimPosts(bulkSubmission.getDetails().getOutcomes(), CRIME_LOWER);
+    var claims =
+        mapper.mapToClaimPosts(
+            bulkSubmission.getDetails().getOutcomes(), BulkSubmissionAreaOfLaw.CRIME_LOWER);
 
     assertThat(claims).hasSize(1);
     ClaimPost claim = claims.getFirst();
