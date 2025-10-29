@@ -23,7 +23,9 @@ public interface ClaimWithAreaOfLawValidator {
    * @param areaOfLaw the area of law for the claim
    */
   default void validate(
-      final ClaimResponse claim, SubmissionValidationContext context, BulkSubmissionAreaOfLaw areaOfLaw) {
+      final ClaimResponse claim,
+      SubmissionValidationContext context,
+      BulkSubmissionAreaOfLaw areaOfLaw) {
     // Default implementation does nothing, overridden methods will be called.
   }
 

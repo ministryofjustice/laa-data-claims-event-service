@@ -125,7 +125,8 @@ class MandatoryFieldClaimValidatorTest {
 
     SubmissionValidationContext context = new SubmissionValidationContext();
 
-    validator.validate(claim, context, BulkSubmissionAreaOfLaw.LEGAL_HELP, FeeCalculationType.FIXED.getValue());
+    validator.validate(
+        claim, context, BulkSubmissionAreaOfLaw.LEGAL_HELP, FeeCalculationType.FIXED.getValue());
 
     assertThat(getClaimMessages(context, claimId.toString()).isEmpty()).isFalse();
     assertThat(getClaimMessages(context, claimId.toString()).getFirst().getDisplayMessage())
@@ -148,7 +149,8 @@ class MandatoryFieldClaimValidatorTest {
   void shouldHaveNoErrorWhenExcludedFieldsMissingForDisbursementOnlyLegalHelpClaims(
       String mandatoryField) {
     // Define the map for the test
-    Map<BulkSubmissionAreaOfLaw, List<String>> legalHelpMandatoryFields = Map.of(BulkSubmissionAreaOfLaw.LEGAL_HELP, List.of(mandatoryField));
+    Map<BulkSubmissionAreaOfLaw, List<String>> legalHelpMandatoryFields =
+        Map.of(BulkSubmissionAreaOfLaw.LEGAL_HELP, List.of(mandatoryField));
 
     lenient()
         .when(mandatoryFieldsRegistry.getMandatoryFieldsByAreaOfLaw())
@@ -160,7 +162,8 @@ class MandatoryFieldClaimValidatorTest {
 
     SubmissionValidationContext context = new SubmissionValidationContext();
 
-    validator.validate(claim, context, BulkSubmissionAreaOfLaw.LEGAL_HELP, FEE_CALCULATION_TYPE_DISB_ONLY);
+    validator.validate(
+        claim, context, BulkSubmissionAreaOfLaw.LEGAL_HELP, FEE_CALCULATION_TYPE_DISB_ONLY);
 
     assertThat(getClaimMessages(context, claimId.toString()).isEmpty()).isTrue();
   }
