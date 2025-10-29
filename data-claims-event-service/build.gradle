@@ -42,8 +42,8 @@ dependencies {
      */
     // Upgrade to fix Uncontrolled Recursion vulnerability in commons-lang3
     implementation 'org.apache.commons:commons-lang3:3.18.0'
-    // Upgrade to fix vulnerabilities in tomcat-embed-core
-    implementation 'org.apache.tomcat.embed:tomcat-embed-core:11.0.10'
+    // Upgrade to fix CVE-2025-55752, CVE-2025-55754 and CVE-2025-61795 vulnerability
+    implementation 'org.apache.tomcat.embed:tomcat-embed-core:11.0.12'
     // Upgrade to fix vulnerabilities in spring-webmvc
     implementation 'org.springframework:spring-webmvc:6.2.11'
     // Upgrade to fix vulnerabilities in spring-core
