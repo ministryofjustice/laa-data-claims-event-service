@@ -8,6 +8,7 @@ import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionAreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionClaim;
@@ -95,7 +96,7 @@ public class ClaimValidationService {
       ClaimResponse claim,
       List<ClaimResponse> submissionClaims,
       Map<String, FeeDetailsResponseWrapper> feeDetailsResponseMap,
-      String areaOfLaw,
+      BulkSubmissionAreaOfLaw areaOfLaw,
       String officeCode,
       SubmissionValidationContext context) {
 

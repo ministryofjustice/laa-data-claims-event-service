@@ -12,11 +12,12 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 /** Service responsible for validating whether a claim is a duplicate. */
 @Slf4j
 @Service
-public class DuplicateClaimCrimeValidationServiceStrategy extends DuplicateClaimValidation
-    implements CrimeDuplicateClaimValidationStrategy {
+public class DuplicateClaimCrimeLowerValidationServiceStrategy extends DuplicateClaimValidation
+    implements CrimeLowerDuplicateClaimValidationStrategy {
 
   @Autowired
-  public DuplicateClaimCrimeValidationServiceStrategy(DataClaimsRestClient dataClaimsRestClient) {
+  public DuplicateClaimCrimeLowerValidationServiceStrategy(
+      DataClaimsRestClient dataClaimsRestClient) {
     super(dataClaimsRestClient);
   }
 

@@ -29,13 +29,14 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationE
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
 @ExtendWith(MockitoExtension.class)
-class DuplicateClaimCivilDisbursementValidationStrategyTest
+class DuplicateClaimLegalHelpDisbursementValidationStrategyTest
     extends AbstractDuplicateClaimValidatorStrategy {
 
   @Mock FeeSchemePlatformRestClient feeSchemePlatformRestClient;
   @Mock DataClaimsRestClient dataClaimsRestClient;
 
-  @InjectMocks DuplicateClaimCivilDisbursementValidationStrategy duplicateClaimValidationService;
+  @InjectMocks
+  DuplicateClaimLegalHelpDisbursementValidationStrategy duplicateClaimValidationService;
 
   @Nested
   class ValidClaim {

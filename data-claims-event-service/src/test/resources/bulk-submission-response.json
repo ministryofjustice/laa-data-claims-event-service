@@ -112,8 +112,8 @@
       }
     ],
     "schedule": {
-      "area_of_law": "LEGAL HELP",
-      "schedule_num": "2Q286D/CIVIL",
+      "area_of_law": "LEGAL_HELP",
+      "schedule_num": "2Q286D/LEGAL_HELP",
       "submission_period": "OCT-2024"
     },
     "matter_starts": []

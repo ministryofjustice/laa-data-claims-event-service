@@ -16,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionAreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionClaim;
@@ -79,7 +80,7 @@ class ClaimValidationServiceTest {
     SubmissionResponse submissionResponse =
         SubmissionResponse.builder()
             .submissionId(submissionId)
-            .areaOfLaw("CIVIL")
+            .areaOfLaw(BulkSubmissionAreaOfLaw.LEGAL_HELP)
             .officeAccountNumber("officeAccountNumber")
             .build()
             .addClaimsItem(
@@ -117,16 +118,40 @@ class ClaimValidationServiceTest {
     // Then
     verify(basicClaimValidator, times(1)).validate(claimOne, context);
     verify(basicClaimValidator, times(1)).validate(claimTwo, context);
-    verify(claimWithAreaOfLawValidator, times(1)).validate(claimOne, context, "CIVIL", "feeType");
-    verify(claimWithAreaOfLawValidator, times(1)).validate(claimTwo, context, "CIVIL", "feeType");
+    verify(claimWithAreaOfLawValidator, times(1))
+        .validate(claimOne, context, BulkSubmissionAreaOfLaw.LEGAL_HELP, "feeType");
+    verify(claimWithAreaOfLawValidator, times(1))
+        .validate(claimTwo, context, BulkSubmissionAreaOfLaw.LEGAL_HELP, "feeType");
     verify(effectiveCategoryOfLawClaimValidator, times(1))
-        .validate(claimOne, context, "CIVIL", "officeAccountNumber", feeDetailsResponseMap);
+        .validate(
+            claimOne,
+            context,
+            BulkSubmissionAreaOfLaw.LEGAL_HELP,
+            "officeAccountNumber",
+            feeDetailsResponseMap);
     verify(effectiveCategoryOfLawClaimValidator, times(1))
-        .validate(claimTwo, context, "CIVIL", "officeAccountNumber", feeDetailsResponseMap);
+        .validate(
+            claimTwo,
+            context,
+            BulkSubmissionAreaOfLaw.LEGAL_HELP,
+            "officeAccountNumber",
+            feeDetailsResponseMap);
     verify(duplicateClaimValidator, times(1))
-        .validate(claimOne, context, "CIVIL", "officeAccountNumber", claimsList, "feeType");
+        .validate(
+            claimOne,
+            context,
+            BulkSubmissionAreaOfLaw.LEGAL_HELP,
+            "officeAccountNumber",
+            claimsList,
+            "feeType");
     verify(duplicateClaimValidator, times(1))
-        .validate(claimTwo, context, "CIVIL", "officeAccountNumber", claimsList, "feeType");
+        .validate(
+            claimTwo,
+            context,
+            BulkSubmissionAreaOfLaw.LEGAL_HELP,
+            "officeAccountNumber",
+            claimsList,
+            "feeType");
 
     verify(feeCalculationService, times(1))
         .validateFeeCalculation(submissionId, claimOne, context, feeDetailsResponse);

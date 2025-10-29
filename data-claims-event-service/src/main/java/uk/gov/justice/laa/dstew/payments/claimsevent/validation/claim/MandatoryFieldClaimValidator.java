@@ -12,10 +12,10 @@ import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionAreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.ExclusionsRegistry;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.MandatoryFieldsRegistry;
-import uk.gov.justice.laa.dstew.payments.claimsevent.validation.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
 /**
@@ -42,9 +42,9 @@ public class MandatoryFieldClaimValidator implements ClaimValidator, ClaimWithAr
   public void validate(
       ClaimResponse claim,
       SubmissionValidationContext context,
-      String areaOfLaw,
+      BulkSubmissionAreaOfLaw areaOfLaw,
       String feeCalculationType) {
-    Map<String, List<String>> mandatoryFieldsByAreaOfLaw =
+    Map<BulkSubmissionAreaOfLaw, List<String>> mandatoryFieldsByAreaOfLaw =
         mandatoryFieldsRegistry.getMandatoryFieldsByAreaOfLaw();
     List<String> mandatoryFields = mandatoryFieldsByAreaOfLaw.get(areaOfLaw);
     if (Objects.isNull(mandatoryFields)) {
@@ -52,7 +52,7 @@ public class MandatoryFieldClaimValidator implements ClaimValidator, ClaimWithAr
     }
     boolean isDisbursementLegalHelpClaim =
         FEE_CALCULATION_TYPE_DISB_ONLY.equals(feeCalculationType)
-            && AreaOfLaw.LEGAL_HELP.getValue().equals(areaOfLaw);
+            && BulkSubmissionAreaOfLaw.LEGAL_HELP.equals(areaOfLaw);
     List<String> disbursementExclusions = exclusionsRegistry.getDisbursementOnlyExclusions();
 
     for (String fieldName : mandatoryFields) {

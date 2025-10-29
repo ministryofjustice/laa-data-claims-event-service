@@ -16,11 +16,11 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
-/** Validation strategy for civil duplicate claims. */
+/** Validation strategy for legal help duplicate claims. */
 @Slf4j
 @Component
-public class DuplicateClaimCivilDisbursementValidationStrategy extends DuplicateClaimValidation
-    implements CivilDuplicateClaimValidationStrategy {
+public class DuplicateClaimLegalHelpDisbursementValidationStrategy extends DuplicateClaimValidation
+    implements LegalHelpDuplicateClaimValidationStrategy {
 
   private static final String DISBURSEMENT_FEE_TYPE =
       FeeCalculationType.DISBURSEMENT_ONLY.toString();
@@ -29,12 +29,12 @@ public class DuplicateClaimCivilDisbursementValidationStrategy extends Duplicate
   private final DateTimeFormatter formatter;
 
   /**
-   * Creates a new {@code DuplicateClaimCivilDisbursementValidationStrategy}.
+   * Creates a new {@code DuplicateClaimLegalHelpDisbursementValidationStrategy}.
    *
    * @param dataClaimsRestClient the data claims rest client
    */
   @Autowired
-  public DuplicateClaimCivilDisbursementValidationStrategy(
+  public DuplicateClaimLegalHelpDisbursementValidationStrategy(
       final DataClaimsRestClient dataClaimsRestClient) {
     super(dataClaimsRestClient);
     formatter =
