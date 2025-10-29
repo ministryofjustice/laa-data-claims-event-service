@@ -22,8 +22,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 public class DuplicateClaimCivilDisbursementValidationStrategy extends DuplicateClaimValidation
     implements CivilDuplicateClaimValidationStrategy {
 
-  private static final String DISBURSEMENT_FEE_TYPE =
-      FeeCalculationType.DISBURSEMENT_ONLY.toString();
+  private static final String DISBURSEMENT_FEE_TYPE = FeeCalculationType.DISB_ONLY.getValue();
   private static final int MAXIMUM_MONTHS_DIFFERENCE = 3;
 
   private final DateTimeFormatter formatter;

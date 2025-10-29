@@ -97,7 +97,7 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
           List.of(claimTobeProcessed),
           "1",
           context,
-          FeeCalculationType.DISBURSEMENT_ONLY.toString());
+          FeeCalculationType.DISB_ONLY.toString());
       // Then
       assertThat(context.hasErrors()).isFalse();
       verify(dataClaimsRestClient, times(1))
@@ -143,7 +143,7 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
           List.of(previousClaim),
           "1",
           context,
-          FeeCalculationType.DISBURSEMENT_ONLY.toString());
+          FeeCalculationType.DISB_ONLY.toString());
       // Then
       assertThat(context.hasErrors()).isFalse();
       verify(dataClaimsRestClient, times(1))
@@ -189,7 +189,7 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
           List.of(claimTobeProcessed),
           "1",
           context,
-          FeeCalculationType.DISBURSEMENT_ONLY.toString());
+          FeeCalculationType.DISB_ONLY.toString());
       // Then
       assertThat(context.hasErrors()).isFalse();
       verify(dataClaimsRestClient, times(1))
@@ -235,7 +235,7 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
           List.of(claimTobeProcessed),
           "1",
           context,
-          FeeCalculationType.DISBURSEMENT_ONLY.toString());
+          FeeCalculationType.DISB_ONLY.toString());
       // Then
       assertThat(context.hasErrors()).isFalse();
       verify(dataClaimsRestClient, times(1))
@@ -286,7 +286,7 @@ class DuplicateClaimCivilDisbursementValidationStrategyTest
           List.of(claimTobeProcessed),
           "1",
           context,
-          FeeCalculationType.DISBURSEMENT_ONLY.toString());
+          FeeCalculationType.DISB_ONLY.toString());
       // Then
       assertThat(context.hasErrors()).isTrue();
       verify(dataClaimsRestClient, times(1))

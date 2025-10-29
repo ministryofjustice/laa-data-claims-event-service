@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.ExclusionsRegistry;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.MandatoryFieldsRegistry;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.AreaOfLaw;
@@ -33,7 +34,6 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 @RequiredArgsConstructor
 public class MandatoryFieldClaimValidator implements ClaimValidator, ClaimWithAreaOfLawValidator {
 
-  public static final String FEE_CALCULATION_TYPE_DISB_ONLY = "DISB_ONLY";
   private final MandatoryFieldsRegistry mandatoryFieldsRegistry;
 
   private final ExclusionsRegistry exclusionsRegistry;
@@ -51,7 +51,7 @@ public class MandatoryFieldClaimValidator implements ClaimValidator, ClaimWithAr
       return;
     }
     boolean isDisbursementLegalHelpClaim =
-        FEE_CALCULATION_TYPE_DISB_ONLY.equals(feeCalculationType)
+        FeeCalculationType.DISB_ONLY.getValue().equals(feeCalculationType)
             && AreaOfLaw.LEGAL_HELP.getValue().equals(areaOfLaw);
     List<String> disbursementExclusions = exclusionsRegistry.getDisbursementOnlyExclusions();
 
