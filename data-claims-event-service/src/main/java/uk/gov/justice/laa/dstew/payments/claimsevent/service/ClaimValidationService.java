@@ -8,10 +8,12 @@ import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionClaim;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessageType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.EventServiceIllegalArgumentException;
@@ -99,22 +101,9 @@ public class ClaimValidationService {
       String officeCode,
       SubmissionValidationContext context) {
 
-    // Includes:
-    // - JSON scheme validation
-    // - Mandatory field validations
-    // - UFN
-    // - Stage reached validation
-    // - Schedule Reference Claim
-    // - Disbursements VAT amount
-    // - Claim dates:
-    // -- Case start date
-    // -- Case concluded date
-    // -- Transfer date
-    // -- Representation order date
-    // - Client dates
-    // -- Client date of birth
-    // - Matter Type Code
-    // - Effective category of law
+    Assert.notNull(claim.getId(), "Claim ID must not be null");
+    eventServiceMetricService.startClaimValidationTimer(UUID.fromString(claim.getId()));
+
     FeeDetailsResponseWrapper feeDetailsResponseWrapper =
         feeDetailsResponseMap.get(claim.getFeeCode());
     if (feeDetailsResponseWrapper.isError()) {
@@ -135,6 +124,23 @@ public class ClaimValidationService {
           claim.getFeeCode());
       return;
     }
+
+    // Includes:
+    // - JSON scheme validation
+    // - Mandatory field validations
+    // - UFN
+    // - Stage reached validation
+    // - Schedule Reference Claim
+    // - Disbursements VAT amount
+    // - Claim dates:
+    // -- Case start date
+    // -- Case concluded date
+    // -- Transfer date
+    // -- Representation order date
+    // - Client dates
+    // -- Client date of birth
+    // - Matter Type Code
+    // - Effective category of law
     String feeCalculationType = feeDetailsResponseWrapper.getFeeDetailsResponse().getFeeType();
     claimValidator.stream()
         .sorted(
@@ -160,29 +166,36 @@ public class ClaimValidationService {
               }
             });
 
+    eventServiceMetricService.stopClaimValidationTimer(UUID.fromString(claim.getId()));
+
     // fee calculation validation - done last after every other claim validation
+    eventServiceMetricService.startFspValidationTimer(UUID.fromString(claim.getId()));
     feeCalculationService.validateFeeCalculation(
         submissionId, claim, context, feeDetailsResponseWrapper.getFeeDetailsResponse());
+    eventServiceMetricService.stopFspValidationTimer(UUID.fromString(claim.getId()));
 
     // Check claim status and record metric
-    recordClaimMetric(claim, context);
+    recordClaimMetrics(claim, context);
   }
 
-  private void recordClaimMetric(ClaimResponse claim, SubmissionValidationContext context) {
+  private void recordClaimMetrics(ClaimResponse claim, SubmissionValidationContext context) {
     Optional<ClaimValidationReport> claimReportOptional = context.getClaimReport(claim.getId());
     if (claimReportOptional.isEmpty()) {
       eventServiceMetricService.incrementTotalClaimsValidatedAndValid();
       return;
     }
 
+    List<ValidationMessagePatch> messages = claimReportOptional.get().getMessages();
+
+    // Record all messages (Helps track most common errors found)
+    messages.forEach(x -> eventServiceMetricService.recordValidationMessage(x, true));
+
     // Claim could have either errors or warnings so record both
-    if (claimReportOptional.get().getMessages().stream()
-        .anyMatch(x -> x.getType().equals(ValidationMessageType.ERROR))) {
+    if (messages.stream().anyMatch(x -> x.getType().equals(ValidationMessageType.ERROR))) {
       eventServiceMetricService.incrementTotalClaimsValidatedAndErrorsFound();
     }
 
-    if (claimReportOptional.get().getMessages().stream()
-        .anyMatch(x -> x.getType().equals(ValidationMessageType.WARNING))) {
+    if (messages.stream().anyMatch(x -> x.getType().equals(ValidationMessageType.WARNING))) {
       eventServiceMetricService.incrementTotalClaimsValidatedAndWarningsFound();
     }
   }

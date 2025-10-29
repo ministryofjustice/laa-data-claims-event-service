@@ -6,6 +6,7 @@ import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionErrorCode;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionStatus;
@@ -42,10 +43,11 @@ public class SubmissionValidationService {
    * @param submissionId the ID of the submission to validate
    */
   public SubmissionValidationContext validateSubmission(UUID submissionId) {
-    SubmissionResponse submission = dataClaimsRestClient.getSubmission(submissionId).getBody();
-
     log.debug("Validating submission {}", submissionId);
+    eventServiceMetricService.startSubmissionValidationTimer(submissionId);
 
+    SubmissionResponse submission = dataClaimsRestClient.getSubmission(submissionId).getBody();
+    Assert.notNull(submission, "Submission not retrievable: " + submissionId.toString());
     SubmissionValidationContext context = initialiseValidationContext(submission);
 
     // Currently validating:
@@ -89,6 +91,13 @@ public class SubmissionValidationService {
       eventServiceMetricService.incrementTotalValidSubmissions();
       bulkSubmissionPatch.status(BulkSubmissionStatus.VALIDATION_SUCCEEDED);
     }
+
+    // Record what submission errors were found
+    context
+        .getSubmissionValidationErrors()
+        .forEach(x -> eventServiceMetricService.recordValidationMessage(x, false));
+    // Stop submission validation timer
+    eventServiceMetricService.stopSubmissionValidationTimer(submissionId);
 
     bulkClaimUpdater.updateClaims(submission, context);
     dataClaimsRestClient.updateSubmission(submissionId.toString(), submissionPatch);
