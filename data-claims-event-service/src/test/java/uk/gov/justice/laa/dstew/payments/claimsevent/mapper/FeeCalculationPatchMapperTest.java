@@ -67,7 +67,7 @@ class FeeCalculationPatchMapperTest {
         new FeeDetailsResponse()
             .categoryOfLawCode("categoryOfLawCode")
             .feeCodeDescription("feeCodeDescription")
-            .feeType(FeeCalculationType.DISBURSEMENT_ONLY.getValue());
+            .feeType(FeeCalculationType.DISB_ONLY.getValue());
     // When
     FeeCalculationPatch result =
         mapper.mapToFeeCalculationPatch(feeCalculationResponse, feeDetailsResponse);
@@ -164,9 +164,7 @@ class FeeCalculationPatchMapperTest {
           // Check details from FeeDetailsResponse
           softAssertions.assertThat(result.getCategoryOfLaw()).isEqualTo("categoryOfLawCode");
           softAssertions.assertThat(result.getFeeCodeDescription()).isEqualTo("feeCodeDescription");
-          softAssertions
-              .assertThat(result.getFeeType())
-              .isEqualTo(FeeCalculationType.DISBURSEMENT_ONLY);
+          softAssertions.assertThat(result.getFeeType()).isEqualTo(FeeCalculationType.DISB_ONLY);
         });
   }
 }

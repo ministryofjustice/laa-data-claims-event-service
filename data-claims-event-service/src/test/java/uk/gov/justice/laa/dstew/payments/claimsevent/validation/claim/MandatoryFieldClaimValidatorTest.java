@@ -3,7 +3,6 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.Mockito.lenient;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.ValidationServiceTestUtils.getClaimMessages;
-import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.MandatoryFieldClaimValidator.FEE_CALCULATION_TYPE_DISB_ONLY;
 
 import java.util.List;
 import java.util.Map;
@@ -158,7 +157,7 @@ class MandatoryFieldClaimValidatorTest {
 
     SubmissionValidationContext context = new SubmissionValidationContext();
 
-    validator.validate(claim, context, "LEGAL HELP", FEE_CALCULATION_TYPE_DISB_ONLY);
+    validator.validate(claim, context, "LEGAL HELP", FeeCalculationType.DISB_ONLY.getValue());
 
     assertThat(getClaimMessages(context, claimId.toString()).isEmpty()).isTrue();
   }
