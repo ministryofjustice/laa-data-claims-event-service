@@ -87,7 +87,6 @@ public class CategoryOfLawValidationService {
       if (response == null) {
         log.error("Get fee details returned empty response for fee code: {}", feeCode);
       }
-      log.debug("Get fee details returned response {} for fee code: {}", response, feeCode);
       return FeeDetailsResponseWrapper.withFeeDetailsResponse(response);
 
     } catch (WebClientResponseException ex) {
