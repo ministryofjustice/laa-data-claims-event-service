@@ -14,8 +14,12 @@ import java.beans.PropertyDescriptor;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
@@ -25,36 +29,47 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.springframework.core.io.ClassPathResource;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
+import uk.gov.justice.laa.dstew.payments.claimsevent.config.SchemaValidationConfig;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.model.ValidationErrorMessage;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class JsonSchemaValidatorTest {
 
-  public static final String CLAIM_SCHEMA = "claim";
-
   private JsonSchemaValidator jsonSchemaValidator;
+
+  private SchemaValidationConfig schemaValidationConfig;
+
+  private Map<String, Set<ValidationErrorMessage>> schemaValidationErrorMessages;
 
   @BeforeAll
   void setUp() throws Exception {
     ObjectMapper mapper = new ObjectMapper();
+    schemaValidationConfig =
+        new SchemaValidationConfig(
+            mapper,
+            new ClassPathResource("schemas/submission-fields.schema.json"),
+            new ClassPathResource("schemas/claim-fields.schema.json"));
     mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     mapper.configure(JsonGenerator.Feature.WRITE_BIGDECIMAL_AS_PLAIN, true);
 
     // Manually load schemas for testing
-    Map<String, JsonSchema> schemas =
-        Map.of(
-            "submission", loadSchema("schemas/submission-fields.schema.json", mapper),
-            "claim", loadSchema("schemas/claim-fields.schema.json", mapper));
-    jsonSchemaValidator = new JsonSchemaValidator(mapper, schemas);
+    schemaValidationErrorMessages = schemaValidationConfig.schemaValidationErrorMessages();
+    jsonSchemaValidator =
+        new JsonSchemaValidator(
+            mapper, schemaValidationConfig.jsonSchemas(), schemaValidationErrorMessages);
   }
 
   private JsonSchema loadSchema(String path, ObjectMapper mapper) throws Exception {
     try (InputStream in = getClass().getClassLoader().getResourceAsStream(path)) {
-      if (in == null) throw new IllegalArgumentException("Schema not found: " + path);
+      if (in == null) {
+        throw new IllegalArgumentException("Schema not found: " + path);
+      }
       JsonNode schemaNode = mapper.readTree(in);
       return JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012).getSchema(schemaNode);
     }
@@ -107,11 +122,25 @@ class JsonSchemaValidatorTest {
           jsonSchemaValidator.validate("submission", submission);
 
       assertThat(errors)
+          .extracting(ValidationMessagePatch::getTechnicalMessage)
+          .containsExactlyInAnyOrder(
+              "office_account_number: does not match the regex pattern ^[A-Z0-9]{6}$ (provided "
+                  + "value: abc123)",
+              "submission_period: does not match the regex pattern ^"
+                  + "(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-[0-9]{4}$ (provided value:"
+                  + " OCTOBER-2024)",
+              "area_of_law: does not have a value in the enumeration [\"CIVIL\", \"CRIME\", "
+                  + "\"MEDIATION\", \"CRIME LOWER\", \"LEGAL HELP\"] (provided value: INVALID)",
+              "number_of_claims: must have a minimum value of 0 (provided value: -1)");
+      assertThat(errors)
           .extracting(ValidationMessagePatch::getDisplayMessage)
           .containsExactlyInAnyOrder(
-              "office_account_number: does not match the regex pattern ^[A-Z0-9]{6}$ (provided value: abc123)",
-              "submission_period: does not match the regex pattern ^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-[0-9]{4}$ (provided value: OCTOBER-2024)",
-              "area_of_law: does not have a value in the enumeration [\"CIVIL\", \"CRIME\", \"MEDIATION\", \"CRIME LOWER\", \"LEGAL HELP\"] (provided value: INVALID)",
+              "office_account_number: does not match the regex pattern ^[A-Z0-9]{6}$ (provided "
+                  + "value: abc123)",
+              "submission_period: does not match the regex pattern ^"
+                  + "(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-[0-9]{4}$ (provided value:"
+                  + " OCTOBER-2024)",
+              "Area of Law must be one of: MEDIATION, CRIME LOWER, or LEGAL HELP",
               "number_of_claims: must have a minimum value of 0 (provided value: -1)");
     }
 
@@ -125,48 +154,68 @@ class JsonSchemaValidatorTest {
      *     snake_case).
      * @param badJsonValue The invalid data value to be set for the field (as a JSON-formatted
      *     string).
-     * @param expectedError The expected validation error message for the field with the invalid
+     * @param technicalMessage The expected validation error message for the field with the invalid
      *     value.
      * @throws Exception if an error occurs during JSON parsing or validation.
      */
     @ParameterizedTest(name = "Invalid type for field {0} should return error")
     @CsvSource({
       // integer fields
-      "status, '\"SNAFU\"', 'status: does not have a value in the enumeration [\"CREATED\", \"READY_FOR_VALIDATION\", \"VALIDATION_IN_PROGRESS\", \"VALIDATION_SUCCEEDED\", \"VALIDATION_FAILED\", \"REPLACED\"] (provided value: SNAFU)'",
+      "status, '\"SNAFU\"', 'status: does not have a value in the enumeration [\"CREATED\", "
+          + "\"READY_FOR_VALIDATION\", \"VALIDATION_IN_PROGRESS\", \"VALIDATION_SUCCEEDED\", "
+          + "\"VALIDATION_FAILED\", \"REPLACED\"] (provided value: SNAFU)',"
+          + "'Status must be one of: CREATED, READY_FOR_VALIDATION, VALIDATION_IN_PROGRESS, "
+          + "VALIDATION_SUCCEEDED, VALIDATION_FAILED, or REPLACED'",
     })
     void validateSubmissionForInvalidDataTypes(
-        String fieldName, String badJsonValue, String expectedError) throws Exception {
+        String fieldName, String badJsonValue, String technicalMessage, String displayMessage)
+        throws Exception {
       List<ValidationMessagePatch> errors =
           validateForInvalidDataTypes(
               "submission", getMinimumValidSubmission(), fieldName, badJsonValue);
       assertThat(errors)
+          .extracting(ValidationMessagePatch::getTechnicalMessage)
+          .contains(technicalMessage);
+      assertThat(errors)
           .extracting(ValidationMessagePatch::getDisplayMessage)
-          .contains(expectedError);
+          .contains(displayMessage);
     }
 
     @ParameterizedTest(name = "Invalid value for {0} should return error")
     @CsvSource({
-      "officeAccountNumber, abc123, 'office_account_number: does not match the regex pattern ^[A-Z0-9]{6}$ (provided value: abc123)'",
-      "numberOfClaims, -10, 'number_of_claims: must have a minimum value of 0 (provided value: -10)'",
+      "officeAccountNumber, abc123, 'office_account_number: does not match the regex pattern "
+          + "^[A-Z0-9]{6}$ (provided value: abc123)'",
+      "numberOfClaims, -10, 'number_of_claims: must have a minimum value of 0 (provided value: "
+          + "-10)'",
       "areaOfLaw, 'WILD WEST', 'area_of_law: does not have a value in the enumeration "
-          + "[\"CIVIL\", \"CRIME\", \"MEDIATION\", \"CRIME LOWER\", \"LEGAL HELP\"] (provided value: WILD WEST)'",
+          + "[\"CIVIL\", \"CRIME\", \"MEDIATION\", \"CRIME LOWER\", \"LEGAL HELP\"] (provided "
+          + "value: WILD WEST)'",
       "submissionPeriod, 'OCTOBER-20', 'submission_period: does not match the regex pattern "
-          + "^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-[0-9]{4}$ (provided value: OCTOBER-20)'",
+          + "^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-[0-9]{4}$ (provided value: "
+          + "OCTOBER-20)'",
       "submissionPeriod, 'OCT-20', 'submission_period: does not match the regex pattern "
-          + "^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-[0-9]{4}$ (provided value: OCT-20)'",
+          + "^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-[0-9]{4}$ (provided value: "
+          + "OCT-20)'",
       "submissionPeriod, 'OCT/2020', 'submission_period: does not match the regex pattern "
-          + "^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-[0-9]{4}$ (provided value: OCT/2020)'",
-      "crimeScheduleNumber, 'A/VERY/LONG/SCHEDULE/NUMBER', 'crime_schedule_number: must be at most 20 characters long (provided value: A/VERY/LONG/SCHEDULE/NUMBER)'",
+          + "^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-[0-9]{4}$ (provided value: "
+          + "OCT/2020)'",
+      "crimeScheduleNumber, 'A/VERY/LONG/SCHEDULE/NUMBER', 'crime_schedule_number: must be at "
+          + "most 20 characters long (provided value: A/VERY/LONG/SCHEDULE/NUMBER)'",
     })
     void validateSubmissionIndividualInvalidField(
-        String fieldName, String badValue, String expectedError) {
+        String fieldName, String badValue, String technicalMessage) {
       SubmissionResponse submission = getMinimumValidSubmission();
       setField(submission, fieldName, badValue);
       final List<ValidationMessagePatch> errors =
           jsonSchemaValidator.validate("submission", submission);
       assertThat(errors)
+          .extracting(ValidationMessagePatch::getTechnicalMessage)
+          .contains(technicalMessage);
+      String displayMessage =
+          getDisplayMessage(convertCamelCaseToSnakeCase(fieldName), technicalMessage);
+      assertThat(errors)
           .extracting(ValidationMessagePatch::getDisplayMessage)
-          .contains(expectedError);
+          .contains(displayMessage);
     }
 
     @Test
@@ -187,6 +236,16 @@ class JsonSchemaValidatorTest {
 
       assertThat(errors).isEmpty();
     }
+  }
+
+  private String getDisplayMessage(String fieldName, String technicalMessage) {
+    return Optional.ofNullable(schemaValidationErrorMessages.get(fieldName))
+        .orElse(new HashSet<>())
+        .stream()
+        .filter(validationErrorMessage -> Objects.equals(validationErrorMessage.key(), "ALL"))
+        .map(ValidationErrorMessage::value)
+        .findFirst()
+        .orElse(technicalMessage);
   }
 
   @Nested
@@ -238,7 +297,7 @@ class JsonSchemaValidatorTest {
      *     snake_case).
      * @param badJsonValue The invalid data value to be set for the field (as a JSON-formatted
      *     string).
-     * @param expectedError The expected validation error message for the field with the invalid
+     * @param technicalError The expected validation error message for the field with the invalid
      *     value.
      * @throws Exception if an error occurs during JSON parsing or validation.
      */
@@ -441,12 +500,11 @@ class JsonSchemaValidatorTest {
       "client_2_date_of_birth, true, 'client_2_date_of_birth: boolean found, string expected (provided value: true)'",
     })
     void validateClaimForInvalidDataTypes(
-        String fieldName, String badJsonValue, String expectedError) throws Exception {
+        String fieldName, String badJsonValue, String technicalError) throws Exception {
       List<ValidationMessagePatch> errors =
           validateForInvalidDataTypes("claim", getMinimumValidClaim(), fieldName, badJsonValue);
-      assertThat(errors)
-          .extracting(ValidationMessagePatch::getDisplayMessage)
-          .contains(expectedError);
+      String error = getValidationErrorMessageFromSchema(fieldName).orElse(technicalError);
+      assertThat(errors).extracting(ValidationMessagePatch::getDisplayMessage).contains(error);
     }
 
     /**
@@ -455,7 +513,7 @@ class JsonSchemaValidatorTest {
      *
      * @param fieldName The name of the claim field being validated.
      * @param badValue The invalid value assigned to the claim field.
-     * @param expectedError The expected error message corresponding to the invalid field value.
+     * @param technicalError The expected error message corresponding to the invalid field value.
      */
     @ParameterizedTest(name = "Invalid value for {0} should return error")
     @CsvSource({
@@ -662,10 +720,13 @@ class JsonSchemaValidatorTest {
       "transferDate, '2025-02-32', 'transfer_date: does not match the regex pattern ^(19\\d{2}|20\\d{2}|2100)-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$ (provided value: 2025-02-32)'"
     })
     void validateClaimIndividualInvalidField(
-        String fieldName, String badValue, String expectedError) {
+        String fieldName, String badValue, String technicalError) {
       ClaimResponse claim = getMinimumValidClaim();
       setField(claim, fieldName, badValue);
       final List<ValidationMessagePatch> errors = jsonSchemaValidator.validate("claim", claim);
+      String expectedError =
+          getValidationErrorMessageFromSchema(convertCamelCaseToSnakeCase(fieldName))
+              .orElse(technicalError);
       assertThat(errors)
           .extracting(ValidationMessagePatch::getDisplayMessage)
           .contains(expectedError);
@@ -863,5 +924,22 @@ class JsonSchemaValidatorTest {
       }
     }
     return sb.toString();
+  }
+
+  public Optional<String> getValidationErrorMessageFromSchema(final String field) {
+    return Optional.ofNullable(schemaValidationErrorMessages.get(field))
+        .orElse(new HashSet<>())
+        .stream()
+        .filter(validationErrorMessage -> Objects.equals(validationErrorMessage.key(), "ALL"))
+        .map(ValidationErrorMessage::value)
+        .findFirst();
+  }
+
+  public String convertCamelCaseToSnakeCase(String value) {
+    return value
+        .replaceAll("([a-z])([A-Z])", "$1_$2")
+        .replaceAll("([A-Za-z])([0-9])", "$1_$2")
+        .replaceAll("([0-9])([A-Za-z])", "$1_$2")
+        .toLowerCase();
   }
 }

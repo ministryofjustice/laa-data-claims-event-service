@@ -13,8 +13,8 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 /** Validation service for civil duplicate claims in the current submission. */
 @Slf4j
 @Service
-public class DuplicatePreviousClaimCivilValidationServiceStrategy extends DuplicateClaimValidation
-    implements CivilDuplicateClaimValidationStrategy {
+public final class DuplicatePreviousClaimCivilValidationServiceStrategy
+    extends DuplicateClaimValidation implements CivilDuplicateClaimValidationStrategy {
 
   @Autowired
   public DuplicatePreviousClaimCivilValidationServiceStrategy(

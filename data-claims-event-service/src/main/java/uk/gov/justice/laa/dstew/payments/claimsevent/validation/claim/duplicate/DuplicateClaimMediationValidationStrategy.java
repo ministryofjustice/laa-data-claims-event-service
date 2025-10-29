@@ -11,9 +11,10 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 /** Duplicate claims Validation Mediation Strategy. */
 @Service
 @Slf4j
-public class DuplicateClaimMediationValidationStrategy extends DuplicateClaimValidation
+public final class DuplicateClaimMediationValidationStrategy extends DuplicateClaimValidation
     implements MediationDuplicateClaimValidationStrategy {
-  protected DuplicateClaimMediationValidationStrategy(DataClaimsRestClient dataClaimsRestClient) {
+
+  public DuplicateClaimMediationValidationStrategy(DataClaimsRestClient dataClaimsRestClient) {
     super(dataClaimsRestClient);
   }
 

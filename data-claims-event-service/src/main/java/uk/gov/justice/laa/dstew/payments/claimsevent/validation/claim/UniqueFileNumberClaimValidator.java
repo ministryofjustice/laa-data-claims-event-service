@@ -19,7 +19,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
  * @see BasicClaimValidator
  */
 @Component
-public class UniqueFileNumberClaimValidator implements ClaimValidator, BasicClaimValidator {
+public final class UniqueFileNumberClaimValidator implements BasicClaimValidator, ClaimValidator {
 
   @Override
   public void validate(ClaimResponse claim, SubmissionValidationContext context) {

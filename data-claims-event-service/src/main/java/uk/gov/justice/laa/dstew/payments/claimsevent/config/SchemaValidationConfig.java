@@ -1,6 +1,7 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.config;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.networknt.schema.JsonSchema;
@@ -8,9 +9,16 @@ import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion.VersionFlag;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.Resource;
+import uk.gov.justice.laa.dstew.payments.claimsevent.exception.EventServiceIllegalArgumentException;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.model.ValidationErrorMessage;
 
 /**
  * Configuration class for setting up and managing JSON Schema validation. This class loads JSON
@@ -18,10 +26,14 @@ import org.springframework.context.annotation.Configuration;
  * configuration relies on the Jackson ObjectMapper for deserialization of schema JSON files, with
  * null values excluded during serialization by default.
  */
+@Slf4j
 @Configuration
 public class SchemaValidationConfig {
 
   private final ObjectMapper mapper;
+
+  private final Resource submissionSchema;
+  private final Resource claimSchema;
 
   /**
    * Constructs a new {@code SchemaValidationConfig} with the given {@link ObjectMapper}.
@@ -33,9 +45,14 @@ public class SchemaValidationConfig {
    * @param mapper the Jackson {@link ObjectMapper} to configure and use for schema validation; must
    *     not be {@code null}
    */
-  public SchemaValidationConfig(ObjectMapper mapper) {
+  public SchemaValidationConfig(
+      ObjectMapper mapper,
+      @Value("classpath:schemas/submission-fields.schema.json") Resource submissionSchema,
+      @Value("classpath:schemas/claim-fields.schema.json") Resource claimSchema) {
     mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL); // exclude nulls
     this.mapper = mapper;
+    this.submissionSchema = submissionSchema;
+    this.claimSchema = claimSchema;
   }
 
   private JsonSchema loadSchema(String path) throws IOException {
@@ -65,6 +82,66 @@ public class SchemaValidationConfig {
 
         // Add more schemas here if needed
         );
+  }
+
+  /**
+   * Generates a map of schema validation error messages based on a JSON schema's validation error
+   * definitions. The method reads a schema file, parses its fields, and collects validation error
+   * messages for each field where defined.
+   *
+   * @return A map where the keys are field names from the JSON schema and the values are lists of
+   *     {@link ValidationErrorMessage} objects representing validation error messages for each
+   *     corresponding field. If a field does not have validation error messages, it is excluded
+   *     from the map.
+   * @throws IOException If an error occurs while reading or parsing the schema file.
+   */
+  @Bean
+  public Map<String, Set<ValidationErrorMessage>> schemaValidationErrorMessages()
+      throws IOException {
+
+    Map<String, Set<ValidationErrorMessage>> result = new HashMap<>();
+
+    addMessagesFromSchema(result, submissionSchema);
+    addMessagesFromSchema(result, claimSchema);
+
+    return result;
+  }
+
+  private void addMessagesFromSchema(
+      Map<String, Set<ValidationErrorMessage>> result, Resource schema) throws IOException {
+
+    // Read JSON
+    JsonNode schemaNode = mapper.readTree(schema.getInputStream());
+
+    // Get the properties node which contains all fields
+    JsonNode propertiesNode = schemaNode.get("properties");
+    if (propertiesNode == null) {
+      log.warn("No properties node found in schema: {}", schema.getFilename());
+      return;
+    }
+
+    // Iterate through all fields in the schema
+    propertiesNode
+        .properties()
+        .forEach(
+            field -> {
+              String fieldName = field.getKey();
+              JsonNode fieldNode = field.getValue();
+
+              // Check if the field has validation error messages
+              JsonNode messagesNode = fieldNode.get("validationErrorMessages");
+              if (messagesNode != null && messagesNode.isArray()) {
+                try {
+                  // Convert the messages array to List<ValidationErrorMessage>
+                  Set<ValidationErrorMessage> messages =
+                      mapper.convertValue(messagesNode, new TypeReference<>() {});
+                  result.put(fieldName, messages);
+                } catch (Exception e) {
+                  throw new EventServiceIllegalArgumentException(
+                      "Error parsing validation messages for field: " + fieldName);
+                }
+              }
+            });
   }
 
   public JsonSchema submissionSchema() throws IOException {

@@ -7,13 +7,14 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import org.apache.commons.lang3.StringUtils;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.ClaimValidator;
 
 /**
  * Abstract class for validating dates.
  *
  * @author Jamie Briggs
  */
-public abstract class AbstractDateValidator {
+public abstract class AbstractDateValidator implements ClaimValidator {
 
   /**
    * Validates whether the provided date value is within the valid range (01/01/1995 to today's

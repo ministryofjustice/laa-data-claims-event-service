@@ -3,7 +3,6 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
@@ -26,12 +25,27 @@ import uk.gov.justice.laa.provider.model.ProviderFirmOfficeContractAndScheduleDt
  */
 @Component
 @Slf4j
-@RequiredArgsConstructor
-public class EffectiveCategoryOfLawClaimValidator implements ClaimValidator {
+public final class EffectiveCategoryOfLawClaimValidator implements ClaimValidator {
 
   private final CategoryOfLawValidationService categoryOfLawValidationService;
   private final ClaimEffectiveDateUtil claimEffectiveDateUtil;
   private final ProviderDetailsRestClient providerDetailsRestClient;
+
+  /**
+   * Constructs an instance of {@link EffectiveCategoryOfLawClaimValidator}.
+   *
+   * @param categoryOfLawValidationService the category of law validation service
+   * @param claimEffectiveDateUtil the claim effective date util
+   * @param providerDetailsRestClient the provider details rest client
+   */
+  public EffectiveCategoryOfLawClaimValidator(
+      CategoryOfLawValidationService categoryOfLawValidationService,
+      ClaimEffectiveDateUtil claimEffectiveDateUtil,
+      ProviderDetailsRestClient providerDetailsRestClient) {
+    this.categoryOfLawValidationService = categoryOfLawValidationService;
+    this.claimEffectiveDateUtil = claimEffectiveDateUtil;
+    this.providerDetailsRestClient = providerDetailsRestClient;
+  }
 
   @Override
   public int priority() {

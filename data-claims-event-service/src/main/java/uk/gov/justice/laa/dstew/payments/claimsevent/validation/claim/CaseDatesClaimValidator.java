@@ -14,8 +14,8 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
  * @see ClaimWithAreaOfLawValidator
  */
 @Component
-public class CaseDatesClaimValidator extends AbstractDateValidator
-    implements ClaimValidator, ClaimWithAreaOfLawValidator {
+public final class CaseDatesClaimValidator extends AbstractDateValidator
+    implements ClaimWithAreaOfLawValidator {
 
   public static final String OLDEST_DATE_ALLOWED_1 = "1995-01-01";
   public static final String MIN_REP_ORDER_DATE = "2016-04-01";

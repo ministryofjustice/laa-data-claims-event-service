@@ -21,7 +21,13 @@
     },
     "area_of_law": {
       "type": "string",
-      "enum": ["CIVIL", "CRIME", "MEDIATION", "CRIME LOWER", "LEGAL HELP"]
+      "enum": ["CIVIL", "CRIME", "MEDIATION", "CRIME LOWER", "LEGAL HELP"],
+      "validationErrorMessages": [
+        {
+          "key": "ALL",
+          "value": "Area of Law must be one of: MEDIATION, CRIME LOWER, or LEGAL HELP"
+        }
+      ]
     },
     "status": {
       "type": "string",
@@ -32,6 +38,12 @@
         "VALIDATION_SUCCEEDED",
         "VALIDATION_FAILED",
         "REPLACED"
+      ],
+      "validationErrorMessages": [
+        {
+          "key": "ALL",
+          "value": "Status must be one of: CREATED, READY_FOR_VALIDATION, VALIDATION_IN_PROGRESS, VALIDATION_SUCCEEDED, VALIDATION_FAILED, or REPLACED"
+        }
       ]
     },
     "crime_schedule_number": {

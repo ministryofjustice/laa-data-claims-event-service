@@ -6,24 +6,47 @@ import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.Out
 import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.OutcomeCodeClaimValidator.OUTCOME_CODE_CRIME_PATTERN;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.OutcomeCodeClaimValidator.OUTCOME_CODE_MEDIATION_PATTERN;
 
-import java.util.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.util.Map;
+import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.springframework.core.io.ClassPathResource;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
+import uk.gov.justice.laa.dstew.payments.claimsevent.config.SchemaValidationConfig;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
 @DisplayName("Outcome code claim validator test")
 class OutcomeCodeClaimValidatorTest {
 
-  OutcomeCodeClaimValidator validator = new OutcomeCodeClaimValidator();
+  OutcomeCodeClaimValidator validator;
+
+  @BeforeEach
+  void beforeEach() throws IOException {
+    SchemaValidationConfig config =
+        new SchemaValidationConfig(
+            new ObjectMapper(),
+            new ClassPathResource("schemas/submission-fields.schema.json"),
+            new ClassPathResource("schemas/claim-fields.schema.json"));
+    validator = new OutcomeCodeClaimValidator(config.schemaValidationErrorMessages());
+  }
 
   private final Map<String, String> outcomeCodePatterns =
       Map.of(
           "CIVIL", OUTCOME_CODE_CIVIL_PATTERN,
           "CRIME", OUTCOME_CODE_CRIME_PATTERN,
           "MEDIATION", OUTCOME_CODE_MEDIATION_PATTERN);
+
+  private final Map<String, String> outcomeCodeDisplayMessages =
+      Map.of(
+          "CIVIL",
+              "Outcome Code must be exactly 2 characters and contain only letters, numbers, and hyphens",
+          "CRIME", "Outcome Code must be a valid crime outcome code or left blank",
+          "MEDIATION", "Outcome Code must be a valid mediation outcome code or left blank");
 
   @ParameterizedTest(
       name = "{index} => claimId={0}, outcomeCode={1}, areaOfLaw={2}, expectError={3}")
@@ -76,6 +99,8 @@ class OutcomeCodeClaimValidatorTest {
               areaOfLaw, outcomeCodePatterns.get(areaOfLaw), outcomeCode);
       assertThat(getClaimMessages(context, claimId.toString()).getFirst().getTechnicalMessage())
           .isEqualTo(expectedMessage);
+      assertThat(getClaimMessages(context, claimId.toString()).getFirst().getDisplayMessage())
+          .isEqualTo(outcomeCodeDisplayMessages.get(areaOfLaw));
     } else {
       assertThat(getClaimMessages(context, claimId.toString()).isEmpty()).isTrue();
     }
