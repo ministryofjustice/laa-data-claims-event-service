@@ -7,18 +7,23 @@ repositories {
     mavenCentral()
 }
 
+dependencyManagement {
+    dependencies {
+        // Force dependency versions to fix vulnerabilities
+        dependencySet(group: 'ch.qos.logback', version: '1.5.19') {
+            entry 'logback-classic'
+            entry 'logback-core'
+        }
+        dependencySet(group: 'org.apache.tomcat.embed', version: '11.0.10') {
+            entry 'tomcat-embed-core'
+            entry 'tomcat-embed-websocket'
+        }
+        dependency 'org.yaml:snakeyaml:2.0'
+        dependency 'org.apache.commons:commons-lang3:3.18.0'
+    }
+}
+
 dependencies {
-
-    /**
-     * Upgrades to resolve vulnerabilities
-     */
-    // Upgrade to fix Uncontrolled Recursion vulnerability in commons-lang3
-    implementation 'org.apache.commons:commons-lang3:3.18.0'
-    // Upgrade to fix vulnerabilities in tomcat-embed-core
-    implementation 'org.apache.tomcat.embed:tomcat-embed-core:11.0.10'
-    // Upgrade to fix CVE-2025-11226 vulnerability in logback-core
-    implementation 'ch.qos.logback:logback-core:1.5.19'
-
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9'
     implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
