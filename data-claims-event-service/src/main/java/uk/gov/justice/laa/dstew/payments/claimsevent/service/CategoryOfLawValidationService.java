@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
@@ -42,7 +43,7 @@ public class CategoryOfLawValidationService {
 
     if (feeDetailsResponseWrapper.isError()) {
       context.flagForRetry(claim.getId());
-    } else {
+    } else if (feeDetailsResponseWrapper.getFeeDetailsResponse() != null) {
       String categoryOfLaw =
           feeDetailsResponseWrapper.getFeeDetailsResponse().getCategoryOfLawCode();
 
@@ -81,6 +82,9 @@ public class CategoryOfLawValidationService {
   }
 
   private FeeDetailsResponseWrapper getFeeDetails(String feeCode) {
+    if (!StringUtils.hasText(feeCode)) {
+      return FeeDetailsResponseWrapper.withFeeDetailsResponse(null);
+    }
     try {
       FeeDetailsResponse response = feeSchemePlatformRestClient.getFeeDetails(feeCode).getBody();
 

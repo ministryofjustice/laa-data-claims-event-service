@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
@@ -47,7 +48,7 @@ public class FeeCalculationService {
       SubmissionValidationContext context,
       FeeDetailsResponse feeDetailsResponse) {
     log.debug("Validating fee calculation for claim {}", claim.getId());
-    if (!context.isFlaggedForRetry(claim.getId())) {
+    if (StringUtils.hasText(claim.getFeeCode()) && !context.isFlaggedForRetry(claim.getId())) {
       FeeCalculationRequest feeCalculationRequest =
           feeSchemeMapper.mapToFeeCalculationRequest(claim);
 

@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionClaim;
@@ -107,24 +108,7 @@ public class ClaimValidationService {
 
     FeeDetailsResponseWrapper feeDetailsResponseWrapper =
         feeDetailsResponseMap.get(claim.getFeeCode());
-    if (feeDetailsResponseWrapper.isError()) {
-      log.error(
-          "Fee Scheme Platform API has returned an unexpected error for feeCode: {}",
-          claim.getFeeCode());
-      context.addClaimError(
-          claim.getId(),
-          ClaimValidationError.TECHNICAL_ERROR_FEE_CALCULATION_SERVICE,
-          claim.getFeeCode());
-      return;
-    }
-    if (feeDetailsResponseWrapper.getFeeDetailsResponse() == null) {
-      log.error("Fee details response returned null for fee code: {}", claim.getFeeCode());
-      context.addClaimError(
-          claim.getId(),
-          ClaimValidationError.INVALID_CATEGORY_OF_LAW_AND_FEE_CODE,
-          claim.getFeeCode());
-      return;
-    }
+    handleFeeDetailsError(claim, feeDetailsResponseWrapper, context);
 
     // Includes:
     // - JSON scheme validation
@@ -142,7 +126,10 @@ public class ClaimValidationService {
     // -- Client date of birth
     // - Matter Type Code
     // - Effective category of law
-    String feeCalculationType = feeDetailsResponseWrapper.getFeeDetailsResponse().getFeeType();
+    String feeCalculationType =
+        feeDetailsResponseWrapper.getFeeDetailsResponse() != null
+            ? feeDetailsResponseWrapper.getFeeDetailsResponse().getFeeType()
+            : null;
     claimValidator.stream()
         .sorted(
             Comparator.comparingInt(ClaimValidator::priority)) // Ensure validators are run in order
@@ -179,6 +166,29 @@ public class ClaimValidationService {
 
     // Check claim status and record metric
     recordClaimMetrics(claim, context);
+  }
+
+  private void handleFeeDetailsError(
+      ClaimResponse claim, FeeDetailsResponseWrapper wrapper, SubmissionValidationContext context) {
+    if (!StringUtils.hasText(claim.getFeeCode())) {
+      return;
+    }
+
+    if (wrapper.isError()) {
+      log.error(
+          "Fee Scheme Platform API has returned an unexpected error for feeCode: {}",
+          claim.getFeeCode());
+      context.addClaimError(
+          claim.getId(),
+          ClaimValidationError.TECHNICAL_ERROR_FEE_CALCULATION_SERVICE,
+          claim.getFeeCode());
+    } else if (wrapper.getFeeDetailsResponse() == null) {
+      log.error("Fee details response returned null for fee code: {}", claim.getFeeCode());
+      context.addClaimError(
+          claim.getId(),
+          ClaimValidationError.INVALID_CATEGORY_OF_LAW_AND_FEE_CODE,
+          claim.getFeeCode());
+    }
   }
 
   private void recordClaimMetrics(ClaimResponse claim, SubmissionValidationContext context) {
