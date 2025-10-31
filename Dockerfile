@@ -1,5 +1,5 @@
 # Specify java runtime base image
-FROM eclipse-temurin:21
+FROM eclipse-temurin:21.0.8_9-jre
 
 # Update and upgrade system packages
 RUN apt-get update && \
