@@ -1,6 +1,11 @@
 # Specify java runtime base image
 FROM eclipse-temurin:21
 
+# Update and upgrade system packages
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    rm -rf /var/lib/apt/lists/*
+
 # Set up working directory in the container
 RUN mkdir -p /opt/data-claims-event-service/
 WORKDIR /opt/data-claims-event-service/
@@ -12,4 +17,4 @@ COPY data-claims-event-service/build/libs/data-claims-event-service-1.0.0.jar ap
 EXPOSE 8080
 
 # Run the JAR file
-CMD java -jar app.jar
+CMD ["java", "-jar", "app.jar"]
