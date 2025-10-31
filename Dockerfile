@@ -1,10 +1,5 @@
 # Specify java runtime base image
-FROM eclipse-temurin:21.0.8_9-jre
-
-# Update and upgrade system packages
-RUN apt-get update && \
-    apt-get upgrade -y && \
-    rm -rf /var/lib/apt/lists/*
+FROM eclipse-temurin:21.0.8_9-jre-ubi9-minimal
 
 # Set up working directory in the container
 RUN mkdir -p /opt/data-claims-event-service/
