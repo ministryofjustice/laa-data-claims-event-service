@@ -1,7 +1,7 @@
 plugins {
     id 'io.freefair.lombok' version '8.14'
     id("com.diffplug.spotless") version "7.2.1"
-    id 'uk.gov.laa.springboot.laa-spring-boot-gradle-plugin' version '1.0.4'
+    id 'uk.gov.laa.springboot.laa-spring-boot-gradle-plugin' version '1.2.0'
 }
 
 test {
@@ -51,7 +51,7 @@ dependencyManagement {
         }
         dependency 'org.yaml:snakeyaml:2.0'
         dependency 'org.apache.commons:commons-lang3:3.18.0'
-        dependency 'org.springframework.boot:spring-boot:3.5.5'
+        dependency 'org.springframework.boot:spring-boot:3.5.6'
     }
 }
 
