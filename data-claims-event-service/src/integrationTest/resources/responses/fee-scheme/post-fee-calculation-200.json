@@ -18,7 +18,7 @@
     "requestedNetProfitCostsAmount": null,
     "netCostOfCounselAmount": 0.0,
     "netTravelCostsAmount": 0.0,
-    "netWaitingCosts": 0.0,
+    "netWaitingCostsAmount": 0.0,
     "detentionTravelAndWaitingCostsAmount": 0.0,
     "jrFormFillingAmount": 0.0,
     "travelAndWaitingCostAmount": 0.0,

@@ -50,7 +50,9 @@ class FeeSchemeMapperTest {
               .schemeId("schemeId")
               .uniqueFileNumber("ufn")
               .mediationSessionsCount(1)
-              .jrFormFillingAmount(BigDecimal.valueOf(1.08));
+              .jrFormFillingAmount(BigDecimal.valueOf(1.08))
+              .isLondonRate(true)
+              .representationOrderDate("2025-01-02");
 
       BoltOnType boltOnType =
           new BoltOnType()
@@ -79,9 +81,9 @@ class FeeSchemeMapperTest {
               .caseConcludedDate(LocalDate.parse("2025-01-02"))
               .policeStationId("policeCourtOrPrisonId")
               .policeStationSchemeId("schemeId")
-              .policeCourtOrPrisonId("policeCourtOrPrisonId")
-              .schemeId("schemeId")
               .uniqueFileNumber("ufn")
+              .londonRate(true)
+              .representationOrderDate(LocalDate.parse("2025-01-02"))
               .numberOfMediationSessions(1)
               .jrFormFilling(1.08)
               .build();
