@@ -21,7 +21,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionAreaOfLaw;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionClaim;
@@ -133,7 +133,7 @@ class SubmissionValidationServiceTest {
       return getSubmission(
           SubmissionStatus.READY_FOR_VALIDATION,
           submissionId,
-          BulkSubmissionAreaOfLaw.LEGAL_HELP,
+          AreaOfLaw.LEGAL_HELP,
           "officeAccountNumber",
           isNilSubmission,
           List.of(claim));
@@ -157,7 +157,7 @@ class SubmissionValidationServiceTest {
   private static SubmissionResponse getSubmission(
       SubmissionStatus submissionStatus,
       UUID submissionId,
-      BulkSubmissionAreaOfLaw areaOfLaw,
+      AreaOfLaw areaOfLaw,
       String officeAccountNumber,
       boolean isNilSubmission,
       List<SubmissionClaim> claims) {

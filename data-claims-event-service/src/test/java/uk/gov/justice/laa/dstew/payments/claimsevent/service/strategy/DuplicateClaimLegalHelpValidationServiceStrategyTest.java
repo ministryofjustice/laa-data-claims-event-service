@@ -35,8 +35,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.
 class DuplicateClaimLegalHelpValidationServiceStrategyTest
     extends AbstractDuplicateClaimValidatorStrategy {
 
-  private static final String DISBURSEMENT_FEE_TYPE =
-      FeeCalculationType.DISBURSEMENT_ONLY.toString();
+  private static final String DISBURSEMENT_FEE_TYPE = FeeCalculationType.DISB_ONLY.toString();
 
   @Mock private DataClaimsRestClient mockDataClaimsRestClient;
 

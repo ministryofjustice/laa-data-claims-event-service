@@ -16,7 +16,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionAreaOfLaw;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationType;
@@ -41,7 +41,7 @@ class MandatoryFieldClaimValidatorTest {
   @Test
   void shouldHaveNoErrorsWhenNoMandatoryFields() {
     // Define the map for the test
-    Map<BulkSubmissionAreaOfLaw, List<String>> legalHelpMandatoryFields = Map.of();
+    Map<AreaOfLaw, List<String>> legalHelpMandatoryFields = Map.of();
 
     lenient()
         .when(mandatoryFieldsRegistry.getMandatoryFieldsByAreaOfLaw())
@@ -60,7 +60,7 @@ class MandatoryFieldClaimValidatorTest {
 
     SubmissionValidationContext context = new SubmissionValidationContext();
 
-    validator.validate(claim, context, BulkSubmissionAreaOfLaw.LEGAL_HELP);
+    validator.validate(claim, context, AreaOfLaw.LEGAL_HELP);
 
     assertThat(getClaimMessages(context, claimId.toString()).isEmpty()).isTrue();
   }
@@ -68,9 +68,9 @@ class MandatoryFieldClaimValidatorTest {
   @Test
   void shouldHaveNoErrorsWhenNoMandatoryFieldsMissing() {
     // Define the map for the test
-    Map<BulkSubmissionAreaOfLaw, List<String>> legalHelpMandatoryFields =
+    Map<AreaOfLaw, List<String>> legalHelpMandatoryFields =
         Map.of(
-            BulkSubmissionAreaOfLaw.LEGAL_HELP,
+            AreaOfLaw.LEGAL_HELP,
             List.of(
                 "feeCode",
                 "caseStartDate",
@@ -95,7 +95,7 @@ class MandatoryFieldClaimValidatorTest {
 
     SubmissionValidationContext context = new SubmissionValidationContext();
 
-    validator.validate(claim, context, BulkSubmissionAreaOfLaw.LEGAL_HELP);
+    validator.validate(claim, context, AreaOfLaw.LEGAL_HELP);
 
     assertThat(getClaimMessages(context, claimId.toString()).isEmpty()).isTrue();
   }
@@ -112,8 +112,8 @@ class MandatoryFieldClaimValidatorTest {
   @DisplayName("Should have error when mandatory fields missing")
   void shouldHaveErrorWhenMandatoryFieldsMissing(String mandatoryField) {
     // Define the map for the test
-    Map<BulkSubmissionAreaOfLaw, List<String>> legalHelpMandatoryFields =
-        Map.of(BulkSubmissionAreaOfLaw.LEGAL_HELP, List.of(mandatoryField));
+    Map<AreaOfLaw, List<String>> legalHelpMandatoryFields =
+        Map.of(AreaOfLaw.LEGAL_HELP, List.of(mandatoryField));
 
     lenient()
         .when(mandatoryFieldsRegistry.getMandatoryFieldsByAreaOfLaw())
@@ -125,12 +125,11 @@ class MandatoryFieldClaimValidatorTest {
 
     SubmissionValidationContext context = new SubmissionValidationContext();
 
-    validator.validate(
-        claim, context, BulkSubmissionAreaOfLaw.LEGAL_HELP, FeeCalculationType.FIXED.getValue());
+    validator.validate(claim, context, AreaOfLaw.LEGAL_HELP, FeeCalculationType.FIXED.getValue());
 
     assertThat(getClaimMessages(context, claimId.toString()).isEmpty()).isFalse();
     assertThat(getClaimMessages(context, claimId.toString()).getFirst().getDisplayMessage())
-        .isEqualTo("%s is required for area of law: LEGAL_HELP".formatted(mandatoryField));
+        .isEqualTo("%s is required for area of law: LEGAL HELP".formatted(mandatoryField));
   }
 
   @ParameterizedTest
@@ -149,8 +148,8 @@ class MandatoryFieldClaimValidatorTest {
   void shouldHaveNoErrorWhenExcludedFieldsMissingForDisbursementOnlyLegalHelpClaims(
       String mandatoryField) {
     // Define the map for the test
-    Map<BulkSubmissionAreaOfLaw, List<String>> legalHelpMandatoryFields =
-        Map.of(BulkSubmissionAreaOfLaw.LEGAL_HELP, List.of(mandatoryField));
+    Map<AreaOfLaw, List<String>> legalHelpMandatoryFields =
+        Map.of(AreaOfLaw.LEGAL_HELP, List.of(mandatoryField));
 
     lenient()
         .when(mandatoryFieldsRegistry.getMandatoryFieldsByAreaOfLaw())
@@ -162,8 +161,7 @@ class MandatoryFieldClaimValidatorTest {
 
     SubmissionValidationContext context = new SubmissionValidationContext();
 
-    validator.validate(
-        claim, context, BulkSubmissionAreaOfLaw.LEGAL_HELP, FEE_CALCULATION_TYPE_DISB_ONLY);
+    validator.validate(claim, context, AreaOfLaw.LEGAL_HELP, FEE_CALCULATION_TYPE_DISB_ONLY);
 
     assertThat(getClaimMessages(context, claimId.toString()).isEmpty()).isTrue();
   }

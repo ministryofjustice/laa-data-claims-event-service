@@ -7,7 +7,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionAreaOfLaw;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
@@ -29,7 +29,7 @@ class MatterTypeClaimValidatorTest {
   void checkMatterType(
       int claimIdBit,
       String matterTypeCode,
-      BulkSubmissionAreaOfLaw areaOfLaw,
+      AreaOfLaw areaOfLaw,
       String regex,
       boolean expectError) {
     UUID claimId = new UUID(claimIdBit, claimIdBit);

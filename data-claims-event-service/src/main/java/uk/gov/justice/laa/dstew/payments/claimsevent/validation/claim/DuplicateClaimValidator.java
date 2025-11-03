@@ -5,7 +5,7 @@ import java.util.function.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionAreaOfLaw;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.DuplicateClaimValidationStrategy;
@@ -39,7 +39,7 @@ public class DuplicateClaimValidator implements ClaimValidator {
   public void validate(
       final ClaimResponse claim,
       final SubmissionValidationContext context,
-      final BulkSubmissionAreaOfLaw areaOfLaw,
+      final AreaOfLaw areaOfLaw,
       final String officeCode,
       final List<ClaimResponse> submissionClaims,
       final String feeType) {

@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionAreaOfLaw;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
@@ -175,7 +175,7 @@ class JsonSchemaValidatorTest {
       submission.setCrimeLowerScheduleNumber("abc123");
       submission.setOfficeAccountNumber("2Q286D");
       submission.setSubmissionPeriod("OCT-2024");
-      submission.setAreaOfLaw(BulkSubmissionAreaOfLaw.CRIME_LOWER);
+      submission.setAreaOfLaw(AreaOfLaw.CRIME_LOWER);
       submission.isNilSubmission(false);
       submission.setNumberOfClaims(3);
 
@@ -776,7 +776,7 @@ class JsonSchemaValidatorTest {
         .bulkSubmissionId(UUID.randomUUID())
         .officeAccountNumber("2Q286D")
         .submissionPeriod("OCT-2024")
-        .areaOfLaw(BulkSubmissionAreaOfLaw.CRIME_LOWER)
+        .areaOfLaw(AreaOfLaw.CRIME_LOWER)
         .status(SubmissionStatus.CREATED)
         .isNilSubmission(false)
         .numberOfClaims(1)

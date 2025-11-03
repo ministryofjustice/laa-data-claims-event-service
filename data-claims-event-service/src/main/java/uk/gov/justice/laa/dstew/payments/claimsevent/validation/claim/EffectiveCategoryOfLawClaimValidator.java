@@ -6,7 +6,7 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionAreaOfLaw;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.EventServiceIllegalArgumentException;
@@ -52,7 +52,7 @@ public class EffectiveCategoryOfLawClaimValidator implements ClaimValidator {
   public void validate(
       ClaimResponse claim,
       SubmissionValidationContext context,
-      BulkSubmissionAreaOfLaw areaOfLaw,
+      AreaOfLaw areaOfLaw,
       String officeCode,
       Map<String, FeeDetailsResponseWrapper> feeDetailsResponseMap) {
     try {
@@ -71,7 +71,7 @@ public class EffectiveCategoryOfLawClaimValidator implements ClaimValidator {
   }
 
   private List<String> getEffectiveCategoriesOfLaw(
-      String officeCode, BulkSubmissionAreaOfLaw areaOfLaw, LocalDate effectiveDate) {
+      String officeCode, AreaOfLaw areaOfLaw, LocalDate effectiveDate) {
     return providerDetailsRestClient
         .getProviderFirmSchedules(officeCode, areaOfLaw.getValue(), effectiveDate)
         .blockOptional()

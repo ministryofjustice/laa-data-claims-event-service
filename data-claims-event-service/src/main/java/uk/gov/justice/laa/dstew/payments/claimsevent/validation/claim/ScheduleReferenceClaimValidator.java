@@ -2,7 +2,7 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionAreaOfLaw;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
@@ -23,9 +23,9 @@ public class ScheduleReferenceClaimValidator
 
   @Override
   public void validate(
-      ClaimResponse claim, SubmissionValidationContext context, BulkSubmissionAreaOfLaw areaOfLaw) {
+      ClaimResponse claim, SubmissionValidationContext context, AreaOfLaw areaOfLaw) {
     String regex = null;
-    if (BulkSubmissionAreaOfLaw.LEGAL_HELP.equals(areaOfLaw)) {
+    if (AreaOfLaw.LEGAL_HELP.equals(areaOfLaw)) {
       regex = LEGAL_HELP_SCHEDULE_REFERENCE_PATTERN;
     }
     validateFieldWithRegex(

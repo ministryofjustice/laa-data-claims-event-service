@@ -2,7 +2,7 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim;
 
 import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationSource.EVENT_SERVICE;
 
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionAreaOfLaw;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
@@ -23,9 +23,7 @@ public interface ClaimWithAreaOfLawValidator {
    * @param areaOfLaw the area of law for the claim
    */
   default void validate(
-      final ClaimResponse claim,
-      SubmissionValidationContext context,
-      BulkSubmissionAreaOfLaw areaOfLaw) {
+      final ClaimResponse claim, SubmissionValidationContext context, AreaOfLaw areaOfLaw) {
     // Default implementation does nothing, overridden methods will be called.
   }
 
@@ -40,7 +38,7 @@ public interface ClaimWithAreaOfLawValidator {
   default void validate(
       final ClaimResponse claim,
       SubmissionValidationContext context,
-      BulkSubmissionAreaOfLaw areaOfLaw,
+      AreaOfLaw areaOfLaw,
       String feeCalculationType) {
     validate(claim, context, areaOfLaw);
   }
@@ -58,7 +56,7 @@ public interface ClaimWithAreaOfLawValidator {
    */
   default void validateFieldWithRegex(
       ClaimResponse claim,
-      BulkSubmissionAreaOfLaw areaOfLaw,
+      AreaOfLaw areaOfLaw,
       String fieldValue,
       String fieldName,
       String regex,

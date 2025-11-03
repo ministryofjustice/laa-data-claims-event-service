@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionAreaOfLaw;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
@@ -36,10 +36,7 @@ class StageReachedClaimValidatorTest {
     "7, ABCD, CRIME_LOWER, true"
   })
   void checkStageReachedCode(
-      int claimIdBit,
-      String stageReachedCode,
-      BulkSubmissionAreaOfLaw areaOfLaw,
-      boolean expectError) {
+      int claimIdBit, String stageReachedCode, AreaOfLaw areaOfLaw, boolean expectError) {
     UUID claimId = new UUID(claimIdBit, claimIdBit);
     ClaimResponse claim =
         new ClaimResponse()
@@ -90,7 +87,7 @@ class StageReachedClaimValidatorTest {
     SubmissionValidationContext context = new SubmissionValidationContext();
 
     // Run validation
-    validator.validate(claim, context, BulkSubmissionAreaOfLaw.CRIME_LOWER);
+    validator.validate(claim, context, AreaOfLaw.CRIME_LOWER);
     assertThat(getClaimMessages(context, claimId.toString()).isEmpty()).isTrue();
   }
 
@@ -102,15 +99,14 @@ class StageReachedClaimValidatorTest {
     SubmissionValidationContext context = new SubmissionValidationContext();
 
     // Run validation
-    assertThatThrownBy(
-            () -> validator.validate(claim, context, BulkSubmissionAreaOfLaw.valueOf("INVALID")))
+    assertThatThrownBy(() -> validator.validate(claim, context, AreaOfLaw.valueOf("INVALID")))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("No enum constant")
         .hasNoCause();
   }
 
-  private String getRegex(BulkSubmissionAreaOfLaw areaOfLaw) {
-    return BulkSubmissionAreaOfLaw.LEGAL_HELP.equals(areaOfLaw)
+  private String getRegex(AreaOfLaw areaOfLaw) {
+    return AreaOfLaw.LEGAL_HELP.equals(areaOfLaw)
         ? STAGE_REACHED_LEGAL_HELP_PATTERN
         : STAGE_REACHED_CRIME_LOWER_PATTERN;
   }

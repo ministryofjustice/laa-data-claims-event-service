@@ -21,7 +21,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionAreaOfLaw;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionBase;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
@@ -33,7 +33,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 @ExtendWith(MockitoExtension.class)
 public class SubmissionOfficeAreaOfLawAndPeriodValidatorTest {
   private static final String OFFICE_CODE = "office1";
-  private static final BulkSubmissionAreaOfLaw AREA_OF_LAW = BulkSubmissionAreaOfLaw.LEGAL_HELP;
+  private static final AreaOfLaw AREA_OF_LAW = AreaOfLaw.LEGAL_HELP;
   private static final String SUBMISSION_PERIOD = "2025-07";
 
   @Mock private DataClaimsRestClient mockDataClaimsRestClient;
@@ -42,7 +42,7 @@ public class SubmissionOfficeAreaOfLawAndPeriodValidatorTest {
 
   @Captor private ArgumentCaptor<List<String>> officeCodeCaptor;
 
-  @Captor private ArgumentCaptor<BulkSubmissionAreaOfLaw> areaOfLawCaptor;
+  @Captor private ArgumentCaptor<AreaOfLaw> areaOfLawCaptor;
 
   @Captor private ArgumentCaptor<String> submissionPeriodCaptor;
 

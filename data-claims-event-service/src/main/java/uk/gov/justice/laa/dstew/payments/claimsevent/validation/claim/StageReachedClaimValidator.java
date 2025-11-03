@@ -2,7 +2,7 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionAreaOfLaw;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
@@ -24,7 +24,7 @@ public class StageReachedClaimValidator implements ClaimValidator, ClaimWithArea
 
   @Override
   public void validate(
-      ClaimResponse claim, SubmissionValidationContext context, BulkSubmissionAreaOfLaw areaOfLaw) {
+      ClaimResponse claim, SubmissionValidationContext context, AreaOfLaw areaOfLaw) {
     String regex =
         switch (areaOfLaw) {
           case LEGAL_HELP -> STAGE_REACHED_LEGAL_HELP_PATTERN;

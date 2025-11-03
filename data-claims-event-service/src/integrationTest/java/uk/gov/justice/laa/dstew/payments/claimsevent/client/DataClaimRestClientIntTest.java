@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionAreaOfLaw;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MockServerIntegrationTest;
 
 @ActiveProfiles("test")
@@ -29,7 +29,7 @@ public class DataClaimRestClientIntTest extends MockServerIntegrationTest {
   @Autowired private DataClaimsRestClient dataClaimsRestClient;
   private static final List<String> offices = List.of("office1");
   private static final String submissionId = "f6bde766-a0a3-483b-bf13-bef888b4f06e";
-  private static final BulkSubmissionAreaOfLaw areaOfLaw = BulkSubmissionAreaOfLaw.LEGAL_HELP;
+  private static final AreaOfLaw areaOfLaw = AreaOfLaw.LEGAL_HELP;
   private static final String submissionPeriod = "2025-07";
 
   @DisplayName(
@@ -54,7 +54,7 @@ public class DataClaimRestClientIntTest extends MockServerIntegrationTest {
     params.add(Parameter.param("submission_id", submissionId));
     params.add(Parameter.param("submitted_date_from", submittedDateFrom.format(formatter)));
     params.add(Parameter.param("submitted_date_to", submittedDateTo.format(formatter)));
-    params.add(Parameter.param("area_of_law", String.valueOf(areaOfLaw)));
+    params.add(Parameter.param("area_of_law", areaOfLaw.name()));
     params.add(Parameter.param("submission_period", submissionPeriod));
 
     if (page != null) params.add(Parameter.param("page", page.toString()));

@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.stereotype.Component;
 import org.springframework.test.context.ActiveProfiles;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionAreaOfLaw;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MockServerIntegrationTest;
 
 @ActiveProfiles("test")
@@ -61,7 +61,7 @@ public class DuplicateClaimsTest extends MockServerIntegrationTest {
       // provider-details
       stubForGetProviderOffice(
           OFFICE_CODE,
-          List.of(new Parameter("areaOfLaw", String.valueOf(BulkSubmissionAreaOfLaw.LEGAL_HELP))),
+          List.of(new Parameter("areaOfLaw", AreaOfLaw.LEGAL_HELP.getValue())),
           "provider-details/get-firm-schedules-openapi-200.json");
       // fee-details
       stubForGetFeeDetails(FEE_CODE, "fee-scheme/get-fee-details-200.json");
@@ -75,7 +75,7 @@ public class DuplicateClaimsTest extends MockServerIntegrationTest {
       getStubForGetSubmissionByCriteria(
           List.of(
               Parameter.param("offices", OFFICE_CODE),
-              Parameter.param("area_of_law", String.valueOf(BulkSubmissionAreaOfLaw.LEGAL_HELP)),
+              Parameter.param("area_of_law", AreaOfLaw.LEGAL_HELP.name()),
               Parameter.param("submission_period", SUBMISSION_PERIOD)),
           "data-claims/get-submission/get-submissions-by-filter_no_content.json");
 

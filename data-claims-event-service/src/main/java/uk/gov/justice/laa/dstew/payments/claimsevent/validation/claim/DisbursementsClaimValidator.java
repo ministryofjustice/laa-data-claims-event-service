@@ -4,7 +4,7 @@ import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimVali
 
 import java.math.BigDecimal;
 import org.springframework.stereotype.Component;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionAreaOfLaw;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
@@ -21,7 +21,7 @@ public class DisbursementsClaimValidator implements ClaimValidator, ClaimWithAre
 
   @Override
   public void validate(
-      ClaimResponse claim, SubmissionValidationContext context, BulkSubmissionAreaOfLaw areaOfLaw) {
+      ClaimResponse claim, SubmissionValidationContext context, AreaOfLaw areaOfLaw) {
     var disbursementsVatAmount = claim.getDisbursementsVatAmount();
 
     BigDecimal maxAllowed =

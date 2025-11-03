@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionAreaOfLaw;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationType;
@@ -65,7 +65,7 @@ class DuplicateClaimValidatorTest {
     validator.validate(
         claim,
         context,
-        BulkSubmissionAreaOfLaw.LEGAL_HELP,
+        AreaOfLaw.LEGAL_HELP,
         "officeAccountNumber",
         singletonList(claim),
         FeeCalculationType.FIXED.toString());
@@ -87,7 +87,7 @@ class DuplicateClaimValidatorTest {
     validator.validate(
         claim,
         context,
-        BulkSubmissionAreaOfLaw.CRIME_LOWER,
+        AreaOfLaw.CRIME_LOWER,
         "officeAccountNumber",
         singletonList(claim),
         FeeCalculationType.FIXED.toString());

@@ -10,7 +10,7 @@ import java.util.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionAreaOfLaw;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
@@ -20,11 +20,11 @@ class OutcomeCodeClaimValidatorTest {
 
   OutcomeCodeClaimValidator validator = new OutcomeCodeClaimValidator();
 
-  private final Map<BulkSubmissionAreaOfLaw, String> outcomeCodePatterns =
+  private final Map<AreaOfLaw, String> outcomeCodePatterns =
       Map.of(
-          BulkSubmissionAreaOfLaw.LEGAL_HELP, OUTCOME_CODE_LEGAL_HELP_PATTERN,
-          BulkSubmissionAreaOfLaw.CRIME_LOWER, OUTCOME_CODE_CRIME_LOWER_PATTERN,
-          BulkSubmissionAreaOfLaw.MEDIATION, OUTCOME_CODE_MEDIATION_PATTERN);
+          AreaOfLaw.LEGAL_HELP, OUTCOME_CODE_LEGAL_HELP_PATTERN,
+          AreaOfLaw.CRIME_LOWER, OUTCOME_CODE_CRIME_LOWER_PATTERN,
+          AreaOfLaw.MEDIATION, OUTCOME_CODE_MEDIATION_PATTERN);
 
   @ParameterizedTest(
       name = "{index} => claimId={0}, outcomeCode={1}, areaOfLaw={2}, expectError={3}")
@@ -54,7 +54,7 @@ class OutcomeCodeClaimValidatorTest {
     "23, AB, MEDIATION, true"
   })
   void checkStageReachedCode(
-      int claimIdBit, String outcomeCode, BulkSubmissionAreaOfLaw areaOfLaw, boolean expectError) {
+      int claimIdBit, String outcomeCode, AreaOfLaw areaOfLaw, boolean expectError) {
     UUID claimId = new UUID(claimIdBit, claimIdBit);
     ClaimResponse claim =
         new ClaimResponse()

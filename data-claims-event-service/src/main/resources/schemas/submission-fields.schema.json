@@ -21,7 +21,7 @@
     },
     "area_of_law": {
       "type": "string",
-      "enum": ["MEDIATION", "CRIME_LOWER", "LEGAL_HELP"]
+      "enum": ["MEDIATION", "CRIME LOWER", "LEGAL HELP"]
     },
     "status": {
       "type": "string",

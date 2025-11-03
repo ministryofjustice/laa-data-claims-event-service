@@ -62,8 +62,7 @@ class BulkSubmissionMapperTest {
         objectMapper.readValue(json, GetBulkSubmission200Response.class);
 
     var claims =
-        mapper.mapToClaimPosts(
-            bulkSubmission.getDetails().getOutcomes(), BulkSubmissionAreaOfLaw.LEGAL_HELP);
+        mapper.mapToClaimPosts(bulkSubmission.getDetails().getOutcomes(), AreaOfLaw.LEGAL_HELP);
 
     assertThat(claims).hasSize(1);
     ClaimPost claim = claims.getFirst();
@@ -90,8 +89,7 @@ class BulkSubmissionMapperTest {
         objectMapper.readValue(json, GetBulkSubmission200Response.class);
 
     var claims =
-        mapper.mapToClaimPosts(
-            bulkSubmission.getDetails().getOutcomes(), BulkSubmissionAreaOfLaw.CRIME_LOWER);
+        mapper.mapToClaimPosts(bulkSubmission.getDetails().getOutcomes(), AreaOfLaw.CRIME_LOWER);
 
     assertThat(claims).hasSize(1);
     ClaimPost claim = claims.getFirst();

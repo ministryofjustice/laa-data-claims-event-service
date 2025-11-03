@@ -15,7 +15,7 @@ import org.springframework.web.service.annotation.GetExchange;
 import org.springframework.web.service.annotation.HttpExchange;
 import org.springframework.web.service.annotation.PatchExchange;
 import org.springframework.web.service.annotation.PostExchange;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionAreaOfLaw;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPost;
@@ -112,7 +112,7 @@ public interface DataClaimsRestClient {
       @RequestParam(value = "submission_id", required = false) String submissionId,
       @RequestParam(value = "submitted_date_from", required = false) LocalDate submittedDateFrom,
       @RequestParam(value = "submitted_date_to", required = false) LocalDate submittedDateTo,
-      @RequestParam(value = "area_of_law", required = false) BulkSubmissionAreaOfLaw areaOfLaw,
+      @RequestParam(value = "area_of_law", required = false) AreaOfLaw areaOfLaw,
       @RequestParam(value = "submission_period", required = false) String submissionPeriod,
       @RequestParam(value = "page", required = false) Integer page,
       @RequestParam(value = "size", required = false) Integer size,

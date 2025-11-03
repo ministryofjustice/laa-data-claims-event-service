@@ -18,7 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionAreaOfLaw;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
@@ -70,9 +70,7 @@ class EffectiveCategoryOfLawClaimValidatorTest {
                         new FirmOfficeContractAndScheduleLine().categoryOfLaw("categoryOfLaw1")));
 
     when(providerDetailsRestClient.getProviderFirmSchedules(
-            eq("officeAccountNumber"),
-            eq(BulkSubmissionAreaOfLaw.LEGAL_HELP.getValue()),
-            any(LocalDate.class)))
+            eq("officeAccountNumber"), eq(AreaOfLaw.LEGAL_HELP.getValue()), any(LocalDate.class)))
         .thenReturn(Mono.just(data));
 
     // Two claims make two separate calls to claimEffectiveDateUtil
@@ -81,11 +79,7 @@ class EffectiveCategoryOfLawClaimValidatorTest {
     SubmissionValidationContext context = new SubmissionValidationContext();
 
     validator.validate(
-        claim,
-        context,
-        BulkSubmissionAreaOfLaw.LEGAL_HELP,
-        "officeAccountNumber",
-        feeDetailsResponseMap);
+        claim, context, AreaOfLaw.LEGAL_HELP, "officeAccountNumber", feeDetailsResponseMap);
 
     verify(claimEffectiveDateUtil, times(1)).getEffectiveDate(claim);
 

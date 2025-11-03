@@ -8,7 +8,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionAreaOfLaw;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
@@ -32,13 +32,13 @@ class DisbursementsClaimValidatorTest {
   void checkDisbursementsVatAmount(
       int claimIdBit,
       BigDecimal disbursementsVatAmount,
-      BulkSubmissionAreaOfLaw areaOfLaw,
+      AreaOfLaw areaOfLaw,
       BigDecimal maxAllowed,
       boolean expectError) {
     UUID claimId = new UUID(claimIdBit, claimIdBit);
     ClaimResponse claim =
         new ClaimResponse().id(claimId.toString()).disbursementsVatAmount(disbursementsVatAmount);
-    if (BulkSubmissionAreaOfLaw.CRIME_LOWER.equals(areaOfLaw)) {
+    if (AreaOfLaw.CRIME_LOWER.equals(areaOfLaw)) {
       claim.setStageReachedCode("ABCD");
     }
 

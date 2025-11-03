@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.Getter;
 import org.springframework.stereotype.Component;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionAreaOfLaw;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 
 /**
  * Registry holding mappings of mandatory field names grouped by area of law.
@@ -67,9 +67,9 @@ public class MandatoryFieldsRegistry {
           "matterTypeCode",
           "uniqueCaseId");
 
-  private final Map<BulkSubmissionAreaOfLaw, List<String>> mandatoryFieldsByAreaOfLaw =
+  private final Map<AreaOfLaw, List<String>> mandatoryFieldsByAreaOfLaw =
       Map.of(
-          BulkSubmissionAreaOfLaw.LEGAL_HELP, legalHelpMandatoryFields,
-          BulkSubmissionAreaOfLaw.CRIME_LOWER, crimeLowerMandatoryFields,
-          BulkSubmissionAreaOfLaw.MEDIATION, mediationMandatoryFields);
+          AreaOfLaw.LEGAL_HELP, legalHelpMandatoryFields,
+          AreaOfLaw.CRIME_LOWER, crimeLowerMandatoryFields,
+          AreaOfLaw.MEDIATION, mediationMandatoryFields);
 }

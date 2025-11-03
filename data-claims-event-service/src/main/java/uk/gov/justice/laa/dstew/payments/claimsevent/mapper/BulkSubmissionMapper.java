@@ -13,7 +13,7 @@ import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
 import org.springframework.util.StringUtils;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionAreaOfLaw;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionMatterStart;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionOutcome;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPost;
@@ -150,8 +150,7 @@ public interface BulkSubmissionMapper {
   @Mapping(target = "surgeryClientsCount", source = "noOfClients")
   @Mapping(target = "surgeryMattersCount", source = "noOfSurgeryClients")
   @Mapping(target = "createdByUserId", constant = EVENT_SERVICE)
-  ClaimPost mapToClaimPost(
-      BulkSubmissionOutcome outcome, @Context BulkSubmissionAreaOfLaw areaOfLaw);
+  ClaimPost mapToClaimPost(BulkSubmissionOutcome outcome, @Context AreaOfLaw areaOfLaw);
 
   /**
    * Adjusts the matter type and stage reached codes for crime lower claims after the initial
@@ -165,14 +164,14 @@ public interface BulkSubmissionMapper {
   default void adjustMatterTypeTarget(
       @MappingTarget ClaimPost claimPost,
       BulkSubmissionOutcome outcome,
-      @Context BulkSubmissionAreaOfLaw areaOfLaw) {
-    if (BulkSubmissionAreaOfLaw.CRIME_LOWER.equals(areaOfLaw)) {
+      @Context AreaOfLaw areaOfLaw) {
+    if (AreaOfLaw.CRIME_LOWER.equals(areaOfLaw)) {
       claimPost.setStageReachedCode(outcome.getMatterType());
     }
   }
 
   List<ClaimPost> mapToClaimPosts(
-      List<BulkSubmissionOutcome> outcomes, @Context BulkSubmissionAreaOfLaw areaOfLaw);
+      List<BulkSubmissionOutcome> outcomes, @Context AreaOfLaw areaOfLaw);
 
   @Mapping(target = "categoryCode", source = "categoryCode")
   @Mapping(target = "accessPointCode", source = "accessPoint")

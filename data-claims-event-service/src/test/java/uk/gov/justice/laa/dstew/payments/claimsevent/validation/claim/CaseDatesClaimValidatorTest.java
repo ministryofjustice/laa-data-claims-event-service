@@ -8,7 +8,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionAreaOfLaw;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
@@ -34,7 +34,7 @@ class CaseDatesClaimValidatorTest {
 
     SubmissionValidationContext context = new SubmissionValidationContext();
 
-    validator.validate(claim, context, BulkSubmissionAreaOfLaw.LEGAL_HELP);
+    validator.validate(claim, context, AreaOfLaw.LEGAL_HELP);
 
     // Then
     assertThat(
@@ -94,7 +94,7 @@ class CaseDatesClaimValidatorTest {
 
     SubmissionValidationContext context = new SubmissionValidationContext();
 
-    validator.validate(claim, context, BulkSubmissionAreaOfLaw.LEGAL_HELP);
+    validator.validate(claim, context, AreaOfLaw.LEGAL_HELP);
 
     // Then
     assertThat(
@@ -156,7 +156,7 @@ class CaseDatesClaimValidatorTest {
   })
   void checkMandatoryCaseConcludedDate(
       int claimIdBit,
-      BulkSubmissionAreaOfLaw areaOfLaw,
+      AreaOfLaw areaOfLaw,
       String caseConcludedDate,
       boolean expectError,
       String expectedErrorMsg) {
