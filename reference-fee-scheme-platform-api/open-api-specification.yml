@@ -88,7 +88,6 @@ components:
       type: object
       required:
         - feeCode
-        - vatIndicator
       properties:
         feeCode:
           type: string
@@ -108,7 +107,7 @@ components:
           description: "Police Station Scheme ID."
         uniqueFileNumber:
           type: string
-          description: "Unique File Number (UFN) for Police Station/Prison Law category. Format DDMMYY/NNNN"
+          description: "Unique File Number (UFN) for Police Station/Prison Law category. Format DDMMYY/NNN"
         netProfitCosts:
           type: number
           format: double
@@ -145,16 +144,10 @@ components:
         detentionTravelAndWaitingCosts:
           type: number
           format: double
-          description: "Value of detention and waiting costs costs"
+          description: "Value of detention travel and waiting costs costs"
         caseConcludedDate:
           type: string
           format: date
-        policeCourtOrPrisonId:
-          type: string
-          description: "ID corresponding with police, court or prison."
-        schemeId:
-          type: string
-          description: "Scheme Id for police station fixed fee calculation."
         numberOfMediationSessions:
           type: integer
           description: "Number of mediation sessions, where applicable this will determine fixed fee for mediation category of law."
@@ -169,6 +162,9 @@ components:
           type: string
           format: date
           description: "The official start date for claimable work carried out for Crime Lower categories"
+        londonRate:
+          type: boolean
+          description: "Indicates if London rate is applied otherwise Non London rate is applied."
 
     FeeCalculationResponse:
       type: object
@@ -244,14 +240,14 @@ components:
           type: number
           format: double
           description: "The net travel cost requested."
-        netWaitingCosts:
+        netWaitingCostsAmount:
           type: number
           format: double
           description: "The net waiting cost requested."
         detentionTravelAndWaitingCostsAmount:
           type: number
           format: double
-          description: "The detention and waiting costs requested."
+          description: "The detention travel and waiting costs requested."
         jrFormFillingAmount:
           type: number
           format: double
@@ -271,6 +267,8 @@ components:
           type:
             type: string
             enum: [ERROR, WARNING]
+          code:
+            type: string
           message:
             type: string
 

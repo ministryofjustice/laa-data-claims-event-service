@@ -27,17 +27,16 @@ public interface FeeSchemeMapper {
   @Mapping(target = "immigrationPriorAuthorityNumber", source = "priorAuthorityReference")
   @Mapping(target = "policeStationId", source = "policeStationCourtPrisonId")
   @Mapping(target = "policeStationSchemeId", source = "schemeId")
-  @Mapping(target = "policeCourtOrPrisonId", source = "policeStationCourtPrisonId")
   @Mapping(target = "boltOns", source = "claim")
   @Mapping(target = "netTravelCosts", source = "travelWaitingCostsAmount")
   @Mapping(target = "netWaitingCosts", source = "netWaitingCostsAmount")
   @Mapping(target = "travelAndWaitingCosts", source = "travelWaitingCostsAmount")
   @Mapping(target = "detentionTravelAndWaitingCosts", source = "detentionTravelWaitingCostsAmount")
   @Mapping(target = "caseConcludedDate", source = "caseConcludedDate")
-  @Mapping(target = "schemeId", source = "schemeId")
   @Mapping(target = "uniqueFileNumber", source = "uniqueFileNumber")
   @Mapping(target = "numberOfMediationSessions", source = "mediationSessionsCount")
   @Mapping(target = "jrFormFilling", source = "jrFormFillingAmount")
+  @Mapping(target = "londonRate", source = "isLondonRate", defaultValue = "false")
   FeeCalculationRequest mapToFeeCalculationRequest(ClaimResponse claim);
 
   /**

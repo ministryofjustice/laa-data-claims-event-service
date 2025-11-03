@@ -25,7 +25,7 @@ public interface FeeCalculationPatchMapper {
       source = "feeCalculationResponse.feeCalculation.travelAndWaitingCostAmount")
   @Mapping(
       target = "netWaitingCostsAmount",
-      source = "feeCalculationResponse.feeCalculation.netWaitingCosts")
+      source = "feeCalculationResponse.feeCalculation.netWaitingCostsAmount")
   @Mapping(
       target = "boltOnDetails",
       source = "feeCalculationResponse.feeCalculation.boltOnFeeDetails")

@@ -50,7 +50,7 @@ class FeeCalculationPatchMapperTest {
             .netCostOfCounselAmount(110.10)
             .netTravelCostsAmount(111.11)
             .travelAndWaitingCostAmount(111.12)
-            .netWaitingCosts(112.12)
+            .netWaitingCostsAmount(112.12)
             .detentionTravelAndWaitingCostsAmount(113.13)
             .jrFormFillingAmount(114.14)
             .boltOnFeeDetails(boltOnFeeDetails);
