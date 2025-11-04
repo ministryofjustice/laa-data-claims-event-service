@@ -51,11 +51,23 @@
     },
     "case_start_date": {
       "type": "string",
-      "pattern": "^(19\\d{2}|20\\d{2}|2100)-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$"
+      "pattern": "^(19\\d{2}|20\\d{2}|2100)-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$",
+      "validationErrorMessages": [
+        {
+          "key": "ALL",
+          "value": "Case Start Date must be a valid date in the format DD/MM/YYYY"
+        }
+      ]
     },
     "case_concluded_date": {
       "type": "string",
-      "pattern": "^(19\\d{2}|20\\d{2}|2100)-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$"
+      "pattern": "^(19\\d{2}|20\\d{2}|2100)-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$",
+      "validationErrorMessages": [
+        {
+          "key": "ALL",
+          "value": "Case Concluded Date must be a valid date in the format DD/MM/YYYY"
+        }
+      ]
     },
     "matter_type_code": {
       "type": "string",
@@ -127,7 +139,13 @@
     },
     "representation_order_date": {
       "type": "string",
-      "pattern": "^(19\\d{2}|20\\d{2}|2100)-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$"
+      "pattern": "^(19\\d{2}|20\\d{2}|2100)-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$",
+      "validationErrorMessages": [
+        {
+          "key": "ALL",
+          "value": "Representation Order Date must be a valid date in the format DD/MM/YYYY"
+        }
+      ]
     },
     "suspects_defendants_count": {
       "type": "integer",
@@ -196,7 +214,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Is Duty Solicitor must be true or false"
+          "value": "Duty Solicitor must be Y or N"
         }
       ]
     },
@@ -205,7 +223,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Is Youth Court must be true or false"
+          "value": "Youth Court must be Y or N"
         }
       ]
     },
@@ -290,7 +308,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Client Date of Birth must be a valid date in the format YYYY-MM-DD"
+          "value": "Client Date of Birth must be a valid date in the format DD/MM/YYYY"
         }
       ]
     },
@@ -354,7 +372,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Is Legally Aided must be true or false"
+          "value": "Is Legally Aided must be Y or N"
         }
       ]
     },
@@ -426,7 +444,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Client 2 Date of Birth must be a valid date in the format YYYY-MM-DD"
+          "value": "Client 2 Date of Birth must be a valid date in the format DD/MM/YYYY"
         }
       ]
     },
@@ -490,7 +508,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Client 2 Is Legally Aided must be true or false"
+          "value": "Client 2 Is Legally Aided must be Y or N"
         }
       ]
     },
@@ -584,7 +602,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Is Postal Application Accepted must be true or false"
+          "value": "Postal Application Accepted must be Y or N"
         }
       ]
     },
@@ -593,7 +611,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Client 2 Is Postal Application Accepted must be true or false"
+          "value": "Client 2 Postal Application Accepted must be Y or N"
         }
       ]
     },
@@ -612,7 +630,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Is NRM Advice must be true or false"
+          "value": "NRM Advice must be Y or N"
         }
       ]
     },
@@ -629,7 +647,13 @@
     },
     "transfer_date": {
       "type": "string",
-      "pattern": "^(19\\d{2}|20\\d{2}|2100)-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$"
+      "pattern": "^(19\\d{2}|20\\d{2}|2100)-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$",
+      "validationErrorMessages": [
+        {
+          "key": "ALL",
+          "value": "Transfer Date must be a valid date in the format DD/MM/YYYY"
+        }
+      ]
     },
     "exemption_criteria_satisfied": {
       "type": "string",
@@ -656,7 +680,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Is Legacy Case must be true or false"
+          "value": "Legacy Case must be Y or N"
         }
       ]
     },
@@ -667,7 +691,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Advice Time must be between 0 and 99999 minutes"
+          "value": "Advice Time must be between in minutes"
         }
       ]
     },
@@ -678,7 +702,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Travel Time must be between 0 and 99999 minutes"
+          "value": "Travel Time must be between in minutes"
         }
       ]
     },
@@ -689,7 +713,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Waiting Time must be between 0 and 99999 minutes"
+          "value": "Waiting Time must be between in minutes"
         }
       ]
     },
@@ -701,7 +725,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Net Profit Costs Amount must be a valid monetary value up to 999999999.99"
+          "value": "Net Profit Costs Amount must be a valid monetary value"
         }
       ]
     },
@@ -725,7 +749,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Net Counsel Costs Amount must be a valid monetary value up to 99999.99"
+          "value": "Net Counsel Costs Amount must be a valid monetary value"
         }
       ]
     },
@@ -748,7 +772,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Travel Waiting Costs Amount must be a valid monetary value up to 9999.99"
+          "value": "Travel Waiting Costs Amount must be a valid monetary value"
         }
       ]
     },
@@ -760,7 +784,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Net Waiting Costs Amount must be a valid monetary value up to 999999.99"
+          "value": "Net Waiting Costs Amount must be a valid monetary value"
         }
       ]
     },
@@ -769,7 +793,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Is VAT Applicable must be true or false"
+          "value": "VAT Applicable must be Y or N"
         }
       ]
     },
@@ -799,7 +823,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Is London Rate must be true or false"
+          "value": "London Rate must be Y or N"
         }
       ]
     },
@@ -819,7 +843,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Is Additional Travel Payment must be true or false"
+          "value": "Additional Travel Payment must be Y or N"
         }
       ]
     },
@@ -831,7 +855,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Costs Damages Recovered Amount must be a valid monetary value up to 99999.99"
+          "value": "Costs Damages Recovered Amount must be a valid monetary value"
         }
       ]
     },
@@ -853,7 +877,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Detention Travel Waiting Costs Amount must be a valid monetary value up to 99999999.99"
+          "value": "Detention Travel Waiting Costs Amount must be a valid monetary value"
         }
       ]
     },
@@ -865,7 +889,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "JR Form Filling Amount must be a valid monetary value up to 9999.99"
+          "value": "JR Form Filling Amount must be a valid monetary value"
         }
       ]
     },
@@ -877,7 +901,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Court Location Code must be valid"
+          "value": "Eligible Client must be Y or N"
         }
       ]
     },
@@ -903,7 +927,13 @@
       ]
     },
     "is_irc_surgery": {
-      "type": "boolean"
+      "type": "boolean",
+      "validationErrorMessages": [
+        {
+          "key": "ALL",
+          "value": "IRC Surgery must be Y or N"
+        }
+      ]
     },
     "surgery_date": {
       "type": "string",
@@ -911,7 +941,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Surgery Date must be a maximum of 30 characters"
+          "value": "Surgery Date is invalid"
         }
       ]
     },
@@ -972,7 +1002,13 @@
       ]
     },
     "is_substantive_hearing": {
-      "type": "boolean"
+      "type": "boolean",
+      "validationErrorMessages": [
+        {
+          "key": "ALL",
+          "value": "Substantive Hearing must be Y or N"
+        }
+      ]
     },
     "ho_interview": {
       "type": "integer",

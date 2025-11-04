@@ -37,20 +37,14 @@ class ClientDateOfBirthClaimValidatorTest {
                 .anyMatch(
                     x ->
                         x.getDisplayMessage()
-                            .equals(
-                                "Invalid date value for Client Date of Birth (Must be between "
-                                    + "1900-01-01 and "
-                                    + "today): 2099-12-31")))
+                            .equals("Client Date of Birth must be between 01/01/1900 and today")))
         .isTrue();
     assertThat(
             getClaimMessages(context, claimId.toString()).stream()
                 .anyMatch(
                     x ->
                         x.getDisplayMessage()
-                            .equals(
-                                "Invalid date value for Client2 Date of Birth (Must be between "
-                                    + "1900-01-01 and "
-                                    + "today): 2099-12-31")))
+                            .equals("Client Date of Birth must be between 01/01/1900 and today")))
         .isTrue();
   }
 
@@ -77,30 +71,21 @@ class ClientDateOfBirthClaimValidatorTest {
                 .anyMatch(
                     x ->
                         x.getDisplayMessage()
-                            .equals(
-                                "Invalid date value for Client Date of Birth (Must be between "
-                                    + "1900-01-01 and "
-                                    + "today): 1899-12-31")))
+                            .equals("Client Date of Birth must be between 01/01/1900 and today")))
         .isTrue();
     assertThat(
             getClaimMessages(context, claimId.toString()).stream()
                 .anyMatch(
                     x ->
                         x.getDisplayMessage()
-                            .equals(
-                                "Invalid date value for Client Date of Birth (Must be between "
-                                    + "1900-01-01 and "
-                                    + "today): 1899-12-31")))
+                            .equals("Client Date of Birth must be between 01/01/1900 and today")))
         .isTrue();
     assertThat(
             getClaimMessages(context, claimId.toString()).stream()
                 .anyMatch(
                     x ->
                         x.getDisplayMessage()
-                            .equals(
-                                "Invalid date value for Client2 Date of Birth (Must be between "
-                                    + "1900-01-01 and "
-                                    + "today): 1899-12-31")))
+                            .equals("Client 2 Date of Birth must be between 01/01/1900 and today")))
         .isTrue();
   }
 }

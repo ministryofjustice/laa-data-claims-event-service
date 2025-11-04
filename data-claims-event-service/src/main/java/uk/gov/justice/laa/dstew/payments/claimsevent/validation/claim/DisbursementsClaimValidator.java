@@ -36,9 +36,7 @@ public final class DisbursementsClaimValidator
         && disbursementsVatAmount.compareTo(maxAllowed) > 0) {
       context.addClaimError(
           claim.getId(),
-          String.format(
-              "disbursementsVatAmount (%s): must have a maximum value of %s (provided value: %s)",
-              areaOfLaw, maxAllowed, disbursementsVatAmount),
+          "Disbursements VAT Amount has exceeded the maximum accepted value",
           EVENT_SERVICE);
     }
   }

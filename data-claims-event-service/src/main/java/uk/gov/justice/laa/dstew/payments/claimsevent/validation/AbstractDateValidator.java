@@ -23,7 +23,7 @@ public abstract class AbstractDateValidator implements ClaimValidator {
    *
    * @param claim The claim object associated with the date being checked.
    * @param fieldName The name of the field associated with the date being validated.
-   * @param dateValueToCheck The date value to validate in the format "yyyy-MM-dd".
+   * @param dateValueToCheck The date value to validate in the format "dd/MM/yyyy".
    */
   protected void checkDateInPast(
       ClaimResponse claim,
@@ -33,6 +33,7 @@ public abstract class AbstractDateValidator implements ClaimValidator {
       SubmissionValidationContext context) {
     if (!StringUtils.isEmpty(dateValueToCheck)) {
       DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+      DateTimeFormatter formatterForMessage = DateTimeFormatter.ofPattern("dd/MM/yyyy");
       try {
         LocalDate oldestDateAllowed = LocalDate.parse(oldestDateAllowedStr, formatter);
         LocalDate date = LocalDate.parse(dateValueToCheck, formatter);
@@ -40,14 +41,14 @@ public abstract class AbstractDateValidator implements ClaimValidator {
           context.addClaimError(
               claim.getId(),
               String.format(
-                  "Invalid date value for %s (Must be between %s and today): %s",
-                  fieldName, oldestDateAllowedStr, dateValueToCheck),
+                  "%s must be between %s and today",
+                  fieldName, oldestDateAllowed.format(formatterForMessage)),
               EVENT_SERVICE);
         }
       } catch (DateTimeParseException e) {
         context.addClaimError(
             claim.getId(),
-            String.format("Invalid date value provided for %s: %s", fieldName, dateValueToCheck),
+            String.format("Invalid date value provided for %s", fieldName),
             EVENT_SERVICE);
       }
     }
