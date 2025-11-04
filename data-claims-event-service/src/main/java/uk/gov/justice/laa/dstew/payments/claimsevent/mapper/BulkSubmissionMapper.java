@@ -2,6 +2,7 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.mapper;
 
 import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationSource.EVENT_SERVICE;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -35,7 +36,10 @@ public interface BulkSubmissionMapper {
   @Mapping(target = "bulkSubmissionId", source = "bulkSubmission.bulkSubmissionId")
   @Mapping(target = "officeAccountNumber", source = "bulkSubmission.details.office.account")
   @Mapping(target = "submissionPeriod", source = "bulkSubmission.details.schedule.submissionPeriod")
-  @Mapping(target = "areaOfLaw", source = "bulkSubmission.details.schedule.areaOfLaw")
+  @Mapping(
+      target = "areaOfLaw",
+      source = "bulkSubmission.details.schedule.areaOfLaw",
+      qualifiedByName = "mapToAreaOfLaw")
   @Mapping(
       target = "crimeLowerScheduleNumber",
       source = "bulkSubmission.details.schedule.scheduleNum")
@@ -50,6 +54,22 @@ public interface BulkSubmissionMapper {
   @Mapping(target = "createdByUserId", constant = EVENT_SERVICE)
   SubmissionPost mapToSubmissionPost(
       GetBulkSubmission200Response bulkSubmission, UUID submissionId);
+
+  /**
+   * Maps a string value to an AreaOfLaw enum, returning null if no match is found.
+   *
+   * @param areaOfLawValue the string representation of the area of law
+   * @return AreaOfLaw enum or null if no match is found
+   */
+  @Named("mapToAreaOfLaw")
+  default AreaOfLaw mapToAreaOfLaw(String areaOfLawValue) {
+    String trimmedValue = areaOfLawValue.trim();
+    return Arrays.stream(AreaOfLaw.values())
+            .map(AreaOfLaw::getValue)
+            .anyMatch(value -> value.equalsIgnoreCase(trimmedValue))
+        ? AreaOfLaw.fromValue(trimmedValue)
+        : null;
+  }
 
   /**
    * Counts the number of claim outcomes within a bulk submission payload.
