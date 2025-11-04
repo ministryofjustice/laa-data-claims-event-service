@@ -7,9 +7,10 @@ import java.util.List;
  *
  * @author Jamie Briggs
  */
-public interface CrimeDuplicateClaimValidationStrategy extends DuplicateClaimValidationStrategy {
+public interface CrimeLowerDuplicateClaimValidationStrategy
+    extends DuplicateClaimValidationStrategy {
 
   default List<String> compatibleStrategies() {
-    return StrategyTypes.CRIME;
+    return StrategyTypes.CRIME_LOWER;
   }
 }

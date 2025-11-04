@@ -14,12 +14,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
-import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.CivilDuplicateClaimValidationStrategy;
-import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.CrimeDuplicateClaimValidationStrategy;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.CrimeLowerDuplicateClaimValidationStrategy;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.LegalHelpDuplicateClaimValidationStrategy;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.StrategyTypes;
 
 @ExtendWith(MockitoExtension.class)
@@ -28,8 +29,8 @@ class DuplicateClaimValidatorTest {
 
   DuplicateClaimValidator validator;
 
-  @Mock private CivilDuplicateClaimValidationStrategy mockCivilValidationStrategy;
-  @Mock private CrimeDuplicateClaimValidationStrategy mockCrimeValidationStrategy;
+  @Mock private LegalHelpDuplicateClaimValidationStrategy mockLegalHelpValidationStrategy;
+  @Mock private CrimeLowerDuplicateClaimValidationStrategy mockCrimeLowerValidationStrategy;
 
   private final ClaimResponse claim =
       new ClaimResponse()
@@ -44,39 +45,18 @@ class DuplicateClaimValidatorTest {
   @BeforeEach
   void setup() {
     lenient()
-        .when(mockCivilValidationStrategy.compatibleStrategies())
-        .thenReturn(StrategyTypes.CIVIL);
+        .when(mockLegalHelpValidationStrategy.compatibleStrategies())
+        .thenReturn(StrategyTypes.LEGAL_HELP);
     lenient()
-        .when(mockCrimeValidationStrategy.compatibleStrategies())
-        .thenReturn(StrategyTypes.CRIME);
+        .when(mockCrimeLowerValidationStrategy.compatibleStrategies())
+        .thenReturn(StrategyTypes.CRIME_LOWER);
     validator =
         new DuplicateClaimValidator(
-            List.of(mockCivilValidationStrategy, mockCrimeValidationStrategy));
+            List.of(mockLegalHelpValidationStrategy, mockCrimeLowerValidationStrategy));
   }
 
   @Test
-  @DisplayName("Area of Code CIVIL: should call civil validation strategy")
-  void callCivilValidationStrategy() {
-    // Given
-    SubmissionValidationContext context = new SubmissionValidationContext();
-
-    // When
-    validator.validate(
-        claim,
-        context,
-        "CIVIL",
-        "officeAccountNumber",
-        singletonList(claim),
-        FeeCalculationType.FIXED.toString());
-
-    // Then
-    verify(mockCivilValidationStrategy).validateDuplicateClaims(any(), any(), any(), any(), any());
-    verify(mockCrimeValidationStrategy, times(0))
-        .validateDuplicateClaims(any(), any(), any(), any(), any());
-  }
-
-  @Test
-  @DisplayName("Area of Code LEGAL HELP: should call civil validation strategy")
+  @DisplayName("Area of Code LEGAL HELP: should call legal help validation strategy")
   void callLegalHelpValidationStrategy() {
     // Given
     SubmissionValidationContext context = new SubmissionValidationContext();
@@ -85,14 +65,15 @@ class DuplicateClaimValidatorTest {
     validator.validate(
         claim,
         context,
-        "LEGAL HELP",
+        AreaOfLaw.LEGAL_HELP,
         "officeAccountNumber",
         singletonList(claim),
         FeeCalculationType.FIXED.toString());
 
     // Then
-    verify(mockCivilValidationStrategy).validateDuplicateClaims(any(), any(), any(), any(), any());
-    verify(mockCrimeValidationStrategy, times(0))
+    verify(mockLegalHelpValidationStrategy)
+        .validateDuplicateClaims(any(), any(), any(), any(), any());
+    verify(mockCrimeLowerValidationStrategy, times(0))
         .validateDuplicateClaims(any(), any(), any(), any(), any());
   }
 
@@ -106,39 +87,16 @@ class DuplicateClaimValidatorTest {
     validator.validate(
         claim,
         context,
-        "CRIME LOWER",
+        AreaOfLaw.CRIME_LOWER,
         "officeAccountNumber",
         singletonList(claim),
         FeeCalculationType.FIXED.toString());
 
     // Then
-    verify(mockCrimeValidationStrategy)
+    verify(mockCrimeLowerValidationStrategy)
         .validateDuplicateClaims(
             claim, claims, "officeAccountNumber", context, FeeCalculationType.FIXED.toString());
-    verify(mockCivilValidationStrategy, times(0))
-        .validateDuplicateClaims(any(), any(), any(), any(), any());
-  }
-
-  @Test
-  @DisplayName("Area of Code CRIME: should call crime validation strategy")
-  void crimeValidationStrategy() {
-    // Given
-    SubmissionValidationContext context = new SubmissionValidationContext();
-
-    // When
-    validator.validate(
-        claim,
-        context,
-        "CRIME",
-        "officeAccountNumber",
-        singletonList(claim),
-        FeeCalculationType.FIXED.toString());
-
-    // Then
-    verify(mockCrimeValidationStrategy)
-        .validateDuplicateClaims(
-            claim, claims, "officeAccountNumber", context, FeeCalculationType.FIXED.toString());
-    verify(mockCivilValidationStrategy, times(0))
+    verify(mockLegalHelpValidationStrategy, times(0))
         .validateDuplicateClaims(any(), any(), any(), any(), any());
   }
 }

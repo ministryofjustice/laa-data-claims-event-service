@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim;
 
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
@@ -19,5 +20,6 @@ public interface ClaimWithAreaOfLawValidator {
    * @param context the validation context to add errors to
    * @param areaOfLaw the area of law for the claim
    */
-  void validate(final ClaimResponse claim, SubmissionValidationContext context, String areaOfLaw);
+  void validate(
+      final ClaimResponse claim, SubmissionValidationContext context, AreaOfLaw areaOfLaw);
 }

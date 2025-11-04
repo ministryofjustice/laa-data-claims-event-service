@@ -19,7 +19,7 @@
       "type": "string",
       "validationErrorMessages": [
         {
-          "key": "CIVIL",
+          "key": "LEGAL HELP",
           "value": "Schedule Reference must be a maximum of 20 characters and contain only letters, numbers, forward slashes, periods, and hyphens"
         }
       ]
@@ -73,7 +73,7 @@
       "type": "string",
       "validationErrorMessages": [
         {
-          "key": "CIVIL",
+          "key": "LEGAL HELP",
           "value": "Each Matter Type Code 1 and 2 must be 4 characters"
         },
         {
@@ -88,8 +88,8 @@
       "pattern": "^[0-9]{1,2}$",
       "validationErrorMessages": [
         {
-          "key": "CRIME",
-          "value": "Crime Matter Type Code must be exactly 2 digits"
+          "key": "CRIME LOWER",
+          "value": "Crime Lower Matter Type Code must be exactly 2 digits"
         }
       ]
     },
@@ -551,12 +551,12 @@
       "maxLength": 4,
       "validationErrorMessages" : [
         {
-          "key": "CIVIL",
-          "value": "Stage Reached Code must be exactly 2 alphanumeric characters for Civil claims"
+          "key": "LEGAL HELP",
+          "value": "Stage Reached Code must be exactly 2 alphanumeric characters for Legal Help claims"
         },
         {
-          "key": "CRIME",
-          "value": "Stage Reached Code must be exactly 4 uppercase letters for Crime claims"
+          "key": "CRIME LOWER",
+          "value": "Stage Reached Code must be exactly 4 uppercase letters for Crime Lower claims"
         }
       ]
     },
@@ -574,12 +574,12 @@
       "type": "string",
       "validationErrorMessages": [
         {
-          "key": "CIVIL",
+          "key": "LEGAL HELP",
           "value": "Outcome Code must be exactly 2 characters and contain only letters, numbers, and hyphens"
         },
         {
-          "key": "CRIME",
-          "value": "Outcome Code must be a valid crime outcome code or left blank"
+          "key": "CRIME LOWER",
+          "value": "Outcome Code must be a valid crime lower outcome code or left blank"
         },
         {
           "key": "MEDIATION",

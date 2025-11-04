@@ -11,6 +11,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.core.io.ClassPathResource;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.SchemaValidationConfig;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
@@ -33,9 +34,9 @@ class MatterTypeClaimValidatorTest {
   @ParameterizedTest(
       name = "{index} => claimId={0}, matterType={1}, areaOfLaw={2}, regex={3}, expectError={4}")
   @CsvSource({
-    "1, BadMatterType, CIVIL, '^[a-zA-Z0-9]{1,4}[-:][a-zA-Z0-9]{1,4}$', true, Each Matter Type Code 1 and 2 must be 4 characters",
-    "2, ab12:bc24, CIVIL, '^[a-zA-Z0-9]{1,4}[-:][a-zA-Z0-9]{1,4}$', false, NA",
-    "3, AB-CD, CIVIL, '^[a-zA-Z0-9]{1,4}[-:][a-zA-Z0-9]{1,4}$', false, NA",
+    "1, BadMatterType, LEGAL_HELP, '^[a-zA-Z0-9]{1,4}[-:][a-zA-Z0-9]{1,4}$', true, Each Matter Type Code 1 and 2 must be 4 characters",
+    "2, ab12:bc24, LEGAL_HELP, '^[a-zA-Z0-9]{1,4}[-:][a-zA-Z0-9]{1,4}$', false, NA",
+    "3, AB-CD, LEGAL_HELP, '^[a-zA-Z0-9]{1,4}[-:][a-zA-Z0-9]{1,4}$', false, NA",
     "4, ABCD:EFGH, MEDIATION, '^[A-Z]{4}[-:][A-Z]{4}$', false, NA",
     "5, AB12:CD34, MEDIATION, '^[A-Z]{4}[-:][A-Z]{4}$', true, Each Matter Type Code 1 and 2 must be 4 uppercase characters",
     "6, AB-CD, MEDIATION, '^[A-Z]{4}[-:][A-Z]{4}$', true, Each Matter Type Code 1 and 2 must be 4 uppercase characters",
@@ -43,7 +44,7 @@ class MatterTypeClaimValidatorTest {
   void checkMatterType(
       int claimIdBit,
       String matterTypeCode,
-      String areaOfLaw,
+      AreaOfLaw areaOfLaw,
       String regex,
       boolean expectError,
       String expectedDisplayMessage) {

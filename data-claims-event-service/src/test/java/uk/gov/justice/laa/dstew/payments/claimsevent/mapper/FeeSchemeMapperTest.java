@@ -82,10 +82,10 @@ class FeeSchemeMapperTest {
               .policeStationId("policeCourtOrPrisonId")
               .policeStationSchemeId("schemeId")
               .uniqueFileNumber("ufn")
-              .londonRate(true)
               .representationOrderDate(LocalDate.parse("2025-01-02"))
               .numberOfMediationSessions(1)
               .jrFormFilling(1.08)
+              .londonRate(true)
               .build();
 
       FeeCalculationRequest actual = feeSchemeMapper.mapToFeeCalculationRequest(claim);

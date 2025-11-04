@@ -1,8 +1,8 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.mapper;
 
-import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.AreaOfLaw.CRIME_LOWER;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationSource.EVENT_SERVICE;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -14,6 +14,7 @@ import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
 import org.springframework.util.StringUtils;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionMatterStart;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionOutcome;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPost;
@@ -23,7 +24,6 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetBulkSubmission200Re
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.MatterStartPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
-import uk.gov.justice.laa.dstew.payments.claimsevent.validation.AreaOfLaw;
 
 /** Maps bulk submission payloads into requests for the Claims Data API. */
 @Mapper(
@@ -36,8 +36,13 @@ public interface BulkSubmissionMapper {
   @Mapping(target = "bulkSubmissionId", source = "bulkSubmission.bulkSubmissionId")
   @Mapping(target = "officeAccountNumber", source = "bulkSubmission.details.office.account")
   @Mapping(target = "submissionPeriod", source = "bulkSubmission.details.schedule.submissionPeriod")
-  @Mapping(target = "areaOfLaw", source = "bulkSubmission.details.schedule.areaOfLaw")
-  @Mapping(target = "crimeScheduleNumber", source = "bulkSubmission.details.schedule.scheduleNum")
+  @Mapping(
+      target = "areaOfLaw",
+      source = "bulkSubmission.details.schedule.areaOfLaw",
+      qualifiedByName = "mapToAreaOfLaw")
+  @Mapping(
+      target = "crimeLowerScheduleNumber",
+      source = "bulkSubmission.details.schedule.scheduleNum")
   @Mapping(target = "previousSubmissionId", ignore = true)
   @Mapping(target = "status", expression = "java(SubmissionStatus.CREATED)")
   @Mapping(
@@ -49,6 +54,22 @@ public interface BulkSubmissionMapper {
   @Mapping(target = "createdByUserId", constant = EVENT_SERVICE)
   SubmissionPost mapToSubmissionPost(
       GetBulkSubmission200Response bulkSubmission, UUID submissionId);
+
+  /**
+   * Maps a string value to an AreaOfLaw enum, returning null if no match is found.
+   *
+   * @param areaOfLawValue the string representation of the area of law
+   * @return AreaOfLaw enum or null if no match is found
+   */
+  @Named("mapToAreaOfLaw")
+  default AreaOfLaw mapToAreaOfLaw(String areaOfLawValue) {
+    String trimmedValue = areaOfLawValue.trim();
+    return Arrays.stream(AreaOfLaw.values())
+            .map(AreaOfLaw::getValue)
+            .anyMatch(value -> value.equalsIgnoreCase(trimmedValue))
+        ? AreaOfLaw.fromValue(trimmedValue)
+        : null;
+  }
 
   /**
    * Counts the number of claim outcomes within a bulk submission payload.
@@ -164,7 +185,7 @@ public interface BulkSubmissionMapper {
       @MappingTarget ClaimPost claimPost,
       BulkSubmissionOutcome outcome,
       @Context AreaOfLaw areaOfLaw) {
-    if (CRIME_LOWER.equals(areaOfLaw)) {
+    if (AreaOfLaw.CRIME_LOWER.equals(areaOfLaw)) {
       claimPost.setStageReachedCode(outcome.getMatterType());
     }
   }

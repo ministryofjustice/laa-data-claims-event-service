@@ -30,6 +30,7 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.core.io.ClassPathResource;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
@@ -92,7 +93,7 @@ class JsonSchemaValidatorTest {
       "submission_period",
       "area_of_law",
       "status",
-      "crime_schedule_number",
+      "crime_lower_schedule_number",
       "is_nil_submission",
       "number_of_claims"
     })
@@ -113,9 +114,9 @@ class JsonSchemaValidatorTest {
       SubmissionResponse submission = new SubmissionResponse();
       submission.setOfficeAccountNumber("abc123");
       submission.setSubmissionPeriod("OCTOBER-2024");
-      submission.setAreaOfLaw("INVALID");
+      submission.setAreaOfLaw(null);
       submission.setNumberOfClaims(-1);
-      submission.setCrimeScheduleNumber("SCHEDULE");
+      submission.setCrimeLowerScheduleNumber("SCHEDULE");
       submission.setIsNilSubmission(false);
       submission.setStatus(SubmissionStatus.CREATED);
       final List<ValidationMessagePatch> errors =
@@ -129,8 +130,7 @@ class JsonSchemaValidatorTest {
               "submission_period: does not match the regex pattern ^"
                   + "(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-[0-9]{4}$ (provided value:"
                   + " OCTOBER-2024)",
-              "area_of_law: does not have a value in the enumeration [\"CIVIL\", \"CRIME\", "
-                  + "\"MEDIATION\", \"CRIME LOWER\", \"LEGAL HELP\"] (provided value: INVALID)",
+              "$: required property 'area_of_law' not found (provided value: null)",
               "number_of_claims: must have a minimum value of 0 (provided value: -1)");
       assertThat(errors)
           .extracting(ValidationMessagePatch::getDisplayMessage)
@@ -140,7 +140,7 @@ class JsonSchemaValidatorTest {
               "submission_period: does not match the regex pattern ^"
                   + "(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-[0-9]{4}$ (provided value:"
                   + " OCTOBER-2024)",
-              "Area of Law must be one of: MEDIATION, CRIME LOWER, or LEGAL HELP",
+              "$: required property 'area_of_law' not found (provided value: null)",
               "number_of_claims: must have a minimum value of 0 (provided value: -1)");
     }
 
@@ -187,9 +187,6 @@ class JsonSchemaValidatorTest {
           + "^[A-Z0-9]{6}$ (provided value: abc123)'",
       "numberOfClaims, -10, 'number_of_claims: must have a minimum value of 0 (provided value: "
           + "-10)'",
-      "areaOfLaw, 'WILD WEST', 'area_of_law: does not have a value in the enumeration "
-          + "[\"CIVIL\", \"CRIME\", \"MEDIATION\", \"CRIME LOWER\", \"LEGAL HELP\"] (provided "
-          + "value: WILD WEST)'",
       "submissionPeriod, 'OCTOBER-20', 'submission_period: does not match the regex pattern "
           + "^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-[0-9]{4}$ (provided value: "
           + "OCTOBER-20)'",
@@ -199,8 +196,7 @@ class JsonSchemaValidatorTest {
       "submissionPeriod, 'OCT/2020', 'submission_period: does not match the regex pattern "
           + "^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-[0-9]{4}$ (provided value: "
           + "OCT/2020)'",
-      "crimeScheduleNumber, 'A/VERY/LONG/SCHEDULE/NUMBER', 'crime_schedule_number: must be at "
-          + "most 20 characters long (provided value: A/VERY/LONG/SCHEDULE/NUMBER)'",
+      "crimeLowerScheduleNumber, 'A/VERY/LONG/SCHEDULE/NUMBER', 'crime_lower_schedule_number: must be at most 20 characters long (provided value: A/VERY/LONG/SCHEDULE/NUMBER)'",
     })
     void validateSubmissionIndividualInvalidField(
         String fieldName, String badValue, String technicalMessage) {
@@ -224,10 +220,10 @@ class JsonSchemaValidatorTest {
       submission.setSubmissionId(UUID.randomUUID());
       submission.setBulkSubmissionId(UUID.randomUUID());
       submission.setStatus(SubmissionStatus.CREATED);
-      submission.setCrimeScheduleNumber("abc123");
+      submission.setCrimeLowerScheduleNumber("abc123");
       submission.setOfficeAccountNumber("2Q286D");
       submission.setSubmissionPeriod("OCT-2024");
-      submission.setAreaOfLaw("CRIME");
+      submission.setAreaOfLaw(AreaOfLaw.CRIME_LOWER);
       submission.isNilSubmission(false);
       submission.setNumberOfClaims(3);
 
@@ -840,11 +836,11 @@ class JsonSchemaValidatorTest {
         .bulkSubmissionId(UUID.randomUUID())
         .officeAccountNumber("2Q286D")
         .submissionPeriod("OCT-2024")
-        .areaOfLaw("CRIME")
+        .areaOfLaw(AreaOfLaw.CRIME_LOWER)
         .status(SubmissionStatus.CREATED)
         .isNilSubmission(false)
         .numberOfClaims(1)
-        .crimeScheduleNumber("SCHEDULE/NUMBER/1");
+        .crimeLowerScheduleNumber("SCHEDULE/NUMBER/1");
     return submission;
   }
 

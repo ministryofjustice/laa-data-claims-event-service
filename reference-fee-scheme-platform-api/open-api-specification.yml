@@ -98,7 +98,7 @@ components:
         startDate:
           type: string
           format: date
-          description: "Civil: case start date."
+          description: "Legal Help: case start date."
         policeStationId:
           type: string
           description: "Police Station ID."

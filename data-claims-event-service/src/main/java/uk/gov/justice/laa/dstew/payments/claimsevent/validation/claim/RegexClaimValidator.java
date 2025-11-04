@@ -4,6 +4,7 @@ import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimVali
 
 import java.util.Map;
 import java.util.Set;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SchemaValidator;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
@@ -39,7 +40,7 @@ public abstract class RegexClaimValidator extends SchemaValidator implements Cla
    */
   protected void validateFieldWithRegex(
       ClaimResponse claim,
-      String areaOfLaw,
+      AreaOfLaw areaOfLaw,
       String fieldValue,
       String fieldName,
       String regex,
@@ -49,7 +50,7 @@ public abstract class RegexClaimValidator extends SchemaValidator implements Cla
             "%s (%s): does not match the regex pattern %s (provided value: %s)",
             fieldName, areaOfLaw, regex, fieldValue);
     String displayMessage =
-        getValidationErrorMessageFromSchema(fieldName, areaOfLaw, technicalMessage);
+        getValidationErrorMessageFromSchema(fieldName, areaOfLaw.getValue(), technicalMessage);
     if (regex != null && fieldValue != null && !fieldValue.matches(regex)) {
       context.addClaimError(claim.getId(), technicalMessage, displayMessage, EVENT_SERVICE);
     }
