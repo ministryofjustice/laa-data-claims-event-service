@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.function.Predicate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.DuplicateClaimValidationStrategy;
@@ -32,20 +33,21 @@ public final class DuplicateClaimValidator implements ClaimValidator {
    * @param claim the {@code ClaimResponse} object to be validated.
    * @param context the {@code SubmissionValidationContext} containing validation-related
    *     information.
-   * @param areaOfLaw the area of law to which the claim pertains (e.g., "CRIME" or "CIVIL").
+   * @param areaOfLaw the area of law to which the claim pertains (e.g., "CRIME LOWER" or "LEGAL
+   *     HELP").
    * @param officeCode the code of the office associated with the claim.
    * @param submissionClaims the list of previously submitted claims for duplicate validation.
    */
   public void validate(
       final ClaimResponse claim,
       final SubmissionValidationContext context,
-      final String areaOfLaw,
+      final AreaOfLaw areaOfLaw,
       final String officeCode,
       final List<ClaimResponse> submissionClaims,
       final String feeType) {
 
     final Predicate<DuplicateClaimValidationStrategy> areaOfLawPredicate =
-        x -> x.compatibleStrategies().contains(areaOfLaw);
+        x -> x.compatibleStrategies().contains(areaOfLaw.getValue());
 
     final List<DuplicateClaimValidationStrategy> compatibleStrategies =
         strategyList.stream().filter(areaOfLawPredicate).toList();

@@ -3,8 +3,8 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim;
 import java.util.Map;
 import java.util.Set;
 import org.springframework.stereotype.Component;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
-import uk.gov.justice.laa.dstew.payments.claimsevent.validation.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.model.ValidationErrorMessage;
 
@@ -30,11 +30,12 @@ public final class StageReachedClaimValidator extends RegexClaimValidator
   }
 
   @Override
-  public void validate(ClaimResponse claim, SubmissionValidationContext context, String areaOfLaw) {
+  public void validate(
+      ClaimResponse claim, SubmissionValidationContext context, AreaOfLaw areaOfLaw) {
     String regex =
-        switch (AreaOfLaw.fromValue(areaOfLaw)) {
-          case AreaOfLaw.LEGAL_HELP -> STAGE_REACHED_LEGAL_HELP_PATTERN;
-          case AreaOfLaw.CRIME_LOWER -> STAGE_REACHED_CRIME_LOWER_PATTERN;
+        switch (areaOfLaw) {
+          case LEGAL_HELP -> STAGE_REACHED_LEGAL_HELP_PATTERN;
+          case CRIME_LOWER -> STAGE_REACHED_CRIME_LOWER_PATTERN;
           default -> null;
         };
 

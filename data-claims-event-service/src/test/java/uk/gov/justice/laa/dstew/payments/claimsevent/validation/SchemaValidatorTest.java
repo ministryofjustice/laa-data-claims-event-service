@@ -8,12 +8,13 @@ import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.model.ValidationErrorMessage;
 
 @DisplayName("Schema validator test")
 class SchemaValidatorTest {
+  private static final String LEGAL_HELP_AOL = "LEGAL HELP";
+  private static final String CRIME_LOWER_AOL = "CRIME LOWER";
+  private static final String MEDIATION_AOL = "MEDIATION";
 
   /** Test schema validator. Extends the abstract class we are wanting to test. */
   public class TestSchemaValidator extends SchemaValidator {
@@ -55,40 +56,40 @@ class SchemaValidatorTest {
     assertThat(result).isEqualTo("Schema message");
   }
 
-  @ParameterizedTest
-  @ValueSource(strings = {"CIVIL", "LEGAL HELP"})
-  @DisplayName("Should return validation message when validation message exists - CIVIL")
-  void shouldReturnValidationMessageWhenValidationMessageExistsCivil(String areaOfLawCode) {
+  @Test
+  @DisplayName("Should return validation message when validation message exists - LEGAL HELP")
+  void shouldReturnValidationMessageWhenValidationMessageExistsLegalHelp() {
     // Given
     HashMap<String, Set<ValidationErrorMessage>> schemaValidationErrorMessages = new HashMap<>();
     HashSet<ValidationErrorMessage> possibleMessages = new HashSet<>();
-    possibleMessages.add(new ValidationErrorMessage("CIVIL", "CIVIL - Schema message"));
+    possibleMessages.add(
+        new ValidationErrorMessage(LEGAL_HELP_AOL, LEGAL_HELP_AOL + " - Schema message"));
     schemaValidationErrorMessages.put("field", possibleMessages);
     TestSchemaValidator schemaValidator = new TestSchemaValidator(schemaValidationErrorMessages);
     // When
     String result =
         schemaValidator.getValidationErrorMessageFromSchema(
-            "field", areaOfLawCode, "Default message");
+            "field", LEGAL_HELP_AOL, "Default message");
     // Then
-    assertThat(result).isEqualTo("CIVIL - Schema message");
+    assertThat(result).isEqualTo(LEGAL_HELP_AOL + " - Schema message");
   }
 
-  @ParameterizedTest
-  @ValueSource(strings = {"CRIME", "CRIME LOWER"})
-  @DisplayName("Should return validation message when validation message exists - CRIME")
-  void shouldReturnValidationMessageWhenValidationMessageExistsCrime(String areaOfLawCode) {
+  @Test
+  @DisplayName("Should return validation message when validation message exists - CRIME LOWER")
+  void shouldReturnValidationMessageWhenValidationMessageExistsCrimeLower() {
     // Given
     HashMap<String, Set<ValidationErrorMessage>> schemaValidationErrorMessages = new HashMap<>();
     HashSet<ValidationErrorMessage> possibleMessages = new HashSet<>();
-    possibleMessages.add(new ValidationErrorMessage("CRIME", "CRIME - Schema message"));
+    possibleMessages.add(
+        new ValidationErrorMessage(CRIME_LOWER_AOL, CRIME_LOWER_AOL + " - Schema message"));
     schemaValidationErrorMessages.put("field", possibleMessages);
     TestSchemaValidator schemaValidator = new TestSchemaValidator(schemaValidationErrorMessages);
     // When
     String result =
         schemaValidator.getValidationErrorMessageFromSchema(
-            "field", areaOfLawCode, "Default message");
+            "field", CRIME_LOWER_AOL, "Default message");
     // Then
-    assertThat(result).isEqualTo("CRIME - Schema message");
+    assertThat(result).isEqualTo(CRIME_LOWER_AOL + " - Schema message");
   }
 
   @Test
@@ -97,14 +98,15 @@ class SchemaValidatorTest {
     // Given
     HashMap<String, Set<ValidationErrorMessage>> schemaValidationErrorMessages = new HashMap<>();
     HashSet<ValidationErrorMessage> possibleMessages = new HashSet<>();
-    possibleMessages.add(new ValidationErrorMessage("MEDIATION", "MEDIATION - Schema message"));
+    possibleMessages.add(
+        new ValidationErrorMessage(MEDIATION_AOL, MEDIATION_AOL + " - Schema message"));
     schemaValidationErrorMessages.put("field", possibleMessages);
     TestSchemaValidator schemaValidator = new TestSchemaValidator(schemaValidationErrorMessages);
     // When
     String result =
         schemaValidator.getValidationErrorMessageFromSchema(
-            "field", "MEDIATION", "Default message");
+            "field", MEDIATION_AOL, "Default message");
     // Then
-    assertThat(result).isEqualTo("MEDIATION - Schema message");
+    assertThat(result).isEqualTo(MEDIATION_AOL + " - Schema message");
   }
 }

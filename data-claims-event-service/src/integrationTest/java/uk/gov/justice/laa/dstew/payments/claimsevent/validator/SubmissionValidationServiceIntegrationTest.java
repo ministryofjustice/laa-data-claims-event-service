@@ -14,6 +14,7 @@ import org.mockserver.model.Parameter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MockServerIntegrationTest;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.SubmissionValidationService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
@@ -30,7 +31,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 public class SubmissionValidationServiceIntegrationTest extends MockServerIntegrationTest {
 
   private static final String OFFICE_CODE = "AQ2B3C";
-  private static final String AREA_OF_LAW = "CIVIL";
+  private static final AreaOfLaw AREA_OF_LAW = AreaOfLaw.LEGAL_HELP;
 
   @Autowired protected SubmissionValidationService submissionValidationService;
 
@@ -52,7 +53,7 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
       getStubForGetSubmissionByCriteria(
           List.of(
               Parameter.param("offices", OFFICE_CODE),
-              Parameter.param("area_of_law", AREA_OF_LAW),
+              Parameter.param("area_of_law", AREA_OF_LAW.name()),
               Parameter.param("submission_period", "APR-2025")),
           "data-claims/get-submission/get-submissions-by-filter_no_content.json");
 
@@ -75,7 +76,7 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
       getStubForGetSubmissionByCriteria(
           List.of(
               Parameter.param("offices", OFFICE_CODE),
-              Parameter.param("area_of_law", AREA_OF_LAW),
+              Parameter.param("area_of_law", AREA_OF_LAW.name()),
               Parameter.param("submission_period", "MAR-2025")),
           "data-claims/get-submission/get-submissions-by-filter_no_content.json");
 
@@ -103,7 +104,7 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
       getStubForGetSubmissionByCriteria(
           List.of(
               Parameter.param("offices", OFFICE_CODE),
-              Parameter.param("area_of_law", AREA_OF_LAW),
+              Parameter.param("area_of_law", AREA_OF_LAW.name()),
               Parameter.param("submission_period", "MAY-2025")),
           "data-claims/get-submission/get-submissions-by-filter_no_content.json");
 
@@ -130,7 +131,7 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
       getStubForGetSubmissionByCriteria(
           List.of(
               Parameter.param("offices", OFFICE_CODE),
-              Parameter.param("area_of_law", AREA_OF_LAW),
+              Parameter.param("area_of_law", AREA_OF_LAW.name()),
               Parameter.param("submission_period", "SEP-2025")),
           "data-claims/get-submission/get-submissions-by-filter_no_content.json");
 
@@ -160,7 +161,7 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
       getStubForGetSubmissionByCriteria(
           List.of(
               Parameter.param("offices", OFFICE_CODE),
-              Parameter.param("area_of_law", AREA_OF_LAW),
+              Parameter.param("area_of_law", AREA_OF_LAW.name()),
               Parameter.param("submission_period", "APR-2025")),
           "data-claims/get-submission/get-submissions-by-filter.json");
 

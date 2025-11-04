@@ -10,14 +10,14 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
-/** Validation service for civil duplicate claims in the current submission. */
+/** Validation service for legal help duplicate claims in the current submission. */
 @Slf4j
 @Service
-public final class DuplicatePreviousClaimCivilValidationServiceStrategy
-    extends DuplicateClaimValidation implements CivilDuplicateClaimValidationStrategy {
+public final class DuplicatePreviousClaimLegalHelpValidationServiceStrategy
+    extends DuplicateClaimValidation implements LegalHelpDuplicateClaimValidationStrategy {
 
   @Autowired
-  public DuplicatePreviousClaimCivilValidationServiceStrategy(
+  public DuplicatePreviousClaimLegalHelpValidationServiceStrategy(
       final DataClaimsRestClient dataClaimsRestClient) {
     super(dataClaimsRestClient);
   }

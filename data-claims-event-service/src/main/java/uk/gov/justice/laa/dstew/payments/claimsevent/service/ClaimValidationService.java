@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionClaim;
@@ -99,7 +100,7 @@ public class ClaimValidationService {
       ClaimResponse claim,
       List<ClaimResponse> submissionClaims,
       Map<String, FeeDetailsResponseWrapper> feeDetailsResponseMap,
-      String areaOfLaw,
+      AreaOfLaw areaOfLaw,
       String officeCode,
       SubmissionValidationContext context) {
 
