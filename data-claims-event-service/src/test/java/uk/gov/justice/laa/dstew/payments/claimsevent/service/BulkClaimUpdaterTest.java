@@ -2,10 +2,12 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,6 +24,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionClaim;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
 @ExtendWith(MockitoExtension.class)
@@ -170,5 +173,66 @@ class BulkClaimUpdaterTest {
     ClaimPatch capturedPatchTwo = claimPatchCaptor.getAllValues().get(1);
     assertThat(capturedPatchTwo.getId()).isEqualTo(claimIdTwo.toString());
     assertThat(capturedPatchTwo.getStatus()).isEqualTo(ClaimStatus.VALID);
+  }
+
+  @Test
+  @DisplayName(
+      "Should update claim to invalid with validation error messages when context has errors")
+  void shouldUpdateClaimToInvalidWhenContextHasErrors() {
+    // Given
+    UUID claimId = new UUID(1, 1);
+    SubmissionResponse build =
+        SubmissionResponse.builder()
+            .submissionId(SUBMISSION_ID)
+            .build()
+            .addClaimsItem(
+                SubmissionClaim.builder()
+                    .status(ClaimStatus.READY_TO_PROCESS)
+                    .claimId(claimId)
+                    .build());
+
+    SubmissionValidationContext context = new SubmissionValidationContext();
+    context.addClaimReports(List.of(new ClaimValidationReport(claimId.toString())));
+    context.flagForRetry(claimId.toString());
+    context.addClaimError(
+        String.valueOf(claimId), ClaimValidationError.TECHNICAL_ERROR_FEE_CALCULATION_SERVICE);
+    // When
+    bulkClaimUpdater.updateClaims(build, context);
+    // Then
+    ArgumentCaptor<ClaimPatch> claimPatchCaptor = ArgumentCaptor.forClass(ClaimPatch.class);
+    // Should skip INVALID claim so only claim two exists
+    verify(dataClaimsRestClient, times(1)).updateClaim(any(), any(), claimPatchCaptor.capture());
+    ClaimPatch capturedPatch = claimPatchCaptor.getAllValues().getFirst();
+    assertThat(capturedPatch.getId()).isEqualTo(claimId.toString());
+    assertThat(capturedPatch.getStatus()).isEqualTo(ClaimStatus.INVALID);
+    assertThat(capturedPatch.getValidationMessages().getFirst().getDisplayMessage())
+        .isEqualTo(
+            ClaimValidationError.TECHNICAL_ERROR_FEE_CALCULATION_SERVICE.getDisplayMessage());
+  }
+
+  @Test
+  @DisplayName("Should not update claim to invalid when the claim is flagged for retry")
+  void shouldNotUpdateClaimToInvalidWhenTheClaimIsFlaggedForRetry() {
+    // Given
+    UUID claimId = new UUID(1, 1);
+    SubmissionResponse build =
+        SubmissionResponse.builder()
+            .submissionId(SUBMISSION_ID)
+            .build()
+            .addClaimsItem(
+                SubmissionClaim.builder()
+                    .status(ClaimStatus.READY_TO_PROCESS)
+                    .claimId(claimId)
+                    .build());
+
+    SubmissionValidationContext context = new SubmissionValidationContext();
+    context.addClaimReports(List.of(new ClaimValidationReport(claimId.toString())));
+    context.flagForRetry(claimId.toString());
+    // When
+    bulkClaimUpdater.updateClaims(build, context);
+    // Then
+    ArgumentCaptor<ClaimPatch> claimPatchCaptor = ArgumentCaptor.forClass(ClaimPatch.class);
+    // Should skip INVALID claim so only claim two exists
+    verify(dataClaimsRestClient, never()).updateClaim(any(), any(), claimPatchCaptor.capture());
   }
 }
