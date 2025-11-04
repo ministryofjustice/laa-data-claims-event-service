@@ -57,8 +57,8 @@ public class BulkClaimUpdater {
               // Get claim ID
               String claimId = claim.getClaimId().toString();
 
-              // Skip claims flagger for retry
-              if (context.isFlaggedForRetry(claimId)) {
+              // Skip claims flagged for retry
+              if (context.isFlaggedForRetry(claimId) && !context.hasErrors(claimId)) {
                 log.debug("Claim {} is flagged for retry. Skipping update.", claim.getClaimId());
                 claimsFlaggedForRetry.incrementAndGet();
                 return;
