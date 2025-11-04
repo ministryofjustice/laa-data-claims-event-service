@@ -21,7 +21,7 @@
     },
     "area_of_law": {
       "type": "string",
-      "enum": ["CIVIL", "CRIME", "MEDIATION", "CRIME LOWER", "LEGAL HELP"],
+      "enum": ["MEDIATION", "CRIME LOWER", "LEGAL HELP"],
       "validationErrorMessages": [
         {
           "key": "ALL",
@@ -46,7 +46,7 @@
         }
       ]
     },
-    "crime_schedule_number": {
+    "crime_lower_schedule_number": {
       "type": "string",
       "pattern": "^[a-zA-Z0-9/]+$",
       "maxLength": 20
@@ -71,7 +71,7 @@
     "submission_period",
     "area_of_law",
     "status",
-    "crime_schedule_number",
+    "crime_lower_schedule_number",
     "is_nil_submission",
     "number_of_claims"
   ]

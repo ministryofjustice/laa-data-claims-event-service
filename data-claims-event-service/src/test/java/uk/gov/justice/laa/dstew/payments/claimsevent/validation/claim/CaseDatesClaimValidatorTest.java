@@ -8,6 +8,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
@@ -33,7 +34,7 @@ class CaseDatesClaimValidatorTest {
 
     SubmissionValidationContext context = new SubmissionValidationContext();
 
-    validator.validate(claim, context, "CIVIL");
+    validator.validate(claim, context, AreaOfLaw.LEGAL_HELP);
 
     // Then
     assertThat(
@@ -93,7 +94,7 @@ class CaseDatesClaimValidatorTest {
 
     SubmissionValidationContext context = new SubmissionValidationContext();
 
-    validator.validate(claim, context, "CIVIL");
+    validator.validate(claim, context, AreaOfLaw.LEGAL_HELP);
 
     // Then
     assertThat(
@@ -139,23 +140,23 @@ class CaseDatesClaimValidatorTest {
   }
 
   /*
-  Case Concluded Date should be mandatory for CIVIL and CRIME, but it's optional for MEDIATION.
+  Case Concluded Date should be mandatory for LEGAL_HELP and CRIME_LOWER, but it's optional for MEDIATION.
   Ref: https://dsdmoj.atlassian.net/browse/DSTEW-566
    */
   @ParameterizedTest(
       name = "{index} => claimId={0}, areaOfLaw={1}, caseConcludedDate={2}, expectError={3}")
   @CsvSource({
-    "1, CIVIL, 2025-08-14, false, null",
-    "2, CIVIL, 1994-08-14, true, Invalid date value for Case Concluded Date (Must be between 1995-01-01 and today): 1994-08-14",
-    "3, CRIME, 2017-08-14, false, null",
-    "4, CRIME, 2015-08-14, true, Invalid date value for Case Concluded Date (Must be between 2016-04-01 and today): 2015-08-14",
-    "5, CRIME, 2099-08-14, true, Invalid date value for Case Concluded Date (Must be between 2016-04-01 and today): 2099-08-14",
+    "1, LEGAL_HELP, 2025-08-14, false, null",
+    "2, LEGAL_HELP, 1994-08-14, true, Invalid date value for Case Concluded Date (Must be between 1995-01-01 and today): 1994-08-14",
+    "3, CRIME_LOWER, 2017-08-14, false, null",
+    "4, CRIME_LOWER, 2015-08-14, true, Invalid date value for Case Concluded Date (Must be between 2016-04-01 and today): 2015-08-14",
+    "5, CRIME_LOWER, 2099-08-14, true, Invalid date value for Case Concluded Date (Must be between 2016-04-01 and today): 2099-08-14",
     "6, MEDIATION, 1996-08-14, false, null",
     "7, MEDIATION, 1994-08-14, true, Invalid date value for Case Concluded Date (Must be between 1995-01-01 and today): 1994-08-14"
   })
   void checkMandatoryCaseConcludedDate(
       int claimIdBit,
-      String areaOfLaw,
+      AreaOfLaw areaOfLaw,
       String caseConcludedDate,
       boolean expectError,
       String expectedErrorMsg) {

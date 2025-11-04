@@ -31,7 +31,7 @@
       "contractAuthorizationStatus": "string",
       "contractStartDate": "2025-07-31",
       "contractEndDate": "2025-07-31",
-      "areaOfLaw": "string",
+      "areaOfLaw": "LEGAL HELP",
       "scheduleType": "string",
       "scheduleNumber": "string",
       "scheduleContractNumber": "string",
@@ -42,7 +42,7 @@
       "scheduleEndDate": "2025-07-31",
       "scheduleLines": [
         {
-          "areaOfLaw": "string",
+          "areaOfLaw": "LEGAL HELP",
           "categoryOfLaw": "string",
           "description": "string",
           "devolvedPowersStatus": "string",

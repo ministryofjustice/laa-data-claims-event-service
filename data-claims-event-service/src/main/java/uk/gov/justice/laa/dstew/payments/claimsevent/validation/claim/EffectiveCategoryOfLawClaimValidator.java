@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.EventServiceIllegalArgumentException;
@@ -65,13 +66,13 @@ public final class EffectiveCategoryOfLawClaimValidator implements ClaimValidato
   public void validate(
       ClaimResponse claim,
       SubmissionValidationContext context,
-      String areaOfLaw,
+      AreaOfLaw areaOfLaw,
       String officeCode,
       Map<String, FeeDetailsResponseWrapper> feeDetailsResponseMap) {
     try {
       LocalDate effectiveDate = claimEffectiveDateUtil.getEffectiveDate(claim);
       List<String> effectiveCategoriesOfLaw =
-          getEffectiveCategoriesOfLaw(officeCode, areaOfLaw, effectiveDate);
+          getEffectiveCategoriesOfLaw(officeCode, areaOfLaw.getValue(), effectiveDate);
       // Get effective category of law lookup
       categoryOfLawValidationService.validateCategoryOfLaw(
           claim, feeDetailsResponseMap, effectiveCategoriesOfLaw, context);

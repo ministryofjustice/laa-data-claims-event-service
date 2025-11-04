@@ -4,6 +4,7 @@ import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimVali
 
 import java.math.BigDecimal;
 import org.springframework.stereotype.Component;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
@@ -20,20 +21,18 @@ public final class DisbursementsClaimValidator
     implements ClaimWithAreaOfLawValidator, ClaimValidator {
 
   @Override
-  public void validate(ClaimResponse claim, SubmissionValidationContext context, String areaOfLaw) {
+  public void validate(
+      ClaimResponse claim, SubmissionValidationContext context, AreaOfLaw areaOfLaw) {
     var disbursementsVatAmount = claim.getDisbursementsVatAmount();
 
     BigDecimal maxAllowed =
         switch (areaOfLaw) {
-          case "CIVIL" -> BigDecimal.valueOf(99999.99);
-          case "CRIME" -> BigDecimal.valueOf(999999.99);
-          case "MEDIATION" -> BigDecimal.valueOf(999999999.99);
-          default -> null;
+          case LEGAL_HELP -> BigDecimal.valueOf(99999.99);
+          case CRIME_LOWER -> BigDecimal.valueOf(999999.99);
+          case MEDIATION -> BigDecimal.valueOf(999999999.99);
         };
 
-    if (maxAllowed != null
-        && disbursementsVatAmount != null
-        && disbursementsVatAmount.compareTo(maxAllowed) > 0) {
+    if (disbursementsVatAmount != null && disbursementsVatAmount.compareTo(maxAllowed) > 0) {
       context.addClaimError(
           claim.getId(),
           String.format(

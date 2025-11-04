@@ -61,10 +61,10 @@ public abstract class SchemaValidator {
   }
 
   private static String simplifyAreaOfLaw(String areaOfLaw) {
-    if (StrategyTypes.CRIME.contains(areaOfLaw)) {
-      return "CRIME";
-    } else if (StrategyTypes.CIVIL.contains(areaOfLaw)) {
-      return "CIVIL";
+    if (StrategyTypes.CRIME_LOWER.contains(areaOfLaw)) {
+      return "CRIME LOWER";
+    } else if (StrategyTypes.LEGAL_HELP.contains(areaOfLaw)) {
+      return "LEGAL HELP";
     } else if (StrategyTypes.MEDIATION.contains(areaOfLaw)) {
       return "MEDIATION";
     } else if ("ALL".equals(areaOfLaw)) {

@@ -52,8 +52,8 @@ public interface DuplicateClaimValidationStrategy {
    */
   default List<String> compatibleStrategies() {
     List<String> strategies = new ArrayList<>();
-    strategies.addAll(StrategyTypes.CRIME);
-    strategies.addAll(StrategyTypes.CIVIL);
+    strategies.addAll(StrategyTypes.CRIME_LOWER);
+    strategies.addAll(StrategyTypes.LEGAL_HELP);
     strategies.addAll(StrategyTypes.MEDIATION);
     return strategies;
   }

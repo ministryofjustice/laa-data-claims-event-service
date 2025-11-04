@@ -112,8 +112,8 @@
       }
     ],
     "schedule": {
-      "area_of_law": "CRIME LOWER",
-      "schedule_num": "2Q286D/CRIME",
+      "area_of_law": "CRIME_LOWER",
+      "schedule_num": "2Q286D/CRIME_LOWER",
       "submission_period": "OCT-2024"
     },
     "matter_starts": []

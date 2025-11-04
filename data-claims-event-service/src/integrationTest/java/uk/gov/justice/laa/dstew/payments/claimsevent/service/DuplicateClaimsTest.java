@@ -1,7 +1,5 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
-import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.AreaOfLaw.LEGAL_HELP;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -14,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.stereotype.Component;
 import org.springframework.test.context.ActiveProfiles;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MockServerIntegrationTest;
 
 @ActiveProfiles("test")
@@ -37,13 +36,14 @@ public class DuplicateClaimsTest extends MockServerIntegrationTest {
   @Autowired protected SubmissionValidationService submissionValidationService;
 
   @Nested
-  class CivilDuplicateClaimValidation {
+  class LegalHelpDuplicateClaimValidation {
 
-    @DisplayName("Civil Duplicate Claim Validation: Should not have any validation errors")
+    @DisplayName("Legal Help Duplicate Claim Validation: Should not have any validation errors")
     @Test
-    void testCivilDuplicateClaimValidation() throws Exception {
+    void testLegalHelpDuplicateClaimValidation() throws Exception {
       // submission
-      stubForGetSubmission(SUBMISSION_ID, "data-claims/get-submission/get-submission-civil.json");
+      stubForGetSubmission(
+          SUBMISSION_ID, "data-claims/get-submission/get-submission-legal-help.json");
 
       stubForPathSubmissionWithClaimsId(SUBMISSION_ID, CLAIM_ID);
 
@@ -61,7 +61,7 @@ public class DuplicateClaimsTest extends MockServerIntegrationTest {
       // provider-details
       stubForGetProviderOffice(
           OFFICE_CODE,
-          List.of(new Parameter("areaOfLaw", LEGAL_HELP.getValue())),
+          List.of(new Parameter("areaOfLaw", AreaOfLaw.LEGAL_HELP.getValue())),
           "provider-details/get-firm-schedules-openapi-200.json");
       // fee-details
       stubForGetFeeDetails(FEE_CODE, "fee-scheme/get-fee-details-200.json");
@@ -75,7 +75,7 @@ public class DuplicateClaimsTest extends MockServerIntegrationTest {
       getStubForGetSubmissionByCriteria(
           List.of(
               Parameter.param("offices", OFFICE_CODE),
-              Parameter.param("area_of_law", LEGAL_HELP.getValue()),
+              Parameter.param("area_of_law", AreaOfLaw.LEGAL_HELP.name()),
               Parameter.param("submission_period", SUBMISSION_PERIOD)),
           "data-claims/get-submission/get-submissions-by-filter_no_content.json");
 
