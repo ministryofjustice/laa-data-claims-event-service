@@ -187,11 +187,6 @@ class JsonSchemaValidatorTest {
           + "^[A-Z0-9]{6}$ (provided value: abc123)'",
       "numberOfClaims, -10, 'number_of_claims: must have a minimum value of 0 (provided value: "
           + "-10)'",
-      // TODO: THIS CAN'T BE TESTED THIS WAY GIVEN AREA_OF_LAW RAW TYPE IS NOW AN ENUM
-      //      "areaOfLaw, 'WILD WEST', 'area_of_law: does not have a value in the enumeration "
-      //          + "[\"CIVIL\", \"CRIME\", \"MEDIATION\", \"CRIME LOWER\", \"LEGAL HELP\"]
-      // (provided "
-      //          + "value: WILD WEST)'",
       "submissionPeriod, 'OCTOBER-20', 'submission_period: does not match the regex pattern "
           + "^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-[0-9]{4}$ (provided value: "
           + "OCTOBER-20)'",
