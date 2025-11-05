@@ -21,6 +21,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.ExclusionsRegistry;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.MandatoryFieldsRegistry;
+import uk.gov.justice.laa.dstew.payments.claimsevent.util.StringCaseUtil;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
 @ExtendWith(MockitoExtension.class)
@@ -128,7 +129,9 @@ class MandatoryFieldClaimValidatorTest {
 
     assertThat(getClaimMessages(context, claimId.toString()).isEmpty()).isFalse();
     assertThat(getClaimMessages(context, claimId.toString()).getFirst().getDisplayMessage())
-        .isEqualTo("%s is required for area of law: LEGAL HELP".formatted(mandatoryField));
+        .isEqualTo(
+            "%s is required for Legal Help claims"
+                .formatted(StringCaseUtil.toTitleCase(mandatoryField)));
   }
 
   @ParameterizedTest

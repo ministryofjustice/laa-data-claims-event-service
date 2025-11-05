@@ -12,6 +12,7 @@ import java.util.Set;
 import org.springframework.stereotype.Component;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessageType;
+import uk.gov.justice.laa.dstew.payments.claimsevent.util.StringCaseUtil;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.model.ValidationErrorMessage;
 
 /** Class responsible for validating objects against predefined JSON schemas. */
@@ -76,7 +77,11 @@ public class JsonSchemaValidator extends SchemaValidator {
   }
 
   private String getDisplayMessage(JsonNode data, ValidationMessage vm) {
-    String field = vm.getMessage().split(":")[0].replaceFirst("^\\$\\.", "");
-    return getValidationErrorMessageFromSchema(field, getTechnicalMessage(data, vm));
+    if ("required".equals(vm.getType())) {
+      return StringCaseUtil.toTitleCase(vm.getProperty()) + " is required";
+    } else {
+      String field = vm.getMessage().split(":")[0].replaceFirst("^\\$\\.", "");
+      return getValidationErrorMessageFromSchema(field, getTechnicalMessage(data, vm));
+    }
   }
 }
