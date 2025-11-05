@@ -1,6 +1,7 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate;
 
 import java.util.List;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 
 /**
  * Strategy for validating duplicate claims for crime law areas of law.
@@ -11,6 +12,6 @@ public interface CrimeLowerDuplicateClaimValidationStrategy
     extends DuplicateClaimValidationStrategy {
 
   default List<String> compatibleStrategies() {
-    return StrategyTypes.CRIME_LOWER;
+    return List.of(AreaOfLaw.CRIME_LOWER.getValue());
   }
 }
