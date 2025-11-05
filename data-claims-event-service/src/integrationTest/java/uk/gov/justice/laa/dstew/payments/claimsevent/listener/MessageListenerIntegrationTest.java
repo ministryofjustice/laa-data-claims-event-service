@@ -8,6 +8,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.awspring.cloud.sqs.operations.SqsTemplate;
 import java.time.Duration;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -80,54 +81,53 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
     verifySubmissionRequests();
   }
 
-  // TODO: Fix this test.
-  //  @Test
-  //  void sendMessage_noErrors_withClaims() throws Exception {
-  //    // Given a submission with a claim
-  //    stubForGetSubmission(
-  //        SUBMISSION_ID, "data-claims/get-submission/get-submission-with-claim.json");
-  //    SubmissionPatch patchBodyInProgress =
-  //        SubmissionPatch.builder()
-  //            .submissionId(SUBMISSION_ID)
-  //            .status(SubmissionStatus.VALIDATION_IN_PROGRESS)
-  //            .build();
-  //    stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodyInProgress);
-  //    SubmissionPatch patchBodySucceeded =
-  //        SubmissionPatch.builder()
-  //            .submissionId(SUBMISSION_ID)
-  //            .status(SubmissionStatus.VALIDATION_SUCCEEDED)
-  //            .build();
-  //    stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodySucceeded);
-  //    stubForGetClaim(SUBMISSION_ID, CLAIM_ID, "data-claims/get-claim/get-claim-2.json");
-  //
-  //    getStubForGetSubmissionByCriteria(
-  //        List.of(
-  //            Parameter.param("offices", OFFICE_CODE),
-  //            Parameter.param("area_of_law", AreaOfLaw.LEGAL_HELP.getValue()),
-  //            Parameter.param("submission_period", "APR-2025")),
-  //        "data-claims/get-submission/get-submissions-by-filter_no_content.json");
-  //    stubForGetFeeDetails("CAPA", "fee-scheme/get-fee-details-200.json");
-  //    stubForGetProviderOffice(
-  //        OFFICE_CODE,
-  //        List.of(new Parameter("areaOfLaw", AreaOfLaw.LEGAL_HELP.getValue())),
-  //        "provider-details/get-firm-schedules-openapi-200.json");
-  //
-  //    stubForGetClaims(Collections.emptyList(), "data-claims/get-claims/no-claims.json");
-  //    // fee-calculation
-  //    stubForPostFeeCalculation("fee-scheme/post-fee-calculation-200.json");
-  //    // Stub patch claim
-  //    stubForUpdateClaim(SUBMISSION_ID, CLAIM_ID);
-  //    // Stub patch submission
-  //    stubForUpdateSubmission(SUBMISSION_ID);
-  //    // Stub patch bulk submission
-  //    stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
-  //
-  //    // when
-  //    sendSubmissionValidationMessage();
-  //
-  //    // then
-  //    verifySubmissionAndClaimRequests();
-  //  }
+  @Test
+  void sendMessage_noErrors_withClaims() throws Exception {
+    // Given a submission with a claim
+    stubForGetSubmission(
+        SUBMISSION_ID, "data-claims/get-submission/get-submission-with-claim.json");
+    SubmissionPatch patchBodyInProgress =
+        SubmissionPatch.builder()
+            .submissionId(SUBMISSION_ID)
+            .status(SubmissionStatus.VALIDATION_IN_PROGRESS)
+            .build();
+    stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodyInProgress);
+    SubmissionPatch patchBodySucceeded =
+        SubmissionPatch.builder()
+            .submissionId(SUBMISSION_ID)
+            .status(SubmissionStatus.VALIDATION_SUCCEEDED)
+            .build();
+    stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodySucceeded);
+    stubForGetClaim(SUBMISSION_ID, CLAIM_ID, "data-claims/get-claim/get-claim-2.json");
+
+    getStubForGetSubmissionByCriteria(
+        List.of(
+            Parameter.param("offices", OFFICE_CODE),
+            Parameter.param("area_of_law", AREA_OF_LAW.name()),
+            Parameter.param("submission_period", "APR-2025")),
+        "data-claims/get-submission/get-submissions-by-filter_no_content.json");
+    stubForGetFeeDetails("CAPA", "fee-scheme/get-fee-details-200.json");
+    stubForGetProviderOffice(
+        OFFICE_CODE,
+        List.of(new Parameter("areaOfLaw", AREA_OF_LAW.getValue())),
+        "provider-details/get-firm-schedules-openapi-200.json");
+
+    stubForGetClaims(Collections.emptyList(), "data-claims/get-claims/no-claims.json");
+    // fee-calculation
+    stubForPostFeeCalculation("fee-scheme/post-fee-calculation-200.json");
+    // Stub patch claim
+    stubForUpdateClaim(SUBMISSION_ID, CLAIM_ID);
+    // Stub patch submission
+    stubForUpdateSubmission(SUBMISSION_ID);
+    // Stub patch bulk submission
+    stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
+
+    // when
+    sendSubmissionValidationMessage();
+
+    // then
+    verifySubmissionAndClaimRequests();
+  }
 
   @Test
   void sendMessage_validationFailedDuplicate() throws Exception {

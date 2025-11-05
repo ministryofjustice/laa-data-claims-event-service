@@ -21,7 +21,6 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.CrimeLowerDuplicateClaimValidationStrategy;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.LegalHelpDuplicateClaimValidationStrategy;
-import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.StrategyTypes;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Duplicate claim validator test")
@@ -46,10 +45,10 @@ class DuplicateClaimValidatorTest {
   void setup() {
     lenient()
         .when(mockLegalHelpValidationStrategy.compatibleStrategies())
-        .thenReturn(StrategyTypes.LEGAL_HELP);
+        .thenReturn(List.of(AreaOfLaw.LEGAL_HELP.getValue()));
     lenient()
         .when(mockCrimeLowerValidationStrategy.compatibleStrategies())
-        .thenReturn(StrategyTypes.CRIME_LOWER);
+        .thenReturn(List.of(AreaOfLaw.CRIME_LOWER.getValue()));
     validator =
         new DuplicateClaimValidator(
             List.of(mockLegalHelpValidationStrategy, mockCrimeLowerValidationStrategy));
