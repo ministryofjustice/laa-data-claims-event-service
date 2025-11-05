@@ -1,9 +1,9 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
@@ -51,10 +51,9 @@ public interface DuplicateClaimValidationStrategy {
    * @return List of compatible area of laws.
    */
   default List<String> compatibleStrategies() {
-    List<String> strategies = new ArrayList<>();
-    strategies.addAll(StrategyTypes.CRIME_LOWER);
-    strategies.addAll(StrategyTypes.LEGAL_HELP);
-    strategies.addAll(StrategyTypes.MEDIATION);
-    return strategies;
+    return List.of(
+        AreaOfLaw.CRIME_LOWER.getValue(),
+        AreaOfLaw.LEGAL_HELP.getValue(),
+        AreaOfLaw.MEDIATION.getValue());
   }
 }
