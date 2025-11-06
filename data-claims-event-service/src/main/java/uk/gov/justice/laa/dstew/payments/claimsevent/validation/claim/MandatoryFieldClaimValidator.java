@@ -16,6 +16,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.ExclusionsRegistry;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.MandatoryFieldsRegistry;
+import uk.gov.justice.laa.dstew.payments.claimsevent.util.StringCaseUtil;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
 /**
@@ -85,7 +86,10 @@ public final class MandatoryFieldClaimValidator implements ClaimValidator {
         if (value == null || (value instanceof String s && s.trim().isEmpty())) {
           context.addClaimError(
               claim.getId(),
-              String.format("%s is required for area of law: %s", fieldName, areaOfLaw),
+              String.format(
+                  "%s is required for %s claims",
+                  StringCaseUtil.toTitleCase(fieldName),
+                  StringCaseUtil.toTitleCase(areaOfLaw.name())),
               EVENT_SERVICE);
         }
 

@@ -42,7 +42,21 @@ class CaseDatesClaimValidatorTest {
                 .anyMatch(
                     x ->
                         x.getDisplayMessage()
-                            .equals("Invalid date value provided for Case Start Date: 2003-13-34")))
+                            .equals("Invalid date value provided for Case Start Date")))
+        .isTrue();
+    assertThat(
+            getClaimMessages(context, claimId.toString()).stream()
+                .anyMatch(
+                    x ->
+                        x.getDisplayMessage()
+                            .equals("Transfer Date must be between 01/01/1995 and today")))
+        .isTrue();
+    assertThat(
+            getClaimMessages(context, claimId.toString()).stream()
+                .anyMatch(
+                    x ->
+                        x.getDisplayMessage()
+                            .equals("Case Concluded Date must be between 01/01/1995 and today")))
         .isTrue();
     assertThat(
             getClaimMessages(context, claimId.toString()).stream()
@@ -50,29 +64,7 @@ class CaseDatesClaimValidatorTest {
                     x ->
                         x.getDisplayMessage()
                             .equals(
-                                "Invalid date value for Transfer Date (Must be between 1995-01-01 "
-                                    + "and today): "
-                                    + "2090-12-02")))
-        .isTrue();
-    assertThat(
-            getClaimMessages(context, claimId.toString()).stream()
-                .anyMatch(
-                    x ->
-                        x.getDisplayMessage()
-                            .equals(
-                                "Invalid date value for Case Concluded Date (Must be between "
-                                    + "1995-01-01 and "
-                                    + "today): 2090-01-01")))
-        .isTrue();
-    assertThat(
-            getClaimMessages(context, claimId.toString()).stream()
-                .anyMatch(
-                    x ->
-                        x.getDisplayMessage()
-                            .equals(
-                                "Invalid date value for Representation Order Date (Must be between "
-                                    + "2016-04-01 "
-                                    + "and today): 2090-01-01")))
+                                "Representation Order Date must be between 01/04/2016 and today")))
         .isTrue();
   }
 
@@ -102,10 +94,21 @@ class CaseDatesClaimValidatorTest {
                 .anyMatch(
                     x ->
                         x.getDisplayMessage()
-                            .equals(
-                                "Invalid date value for Case Start Date (Must be between 1995-01-01"
-                                    + " and today):"
-                                    + " 1993-01-03")))
+                            .equals("Case Start Date must be between 01/01/1995 and today")))
+        .isTrue();
+    assertThat(
+            getClaimMessages(context, claimId.toString()).stream()
+                .anyMatch(
+                    x ->
+                        x.getDisplayMessage()
+                            .equals("Transfer Date must be between 01/01/1995 and today")))
+        .isTrue();
+    assertThat(
+            getClaimMessages(context, claimId.toString()).stream()
+                .anyMatch(
+                    x ->
+                        x.getDisplayMessage()
+                            .equals("Case Concluded Date must be between 01/01/1995 and today")))
         .isTrue();
     assertThat(
             getClaimMessages(context, claimId.toString()).stream()
@@ -113,29 +116,7 @@ class CaseDatesClaimValidatorTest {
                     x ->
                         x.getDisplayMessage()
                             .equals(
-                                "Invalid date value for Transfer Date (Must be between 1995-01-01 "
-                                    + "and today): "
-                                    + "1990-12-02")))
-        .isTrue();
-    assertThat(
-            getClaimMessages(context, claimId.toString()).stream()
-                .anyMatch(
-                    x ->
-                        x.getDisplayMessage()
-                            .equals(
-                                "Invalid date value for Case Concluded Date (Must be between "
-                                    + "1995-01-01 and "
-                                    + "today): 1993-01-01")))
-        .isTrue();
-    assertThat(
-            getClaimMessages(context, claimId.toString()).stream()
-                .anyMatch(
-                    x ->
-                        x.getDisplayMessage()
-                            .equals(
-                                "Invalid date value for Representation Order Date (Must be between "
-                                    + "2016-04-01 "
-                                    + "and today): 2016-03-30")))
+                                "Representation Order Date must be between 01/04/2016 and today")))
         .isTrue();
   }
 
@@ -147,12 +128,12 @@ class CaseDatesClaimValidatorTest {
       name = "{index} => claimId={0}, areaOfLaw={1}, caseConcludedDate={2}, expectError={3}")
   @CsvSource({
     "1, LEGAL_HELP, 2025-08-14, false, null",
-    "2, LEGAL_HELP, 1994-08-14, true, Invalid date value for Case Concluded Date (Must be between 1995-01-01 and today): 1994-08-14",
+    "2, LEGAL_HELP, 1994-08-14, true, Case Concluded Date must be between 01/01/1995 and today",
     "3, CRIME_LOWER, 2017-08-14, false, null",
-    "4, CRIME_LOWER, 2015-08-14, true, Invalid date value for Case Concluded Date (Must be between 2016-04-01 and today): 2015-08-14",
-    "5, CRIME_LOWER, 2099-08-14, true, Invalid date value for Case Concluded Date (Must be between 2016-04-01 and today): 2099-08-14",
+    "4, CRIME_LOWER, 2015-08-14, true, Case Concluded Date must be between 01/04/2016 and today",
+    "5, CRIME_LOWER, 2099-08-14, true, Case Concluded Date must be between 01/04/2016 and today",
     "6, MEDIATION, 1996-08-14, false, null",
-    "7, MEDIATION, 1994-08-14, true, Invalid date value for Case Concluded Date (Must be between 1995-01-01 and today): 1994-08-14"
+    "7, MEDIATION, 1994-08-14, true, Case Concluded Date must be between 01/01/1995 and today"
   })
   void checkMandatoryCaseConcludedDate(
       int claimIdBit,

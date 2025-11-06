@@ -25,7 +25,7 @@ public final class ClientDateOfBirthClaimValidator extends AbstractDateValidator
     checkDateInPast(
         claim, "Client Date of Birth", claim.getClientDateOfBirth(), MIN_BIRTH_DATE, context);
     checkDateInPast(
-        claim, "Client2 Date of Birth", claim.getClient2DateOfBirth(), MIN_BIRTH_DATE, context);
+        claim, "Client 2 Date of Birth", claim.getClient2DateOfBirth(), MIN_BIRTH_DATE, context);
   }
 
   @Override

@@ -37,6 +37,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.SchemaValidationConfig;
+import uk.gov.justice.laa.dstew.payments.claimsevent.util.StringCaseUtil;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.model.ValidationErrorMessage;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -105,8 +106,7 @@ class JsonSchemaValidatorTest {
           jsonSchemaValidator.validate("submission", submission);
       assertThat(errors)
           .extracting(ValidationMessagePatch::getDisplayMessage)
-          .containsExactlyInAnyOrder(
-              "$: required property '" + jsonField + "' not found (provided value: null)");
+          .containsExactlyInAnyOrder(StringCaseUtil.toTitleCase(jsonField) + " is required");
     }
 
     @Test
@@ -140,7 +140,7 @@ class JsonSchemaValidatorTest {
               "submission_period: does not match the regex pattern ^"
                   + "(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-[0-9]{4}$ (provided value:"
                   + " OCTOBER-2024)",
-              "$: required property 'area_of_law' not found (provided value: null)",
+              "Area of Law is required",
               "number_of_claims: must have a minimum value of 0 (provided value: -1)");
     }
 
@@ -270,8 +270,7 @@ class JsonSchemaValidatorTest {
       final List<ValidationMessagePatch> errors = jsonSchemaValidator.validate("claim", claim);
       assertThat(errors)
           .extracting(ValidationMessagePatch::getDisplayMessage)
-          .containsExactlyInAnyOrder(
-              "$: required property '" + jsonField + "' not found (provided value: null)");
+          .containsExactlyInAnyOrder(StringCaseUtil.toTitleCase(jsonField) + " is required");
     }
 
     @Test

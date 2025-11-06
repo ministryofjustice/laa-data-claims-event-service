@@ -48,10 +48,7 @@ class DisbursementsClaimValidatorTest {
     validator.validate(claim, context, areaOfLaw);
 
     if (expectError) {
-      String expectedMessage =
-          String.format(
-              "disbursementsVatAmount (%s): must have a maximum value of %s (provided value: %s)",
-              areaOfLaw, maxAllowed, disbursementsVatAmount);
+      String expectedMessage = "Disbursements VAT Amount has exceeded the maximum accepted value";
       assertThat(getClaimMessages(context, claimId.toString()).getFirst().getDisplayMessage())
           .isEqualTo(expectedMessage);
     } else {
