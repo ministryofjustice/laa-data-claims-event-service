@@ -19,6 +19,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.model.Validation
 @Component
 public class JsonSchemaValidator extends SchemaValidator {
 
+  public static final String REQUIRED = "required";
   private final ObjectMapper mapper;
 
   // Map of schema names to JsonSchema objects
@@ -77,8 +78,8 @@ public class JsonSchemaValidator extends SchemaValidator {
   }
 
   private String getDisplayMessage(JsonNode data, ValidationMessage vm) {
-    if ("required".equals(vm.getType())) {
-      return StringCaseUtil.toTitleCase(vm.getProperty()) + " is required";
+    if (REQUIRED.equals(vm.getType())) {
+      return String.format("%s is required", StringCaseUtil.toTitleCase(vm.getProperty()));
     } else {
       String field = vm.getMessage().split(":")[0].replaceFirst("^\\$\\.", "");
       return getValidationErrorMessageFromSchema(field, getTechnicalMessage(data, vm));

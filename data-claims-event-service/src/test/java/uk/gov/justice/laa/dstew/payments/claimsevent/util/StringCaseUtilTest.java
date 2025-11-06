@@ -1,7 +1,6 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.util.StringCaseUtil.toTitleCase;
 
 import org.junit.jupiter.api.Test;
