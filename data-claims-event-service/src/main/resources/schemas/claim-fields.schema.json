@@ -691,7 +691,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Advice Time must be between in minutes"
+          "value": "Advice Time must be in minutes"
         }
       ]
     },
@@ -702,7 +702,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Travel Time must be between in minutes"
+          "value": "Travel Time must be in minutes"
         }
       ]
     },
@@ -713,7 +713,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Waiting Time must be between in minutes"
+          "value": "Waiting Time must be in minutes"
         }
       ]
     },
