@@ -593,7 +593,7 @@ class JsonSchemaValidatorTest {
       "dsccNumber, '202101/001', 'dscc_number: does not match the regex pattern ^[a-zA-Z0-9]{10}$ (provided value: 202101/001)'",
       "dsccNumber, '202101A', 'dscc_number: does not match the regex pattern ^[a-zA-Z0-9]{10}$ (provided value: 202101A)'",
       "dsccNumber, '202101aTooLong', 'dscc_number: does not match the regex pattern ^[a-zA-Z0-9]{10}$ (provided value: 202101aTooLong)'",
-      "maatId, '2021012Long', 'maat_id: does not match the regex pattern ^[a-zA-Z0-9]{1-10}$ (provided value: 202101aTooLong)'",
+      "maatId, '2021012Long', 'maat_id: does not match the regex pattern ^[a-zA-Z0-9]{1-10}$ (provided value: 2021012Long)'",
       "prisonLawPriorApprovalNumber, '202101/001', 'prison_law_prior_approval_number: does not match the regex pattern ^[a-zA-Z0-9]{10}$ (provided value: 202101/001)'",
       "prisonLawPriorApprovalNumber, '202101A', 'prison_law_prior_approval_number: does not match the regex pattern ^[a-zA-Z0-9]{10}$ (provided value: 202101A)'",
       "prisonLawPriorApprovalNumber, '202101aTooLong', 'prison_law_prior_approval_number: does not match the regex pattern ^[a-zA-Z0-9]{10}$ (provided value: 202101aTooLong)'",
