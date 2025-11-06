@@ -191,11 +191,11 @@
     },
     "maat_id": {
       "type": "string",
-      "pattern": "^[a-zA-Z0-9]{10}$",
+      "pattern": "^[A-Za-z0-9]{1,10}$",
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "MAAT ID must be exactly 10 alphanumeric characters"
+          "value": "MAAT ID must be up to 10 alphanumeric characters"
         }
       ]
     },
