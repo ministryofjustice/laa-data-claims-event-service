@@ -27,6 +27,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MessageListenerBase;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MockServerIntegrationTest;
 import uk.gov.justice.laa.dstew.payments.claimsevent.model.SubmissionEventType;
@@ -130,6 +131,112 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
   }
 
   @Test
+  void sendMessage_returnsNoValidationError_withDisbursementClaim_caseStartDateMoreThan3MonthsOld()
+      throws Exception {
+    // Given a submission with a claim
+    stubForGetSubmission(
+        SUBMISSION_ID, "data-claims/get-submission/get-submission-with-claim.json");
+    SubmissionPatch patchBodyInProgress =
+        SubmissionPatch.builder()
+            .submissionId(SUBMISSION_ID)
+            .status(SubmissionStatus.VALIDATION_IN_PROGRESS)
+            .build();
+    stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodyInProgress);
+    SubmissionPatch patchBodySucceeded =
+        SubmissionPatch.builder()
+            .submissionId(SUBMISSION_ID)
+            .status(SubmissionStatus.VALIDATION_SUCCEEDED)
+            .build();
+    stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodySucceeded);
+    // this returns the caseStartDate as 2025-01-01 which is more than 3 months old for the given
+    // submission period: APR-2025 (end date: 30-APR-2025)
+    stubForGetClaim(SUBMISSION_ID, CLAIM_ID, "data-claims/get-claim/get-claim-disbursement.json");
+
+    getStubForGetSubmissionByCriteria(
+        List.of(
+            Parameter.param("offices", OFFICE_CODE),
+            Parameter.param("area_of_law", AREA_OF_LAW.name()),
+            Parameter.param("submission_period", "APR-2025")),
+        "data-claims/get-submission/get-submissions-by-filter_no_content.json");
+    stubForGetFeeDetails("CAPA", "fee-scheme/get-fee-details-disbursement.json");
+    stubForGetProviderOffice(
+        OFFICE_CODE,
+        List.of(new Parameter("areaOfLaw", AREA_OF_LAW.getValue())),
+        "provider-details/get-firm-schedules-openapi-200.json");
+
+    stubForGetClaims(Collections.emptyList(), "data-claims/get-claims/no-claims.json");
+    // fee-calculation
+    stubForPostFeeCalculation("fee-scheme/post-fee-calculation-200.json");
+    // Stub patch claim
+    stubForUpdateClaim(SUBMISSION_ID, CLAIM_ID);
+    // Stub patch submission
+    stubForUpdateSubmission(SUBMISSION_ID);
+    // Stub patch bulk submission
+    stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
+
+    // when
+    sendSubmissionValidationMessage();
+
+    // then
+    verifySubmissionAndClaimRequests();
+  }
+
+  @Test
+  void sendMessage_returnsValidationError_withDisbursementClaim_caseStartDateLessThan3MonthsOld()
+      throws Exception {
+    // Given a submission with a claim
+    stubForGetSubmission(
+        SUBMISSION_ID, "data-claims/get-submission/get-submission-with-claim.json");
+    SubmissionPatch patchBodyInProgress =
+        SubmissionPatch.builder()
+            .submissionId(SUBMISSION_ID)
+            .status(SubmissionStatus.VALIDATION_IN_PROGRESS)
+            .build();
+    stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodyInProgress);
+    SubmissionPatch patchBodySucceeded =
+        SubmissionPatch.builder()
+            .submissionId(SUBMISSION_ID)
+            .status(SubmissionStatus.VALIDATION_SUCCEEDED)
+            .build();
+    stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodySucceeded);
+    // this returns the caseStartDate as 2025-03-01 which is less than 3 months old for the given
+    // submission period: APR-2025 (end date: 30-APR-2025)
+    stubForGetClaim(
+        SUBMISSION_ID,
+        CLAIM_ID,
+        "data-claims/get-claim/get-claim-disb-case-start-date-within-3-months.json");
+
+    getStubForGetSubmissionByCriteria(
+        List.of(
+            Parameter.param("offices", OFFICE_CODE),
+            Parameter.param("area_of_law", AREA_OF_LAW.name()),
+            Parameter.param("submission_period", "APR-2025")),
+        "data-claims/get-submission/get-submissions-by-filter_no_content.json");
+    stubForGetFeeDetails("CAPA", "fee-scheme/get-fee-details-disbursement.json");
+    stubForGetProviderOffice(
+        OFFICE_CODE,
+        List.of(new Parameter("areaOfLaw", AREA_OF_LAW.getValue())),
+        "provider-details/get-firm-schedules-openapi-200.json");
+
+    stubForGetClaims(Collections.emptyList(), "data-claims/get-claims/no-claims.json");
+    // fee-calculation
+    stubForPostFeeCalculation("fee-scheme/post-fee-calculation-200.json");
+    // Stub patch claim
+    stubForUpdateClaim(SUBMISSION_ID, CLAIM_ID);
+    // Stub patch submission
+    stubForUpdateSubmission(SUBMISSION_ID);
+    // Stub patch bulk submission
+    stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
+
+    // when
+    sendSubmissionValidationMessage();
+
+    // then
+    verifySubmissionRequests();
+    verifyClaimRequestInvocationWithValidationErrorMessage();
+  }
+
+  @Test
   void sendMessage_validationFailedDuplicate() throws Exception {
     // Given Validation failed for submission
     stubForGetSubmission(SUBMISSION_ID, "data-claims/get-submission/get-submission-APR-25.json");
@@ -217,6 +324,28 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
             .withMethod("PATCH")
             .withPath(API_VERSION_0 + "submissions/" + SUBMISSION_ID + "/claims/" + CLAIM_ID)
             .withBody(json(objectMapper.writeValueAsString(validClaimPatch))),
+        VerificationTimes.exactly(1));
+  }
+
+  private void verifyClaimRequestInvocationWithValidationErrorMessage()
+      throws JsonProcessingException {
+    ClaimPatch invalidClaimPatch =
+        ClaimPatch.builder()
+            .id(CLAIM_ID.toString())
+            .status(ClaimStatus.INVALID)
+            .validationMessages(
+                List.of(
+                    ValidationMessagePatch.builder()
+                        .displayMessage(
+                            "Disbursement claims can only be submitted at least 3 calendar months after the Case Start Date 01/03/2025")
+                        .build()))
+            .build();
+
+    mockServerClient.verify(
+        request()
+            .withMethod("PATCH")
+            .withPath(API_VERSION_0 + "submissions/" + SUBMISSION_ID + "/claims/" + CLAIM_ID)
+            .withBody(json(objectMapper.writeValueAsString(invalidClaimPatch))),
         VerificationTimes.exactly(1));
   }
 }
