@@ -10,6 +10,7 @@ import java.util.Locale;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
@@ -57,25 +58,28 @@ public final class DisbursementClaimStartDateValidator implements ClaimValidator
       log.debug("Claim {} is not a disbursement claim", currentClaim.getId());
       return;
     }
-    YearMonth submissionPeriod =
-        YearMonth.parse(currentClaim.getSubmissionPeriod(), submissionPeriodFormatter);
+    if (StringUtils.hasText(currentClaim.getSubmissionPeriod())
+        && StringUtils.hasText(currentClaim.getCaseStartDate())) {
+      YearMonth submissionPeriod =
+          YearMonth.parse(currentClaim.getSubmissionPeriod(), submissionPeriodFormatter);
 
-    LocalDate submissionEndDate = submissionPeriod.atEndOfMonth();
-    LocalDate caseStartDate =
-        LocalDate.parse(currentClaim.getCaseStartDate(), CASE_START_DATE_FORMATTER);
+      LocalDate submissionEndDate = submissionPeriod.atEndOfMonth();
+      LocalDate caseStartDate =
+          LocalDate.parse(currentClaim.getCaseStartDate(), CASE_START_DATE_FORMATTER);
 
-    if (caseStartDate.plusMonths(3).isAfter(submissionEndDate)) {
-      log.debug(
-          "Disbursement claims can only be submitted at least {} calendar months after the Case Start Date {}",
-          MAXIMUM_MONTHS_DIFFERENCE,
-          caseStartDate.format(FORMATTER_FOR_DISPLAY_MESSAGE));
+      if (caseStartDate.plusMonths(3).isAfter(submissionEndDate)) {
+        log.debug(
+            "Disbursement claims can only be submitted at least {} calendar months after the Case Start Date {}",
+            MAXIMUM_MONTHS_DIFFERENCE,
+            caseStartDate.format(FORMATTER_FOR_DISPLAY_MESSAGE));
 
-      context.addClaimError(
-          currentClaim.getId(),
-          String.format(
-              "Disbursement claims can only be submitted at least %d calendar months after the Case Start Date %s",
-              MAXIMUM_MONTHS_DIFFERENCE, caseStartDate.format(FORMATTER_FOR_DISPLAY_MESSAGE)),
-          EVENT_SERVICE);
+        context.addClaimError(
+            currentClaim.getId(),
+            String.format(
+                "Disbursement claims can only be submitted at least %d calendar months after the Case Start Date %s",
+                MAXIMUM_MONTHS_DIFFERENCE, caseStartDate.format(FORMATTER_FOR_DISPLAY_MESSAGE)),
+            EVENT_SERVICE);
+      }
     }
   }
 
