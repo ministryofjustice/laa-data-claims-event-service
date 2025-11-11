@@ -131,7 +131,8 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
   }
 
   @Test
-  void sendMessage_noErrors_withDisbursementClaim() throws Exception {
+  void sendMessage_returnsNoValidationError_withDisbursementClaim_caseStartDateMoreThan3MonthsOld()
+      throws Exception {
     // Given a submission with a claim
     stubForGetSubmission(
         SUBMISSION_ID, "data-claims/get-submission/get-submission-with-claim.json");
@@ -147,6 +148,8 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
             .status(SubmissionStatus.VALIDATION_SUCCEEDED)
             .build();
     stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodySucceeded);
+    // this returns the caseStartDate as 2025-01-01 which is more than 3 months old for the given
+    // submission period: APR-2025 (end date: 30-APR-2025)
     stubForGetClaim(SUBMISSION_ID, CLAIM_ID, "data-claims/get-claim/get-claim-disbursement.json");
 
     getStubForGetSubmissionByCriteria(
@@ -196,6 +199,8 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
             .status(SubmissionStatus.VALIDATION_SUCCEEDED)
             .build();
     stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodySucceeded);
+    // this returns the caseStartDate as 2025-03-01 which is less than 3 months old for the given
+    // submission period: APR-2025 (end date: 30-APR-2025)
     stubForGetClaim(
         SUBMISSION_ID,
         CLAIM_ID,
