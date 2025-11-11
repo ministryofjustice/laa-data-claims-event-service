@@ -26,6 +26,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.BasicClaimValidator;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.ClaimValidator;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.ClaimWithAreaOfLawValidator;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.DisbursementClaimStartDateValidator;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.DuplicateClaimValidator;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.EffectiveCategoryOfLawClaimValidator;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.MandatoryFieldClaimValidator;
@@ -143,6 +144,8 @@ public class ClaimValidationService {
                 case EffectiveCategoryOfLawClaimValidator validator ->
                     validator.validate(
                         claim, context, areaOfLaw, officeCode, feeDetailsResponseMap);
+                case DisbursementClaimStartDateValidator validator ->
+                    validator.validate(claim, context, feeCalculationType);
                 case MandatoryFieldClaimValidator validator ->
                     validator.validate(claim, context, areaOfLaw, feeCalculationType);
                 case DuplicateClaimValidator validator ->
