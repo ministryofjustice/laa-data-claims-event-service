@@ -54,11 +54,17 @@ public interface FeeSchemeMapper {
       @MappingTarget FeeCalculationRequest feeCalculationRequest,
       ClaimResponse claim,
       @Context AreaOfLaw areaOfLaw) {
-    if (AreaOfLaw.CRIME_LOWER.equals(areaOfLaw)) {
-      feeCalculationRequest.setNetTravelCosts(toDouble(claim.getTravelWaitingCostsAmount()));
-      feeCalculationRequest.setNetWaitingCosts(toDouble(claim.getNetWaitingCostsAmount()));
-    } else if (AreaOfLaw.LEGAL_HELP.equals(areaOfLaw)) {
-      feeCalculationRequest.setTravelAndWaitingCosts(toDouble(claim.getTravelWaitingCostsAmount()));
+    switch (areaOfLaw) {
+      case CRIME_LOWER -> {
+        feeCalculationRequest.setNetTravelCosts(toDouble(claim.getTravelWaitingCostsAmount()));
+        feeCalculationRequest.setNetWaitingCosts(toDouble(claim.getNetWaitingCostsAmount()));
+      }
+      case LEGAL_HELP ->
+          feeCalculationRequest.setTravelAndWaitingCosts(
+              toDouble(claim.getTravelWaitingCostsAmount()));
+      default -> {
+        // No area-of-law specific adjustments needed
+      }
     }
   }
 

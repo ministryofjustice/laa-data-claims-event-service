@@ -185,12 +185,16 @@ public interface BulkSubmissionMapper {
       @MappingTarget ClaimPost claimPost,
       BulkSubmissionOutcome outcome,
       @Context AreaOfLaw areaOfLaw) {
-    if (AreaOfLaw.CRIME_LOWER.equals(areaOfLaw)) {
-      claimPost.setStageReachedCode(outcome.getMatterType());
-      claimPost.setNetWaitingCostsAmount(outcome.getTravelWaitingCosts());
-      claimPost.setTravelWaitingCostsAmount(outcome.getTravelCosts());
-    } else if (AreaOfLaw.LEGAL_HELP.equals(areaOfLaw)) {
-      claimPost.setTravelWaitingCostsAmount(outcome.getTravelWaitingCosts());
+    switch (areaOfLaw) {
+      case CRIME_LOWER -> {
+        claimPost.setStageReachedCode(outcome.getMatterType());
+        claimPost.setNetWaitingCostsAmount(outcome.getTravelWaitingCosts());
+        claimPost.setTravelWaitingCostsAmount(outcome.getTravelCosts());
+      }
+      case LEGAL_HELP -> claimPost.setTravelWaitingCostsAmount(outcome.getTravelWaitingCosts());
+      default -> {
+        // No area-of-law specific adjustments needed
+      }
     }
   }
 
