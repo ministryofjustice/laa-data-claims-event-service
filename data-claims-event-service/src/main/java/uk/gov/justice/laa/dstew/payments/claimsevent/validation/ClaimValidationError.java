@@ -36,9 +36,14 @@ public enum ClaimValidationError {
       FEE_SERVICE,
       ValidationMessageType.ERROR),
   TECHNICAL_ERROR_FEE_CALCULATION_SERVICE(
+      "A technical error occurred, please try again after some time",
       "A technical error occurred when attempting to make a request to the fee calculation service",
-      null,
       FEE_SERVICE,
+      ValidationMessageType.ERROR),
+  TECHNICAL_ERROR_PROVIDER_DETAILS_API(
+      "A technical error occurred, please try again after some time",
+      "A technical error occurred when attempting to make a request to the Provider Details API",
+      EVENT_SERVICE,
       ValidationMessageType.ERROR),
   INVALID_CLAIM_HAS_DUPLICATE_IN_EXISTING_SUBMISSION(
       "A duplicate claim was found within the same submission",
