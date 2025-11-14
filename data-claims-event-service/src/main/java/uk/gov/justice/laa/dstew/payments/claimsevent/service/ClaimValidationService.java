@@ -165,7 +165,7 @@ public class ClaimValidationService {
     // fee calculation validation - done last after every other claim validation
     eventServiceMetricService.startFspValidationTimer(UUID.fromString(claim.getId()));
     feeCalculationService.validateFeeCalculation(
-        submissionId, claim, context, feeDetailsResponseWrapper.getFeeDetailsResponse());
+        submissionId, claim, context, feeDetailsResponseWrapper.getFeeDetailsResponse(), areaOfLaw);
     eventServiceMetricService.stopFspValidationTimer(UUID.fromString(claim.getId()));
 
     // Check claim status and record metric

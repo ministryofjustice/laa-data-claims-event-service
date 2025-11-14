@@ -141,8 +141,10 @@ class ClaimValidationServiceTest {
             claimTwo, context, AreaOfLaw.LEGAL_HELP, "officeAccountNumber", claimsList, "feeType");
 
     verify(feeCalculationService, times(1))
-        .validateFeeCalculation(submissionId, claimOne, context, feeDetailsResponse);
+        .validateFeeCalculation(
+            submissionId, claimOne, context, feeDetailsResponse, AreaOfLaw.LEGAL_HELP);
     verify(feeCalculationService, times(1))
-        .validateFeeCalculation(submissionId, claimTwo, context, feeDetailsResponse);
+        .validateFeeCalculation(
+            submissionId, claimTwo, context, feeDetailsResponse, AreaOfLaw.LEGAL_HELP);
   }
 }

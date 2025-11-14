@@ -1,6 +1,7 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.mapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw.LEGAL_HELP;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -8,6 +9,9 @@ import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.fee.scheme.model.BoltOnType;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationRequest;
@@ -20,9 +24,12 @@ class FeeSchemeMapperTest {
   @DisplayName("mapToFeeCalculationRequest")
   class MapToFeeCalculationRequestTests {
 
-    @Test
-    @DisplayName("Maps to fee calculation request")
-    void mapsToFeeCalculationRequest() {
+    @ParameterizedTest
+    @CsvSource({"LEGAL_HELP", "CRIME_LOWER"})
+    @DisplayName("Maps to fee calculation request for {0} claim")
+    void mapsToFeeCalculationRequest(String areaOfLawName) {
+      AreaOfLaw areaOfLaw = AreaOfLaw.valueOf(areaOfLawName);
+      boolean isLegalHelp = areaOfLaw == LEGAL_HELP;
 
       String claimId = UUID.randomUUID().toString();
       ClaimResponse claim =
@@ -42,7 +49,7 @@ class FeeSchemeMapperTest {
               .isSubstantiveHearing(true)
               .isAdditionalTravelPayment(true)
               .hoInterview(5)
-              .netWaitingCostsAmount(BigDecimal.valueOf(1.05))
+              .netWaitingCostsAmount(isLegalHelp ? null : BigDecimal.valueOf(1.05))
               .travelWaitingCostsAmount(BigDecimal.valueOf(1.06))
               .detentionTravelWaitingCostsAmount(BigDecimal.valueOf(1.07))
               .caseConcludedDate("2025-01-02")
@@ -74,9 +81,9 @@ class FeeSchemeMapperTest {
               .vatIndicator(true)
               .immigrationPriorAuthorityNumber("disbursementPriorAuthority")
               .boltOns(boltOnType)
-              .netTravelCosts(1.06)
-              .netWaitingCosts(1.05)
-              .travelAndWaitingCosts(1.06)
+              .netTravelCosts(isLegalHelp ? null : 1.06)
+              .netWaitingCosts(isLegalHelp ? null : 1.05)
+              .travelAndWaitingCosts(isLegalHelp ? 1.06 : null)
               .detentionTravelAndWaitingCosts(1.07)
               .caseConcludedDate(LocalDate.parse("2025-01-02"))
               .policeStationId("policeCourtOrPrisonId")
@@ -88,40 +95,40 @@ class FeeSchemeMapperTest {
               .londonRate(true)
               .build();
 
-      FeeCalculationRequest actual = feeSchemeMapper.mapToFeeCalculationRequest(claim);
+      FeeCalculationRequest actual = feeSchemeMapper.mapToFeeCalculationRequest(claim, areaOfLaw);
 
       assertThat(actual).isEqualTo(expected);
     }
-  }
 
-  @Nested
-  @DisplayName("mapToBoltOnType")
-  class MapToBoltOnTypeTests {
+    @Nested
+    @DisplayName("mapToBoltOnType")
+    class MapToBoltOnTypeTests {
 
-    @Test
-    @DisplayName("Maps to bolt on type")
-    void mapsToBoltOnType() {
+      @Test
+      @DisplayName("Maps to bolt on type")
+      void mapsToBoltOnType() {
 
-      ClaimResponse claim =
-          new ClaimResponse()
-              .adjournedHearingFeeAmount(1)
-              .cmrhOralCount(2)
-              .cmrhTelephoneCount(3)
-              .isAdditionalTravelPayment(true)
-              .isSubstantiveHearing(true)
-              .hoInterview(5);
+        ClaimResponse claim =
+            new ClaimResponse()
+                .adjournedHearingFeeAmount(1)
+                .cmrhOralCount(2)
+                .cmrhTelephoneCount(3)
+                .isAdditionalTravelPayment(true)
+                .isSubstantiveHearing(true)
+                .hoInterview(5);
 
-      BoltOnType expected =
-          new BoltOnType()
-              .boltOnAdjournedHearing(1)
-              .boltOnCmrhOral(2)
-              .boltOnCmrhTelephone(3)
-              .boltOnHomeOfficeInterview(5)
-              .boltOnSubstantiveHearing(true);
+        BoltOnType expected =
+            new BoltOnType()
+                .boltOnAdjournedHearing(1)
+                .boltOnCmrhOral(2)
+                .boltOnCmrhTelephone(3)
+                .boltOnHomeOfficeInterview(5)
+                .boltOnSubstantiveHearing(true);
 
-      BoltOnType actual = feeSchemeMapper.mapToBoltOnType(claim);
+        BoltOnType actual = feeSchemeMapper.mapToBoltOnType(claim);
 
-      assertThat(actual).isEqualTo(expected);
+        assertThat(actual).isEqualTo(expected);
+      }
     }
   }
 }

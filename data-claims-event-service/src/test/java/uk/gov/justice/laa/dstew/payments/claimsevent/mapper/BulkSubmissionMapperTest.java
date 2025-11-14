@@ -78,6 +78,9 @@ class BulkSubmissionMapperTest {
     assertThat(claim.getSurgeryClientsCount()).isEqualTo(4);
     assertThat(claim.getSurgeryMattersCount()).isEqualTo(2);
     assertThat(claim.getMatterTypeCode()).isEqualTo("FAMX:FAPP");
+    assertThat(claim.getNetWaitingCostsAmount()).isNull();
+    assertThat(claim.getTravelWaitingCostsAmount())
+        .isEqualTo(bulkSubmission.getDetails().getOutcomes().getFirst().getTravelWaitingCosts());
     assertThat(claim.getCreatedByUserId()).isEqualTo(EVENT_SERVICE);
   }
 
@@ -97,6 +100,12 @@ class BulkSubmissionMapperTest {
     assertThat(claim.getStageReachedCode()).isEqualTo("FAMX");
     assertThat(claim.getMatterTypeCode()).isEqualTo("FAMX");
     assertThat(claim.getCreatedByUserId()).isEqualTo(EVENT_SERVICE);
+    BulkSubmissionOutcome bulkSubmissionOutcome =
+        bulkSubmission.getDetails().getOutcomes().getFirst();
+    assertThat(claim.getTravelWaitingCostsAmount())
+        .isEqualTo(bulkSubmissionOutcome.getTravelCosts());
+    assertThat(claim.getNetWaitingCostsAmount())
+        .isEqualTo(bulkSubmissionOutcome.getTravelWaitingCosts());
     assertThat(claim.getIsVatApplicable()).isTrue();
   }
 
