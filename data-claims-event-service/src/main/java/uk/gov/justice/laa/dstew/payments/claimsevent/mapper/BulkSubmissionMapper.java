@@ -134,7 +134,6 @@ public interface BulkSubmissionMapper {
   @Mapping(target = "netDisbursementAmount", source = "disbursementsAmount")
   @Mapping(target = "netCounselCostsAmount", source = "counselCost")
   @Mapping(target = "disbursementsVatAmount", source = "disbursementsVat")
-  @Mapping(target = "travelWaitingCostsAmount", source = "travelWaitingCosts")
   @Mapping(target = "detentionTravelWaitingCostsAmount", source = "detentionTravelWaitingCosts")
   @Mapping(target = "jrFormFillingAmount", source = "jrFormFilling")
   @Mapping(target = "costsDamagesRecoveredAmount", source = "costsDamagesRecovered")
@@ -173,20 +172,25 @@ public interface BulkSubmissionMapper {
   ClaimPost mapToClaimPost(BulkSubmissionOutcome outcome, @Context AreaOfLaw areaOfLaw);
 
   /**
-   * Adjusts the matter type and stage reached codes for crime lower claims after the initial
-   * mapping. For crime lower claims, the matter type is used as the stage reached code.
+   * Applies post-mapping adjustments to a mapped {@link ClaimPost} based on the provided {@link
+   * AreaOfLaw} context. Certain fields are set or overridden after MapStruct mapping to accommodate
+   * area-specific mappings that cannot be expressed via annotations.
    *
-   * @param claimPost the target claim post object being mapped
-   * @param outcome the source bulk submission outcome
-   * @param areaOfLaw the area of law context for this mapping
+   * @param claimPost the mapping target to adjust
+   * @param outcome the source {@link BulkSubmissionOutcome} containing raw values
+   * @param areaOfLaw the area of law context used to determine which adjustments to apply
    */
   @AfterMapping
-  default void adjustMatterTypeTarget(
+  default void applyPostMappingAdjustments(
       @MappingTarget ClaimPost claimPost,
       BulkSubmissionOutcome outcome,
       @Context AreaOfLaw areaOfLaw) {
     if (AreaOfLaw.CRIME_LOWER.equals(areaOfLaw)) {
       claimPost.setStageReachedCode(outcome.getMatterType());
+      claimPost.setNetWaitingCostsAmount(outcome.getTravelWaitingCosts());
+      claimPost.setTravelWaitingCostsAmount(outcome.getTravelCosts());
+    } else if (AreaOfLaw.LEGAL_HELP.equals(areaOfLaw)) {
+      claimPost.setTravelWaitingCostsAmount(outcome.getTravelWaitingCosts());
     }
   }
 
