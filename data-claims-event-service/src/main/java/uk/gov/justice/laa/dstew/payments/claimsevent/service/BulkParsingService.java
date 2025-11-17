@@ -1,6 +1,8 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
 import java.net.URI;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -59,6 +61,7 @@ public class BulkParsingService {
     SubmissionPost submissionPost =
         bulkSubmissionMapper.mapToSubmissionPost(bulkSubmission, submissionId);
 
+    submissionPost.setSubmitted(OffsetDateTime.now(ZoneId.systemDefault()));
     String createdSubmissionId = createSubmission(submissionPost);
 
     List<BulkSubmissionOutcome> outcomes =
