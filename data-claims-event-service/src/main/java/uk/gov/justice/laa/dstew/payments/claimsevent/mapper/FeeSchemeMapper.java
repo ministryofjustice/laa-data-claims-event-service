@@ -1,7 +1,12 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.mapper;
 
+import java.math.BigDecimal;
+import org.mapstruct.AfterMapping;
+import org.mapstruct.Context;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.fee.scheme.model.BoltOnType;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationRequest;
@@ -28,16 +33,44 @@ public interface FeeSchemeMapper {
   @Mapping(target = "policeStationId", source = "policeStationCourtPrisonId")
   @Mapping(target = "policeStationSchemeId", source = "schemeId")
   @Mapping(target = "boltOns", source = "claim")
-  @Mapping(target = "netTravelCosts", source = "travelWaitingCostsAmount")
-  @Mapping(target = "netWaitingCosts", source = "netWaitingCostsAmount")
-  @Mapping(target = "travelAndWaitingCosts", source = "travelWaitingCostsAmount")
   @Mapping(target = "detentionTravelAndWaitingCosts", source = "detentionTravelWaitingCostsAmount")
   @Mapping(target = "caseConcludedDate", source = "caseConcludedDate")
   @Mapping(target = "uniqueFileNumber", source = "uniqueFileNumber")
   @Mapping(target = "numberOfMediationSessions", source = "mediationSessionsCount")
   @Mapping(target = "jrFormFilling", source = "jrFormFillingAmount")
   @Mapping(target = "londonRate", source = "isLondonRate", defaultValue = "false")
-  FeeCalculationRequest mapToFeeCalculationRequest(ClaimResponse claim);
+  FeeCalculationRequest mapToFeeCalculationRequest(
+      ClaimResponse claim, @Context AreaOfLaw areaOfLaw);
+
+  /**
+   * Performs area-of-law specific adjustments after MapStruct has mapped common fields.
+   *
+   * @param feeCalculationRequest the target request being populated
+   * @param claim the source claim containing cost amounts
+   * @param areaOfLaw the area of law context used to decide which adjustments to apply
+   */
+  @AfterMapping
+  default void applyPostMappingAdjustments(
+      @MappingTarget FeeCalculationRequest feeCalculationRequest,
+      ClaimResponse claim,
+      @Context AreaOfLaw areaOfLaw) {
+    switch (areaOfLaw) {
+      case CRIME_LOWER -> {
+        feeCalculationRequest.setNetTravelCosts(toDouble(claim.getTravelWaitingCostsAmount()));
+        feeCalculationRequest.setNetWaitingCosts(toDouble(claim.getNetWaitingCostsAmount()));
+      }
+      case LEGAL_HELP ->
+          feeCalculationRequest.setTravelAndWaitingCosts(
+              toDouble(claim.getTravelWaitingCostsAmount()));
+      default -> {
+        // No area-of-law specific adjustments needed
+      }
+    }
+  }
+
+  private Double toDouble(BigDecimal value) {
+    return value != null ? value.doubleValue() : null;
+  }
 
   /**
    * Map claim fields to an object holding the bolt ons.

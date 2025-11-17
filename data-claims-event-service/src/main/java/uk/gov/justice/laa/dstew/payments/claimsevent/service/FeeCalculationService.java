@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
@@ -46,12 +47,13 @@ public class FeeCalculationService {
       UUID submissionId,
       ClaimResponse claim,
       SubmissionValidationContext context,
-      FeeDetailsResponse feeDetailsResponse) {
+      FeeDetailsResponse feeDetailsResponse,
+      AreaOfLaw areaOfLaw) {
     log.debug("Validating fee calculation for claim {}", claim.getId());
     if (StringUtils.hasText(claim.getFeeCode()) && !context.isFlaggedForRetry(claim.getId())) {
       FeeCalculationRequest feeCalculationRequest =
-          feeSchemeMapper.mapToFeeCalculationRequest(claim);
-
+          feeSchemeMapper.mapToFeeCalculationRequest(claim, areaOfLaw);
+      log.debug("Fee calculation request: {}", feeCalculationRequest);
       try {
         ResponseEntity<FeeCalculationResponse> response =
             feeSchemePlatformRestClient.calculateFee(feeCalculationRequest);
@@ -62,7 +64,7 @@ public class FeeCalculationService {
           context.flagForRetry(claim.getId());
           return;
         }
-
+        log.debug("Fee calculation response: {}", feeCalculationResponse);
         // Patch claim with fee calculation response
         feeCalculationUpdaterService.updateClaimWithFeeCalculationDetails(
             submissionId, claim, feeCalculationResponse, feeDetailsResponse);
