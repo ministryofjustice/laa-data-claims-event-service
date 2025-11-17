@@ -314,7 +314,7 @@ public class EventServiceMetricService {
    * @param claimId the ID of the claim to start the timer for
    */
   public void startClaimValidationTimer(UUID claimId) {
-    if (submissionValidationTimers.containsKey(claimId)) {
+    if (claimValidationTimers.containsKey(claimId)) {
       log.warn("Timer already started for claim {}, old timer will be removed", claimId);
     }
     claimValidationTimers.put(
@@ -347,7 +347,7 @@ public class EventServiceMetricService {
    * @param claimId the ID of the claim to start the timer for
    */
   public void startFspValidationTimer(UUID claimId) {
-    if (submissionValidationTimers.containsKey(claimId)) {
+    if (fspValidationTimers.containsKey(claimId)) {
       log.warn("Timer already started for claim {}, old timer will be removed", claimId);
     }
     fspValidationTimers.put(
