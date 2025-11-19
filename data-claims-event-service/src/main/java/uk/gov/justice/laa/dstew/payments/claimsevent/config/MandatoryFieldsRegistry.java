@@ -38,7 +38,8 @@ public class MandatoryFieldsRegistry {
           "caseReferenceNumber",
           "scheduleReference",
           "matterTypeCode",
-          "netProfitCostsAmount");
+          "netProfitCostsAmount",
+          "isVatApplicable");
 
   private final List<String> crimeLowerMandatoryFields =
       List.of(
