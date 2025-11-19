@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.ValidationMessage;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -33,9 +35,9 @@ public class JsonSchemaValidator extends SchemaValidator {
    * @param schemaValidationErrorMessages map of schema names to error messages.
    */
   public JsonSchemaValidator(
-      ObjectMapper mapper,
-      Map<String, JsonSchema> schemas,
-      Map<String, Set<ValidationErrorMessage>> schemaValidationErrorMessages) {
+      final ObjectMapper mapper,
+      final Map<String, JsonSchema> schemas,
+      final Map<String, Set<ValidationErrorMessage>> schemaValidationErrorMessages) {
     super(schemaValidationErrorMessages);
     this.mapper = mapper;
     this.schemas = schemas;
@@ -48,28 +50,37 @@ public class JsonSchemaValidator extends SchemaValidator {
    * @param object any object that can be converted to JSON
    * @return list of enriched validation messages
    */
-  public List<ValidationMessagePatch> validate(String schemaName, Object object) {
+  public List<ValidationMessagePatch> validate(final String schemaName, final Object object) {
     JsonSchema schema = schemas.get(schemaName);
     schema.getValidators();
-    if (schema == null) {
-      throw new IllegalArgumentException("No schema registered for name: " + schemaName);
-    }
+
     JsonNode data = mapper.valueToTree(object);
 
-    return schema.validate(data).stream().map(vm -> toValidationMessagePatch(vm, data)).toList();
+    Set<ValidationMessage> validationMessages = schema.validate(data);
+    Map<String, String> fieldToTechnicalMessage =
+        groupTechnicalMessageByField(validationMessages, data);
+
+    return new HashSet<>(
+            validationMessages.stream()
+                .map(
+                    vm ->
+                        toValidationMessagePatch(vm, fieldToTechnicalMessage.get(getFieldName(vm))))
+                .toList())
+        .stream().toList();
   }
 
-  private ValidationMessagePatch toValidationMessagePatch(ValidationMessage vm, JsonNode data) {
+  private ValidationMessagePatch toValidationMessagePatch(
+      final ValidationMessage vm, final String technicalMessage) {
     return new ValidationMessagePatch()
         .type(ValidationMessageType.ERROR)
         .source(EVENT_SERVICE)
-        .displayMessage(getDisplayMessage(data, vm))
-        .technicalMessage(getTechnicalMessage(data, vm));
+        .displayMessage(getDisplayMessage(vm, technicalMessage))
+        .technicalMessage(technicalMessage);
   }
 
-  private String getTechnicalMessage(JsonNode data, ValidationMessage vm) {
+  private String getTechnicalMessage(final JsonNode data, final ValidationMessage vm) {
     String message = vm.getMessage();
-    String field = vm.getMessage().split(":")[0].replaceFirst("^\\$\\.", "");
+    String field = getFieldName(vm);
     JsonNode valueNode = data.get(field);
     String value = valueNode == null || valueNode.isNull() ? "null" : valueNode.asText();
     return String.format(
@@ -77,12 +88,35 @@ public class JsonSchemaValidator extends SchemaValidator {
         field, message.substring(message.indexOf(':') + 1).trim(), value);
   }
 
-  private String getDisplayMessage(JsonNode data, ValidationMessage vm) {
-    if (REQUIRED.equals(vm.getType())) {
-      return String.format("%s is required", StringCaseUtil.toTitleCase(vm.getProperty()));
-    } else {
-      String field = vm.getMessage().split(":")[0].replaceFirst("^\\$\\.", "");
-      return getValidationErrorMessageFromSchema(field, getTechnicalMessage(data, vm));
-    }
+  private String getDisplayMessage(final ValidationMessage vm, final String defaultMessage) {
+    return REQUIRED.equals(vm.getType())
+        ? String.format("%s is required", StringCaseUtil.toTitleCase(vm.getProperty()))
+        : getValidationErrorMessageFromSchema(getFieldName(vm), defaultMessage);
+  }
+
+  private String getFieldName(final ValidationMessage vm) {
+    return vm.getMessage().split(":")[0].replaceFirst("^\\$\\.", "");
+  }
+
+  /**
+   * Groups technical validation messages by their associated fields. Each field will map to a
+   * combined technical message string if multiple validation messages are associated with the same
+   * field.
+   *
+   * @param validationMessages a set of validation messages to be processed
+   * @param data the JSON data node containing field values
+   * @return a map where keys are field names and values are combined technical messages
+   */
+  private Map<String, String> groupTechnicalMessageByField(
+      final Set<ValidationMessage> validationMessages, final JsonNode data) {
+    Map<String, String> fieldToTechnicalMessage = new HashMap<>();
+    validationMessages.forEach(
+        vm -> {
+          String fieldName = getFieldName(vm);
+          String technicalMessage = getTechnicalMessage(data, vm);
+          fieldToTechnicalMessage.merge(
+              fieldName, technicalMessage, (existingMsg, newMsg) -> existingMsg + " : " + newMsg);
+        });
+    return fieldToTechnicalMessage;
   }
 }
