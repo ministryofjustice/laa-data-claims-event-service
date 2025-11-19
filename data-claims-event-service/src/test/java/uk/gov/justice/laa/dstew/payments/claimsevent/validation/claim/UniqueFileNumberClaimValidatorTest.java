@@ -97,4 +97,19 @@ class UniqueFileNumberClaimValidatorTest {
     assertContextClaimError(
         context, claimId, ClaimValidationError.INVALID_DATE_IN_UNIQUE_FILE_NUMBER);
   }
+
+  @Test
+  @DisplayName("Should have errors if date is not correct (999999/999)")
+  void shouldHaveErrorsIfDateCantBeParsed() {
+    String claimId = new UUID(1, 1).toString();
+    String ufn = "999999/123";
+    ClaimResponse claimResponse = new ClaimResponse().id(claimId).uniqueFileNumber(ufn);
+
+    SubmissionValidationContext context = new SubmissionValidationContext();
+    validator.validate(claimResponse, context);
+
+    assertThat(context.hasErrors(claimId)).isTrue();
+    assertContextClaimError(
+            context, claimId, ClaimValidationError.INVALID_DATE_IN_UNIQUE_FILE_NUMBER);
+  }
 }
