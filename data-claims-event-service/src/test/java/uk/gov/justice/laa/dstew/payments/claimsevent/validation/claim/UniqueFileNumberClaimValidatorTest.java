@@ -110,6 +110,6 @@ class UniqueFileNumberClaimValidatorTest {
 
     assertThat(context.hasErrors(claimId)).isTrue();
     assertContextClaimError(
-            context, claimId, ClaimValidationError.INVALID_DATE_IN_UNIQUE_FILE_NUMBER);
+        context, claimId, ClaimValidationError.INVALID_DATE_IN_UNIQUE_FILE_NUMBER);
   }
 }
