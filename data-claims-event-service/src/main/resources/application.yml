@@ -10,6 +10,7 @@ spring:
     aws:
       sqs:
         queue-not-found-strategy: fail
+        endpoint: http://localhost:4566
       region:
         static: ${AWS_REGION}
 
@@ -21,11 +22,11 @@ info:
     version: 1.0.0
 
 server:
-  port: 8085
+  port: 9085
 
 management:
   server:
-    port: 8081
+    port: 8084
 
   # specify actuator endpoints to enable
   endpoints:

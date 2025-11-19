@@ -137,9 +137,7 @@ class JsonSchemaValidatorTest {
           .containsExactlyInAnyOrder(
               "office_account_number: does not match the regex pattern ^[A-Z0-9]{6}$ (provided "
                   + "value: abc123)",
-              "submission_period: does not match the regex pattern ^"
-                  + "(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-[0-9]{4}$ (provided value:"
-                  + " OCTOBER-2024)",
+              "Submission period wrong format, should be in the format MMM-YYYY",
               "Area of Law is required",
               "number_of_claims: must have a minimum value of 0 (provided value: -1)");
     }
@@ -826,6 +824,21 @@ class JsonSchemaValidatorTest {
       setField(claim, fieldName, badValue);
       final List<ValidationMessagePatch> errors = jsonSchemaValidator.validate("claim", claim);
       assertThat(errors).isEmpty();
+    }
+
+    @DisplayName("should create only one ValidationMessagePatch for unique display message")
+    @Test
+    void shouldCreateOneValidationMessagePatch() {
+      var claim = getMinimumValidClaim();
+      setField(claim, "ethnicityCode", "999999");
+      final List<ValidationMessagePatch> errors = jsonSchemaValidator.validate("claim", claim);
+
+      assertThat(errors).hasSize(1);
+
+      assertThat(errors.getFirst().getTechnicalMessage())
+          .isEqualTo(
+              "ethnicity_code: does not match the regex pattern ^(0[0-9]|1[0-6]|99)$ (provided value: 999999)"
+                  + " : ethnicity_code: must be at most 2 characters long (provided value: 999999)");
     }
   }
 

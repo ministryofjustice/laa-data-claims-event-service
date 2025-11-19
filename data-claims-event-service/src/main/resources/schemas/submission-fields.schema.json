@@ -17,7 +17,13 @@
     },
     "submission_period": {
       "type": "string",
-      "pattern": "^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-[0-9]{4}$"
+      "pattern": "^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-[0-9]{4}$",
+      "validationErrorMessages": [
+        {
+          "key": "ALL",
+          "value": "Submission period wrong format, should be in the format MMM-YYYY"
+        }
+      ]
     },
     "area_of_law": {
       "type": "string",

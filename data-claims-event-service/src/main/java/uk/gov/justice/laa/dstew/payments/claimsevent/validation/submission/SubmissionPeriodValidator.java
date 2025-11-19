@@ -3,7 +3,6 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.validation.submission;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
-import java.time.format.DateTimeParseException;
 import java.util.Locale;
 import java.util.Objects;
 import org.apache.commons.lang3.StringUtils;
@@ -60,28 +59,22 @@ public class SubmissionPeriodValidator implements SubmissionValidator {
       return;
     }
 
-    try {
-      YearMonth enteredSubmissionPeriod =
-          YearMonth.parse(submission.getSubmissionPeriod(), formatter);
-      YearMonth currentMonth = dateUtil.currentYearMonth();
+    YearMonth enteredSubmissionPeriod =
+        YearMonth.parse(submission.getSubmissionPeriod(), formatter);
+    YearMonth currentMonth = dateUtil.currentYearMonth();
 
-      if (Objects.equals(enteredSubmissionPeriod, currentMonth)) {
-        context.addSubmissionValidationError(
-            SubmissionValidationError.SUBMISSION_PERIOD_SAME_MONTH, getReadableCurrentMonth());
-      } else if (enteredSubmissionPeriod.isAfter(currentMonth)) {
-        context.addSubmissionValidationError(
-            SubmissionValidationError.SUBMISSION_PERIOD_FUTURE_MONTH, getReadableCurrentMonth());
-      } else if (enteredSubmissionPeriod.isBefore(
-          YearMonth.parse(submissionValidationMinimumPeriod, formatter))) {
-        context.addSubmissionValidationError(
-            SubmissionValidationError.SUBMISSION_VALIDATION_MINIMUM_PERIOD,
-            submissionValidationMinimumPeriod,
-            submissionValidationMinimumPeriod);
-      }
-    } catch (DateTimeParseException e) {
-      // Add error if date format is incorrect
+    if (Objects.equals(enteredSubmissionPeriod, currentMonth)) {
       context.addSubmissionValidationError(
-          SubmissionValidationError.SUBMISSION_PERIOD_INVALID_FORMAT);
+          SubmissionValidationError.SUBMISSION_PERIOD_SAME_MONTH, getReadableCurrentMonth());
+    } else if (enteredSubmissionPeriod.isAfter(currentMonth)) {
+      context.addSubmissionValidationError(
+          SubmissionValidationError.SUBMISSION_PERIOD_FUTURE_MONTH, getReadableCurrentMonth());
+    } else if (enteredSubmissionPeriod.isBefore(
+        YearMonth.parse(submissionValidationMinimumPeriod, formatter))) {
+      context.addSubmissionValidationError(
+          SubmissionValidationError.SUBMISSION_VALIDATION_MINIMUM_PERIOD,
+          submissionValidationMinimumPeriod,
+          submissionValidationMinimumPeriod);
     }
   }
 

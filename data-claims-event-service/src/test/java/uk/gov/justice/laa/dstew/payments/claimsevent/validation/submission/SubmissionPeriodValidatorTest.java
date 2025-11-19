@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
@@ -54,22 +53,6 @@ class SubmissionPeriodValidatorTest {
     assertTrue(submissionValidationContext.hasErrors());
     assertContextClaimError(
         submissionValidationContext, SubmissionValidationError.SUBMISSION_PERIOD_MISSING);
-  }
-
-  @ParameterizedTest
-  @ValueSource(strings = {"2025-05", "2025-05-01", "2025-05-01T12:00:00"})
-  @DisplayName("Should have error if submission period invalid format")
-  void shouldHaveErrorIfSubmissionPeriodInvalidFormat(String submissionPeriod) {
-    // Given
-    SubmissionResponse submissionResponse =
-        SubmissionResponse.builder().submissionPeriod(submissionPeriod).build();
-    SubmissionValidationContext submissionValidationContext = new SubmissionValidationContext();
-    // When
-    validator.validate(submissionResponse, submissionValidationContext);
-    // Then
-    assertTrue(submissionValidationContext.hasErrors());
-    assertContextClaimError(
-        submissionValidationContext, SubmissionValidationError.SUBMISSION_PERIOD_INVALID_FORMAT);
   }
 
   @Test
