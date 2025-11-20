@@ -33,7 +33,7 @@ public final class UniqueFileNumberUtil {
     int month = Integer.parseInt(datePart.substring(2, 4));
     int yearTwoDigits = Integer.parseInt(datePart.substring(4, 6));
 
-    int year = (yearTwoDigits >= 50) ? 1900 + yearTwoDigits : 2000 + yearTwoDigits;
+    int year = (yearTwoDigits > 50) ? 1900 + yearTwoDigits : 2000 + yearTwoDigits;
 
     return LocalDate.of(year, month, day);
   }

@@ -1,7 +1,7 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim;
 
+import java.time.DateTimeException;
 import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
 import org.springframework.stereotype.Component;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.EventServiceIllegalArgumentException;
@@ -32,7 +32,7 @@ public final class UniqueFileNumberClaimValidator implements BasicClaimValidator
           context.addClaimError(
               claim.getId(), ClaimValidationError.INVALID_DATE_IN_UNIQUE_FILE_NUMBER);
         }
-      } catch (DateTimeParseException | EventServiceIllegalArgumentException e) {
+      } catch (DateTimeException | EventServiceIllegalArgumentException e) {
         context.addClaimError(
             claim.getId(), ClaimValidationError.INVALID_DATE_IN_UNIQUE_FILE_NUMBER);
       }

@@ -35,6 +35,28 @@ class UniqueFileNumberUtilTest {
     assertThat(result).isEqualTo(LocalDate.of(2030, 12, 25));
   }
 
+  @Test
+  @DisplayName("Should parse valid with year greater than 50 (1900)")
+  void shouldParseValidWithYearGreaterThan50() {
+    // Given
+    String ufn = "010151/123";
+    // When
+    LocalDate result = UniqueFileNumberUtil.parse(ufn);
+    // Then
+    assertThat(result).isEqualTo(LocalDate.of(1951, 1, 1));
+  }
+
+  @Test
+  @DisplayName("Should parse valid with year lower than 50 (2000)")
+  void shouldParseValidWithYearLowerThan50() {
+    // Given
+    String ufn = "010150/123";
+    // When
+    LocalDate result = UniqueFileNumberUtil.parse(ufn);
+    // Then
+    assertThat(result).isEqualTo(LocalDate.of(2050, 1, 1));
+  }
+
   @ParameterizedTest
   @ValueSource(strings = {"234", "010101", "ABC"})
   void shouldThrowExceptionWhenInvalidFormat(String invalidUfnNumbers) {
