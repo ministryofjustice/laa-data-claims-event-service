@@ -65,18 +65,20 @@ public class SubmissionListener {
   public void receiveSubmissionEvent(Message message) {
 
     UUID timerRef = UUID.randomUUID();
-    eventServiceMetricService.startFileParsingTimer(timerRef);
     SubmissionEventType submissionEventType = getSubmissionEventType(message);
 
     switch (submissionEventType) {
-      case SubmissionEventType.PARSE_BULK_SUBMISSION -> handleBulkSubmissionMessage(message);
+      case SubmissionEventType.PARSE_BULK_SUBMISSION -> {
+        eventServiceMetricService.startFileParsingTimer(timerRef);
+        handleBulkSubmissionMessage(message);
+        eventServiceMetricService.stopFileParsingTimer(timerRef);
+      }
       case SubmissionEventType.VALIDATE_SUBMISSION -> handleSubmissionValidationMessage(message);
       default ->
           throw new SubmissionEventProcessingException(
               "Unsupported submission event type: " + submissionEventType);
     }
 
-    eventServiceMetricService.stopFileParsingTimer(timerRef);
   }
 
   private SubmissionEventType getSubmissionEventType(Message message) {

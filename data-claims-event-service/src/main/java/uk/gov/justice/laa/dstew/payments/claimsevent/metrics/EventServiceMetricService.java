@@ -268,7 +268,7 @@ public class EventServiceMetricService {
       try (var timerResource = timer.timer()) {
         double v = timerResource.observeDuration();
         if (v > 2) {
-          log.warn("File parsing took {} seconds for claim {}", v, parsingReference);
+          log.warn("File parsing took {} seconds for submission {}", v, parsingReference);
         }
       }
     }
@@ -301,7 +301,7 @@ public class EventServiceMetricService {
       try (var timerResource = timer.timer()) {
         double v = timerResource.observeDuration();
         if (v > 2) {
-          log.warn("Submission validation took {} seconds for claim {}", v, claimId);
+          log.warn("Submission validation took {} seconds for submission {}", v, claimId);
         }
       }
     }
@@ -336,6 +336,7 @@ public class EventServiceMetricService {
         if (v > 2) {
           log.warn("Claim validation took {} seconds for claim {}", v, claimId);
         }
+        log.warn("Claim validation took {} seconds for claim {}", v, claimId);
       }
     }
   }
