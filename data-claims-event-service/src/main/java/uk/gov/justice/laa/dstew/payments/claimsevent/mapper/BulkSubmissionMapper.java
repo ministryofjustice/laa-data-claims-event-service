@@ -40,9 +40,6 @@ public interface BulkSubmissionMapper {
       target = "areaOfLaw",
       source = "bulkSubmission.details.schedule.areaOfLaw",
       qualifiedByName = "mapToAreaOfLaw")
-  @Mapping(
-      target = "crimeLowerScheduleNumber",
-      source = "bulkSubmission.details.schedule.scheduleNum")
   @Mapping(target = "previousSubmissionId", ignore = true)
   @Mapping(target = "status", expression = "java(SubmissionStatus.CREATED)")
   @Mapping(
@@ -54,6 +51,36 @@ public interface BulkSubmissionMapper {
   @Mapping(target = "createdByUserId", constant = EVENT_SERVICE)
   SubmissionPost mapToSubmissionPost(
       GetBulkSubmission200Response bulkSubmission, UUID submissionId);
+
+  /**
+   * Sets the appropriate schedule number field based on the area of law. This is called after the
+   * main mapping is complete to ensure the schedule number is set on the correct field according to
+   * the area of law.
+   *
+   * @param target the SubmissionPost being populated
+   * @param source the source bulk submission response containing the schedule details
+   */
+  @AfterMapping
+  default void setConditionalScheduleNum(
+      @MappingTarget SubmissionPost target, GetBulkSubmission200Response source) {
+
+    // areaOfLaw is already mapped onto the target object
+    var area = target.getAreaOfLaw();
+    var scheduleNum = source.getDetails().getSchedule().getScheduleNum();
+
+    if (area == null || scheduleNum == null) {
+      return;
+    }
+
+    switch (area) {
+      case LEGAL_HELP -> target.setLegalHelpSubmissionReference(scheduleNum);
+      case CRIME_LOWER -> target.setCrimeLowerScheduleNumber(scheduleNum);
+      case MEDIATION -> target.setMediationSubmissionReference(scheduleNum);
+      default -> {
+        /* ignore */
+      }
+    }
+  }
 
   /**
    * Maps a string value to an AreaOfLaw enum, returning null if no match is found.
