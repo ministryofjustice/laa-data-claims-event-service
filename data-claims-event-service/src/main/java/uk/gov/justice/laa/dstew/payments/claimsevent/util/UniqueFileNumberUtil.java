@@ -1,7 +1,6 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.util;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.EventServiceIllegalArgumentException;
@@ -28,7 +27,14 @@ public final class UniqueFileNumberUtil {
               uniqueFileNumber));
     }
 
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyy/NNN");
-    return LocalDate.parse(uniqueFileNumber, formatter);
+    String datePart = uniqueFileNumber.split("/")[0];
+
+    int day = Integer.parseInt(datePart.substring(0, 2));
+    int month = Integer.parseInt(datePart.substring(2, 4));
+    int yearTwoDigits = Integer.parseInt(datePart.substring(4, 6));
+
+    int year = (yearTwoDigits >= 50) ? 1900 + yearTwoDigits : 2000 + yearTwoDigits;
+
+    return LocalDate.of(year, month, day);
   }
 }

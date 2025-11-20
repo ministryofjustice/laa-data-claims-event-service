@@ -98,11 +98,11 @@ class UniqueFileNumberClaimValidatorTest {
         context, claimId, ClaimValidationError.INVALID_DATE_IN_UNIQUE_FILE_NUMBER);
   }
 
-  @Test
-  @DisplayName("Should have errors if date is not correct (999999/999)")
-  void shouldHaveErrorsIfDateCantBeParsed() {
+  @ParameterizedTest
+  @ValueSource(strings = {"999999/001", "320101/001", "000000/001", "311102/001", "290225/001"})
+  @DisplayName("Should have errors if date is not correct")
+  void shouldHaveErrorsIfDateCantBeParsed(String ufn) {
     String claimId = new UUID(1, 1).toString();
-    String ufn = "999999/123";
     ClaimResponse claimResponse = new ClaimResponse().id(claimId).uniqueFileNumber(ufn);
 
     SubmissionValidationContext context = new SubmissionValidationContext();
