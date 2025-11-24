@@ -99,7 +99,6 @@ public class SubmissionValidationService {
     // Stop submission validation timer
     eventServiceMetricService.stopSubmissionValidationTimer(submissionId);
 
-    bulkClaimUpdater.updateClaims(submission, context);
     dataClaimsRestClient.updateSubmission(submissionId.toString(), submissionPatch);
     dataClaimsRestClient.updateBulkSubmission(
         String.valueOf(bulkSubmissionId), bulkSubmissionPatch);

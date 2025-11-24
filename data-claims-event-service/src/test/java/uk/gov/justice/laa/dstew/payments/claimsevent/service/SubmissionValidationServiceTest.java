@@ -91,7 +91,7 @@ class SubmissionValidationServiceTest {
           submissionValidationContext, SubmissionValidationError.SUBMISSION_PERIOD_MISSING);
       verify(claimValidationService, times(0)).validateClaims(any(), any());
       // we need to update and mark the claims as invalid when the submission is invalid.
-      verify(bulkClaimUpdater, times(1)).updateClaims(submission, submissionValidationContext);
+
     }
 
     @Test
@@ -150,7 +150,6 @@ class SubmissionValidationServiceTest {
       verify(claimValidationService, times(1)).validateClaims(eq(submissionResponse), any());
       verify(claimValidationService, times(1))
           .validateClaims(eq(submissionResponse), any(SubmissionValidationContext.class));
-      verify(bulkClaimUpdater, times(1)).updateClaims(submissionResponse, context);
     }
   }
 

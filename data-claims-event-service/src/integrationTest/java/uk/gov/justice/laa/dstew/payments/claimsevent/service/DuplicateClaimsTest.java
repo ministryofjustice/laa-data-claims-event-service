@@ -29,6 +29,7 @@ public class DuplicateClaimsTest extends MockServerIntegrationTest {
   private static final String FEE_CODE = "432EC";
   private static final String SUBMISSION_PERIOD = "APR-2025";
   private static final String CLAIM_ID = "6850db96-fbb7-4859-a5a5-fc111cd205b2";
+  private static final String CLAIM_ID_2 = "f6bde766-a0a3-483b-bf13-bef888b4f06e";
   public static final UUID SUBMISSION_ID = UUID.fromString("00000000-0000-0001-0000-000000000001");
   public static final UUID BULK_SUBMISSION_ID =
       UUID.fromString("3fa85f64-5717-4562-b3fc-2c963f66afa6");
@@ -46,16 +47,13 @@ public class DuplicateClaimsTest extends MockServerIntegrationTest {
           SUBMISSION_ID, "data-claims/get-submission/get-submission-legal-help.json");
 
       stubForPathSubmissionWithClaimsId(SUBMISSION_ID, CLAIM_ID);
+      stubForPathSubmissionWithClaimsId(SUBMISSION_ID, CLAIM_ID_2);
 
       // claims
       stubForGetClaim(
-          SUBMISSION_ID,
-          UUID.fromString("f6bde766-a0a3-483b-bf13-bef888b4f06e"),
-          "data-claims/get-claim/get-claim-1.json");
+          SUBMISSION_ID, UUID.fromString(CLAIM_ID_2), "data-claims/get-claim/get-claim-1.json");
       stubForGetClaim(
-          SUBMISSION_ID,
-          UUID.fromString("6850db96-fbb7-4859-a5a5-fc111cd205b2"),
-          "data-claims/get-claim/get-claim-1.json");
+          SUBMISSION_ID, UUID.fromString(CLAIM_ID), "data-claims/get-claim/get-claim-1.json");
 
       stubForGetClaims(Collections.emptyList(), "data-claims/get-claims/no-claims.json");
       // provider-details

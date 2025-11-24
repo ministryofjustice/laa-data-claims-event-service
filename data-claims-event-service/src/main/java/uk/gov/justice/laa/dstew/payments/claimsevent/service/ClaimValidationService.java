@@ -43,9 +43,8 @@ public class ClaimValidationService {
 
   private final CategoryOfLawValidationService categoryOfLawValidationService;
   private final DataClaimsRestClient dataClaimsRestClient;
-  private final FeeCalculationService feeCalculationService;
   private final EventServiceMetricService eventServiceMetricService;
-
+  private final BulkClaimUpdater bulkClaimUpdater;
   private final List<ClaimValidator> claimValidator;
 
   /**
@@ -68,18 +67,22 @@ public class ClaimValidationService {
         categoryOfLawValidationService.getFeeDetailsResponseForAllFeeCodesInClaims(
             submissionClaims);
 
-    submissionClaims.stream()
-        .filter(claim -> ClaimStatus.READY_TO_PROCESS.equals(claim.getStatus()))
-        .forEach(
-            claim ->
-                validateClaim(
-                    submission.getSubmissionId(),
-                    claim,
-                    submissionClaims,
-                    feeDetailsResponseMap,
-                    submission.getAreaOfLaw(),
-                    submission.getOfficeAccountNumber(),
-                    context));
+    submissionClaims.forEach(
+        claim ->
+            validateClaim(
+                claim,
+                submissionClaims,
+                feeDetailsResponseMap,
+                submission.getAreaOfLaw(),
+                submission.getOfficeAccountNumber(),
+                context));
+    // Update claims status after validations
+    bulkClaimUpdater.updateClaims(
+        submission.getSubmissionId(),
+        submissionClaims,
+        submission.getAreaOfLaw(),
+        context,
+        feeDetailsResponseMap);
   }
 
   /**
@@ -89,7 +92,6 @@ public class ClaimValidationService {
    * errors encountered during the validation process are added to the submission validation
    * context.
    *
-   * @param submissionId the ID of the submission to which the claim belongs
    * @param claim the claim object to validate
    * @param feeDetailsResponseMap a map containing FeeDetailsResponse and their corresponding
    *     feeCodes
@@ -97,7 +99,6 @@ public class ClaimValidationService {
    *     on the area of law.
    */
   private void validateClaim(
-      UUID submissionId,
       ClaimResponse claim,
       List<ClaimResponse> submissionClaims,
       Map<String, FeeDetailsResponseWrapper> feeDetailsResponseMap,
@@ -161,12 +162,6 @@ public class ClaimValidationService {
             });
 
     eventServiceMetricService.stopClaimValidationTimer(UUID.fromString(claim.getId()));
-
-    // fee calculation validation - done last after every other claim validation
-    eventServiceMetricService.startFspValidationTimer(UUID.fromString(claim.getId()));
-    feeCalculationService.validateFeeCalculation(
-        submissionId, claim, context, feeDetailsResponseWrapper.getFeeDetailsResponse(), areaOfLaw);
-    eventServiceMetricService.stopFspValidationTimer(UUID.fromString(claim.getId()));
 
     // Check claim status and record metric
     recordClaimMetrics(claim, context);
