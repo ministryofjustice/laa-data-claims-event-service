@@ -48,11 +48,12 @@ public class ClaimValidationService {
   private final List<ClaimValidator> claimValidator;
 
   /**
-   * Validate a list of claims in a submission.
+   * Validate a list of claims in a submission and Updates it in the Data Claims API.
    *
    * @param submission the submission
    */
-  public void validateClaims(SubmissionResponse submission, SubmissionValidationContext context) {
+  public void validateAndUpdateClaims(
+      SubmissionResponse submission, SubmissionValidationContext context) {
 
     List<ClaimResponse> submissionClaims =
         submission.getClaims().stream()

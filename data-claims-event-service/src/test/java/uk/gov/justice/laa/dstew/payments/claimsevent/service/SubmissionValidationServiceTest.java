@@ -89,7 +89,7 @@ class SubmissionValidationServiceTest {
       assertTrue(submissionValidationContext.hasErrors());
       assertContextClaimError(
           submissionValidationContext, SubmissionValidationError.SUBMISSION_PERIOD_MISSING);
-      verify(claimValidationService, times(0)).validateClaims(any(), any());
+      verify(claimValidationService, times(0)).validateAndUpdateClaims(any(), any());
       // we need to update and mark the claims as invalid when the submission is invalid.
 
     }
@@ -147,9 +147,10 @@ class SubmissionValidationServiceTest {
 
     private void verifyCommonInteractions(
         SubmissionResponse submissionResponse, SubmissionValidationContext context) {
-      verify(claimValidationService, times(1)).validateClaims(eq(submissionResponse), any());
       verify(claimValidationService, times(1))
-          .validateClaims(eq(submissionResponse), any(SubmissionValidationContext.class));
+          .validateAndUpdateClaims(eq(submissionResponse), any());
+      verify(claimValidationService, times(1))
+          .validateAndUpdateClaims(eq(submissionResponse), any(SubmissionValidationContext.class));
     }
   }
 

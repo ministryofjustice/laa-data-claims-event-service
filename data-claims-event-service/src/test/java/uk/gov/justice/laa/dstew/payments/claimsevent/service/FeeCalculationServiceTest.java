@@ -35,8 +35,6 @@ class FeeCalculationServiceTest {
 
   @Mock private FeeSchemeMapper feeSchemeMapper;
 
-  @Mock private FeeCalculationUpdaterService feeCalculationUpdaterService;
-
   @InjectMocks private FeeCalculationService feeCalculationService;
 
   @Nested

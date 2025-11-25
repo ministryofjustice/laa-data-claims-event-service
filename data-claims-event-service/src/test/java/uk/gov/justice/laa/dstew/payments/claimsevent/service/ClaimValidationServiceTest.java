@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -116,7 +117,7 @@ class ClaimValidationServiceTest {
         .thenReturn(feeDetailsResponseMap);
 
     // When
-    claimValidationService.validateClaims(submissionResponse, context);
+    claimValidationService.validateAndUpdateClaims(submissionResponse, context);
 
     // Then
     verify(basicClaimValidator, times(1)).validate(claimOne, context);
@@ -139,5 +140,13 @@ class ClaimValidationServiceTest {
     verify(duplicateClaimValidator, times(1))
         .validate(
             claimTwo, context, AreaOfLaw.LEGAL_HELP, "officeAccountNumber", claimsList, "feeType");
+
+    verify(bulkClaimUpdater)
+        .updateClaims(
+            eq(submissionId),
+            eq(claimsList),
+            eq(AreaOfLaw.LEGAL_HELP),
+            eq(context),
+            eq(feeDetailsResponseMap));
   }
 }
