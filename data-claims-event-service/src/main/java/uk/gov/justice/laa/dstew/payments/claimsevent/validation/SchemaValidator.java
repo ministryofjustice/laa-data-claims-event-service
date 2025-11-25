@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.model.ValidationErrorMessage;
 
 /**
@@ -30,28 +31,19 @@ public abstract class SchemaValidator {
    * Gets the validation error message from the schema.
    *
    * @param field the field to get the error message for.
-   * @param defaultMessage the default message to use if no error message is found.
-   * @return the validation error message.
-   */
-  protected String getValidationErrorMessageFromSchema(
-      final String field, final String defaultMessage) {
-    return getValidationErrorMessageFromSchema(field, "ALL", defaultMessage);
-  }
-
-  /**
-   * Gets the validation error message from the schema.
-   *
-   * @param field the field to get the error message for.
    * @param areaOfLaw the area of law to get the error message for.
    * @param defaultMessage the default message to use if no error message is found.
    * @return the validation error message.
    */
   protected String getValidationErrorMessageFromSchema(
-      final String field, final String areaOfLaw, final String defaultMessage) {
+      final String field, final String defaultMessage, final AreaOfLaw areaOfLaw) {
     return Optional.ofNullable(schemaValidationErrorMessages.get(field))
         .orElse(new HashSet<>())
         .stream()
-        .filter(validationErrorMessage -> Objects.equals(validationErrorMessage.key(), areaOfLaw))
+        .filter(
+            validationErrorMessage ->
+                Objects.equals(validationErrorMessage.key(), areaOfLaw.getValue())
+                    || Objects.equals(validationErrorMessage.key(), "ALL"))
         .map(ValidationErrorMessage::value)
         .findFirst()
         .orElse(defaultMessage);
