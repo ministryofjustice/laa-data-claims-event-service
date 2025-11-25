@@ -43,6 +43,15 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.model.Validation
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class JsonSchemaValidatorTest {
 
+  private static final String ERROR_MESSAGE =
+      "must be a maximum of 20 characters and contain only letters, numbers and forward slashes'";
+  private static final String LEGAL_HELP_SUBMISSION_REF_INVALID_MSG =
+      "'Legal Help Submission Reference " + ERROR_MESSAGE;
+  private static final String CRIME_LOWER_SCHEDULE_NUMBER_INVALID_MSG =
+      "'Crime Lower Schedule Number " + ERROR_MESSAGE;
+  private static final String MEDIATION_SUBMISSION_REF_INVALID_MSG =
+      "'Mediation Submission Reference " + ERROR_MESSAGE;
+
   private JsonSchemaValidator jsonSchemaValidator;
 
   private SchemaValidationConfig schemaValidationConfig;
@@ -94,7 +103,6 @@ class JsonSchemaValidatorTest {
       "submission_period",
       "area_of_law",
       "status",
-      "crime_lower_schedule_number",
       "is_nil_submission",
       "number_of_claims"
     })
@@ -107,6 +115,72 @@ class JsonSchemaValidatorTest {
       assertThat(errors)
           .extracting(ValidationMessagePatch::getDisplayMessage)
           .containsExactlyInAnyOrder(StringCaseUtil.toTitleCase(jsonField) + " is required");
+    }
+
+    @ParameterizedTest(name = "Missing {0} for area of law {1}")
+    @CsvSource({
+      "legal_help_submission_reference,LEGAL_HELP,Legal Help Submission Reference is required",
+      "crime_lower_schedule_number,CRIME_LOWER,Crime Lower Schedule Number is required",
+      "mediation_submission_reference,MEDIATION,Mediation Submission Reference is required"
+    })
+    void validateErrorForMissingSubmissionReferenceFields(
+        String jsonField, String areaOfLaw, String expectedError) {
+      SubmissionResponse submission = getMinimumValidSubmission();
+      submission.setAreaOfLaw(AreaOfLaw.valueOf(areaOfLaw));
+      String fieldName = toCamelCase(jsonField);
+      setField(submission, fieldName, null);
+      final List<ValidationMessagePatch> errors =
+          jsonSchemaValidator.validate("submission", submission);
+      assertThat(errors)
+          .extracting(ValidationMessagePatch::getDisplayMessage)
+          .containsExactlyInAnyOrder(expectedError);
+    }
+
+    @ParameterizedTest(name = "Field {0} set for area of law {1}")
+    @CsvSource({
+      "legal_help_submission_reference,LEGAL_HELP,1A123B/CIVIL",
+      "crime_lower_schedule_number,CRIME_LOWER,CRM/1A123B/13",
+      "mediation_submission_reference,MEDIATION,1A123B/MEDI2010/14"
+    })
+    void validateNoErrorWhenAValidValueIsSetForScheduleNum(
+        String jsonField, String areaOfLaw, String scheduleNum) {
+      SubmissionResponse submission = getMinimumValidSubmission();
+      submission.setAreaOfLaw(AreaOfLaw.valueOf(areaOfLaw));
+      String fieldName = toCamelCase(jsonField);
+      setField(submission, fieldName, scheduleNum);
+      final List<ValidationMessagePatch> errors =
+          jsonSchemaValidator.validate("submission", submission);
+      assertThat(errors).isEmpty();
+    }
+
+    @ParameterizedTest(name = "Field {0} set for area of law {1} with invalid characters")
+    @CsvSource({
+      "legal_help_submission_reference,LEGAL_HELP,ABC01_SCH,"
+          + LEGAL_HELP_SUBMISSION_REF_INVALID_MSG,
+      "legal_help_submission_reference,LEGAL_HELP,ABC01?," + LEGAL_HELP_SUBMISSION_REF_INVALID_MSG,
+      "legal_help_submission_reference,LEGAL_HELP,REALLYLONGREFERENCE1234567890,"
+          + LEGAL_HELP_SUBMISSION_REF_INVALID_MSG,
+      "crime_lower_schedule_number,CRIME_LOWER,ABC01_SCH,"
+          + CRIME_LOWER_SCHEDULE_NUMBER_INVALID_MSG,
+      "crime_lower_schedule_number,CRIME_LOWER,ABC01?," + CRIME_LOWER_SCHEDULE_NUMBER_INVALID_MSG,
+      "crime_lower_schedule_number,CRIME_LOWER,REALLYLONGREFERENCE1234567890,"
+          + CRIME_LOWER_SCHEDULE_NUMBER_INVALID_MSG,
+      "mediation_submission_reference,MEDIATION,ABC01_SCH," + MEDIATION_SUBMISSION_REF_INVALID_MSG,
+      "mediation_submission_reference,MEDIATION,ABC01?," + MEDIATION_SUBMISSION_REF_INVALID_MSG,
+      "mediation_submission_reference,MEDIATION,REALLYLONGREFERENCE1234567890,"
+          + MEDIATION_SUBMISSION_REF_INVALID_MSG
+    })
+    void validateErrorsForInvalidSubmissionReferenceFields(
+        String jsonField, String areaOfLaw, String value, String expectedError) {
+      SubmissionResponse submission = getMinimumValidSubmission();
+      submission.setAreaOfLaw(AreaOfLaw.valueOf(areaOfLaw));
+      String fieldName = toCamelCase(jsonField);
+      setField(submission, fieldName, value);
+      final List<ValidationMessagePatch> errors =
+          jsonSchemaValidator.validate("submission", submission);
+      assertThat(errors)
+          .extracting(ValidationMessagePatch::getDisplayMessage)
+          .containsExactlyInAnyOrder(expectedError);
     }
 
     @Test
@@ -135,8 +209,7 @@ class JsonSchemaValidatorTest {
       assertThat(errors)
           .extracting(ValidationMessagePatch::getDisplayMessage)
           .containsExactlyInAnyOrder(
-              "office_account_number: does not match the regex pattern ^[A-Z0-9]{6}$ (provided "
-                  + "value: abc123)",
+              "Office Account Number must be exactly 6 characters containing uppercase letters and numbers.",
               "Submission period wrong format, should be in the format MMM-YYYY",
               "Area of Law is required",
               "number_of_claims: must have a minimum value of 0 (provided value: -1)");

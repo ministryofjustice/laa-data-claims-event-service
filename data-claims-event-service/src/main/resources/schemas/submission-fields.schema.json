@@ -13,7 +13,13 @@
     },
     "office_account_number": {
       "type": "string",
-      "pattern": "^[A-Z0-9]{6}$"
+      "pattern": "^[A-Z0-9]{6}$",
+      "validationErrorMessages": [
+        {
+          "key": "ALL",
+          "value": "Office Account Number must be exactly 6 characters containing uppercase letters and numbers."
+        }
+      ]
     },
     "submission_period": {
       "type": "string",
@@ -52,10 +58,32 @@
         }
       ]
     },
+    "legal_help_submission_reference": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9/]+$",
+      "maxLength": 20,
+      "validationErrorMessages": [
+        { "key": "required", "value": "Legal Help Submission Reference is required" },
+        { "key": "ALL", "value": "Legal Help Submission Reference must be a maximum of 20 characters and contain only letters, numbers and forward slashes"}
+      ]
+    },
     "crime_lower_schedule_number": {
       "type": "string",
       "pattern": "^[a-zA-Z0-9/]+$",
-      "maxLength": 20
+      "maxLength": 20,
+      "validationErrorMessages": [
+        { "key": "required", "value": "Crime Lower Schedule Number is required" },
+        { "key": "ALL", "value": "Crime Lower Schedule Number must be a maximum of 20 characters and contain only letters, numbers and forward slashes"}
+      ]
+    },
+    "mediation_submission_reference": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9/]+$",
+      "maxLength": 20,
+      "validationErrorMessages": [
+        { "key": "required", "value": "Mediation Submission Reference is required" },
+        { "key": "ALL", "value": "Mediation Submission Reference must be a maximum of 20 characters and contain only letters, numbers and forward slashes"}
+      ]
     },
     "previous_submission_id": {
       "type": "string",
@@ -77,8 +105,36 @@
     "submission_period",
     "area_of_law",
     "status",
-    "crime_lower_schedule_number",
     "is_nil_submission",
     "number_of_claims"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "required": ["area_of_law"],
+        "properties": { "area_of_law": { "const": "CRIME LOWER" } }
+      },
+      "then": {
+        "required": ["crime_lower_schedule_number"]
+      }
+    },
+    {
+      "if": {
+        "required": ["area_of_law"],
+        "properties": { "area_of_law": { "const": "LEGAL HELP" } }
+      },
+      "then": {
+        "required": ["legal_help_submission_reference"]
+      }
+    },
+    {
+      "if": {
+        "required": ["area_of_law"],
+        "properties": { "area_of_law": { "const": "MEDIATION" } }
+      },
+      "then": {
+        "required": ["mediation_submission_reference"]
+      }
+    }
   ]
 }

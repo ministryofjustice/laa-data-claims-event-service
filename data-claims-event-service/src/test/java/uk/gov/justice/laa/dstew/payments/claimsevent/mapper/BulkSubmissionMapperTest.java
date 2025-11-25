@@ -1,6 +1,9 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.mapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw.CRIME_LOWER;
+import static uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw.LEGAL_HELP;
+import static uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw.MEDIATION;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationSource.EVENT_SERVICE;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -13,6 +16,8 @@ import java.nio.file.Path;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.*;
 
 class BulkSubmissionMapperTest {
@@ -30,20 +35,31 @@ class BulkSubmissionMapperTest {
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
   }
 
-  @Test
-  void shouldMapBulkSubmissionResponseToSubmissionPost() throws IOException {
+  @ParameterizedTest(name = "AreaOfLaw: {0}")
+  @EnumSource(AreaOfLaw.class)
+  void shouldMapBulkSubmissionResponseToSubmissionPost(AreaOfLaw areaOfLaw) throws IOException {
     // Arrange
     String json = Files.readString(Path.of("src/test/resources/bulk-submission-response.json"));
+    String expectedRef = "2Q286D/SCH";
 
     GetBulkSubmission200Response bulkSubmission =
         objectMapper.readValue(json, GetBulkSubmission200Response.class);
-
+    bulkSubmission.getDetails().getSchedule().setAreaOfLaw(areaOfLaw.toString());
+    bulkSubmission.getDetails().getSchedule().setScheduleNum(expectedRef);
     UUID submissionId = UUID.randomUUID();
 
     SubmissionPost result = mapper.mapToSubmissionPost(bulkSubmission, submissionId);
 
     assertThat(result).isNotNull();
     assertThat(result.getSubmissionId()).isEqualTo(submissionId);
+
+    assertThat(result.getLegalHelpSubmissionReference())
+        .isEqualTo(areaOfLaw == LEGAL_HELP ? expectedRef : null);
+    assertThat(result.getCrimeLowerScheduleNumber())
+        .isEqualTo(areaOfLaw == CRIME_LOWER ? expectedRef : null);
+    assertThat(result.getMediationSubmissionReference())
+        .isEqualTo(areaOfLaw == MEDIATION ? expectedRef : null);
+
     assertThat(result.getBulkSubmissionId())
         .isEqualTo(UUID.fromString("c4ef2c36-35dc-4627-b5d8-7db10d86be3d"));
     assertThat(result.getNumberOfClaims()).isEqualTo(1);
@@ -61,8 +77,7 @@ class BulkSubmissionMapperTest {
     GetBulkSubmission200Response bulkSubmission =
         objectMapper.readValue(json, GetBulkSubmission200Response.class);
 
-    var claims =
-        mapper.mapToClaimPosts(bulkSubmission.getDetails().getOutcomes(), AreaOfLaw.LEGAL_HELP);
+    var claims = mapper.mapToClaimPosts(bulkSubmission.getDetails().getOutcomes(), LEGAL_HELP);
 
     assertThat(claims).hasSize(1);
     ClaimPost claim = claims.getFirst();
@@ -91,8 +106,7 @@ class BulkSubmissionMapperTest {
     GetBulkSubmission200Response bulkSubmission =
         objectMapper.readValue(json, GetBulkSubmission200Response.class);
 
-    var claims =
-        mapper.mapToClaimPosts(bulkSubmission.getDetails().getOutcomes(), AreaOfLaw.CRIME_LOWER);
+    var claims = mapper.mapToClaimPosts(bulkSubmission.getDetails().getOutcomes(), CRIME_LOWER);
 
     assertThat(claims).hasSize(1);
     ClaimPost claim = claims.getFirst();
