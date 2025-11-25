@@ -191,7 +191,7 @@
     },
     "maat_id": {
       "type": "string",
-      "pattern": "^[A-Za-z0-9]{1,10}$",
+      "pattern": "^[a-zA-Z0-9]{1,10}$",
       "validationErrorMessages": [
         {
           "key": "ALL",

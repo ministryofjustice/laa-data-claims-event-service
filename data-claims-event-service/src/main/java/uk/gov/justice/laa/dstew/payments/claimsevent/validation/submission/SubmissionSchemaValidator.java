@@ -21,7 +21,8 @@ public class SubmissionSchemaValidator implements SubmissionValidator {
 
   @Override
   public void validate(final SubmissionResponse submission, SubmissionValidationContext context) {
-    context.addSubmissionValidationErrors(jsonSchemaValidator.validate("submission", submission));
+    context.addSubmissionValidationErrors(
+        jsonSchemaValidator.validate("submission", submission, submission.getAreaOfLaw()));
   }
 
   @Override

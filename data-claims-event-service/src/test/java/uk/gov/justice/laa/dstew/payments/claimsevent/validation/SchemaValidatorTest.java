@@ -8,10 +8,14 @@ import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.model.ValidationErrorMessage;
 
 @DisplayName("Schema validator test")
 class SchemaValidatorTest {
+
   private static final String LEGAL_HELP_AOL = "LEGAL HELP";
   private static final String CRIME_LOWER_AOL = "CRIME LOWER";
   private static final String MEDIATION_AOL = "MEDIATION";
@@ -30,20 +34,23 @@ class SchemaValidatorTest {
     }
   }
 
-  @Test
+  @ParameterizedTest
+  @EnumSource(value = AreaOfLaw.class)
   @DisplayName("Should return default message when no validation message exists")
-  void shouldReturnDefaultMessageWhenNoValidationMessageExists() {
+  void shouldReturnDefaultMessageWhenNoValidationMessageExists(AreaOfLaw areaOfLaw) {
     // Given
     TestSchemaValidator schemaValidator = new TestSchemaValidator(new HashMap<>());
     // When
-    String result = schemaValidator.getValidationErrorMessageFromSchema("field", "Default message");
+    String result =
+        schemaValidator.getValidationErrorMessageFromSchema("field", "Default message", areaOfLaw);
     // Then
     assertThat(result).isEqualTo("Default message");
   }
 
-  @Test
+  @ParameterizedTest
+  @EnumSource(value = AreaOfLaw.class)
   @DisplayName("Should return validation message when validation message exists")
-  void shouldReturnValidationMessageWhenValidationMessageExists() {
+  void shouldReturnValidationMessageWhenValidationMessageExists(AreaOfLaw areaOfLaw) {
     // Given
     HashMap<String, Set<ValidationErrorMessage>> schemaValidationErrorMessages = new HashMap<>();
     HashSet<ValidationErrorMessage> possibleMessages = new HashSet<>();
@@ -51,7 +58,8 @@ class SchemaValidatorTest {
     schemaValidationErrorMessages.put("field", possibleMessages);
     TestSchemaValidator schemaValidator = new TestSchemaValidator(schemaValidationErrorMessages);
     // When
-    String result = schemaValidator.getValidationErrorMessageFromSchema("field", "Default message");
+    String result =
+        schemaValidator.getValidationErrorMessageFromSchema("field", "Default message", areaOfLaw);
     // Then
     assertThat(result).isEqualTo("Schema message");
   }
@@ -69,7 +77,7 @@ class SchemaValidatorTest {
     // When
     String result =
         schemaValidator.getValidationErrorMessageFromSchema(
-            "field", LEGAL_HELP_AOL, "Default message");
+            "field", "Default message", AreaOfLaw.LEGAL_HELP);
     // Then
     assertThat(result).isEqualTo(LEGAL_HELP_AOL + " - Schema message");
   }
@@ -87,7 +95,7 @@ class SchemaValidatorTest {
     // When
     String result =
         schemaValidator.getValidationErrorMessageFromSchema(
-            "field", CRIME_LOWER_AOL, "Default message");
+            "field", "Default message", AreaOfLaw.CRIME_LOWER);
     // Then
     assertThat(result).isEqualTo(CRIME_LOWER_AOL + " - Schema message");
   }
@@ -105,7 +113,7 @@ class SchemaValidatorTest {
     // When
     String result =
         schemaValidator.getValidationErrorMessageFromSchema(
-            "field", MEDIATION_AOL, "Default message");
+            "field", "Default message", AreaOfLaw.MEDIATION);
     // Then
     assertThat(result).isEqualTo(MEDIATION_AOL + " - Schema message");
   }

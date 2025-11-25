@@ -93,7 +93,8 @@ class JsonSchemaValidatorTest {
     @Test
     void validateNoErrorsForMinimumSubmission() {
       final List<ValidationMessagePatch> errors =
-          jsonSchemaValidator.validate("submission", getMinimumValidSubmission());
+          jsonSchemaValidator.validate(
+              "submission", getMinimumValidSubmission(), AreaOfLaw.LEGAL_HELP);
       assertThat(errors).isEmpty();
     }
 
@@ -111,7 +112,7 @@ class JsonSchemaValidatorTest {
       String fieldName = toCamelCase(jsonField);
       setField(submission, fieldName, null);
       final List<ValidationMessagePatch> errors =
-          jsonSchemaValidator.validate("submission", submission);
+          jsonSchemaValidator.validate("submission", submission, AreaOfLaw.LEGAL_HELP);
       assertThat(errors)
           .extracting(ValidationMessagePatch::getDisplayMessage)
           .containsExactlyInAnyOrder(StringCaseUtil.toTitleCase(jsonField) + " is required");
@@ -130,7 +131,7 @@ class JsonSchemaValidatorTest {
       String fieldName = toCamelCase(jsonField);
       setField(submission, fieldName, null);
       final List<ValidationMessagePatch> errors =
-          jsonSchemaValidator.validate("submission", submission);
+          jsonSchemaValidator.validate("submission", submission, AreaOfLaw.LEGAL_HELP);
       assertThat(errors)
           .extracting(ValidationMessagePatch::getDisplayMessage)
           .containsExactlyInAnyOrder(expectedError);
@@ -149,7 +150,7 @@ class JsonSchemaValidatorTest {
       String fieldName = toCamelCase(jsonField);
       setField(submission, fieldName, scheduleNum);
       final List<ValidationMessagePatch> errors =
-          jsonSchemaValidator.validate("submission", submission);
+          jsonSchemaValidator.validate("submission", submission, AreaOfLaw.LEGAL_HELP);
       assertThat(errors).isEmpty();
     }
 
@@ -177,7 +178,7 @@ class JsonSchemaValidatorTest {
       String fieldName = toCamelCase(jsonField);
       setField(submission, fieldName, value);
       final List<ValidationMessagePatch> errors =
-          jsonSchemaValidator.validate("submission", submission);
+          jsonSchemaValidator.validate("submission", submission, AreaOfLaw.LEGAL_HELP);
       assertThat(errors)
           .extracting(ValidationMessagePatch::getDisplayMessage)
           .containsExactlyInAnyOrder(expectedError);
@@ -194,7 +195,7 @@ class JsonSchemaValidatorTest {
       submission.setIsNilSubmission(false);
       submission.setStatus(SubmissionStatus.CREATED);
       final List<ValidationMessagePatch> errors =
-          jsonSchemaValidator.validate("submission", submission);
+          jsonSchemaValidator.validate("submission", submission, AreaOfLaw.LEGAL_HELP);
 
       assertThat(errors)
           .extracting(ValidationMessagePatch::getTechnicalMessage)
@@ -274,7 +275,7 @@ class JsonSchemaValidatorTest {
       SubmissionResponse submission = getMinimumValidSubmission();
       setField(submission, fieldName, badValue);
       final List<ValidationMessagePatch> errors =
-          jsonSchemaValidator.validate("submission", submission);
+          jsonSchemaValidator.validate("submission", submission, AreaOfLaw.LEGAL_HELP);
       assertThat(errors)
           .extracting(ValidationMessagePatch::getTechnicalMessage)
           .contains(technicalMessage);
@@ -299,7 +300,7 @@ class JsonSchemaValidatorTest {
       submission.setNumberOfClaims(3);
 
       final List<ValidationMessagePatch> errors =
-          jsonSchemaValidator.validate("submission", submission);
+          jsonSchemaValidator.validate("submission", submission, AreaOfLaw.LEGAL_HELP);
 
       assertThat(errors).isEmpty();
     }
@@ -322,7 +323,8 @@ class JsonSchemaValidatorTest {
     @Test
     void validateNoErrorsForClaimWithRequiredFields() {
       ClaimResponse claim = getMinimumValidClaim();
-      final List<ValidationMessagePatch> errors = jsonSchemaValidator.validate("claim", claim);
+      final List<ValidationMessagePatch> errors =
+          jsonSchemaValidator.validate("claim", claim, AreaOfLaw.LEGAL_HELP);
       assertThat(errors).isEmpty();
     }
 
@@ -338,7 +340,8 @@ class JsonSchemaValidatorTest {
       Object claim = getMinimumValidClaim();
       String fieldName = toCamelCase(jsonField);
       setField(claim, fieldName, null);
-      final List<ValidationMessagePatch> errors = jsonSchemaValidator.validate("claim", claim);
+      final List<ValidationMessagePatch> errors =
+          jsonSchemaValidator.validate("claim", claim, AreaOfLaw.LEGAL_HELP);
       assertThat(errors)
           .extracting(ValidationMessagePatch::getDisplayMessage)
           .containsExactlyInAnyOrder(StringCaseUtil.toTitleCase(jsonField) + " is required");
@@ -349,7 +352,8 @@ class JsonSchemaValidatorTest {
       Object claim = getMinimumValidClaim();
       String fieldName = toCamelCase("case_start_date");
       setField(claim, fieldName, null);
-      final List<ValidationMessagePatch> errors = jsonSchemaValidator.validate("claim", claim);
+      final List<ValidationMessagePatch> errors =
+          jsonSchemaValidator.validate("claim", claim, AreaOfLaw.LEGAL_HELP);
       assertThat(errors).isEmpty();
     }
 
@@ -569,8 +573,9 @@ class JsonSchemaValidatorTest {
         String fieldName, String badJsonValue, String technicalError) throws Exception {
       List<ValidationMessagePatch> errors =
           validateForInvalidDataTypes("claim", getMinimumValidClaim(), fieldName, badJsonValue);
-      String error = getValidationErrorMessageFromSchema(fieldName).orElse(technicalError);
-      assertThat(errors).extracting(ValidationMessagePatch::getDisplayMessage).contains(error);
+      assertThat(errors)
+          .extracting(ValidationMessagePatch::getTechnicalMessage)
+          .contains(technicalError);
     }
 
     /**
@@ -664,7 +669,7 @@ class JsonSchemaValidatorTest {
       "dsccNumber, '202101/001', 'dscc_number: does not match the regex pattern ^[a-zA-Z0-9]{10}$ (provided value: 202101/001)'",
       "dsccNumber, '202101A', 'dscc_number: does not match the regex pattern ^[a-zA-Z0-9]{10}$ (provided value: 202101A)'",
       "dsccNumber, '202101aTooLong', 'dscc_number: does not match the regex pattern ^[a-zA-Z0-9]{10}$ (provided value: 202101aTooLong)'",
-      "maatId, '2021012Long', 'maat_id: does not match the regex pattern ^[a-zA-Z0-9]{1-10}$ (provided value: 2021012Long)'",
+      "maatId, '2021012Long', 'maat_id: does not match the regex pattern ^[a-zA-Z0-9]{1,10}$ (provided value: 2021012Long)'",
       "prisonLawPriorApprovalNumber, '202101/001', 'prison_law_prior_approval_number: does not match the regex pattern ^[a-zA-Z0-9]{10}$ (provided value: 202101/001)'",
       "prisonLawPriorApprovalNumber, '202101A', 'prison_law_prior_approval_number: does not match the regex pattern ^[a-zA-Z0-9]{10}$ (provided value: 202101A)'",
       "prisonLawPriorApprovalNumber, '202101aTooLong', 'prison_law_prior_approval_number: does not match the regex pattern ^[a-zA-Z0-9]{10}$ (provided value: 202101aTooLong)'",
@@ -679,23 +684,23 @@ class JsonSchemaValidatorTest {
       "referralSource, 'TooLong', 'referral_source: does not match the regex pattern ^(0[2-9]|1[0-1])$ (provided value: TooLong)'",
       "referralSource, '01', 'referral_source: does not match the regex pattern ^(0[2-9]|1[0-1])$ (provided value: 01)'",
       "referralSource, '12', 'referral_source: does not match the regex pattern ^(0[2-9]|1[0-1])$ (provided value: 12)'",
-      "clientForename, 'Hello This is a name that is toooo long', 'client_forename: does not match the regex pattern ^[\\p{L}\\p{N}\\p{Zs}\\-’''&]{1,30}$ (provided value: Hello This is a name that is toooo long)'",
-      "clientForename, 'Anthony, Gonsalves', 'client_forename: does not match the regex pattern ^[\\p{L}\\p{N}\\p{Zs}\\-’''&]{1,30}$ (provided value: Anthony, Gonsalves)'",
-      "clientForename, '$£%^&*(', 'client_forename: does not match the regex pattern ^[\\p{L}\\p{N}\\p{Zs}\\-’''&]{1,30}$ (provided value: $£%^&*()'",
-      "clientSurname, 'Hello This is a name that is toooo long', 'client_surname: does not match the regex pattern ^[\\p{L}\\p{N}\\p{Zs}\\-’''&]{1,30}$ (provided value: Hello This is a name that is toooo long)'",
-      "clientSurname, 'Anthony, Gonsalves', 'client_surname: does not match the regex pattern ^[\\p{L}\\p{N}\\p{Zs}\\-’''&]{1,30}$ (provided value: Anthony, Gonsalves)'",
-      "clientSurname, '$£%^&*(', 'client_surname: does not match the regex pattern ^[\\p{L}\\p{N}\\p{Zs}\\-’''&]{1,30}$ (provided value: $£%^&*()'",
-      "client2Forename, 'Hello This is a name that is toooo long', 'client_2_forename: does not match the regex pattern ^[\\p{L}\\p{N}\\p{Zs}\\-’''&]{1,30}$ (provided value: Hello This is a name that is toooo long)'",
-      "client2Forename, 'Anthony, Gonsalves', 'client_2_forename: does not match the regex pattern ^[\\p{L}\\p{N}\\p{Zs}\\-’''&]{1,30}$ (provided value: Anthony, Gonsalves)'",
-      "client2Forename, '$£%^&*(', 'client_2_forename: does not match the regex pattern ^[\\p{L}\\p{N}\\p{Zs}\\-’''&]{1,30}$ (provided value: $£%^&*()'",
-      "client2Surname, 'Hello This is a name that is toooo long', 'client_2_surname: does not match the regex pattern ^[\\p{L}\\p{N}\\p{Zs}\\-’''&]{1,30}$ (provided value: Hello This is a name that is toooo long)'",
-      "client2Surname, 'Anthony, Gonsalves', 'client_2_surname: does not match the regex pattern ^[\\p{L}\\p{N}\\p{Zs}\\-’''&]{1,30}$ (provided value: Anthony, Gonsalves)'",
-      "client2Surname, '$£%^&*(', 'client_2_surname: does not match the regex pattern ^[\\p{L}\\p{N}\\p{Zs}\\-’''&]{1,30}$ (provided value: $£%^&*()'",
-      "uniqueClientNumber, '$£%^&*(', 'unique_client_number: does not match the regex pattern ^(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[0-2])(19[0-9]{2}|20[0-9]{2})/[\\p{L}0-9 \\-’''&]/[\\p{L}0-9 \\-’''&]{1,4}$ (provided value: $£%^&*()'",
-      "uniqueClientNumber, '123456/A/ABCD', 'unique_client_number: does not match the regex pattern ^(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[0-2])(19[0-9]{2}|20[0-9]{2})/[\\p{L}0-9 \\-’''&]/[\\p{L}0-9 \\-’''&]{1,4}$ (provided value: 123456/A/ABCD)'",
-      "uniqueClientNumber, '12121999-A-ABCD', 'unique_client_number: does not match the regex pattern ^(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[0-2])(19[0-9]{2}|20[0-9]{2})/[\\p{L}0-9 \\-’''&]/[\\p{L}0-9 \\-’''&]{1,4}$ (provided value: 12121999-A-ABCD)'",
-      "uniqueClientNumber, '31121899/A/ABCD', 'unique_client_number: does not match the regex pattern ^(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[0-2])(19[0-9]{2}|20[0-9]{2})/[\\p{L}0-9 \\-’''&]/[\\p{L}0-9 \\-’''&]{1,4}$ (provided value: 31121899/A/ABCD)'",
-      "uniqueClientNumber, '01012100/A/ABCD', 'unique_client_number: does not match the regex pattern ^(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[0-2])(19[0-9]{2}|20[0-9]{2})/[\\p{L}0-9 \\-’''&]/[\\p{L}0-9 \\-’''&]{1,4}$ (provided value: 01012100/A/ABCD)'",
+      "clientForename, 'Hello This is a name that is toooo long', 'client_forename: does not match the regex pattern ^[\\p{L}\\p{N}\\p{Zs}\\-'''&]{1,30}$ (provided value: Hello This is a name that is toooo long)'",
+      "clientForename, 'Anthony, Gonsalves', 'client_forename: does not match the regex pattern ^[\\p{L}\\p{N}\\p{Zs}\\-'''&]{1,30}$ (provided value: Anthony, Gonsalves)'",
+      "clientForename, '$£%^&*(', 'client_forename: does not match the regex pattern ^[\\p{L}\\p{N}\\p{Zs}\\-'''&]{1,30}$ (provided value: $£%^&*()'",
+      "clientSurname, 'Hello This is a name that is toooo long', 'client_surname: does not match the regex pattern ^[\\p{L}\\p{N}\\p{Zs}\\-'''&]{1,30}$ (provided value: Hello This is a name that is toooo long)'",
+      "clientSurname, 'Anthony, Gonsalves', 'client_surname: does not match the regex pattern ^[\\p{L}\\p{N}\\p{Zs}\\-'''&]{1,30}$ (provided value: Anthony, Gonsalves)'",
+      "clientSurname, '$£%^&*(', 'client_surname: does not match the regex pattern ^[\\p{L}\\p{N}\\p{Zs}\\-'''&]{1,30}$ (provided value: $£%^&*()'",
+      "client2Forename, 'Hello This is a name that is toooo long', 'client_2_forename: does not match the regex pattern ^[\\p{L}\\p{N}\\p{Zs}\\-'''&]{1,30}$ (provided value: Hello This is a name that is toooo long)'",
+      "client2Forename, 'Anthony, Gonsalves', 'client_2_forename: does not match the regex pattern ^[\\p{L}\\p{N}\\p{Zs}\\-'''&]{1,30}$ (provided value: Anthony, Gonsalves)'",
+      "client2Forename, '$£%^&*(', 'client_2_forename: does not match the regex pattern ^[\\p{L}\\p{N}\\p{Zs}\\-'''&]{1,30}$ (provided value: $£%^&*()'",
+      "client2Surname, 'Hello This is a name that is toooo long', 'client_2_surname: does not match the regex pattern ^[\\p{L}\\p{N}\\p{Zs}\\-'''&]{1,30}$ (provided value: Hello This is a name that is toooo long)'",
+      "client2Surname, 'Anthony, Gonsalves', 'client_2_surname: does not match the regex pattern ^[\\p{L}\\p{N}\\p{Zs}\\-'''&]{1,30}$ (provided value: Anthony, Gonsalves)'",
+      "client2Surname, '$£%^&*(', 'client_2_surname: does not match the regex pattern ^[\\p{L}\\p{N}\\p{Zs}\\-'''&]{1,30}$ (provided value: $£%^&*()'",
+      "uniqueClientNumber, '$£%^&*(', 'unique_client_number: does not match the regex pattern ^(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[0-2])(19[0-9]{2}|20[0-9]{2})/[\\p{L}0-9 \\-''''&]/[\\p{L}0-9 \\-''''&]{1,4}$ (provided value: $£%^&*()'",
+      "uniqueClientNumber, '123456/A/ABCD', 'unique_client_number: does not match the regex pattern ^(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[0-2])(19[0-9]{2}|20[0-9]{2})/[\\p{L}0-9 \\-''''&]/[\\p{L}0-9 \\-''''&]{1,4}$ (provided value: 123456/A/ABCD)'",
+      "uniqueClientNumber, '12121999-A-ABCD', 'unique_client_number: does not match the regex pattern ^(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[0-2])(19[0-9]{2}|20[0-9]{2})/[\\p{L}0-9 \\-''''&]/[\\p{L}0-9 \\-''''&]{1,4}$ (provided value: 12121999-A-ABCD)'",
+      "uniqueClientNumber, '31121899/A/ABCD', 'unique_client_number: does not match the regex pattern ^(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[0-2])(19[0-9]{2}|20[0-9]{2})/[\\p{L}0-9 \\-''''&]/[\\p{L}0-9 \\-''''&]{1,4}$ (provided value: 31121899/A/ABCD)'",
+      "uniqueClientNumber, '01012100/A/ABCD', 'unique_client_number: does not match the regex pattern ^(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[0-2])(19[0-9]{2}|20[0-9]{2})/[\\p{L}0-9 \\-''''&]/[\\p{L}0-9 \\-''''&]{1,4}$ (provided value: 01012100/A/ABCD)'",
       "clientPostcode, 'ABCD', 'client_postcode: does not match the regex pattern ^NFA|[A-Z]{1,2}[0-9][0-9A-Z]?\\s?[0-9][A-Z]{2}$ (provided value: ABCD)'",
       "clientPostcode, 'ABC12 BCD', 'client_postcode: does not match the regex pattern ^NFA|[A-Z]{1,2}[0-9][0-9A-Z]?\\s?[0-9][A-Z]{2}$ (provided value: ABC12 BCD)'",
       "client2Postcode, 'ABCD', 'client_2_postcode: does not match the regex pattern ^NFA|[A-Z]{1,2}[0-9][0-9A-Z]?\\s?[0-9][A-Z]{2}$ (provided value: ABCD)'",
@@ -787,13 +792,14 @@ class JsonSchemaValidatorTest {
         String fieldName, String badValue, String technicalError) {
       ClaimResponse claim = getMinimumValidClaim();
       setField(claim, fieldName, badValue);
-      final List<ValidationMessagePatch> errors = jsonSchemaValidator.validate("claim", claim);
-      String expectedError =
-          getValidationErrorMessageFromSchema(convertCamelCaseToSnakeCase(fieldName))
-              .orElse(technicalError);
+      final List<ValidationMessagePatch> errors =
+          jsonSchemaValidator.validate("claim", claim, AreaOfLaw.LEGAL_HELP);
       assertThat(errors)
-          .extracting(ValidationMessagePatch::getDisplayMessage)
-          .contains(expectedError);
+          .extracting(ValidationMessagePatch::getTechnicalMessage)
+          .map("'%s'"::formatted)
+          .anyMatch(
+              msg -> msg.contains(technicalError),
+              "Technical message didn't contain expected text: %s".formatted(technicalError));
     }
 
     /**
@@ -895,7 +901,8 @@ class JsonSchemaValidatorTest {
     void validateClaimIndividualValidField(String fieldName, String badValue) {
       ClaimResponse claim = getMinimumValidClaim();
       setField(claim, fieldName, badValue);
-      final List<ValidationMessagePatch> errors = jsonSchemaValidator.validate("claim", claim);
+      final List<ValidationMessagePatch> errors =
+          jsonSchemaValidator.validate("claim", claim, AreaOfLaw.LEGAL_HELP);
       assertThat(errors).isEmpty();
     }
 
@@ -904,7 +911,8 @@ class JsonSchemaValidatorTest {
     void shouldCreateOneValidationMessagePatch() {
       var claim = getMinimumValidClaim();
       setField(claim, "ethnicityCode", "999999");
-      final List<ValidationMessagePatch> errors = jsonSchemaValidator.validate("claim", claim);
+      final List<ValidationMessagePatch> errors =
+          jsonSchemaValidator.validate("claim", claim, AreaOfLaw.LEGAL_HELP);
 
       assertThat(errors).hasSize(1);
 
@@ -990,7 +998,7 @@ class JsonSchemaValidatorTest {
     ObjectNode node = validNode.deepCopy();
     node.set(fieldName, mapper.readTree(badJsonValue));
 
-    return jsonSchemaValidator.validate(schemaName, node);
+    return jsonSchemaValidator.validate(schemaName, node, AreaOfLaw.LEGAL_HELP);
   }
 
   // Utility to convert snake_case to camelCase
@@ -1006,15 +1014,6 @@ class JsonSchemaValidatorTest {
       }
     }
     return sb.toString();
-  }
-
-  public Optional<String> getValidationErrorMessageFromSchema(final String field) {
-    return Optional.ofNullable(schemaValidationErrorMessages.get(field))
-        .orElse(new HashSet<>())
-        .stream()
-        .filter(validationErrorMessage -> Objects.equals(validationErrorMessage.key(), "ALL"))
-        .map(ValidationErrorMessage::value)
-        .findFirst();
   }
 
   public String convertCamelCaseToSnakeCase(String value) {

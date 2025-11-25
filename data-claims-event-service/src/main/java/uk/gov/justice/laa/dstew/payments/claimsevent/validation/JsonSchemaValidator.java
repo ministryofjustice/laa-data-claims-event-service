@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.springframework.stereotype.Component;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessageType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.util.StringCaseUtil;
@@ -50,7 +51,8 @@ public class JsonSchemaValidator extends SchemaValidator {
    * @param object any object that can be converted to JSON
    * @return list of enriched validation messages
    */
-  public List<ValidationMessagePatch> validate(final String schemaName, final Object object) {
+  public List<ValidationMessagePatch> validate(
+      final String schemaName, final Object object, final AreaOfLaw areaOfLaw) {
     JsonSchema schema = schemas.get(schemaName);
     schema.getValidators();
 
@@ -63,18 +65,21 @@ public class JsonSchemaValidator extends SchemaValidator {
     return new HashSet<>(
             validationMessages.stream()
                 .map(
-                    vm ->
-                        toValidationMessagePatch(vm, fieldToTechnicalMessage.get(getFieldName(vm))))
+                    vm -> {
+                      String technicalMessage = fieldToTechnicalMessage.get(getFieldName(vm));
+                      String displayMessage = getDisplayMessage(vm, technicalMessage, areaOfLaw);
+                      return toValidationMessagePatch(vm, technicalMessage, displayMessage);
+                    })
                 .toList())
         .stream().toList();
   }
 
   private ValidationMessagePatch toValidationMessagePatch(
-      final ValidationMessage vm, final String technicalMessage) {
+      final ValidationMessage vm, final String technicalMessage, final String displayMessage) {
     return new ValidationMessagePatch()
         .type(ValidationMessageType.ERROR)
         .source(EVENT_SERVICE)
-        .displayMessage(getDisplayMessage(vm, technicalMessage))
+        .displayMessage(displayMessage)
         .technicalMessage(technicalMessage);
   }
 
@@ -88,10 +93,11 @@ public class JsonSchemaValidator extends SchemaValidator {
         field, message.substring(message.indexOf(':') + 1).trim(), value);
   }
 
-  private String getDisplayMessage(final ValidationMessage vm, final String defaultMessage) {
+  private String getDisplayMessage(
+      final ValidationMessage vm, final String defaultMessage, final AreaOfLaw areaOfLaw) {
     return REQUIRED.equals(vm.getType())
         ? String.format("%s is required", StringCaseUtil.toTitleCase(vm.getProperty()))
-        : getValidationErrorMessageFromSchema(getFieldName(vm), defaultMessage);
+        : getValidationErrorMessageFromSchema(getFieldName(vm), defaultMessage, areaOfLaw);
   }
 
   private String getFieldName(final ValidationMessage vm) {
