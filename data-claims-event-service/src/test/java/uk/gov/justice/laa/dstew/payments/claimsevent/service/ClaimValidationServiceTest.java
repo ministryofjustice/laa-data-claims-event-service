@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -39,7 +40,7 @@ class ClaimValidationServiceTest {
 
   @Mock CategoryOfLawValidationService categoryOfLawValidationService;
   @Mock DataClaimsRestClient dataClaimsRestClient;
-  @Mock FeeCalculationService feeCalculationService;
+  @Mock private BulkClaimUpdater bulkClaimUpdater;
 
   public interface StubBasicClaimValidator extends ClaimValidator, BasicClaimValidator {}
 
@@ -59,8 +60,8 @@ class ClaimValidationServiceTest {
         new ClaimValidationService(
             categoryOfLawValidationService,
             dataClaimsRestClient,
-            feeCalculationService,
             eventServiceMetricService,
+            bulkClaimUpdater,
             Arrays.asList(
                 basicClaimValidator,
                 claimWithAreaOfLawValidator,
@@ -116,7 +117,7 @@ class ClaimValidationServiceTest {
         .thenReturn(feeDetailsResponseMap);
 
     // When
-    claimValidationService.validateClaims(submissionResponse, context);
+    claimValidationService.validateAndUpdateClaims(submissionResponse, context);
 
     // Then
     verify(basicClaimValidator, times(1)).validate(claimOne, context);
@@ -140,11 +141,12 @@ class ClaimValidationServiceTest {
         .validate(
             claimTwo, context, AreaOfLaw.LEGAL_HELP, "officeAccountNumber", claimsList, "feeType");
 
-    verify(feeCalculationService, times(1))
-        .validateFeeCalculation(
-            submissionId, claimOne, context, feeDetailsResponse, AreaOfLaw.LEGAL_HELP);
-    verify(feeCalculationService, times(1))
-        .validateFeeCalculation(
-            submissionId, claimTwo, context, feeDetailsResponse, AreaOfLaw.LEGAL_HELP);
+    verify(bulkClaimUpdater)
+        .updateClaims(
+            eq(submissionId),
+            eq(claimsList),
+            eq(AreaOfLaw.LEGAL_HELP),
+            eq(context),
+            eq(feeDetailsResponseMap));
   }
 }
