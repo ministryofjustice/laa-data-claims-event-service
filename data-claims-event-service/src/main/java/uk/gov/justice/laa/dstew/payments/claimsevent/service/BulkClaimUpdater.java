@@ -1,5 +1,7 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
+import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationSource.EVENT_SERVICE;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -75,12 +77,12 @@ public class BulkClaimUpdater {
               getFeeCalculationResponse(areaOfLaw, context, claim);
 
           FeeCalculationPatch feeCalculationPatch =
-              buildFeeCalculationPath(
+              buildFeeCalculationPatch(
                   feeCalculationResponse, feeDetailsResponseMap.get(claim.getFeeCode()));
 
           // If a claim was found to be invalid, make the rest of the claims invalid
           ClaimStatus claimStatus = getClaimStatus(claim.getId(), context);
-          ClaimPatch claimPatch = buildClaimPath(claim, feeCalculationPatch, context, claimStatus);
+          ClaimPatch claimPatch = buildClaimPatch(claim, feeCalculationPatch, context, claimStatus);
 
           dataClaimsRestClient.updateClaim(
               submissionId, UUID.fromString(claim.getId()), claimPatch);
@@ -124,7 +126,7 @@ public class BulkClaimUpdater {
     return feeCalculationResponse;
   }
 
-  private ClaimPatch buildClaimPath(
+  private ClaimPatch buildClaimPatch(
       final ClaimResponse claim,
       final FeeCalculationPatch feeCalculationPatch,
       final SubmissionValidationContext context,
@@ -136,10 +138,11 @@ public class BulkClaimUpdater {
         .status(claimStatus)
         .feeCalculationResponse(feeCalculationPatch)
         .validationMessages(claimMessages)
+        .createdByUserId(EVENT_SERVICE)
         .build();
   }
 
-  private FeeCalculationPatch buildFeeCalculationPath(
+  private FeeCalculationPatch buildFeeCalculationPatch(
       final Optional<FeeCalculationResponse> feeCalculationResponse,
       final FeeDetailsResponseWrapper feeDetailsResponseWrapper) {
     return feeCalculationPatchMapper.mapToFeeCalculationPatch(

@@ -20,6 +20,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.mapper.FeeCalculationPatchM
 import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationSource;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationResponse;
 import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponse;
@@ -109,6 +110,7 @@ class BulkClaimUpdaterTest {
     assertThat(capturedPatch.getId()).isEqualTo(claimResponse.getId());
     assertThat(capturedPatch.getFeeCalculationResponse()).isEqualTo(feeCalculationPatch);
     assertThat(capturedPatch.getValidationMessages().isEmpty()).isTrue();
+    assertThat(capturedPatch.getCreatedByUserId()).isEqualTo(ClaimValidationSource.EVENT_SERVICE);
     assertThat(capturedPatch.getStatus()).isEqualTo(ClaimStatus.VALID);
   }
 
