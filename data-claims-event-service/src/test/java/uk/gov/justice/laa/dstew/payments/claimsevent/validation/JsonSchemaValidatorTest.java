@@ -802,6 +802,100 @@ class JsonSchemaValidatorTest {
               "Technical message didn't contain expected text: %s".formatted(technicalError));
     }
 
+    @ParameterizedTest(name = "Invalid value {1} for {0} should return error")
+    @CsvSource({
+      "uniqueClientNumber, '$£%^&*(', LEGAL HELP, 'Unique Client Number must be in the format DDMMYYYY/X/ZZZZ with valid date, and be a maximum of 15 characters'",
+      "client2Ucn, '12121999-A-ABCD', LEGAL HELP, Client 2 Unique Client Number must be in the format DDMMYYYY/X/ZZZZ with valid date, and be a maximum of 15 characters'",
+      "caseReferenceNumber, 'Case:Ref:123', LEGAL HELP, Case Reference Number must contain only letters, numbers, forward slashes, periods, hyphens, and spaces, and be a maximum of 30 characters",
+      "uniqueFileNumber, '010123-001', LEGAL HELP, Unique File Number must be in the format DDMMYY/NNN (6 digits forward slash 3 digits)",
+      "caseStartDate, '1899-12-31', LEGAL HELP, Case Start Date must be a valid date in the format DD/MM/YYYY",
+      "caseConcludedDate, '1899-12-31', LEGAL HELP, Case Concluded Date must be a valid date in the format DD/MM/YYYY",
+      "crimeMatterTypeCode, '123', CRIME LOWER, Crime Lower Matter Type Code must be exactly 2 digits",
+      "feeCode, 'ABC_90', LEGAL HELP, Fee Code must contain only letters and numbers, and be a maximum of 10 characters",
+      "procurementAreaCode, 'aa543', LEGAL HELP, Procurement Area Code must be 2 uppercase letters followed by 5 digits",
+      "accessPointCode, 'ap12543', LEGAL HELP, Access Point Code must be in the format AP##### (AP followed by 5 digits)",
+      "deliveryLocation, 'ap12543', LEGAL HELP, Delivery Location must be 2 uppercase letters followed by 5 digits",
+      "representationOrderDate, '10/01/12', LEGAL HELP, Representation Order Date must be a valid date in the format DD/MM/YYYY",
+      "suspectsDefendantsCount, '121', LEGAL HELP, Suspects Defendants Count must be between 0 and 99",
+      "policeStationCourtAttendancesCount, '121', LEGAL HELP, Police Station Court Attendances Count must be between 0 and 99",
+      "policeStationCourtPrisonId, '121', LEGAL HELP, Police Station Court Prison ID must be 1–6 alphanumeric characters and contain at least one letter",
+      "dsccNumber, '121', LEGAL HELP, DSCC Number must be exactly 10 alphanumeric characters",
+      "maatId, 'fdsdfs&121', LEGAL HELP, MAAT ID must be up to 10 alphanumeric characters",
+      "prisonLawPriorApprovalNumber, 'fd121', LEGAL HELP, Prison Law Prior Approval Number must be exactly 10 alphanumeric characters",
+      "schemeId, 'AB', LEGAL HELP, Scheme ID must be exactly 4 alphanumeric characters",
+      "mediationSessionsCount, 122, LEGAL HELP, Mediation Sessions Count must be between 1 and 99",
+      "mediationTimeMinutes, 9999999, LEGAL HELP, Mediation Time Minutes must be between 0 and 99999",
+      "outreachLocation, ABCD5, LEGAL HELP, Outreach Location must be exactly 3 alphanumeric characters",
+      "referralSource, 100, LEGAL HELP, Referral Source must be a valid 2-digit code (02-11)",
+      "clientForename, 'Anthony, Gonsalves', LEGAL HELP, Client Forename must contain only letters, numbers, spaces, hyphens, apostrophes, ampersands, and be a maximum of 30 characters",
+      "client2Forename, 'Anthony, Gonsalves', LEGAL HELP, Client 2 Forename must contain only letters, numbers, spaces, hyphens, apostrophes, ampersands, and be a maximum of 30 characters",
+      "clientSurname, 'Anthony, Gonsalves', LEGAL HELP, Client Surname must contain only letters, numbers, spaces, hyphens, apostrophes, ampersands, and be a maximum of 30 characters",
+      "client2Surname, 'Anthony, Gonsalves', LEGAL HELP, Client 2 Surname must contain only letters, numbers, spaces, hyphens, apostrophes, ampersands, and be a maximum of 30 characters",
+      "clientDateOfBirth, 01/09/08, LEGAL HELP, Client Date of Birth must be a valid date in the format DD/MM/YYYY",
+      "clientPostcode, ABCD, LEGAL HELP, Client Postcode must be a valid UK postcode or NFA",
+      "client2Postcode, ABCD, LEGAL HELP, Client 2 Postcode must be a valid UK postcode or NFA",
+      "genderCode, Z, LEGAL HELP, Gender code must be valid",
+      "client2GenderCode, Z, LEGAL HELP, Client 2 Gender code must be valid",
+      "ethnicityCode, 17, LEGAL HELP, Ethnicity Code must be valid",
+      "client2EthnicityCode, 17, LEGAL HELP, Client 2 Ethnicity Code must be valid",
+      "disabilityCode, ABC, LEGAL HELP, Disability Code must be valid",
+      "client2DisabilityCode, ABC, LEGAL HELP, Client 2 Disability Code must be valid",
+      "clientTypeCode, MF, LEGAL HELP, Client Type Code must be valid",
+      "homeOfficeClientNumber, abc def, LEGAL HELP, Home Office Client Number must contain only letters and numbers, and be a maximum of 16 characters",
+      "claReferenceNumber, ABC123, LEGAL HELP, CLA Reference Number must be between 1 and 7 digits",
+      "claExemptionCode, ABCDE, LEGAL HELP, CLA Exemption Code must be exactly 4 characters",
+      "client2DateOfBirth, 01/09/09, LEGAL HELP, Client 2 Date of Birth must be a valid date in the format DD/MM/YYYY",
+      "transferDate, 01/09/09, LEGAL HELP, Transfer Date must be a valid date in the format DD/MM/YYYY",
+      "caseId, ABCD, LEGAL HELP, Case ID must be exactly 3 digits",
+      "uniqueCaseId, '  ', LEGAL HELP, Unique Case ID must contain at least one non-whitespace character",
+      "caseStageCode, ABCDE, LEGAL HELP, Case Stage/Level Code must be valid",
+      "stageReachedCode, ABCDE, LEGAL HELP, Stage Reached Code must be exactly 2 alphanumeric characters for Legal Help claims",
+      "stageReachedCode, ABCDE, CRIME LOWER, Stage Reached Code must be exactly 4 uppercase letters for Crime Lower claims",
+      "standardFeeCategoryCode, XYZ, LEGAL HELP, Standard Fee Category Code must be valid",
+      "designatedAccreditedRepresentativeCode, 6, LEGAL HELP, Designated Accredited Representative Code must be valid",
+      "mentalHealthTribunalReference, AB/123/1234, LEGAL HELP, Mental Health Tribunal Reference must be in format XX/YYYY/YYYY or XXYYYZZZ",
+      "followOnWork, AB, LEGAL HELP, Follow On Work must be a single character",
+      "exemptionCriteriaSatisfied, ab120, LEGAL HELP, Exemption Criteria Satisfied must be 2 uppercase letters followed by 3 digits",
+      "exceptionalCaseFundingReference, 1234567ABX, LEGAL HELP, Exceptional Case Funding Reference must be 7 digits followed by 2 uppercase letters",
+      "adviceTime, 99999999, LEGAL HELP, Advice Time must be in minutes",
+      "travelTime, 99999999, LEGAL HELP, Travel Time must be in minutes",
+      "waitingTime, 99999999, LEGAL HELP, Waiting Time must be in minutes",
+      "netProfitCostsAmount, 1000000000, LEGAL HELP, Net Profit Costs Amount must be a valid monetary value",
+      "netDisbursementAmount, 1000000000, LEGAL HELP, Net Disbursement Amount must be a valid monetary value",
+      "netCounselCostsAmount, 1000000000, LEGAL HELP, Net Counsel Costs Amount must be a valid monetary value",
+      "disbursementsVatAmount, 10.011, LEGAL HELP, Disbursements VAT Amount must be a valid monetary value",
+      "travelWaitingCostsAmount, 10000, LEGAL HELP, Travel Waiting Costs Amount must be a valid monetary value",
+      "netWaitingCostsAmount, 10.011, LEGAL HELP, Net Waiting Costs Amount must be a valid monetary value",
+      "priorAuthorityReference, ABC$123, LEGAL HELP, Prior Authority Reference must be exactly 7 alphanumeric characters",
+      "adjournedHearingFeeAmount, 10, LEGAL HELP, Adjourned Hearing Fee Amount must be between 0 and 9",
+      "costsDamagesRecoveredAmount, 100000, LEGAL HELP, Costs Damages Recovered Amount must be a valid monetary value",
+      "meetingsAttendedCode, MTGA25, LEGAL HELP, Meetings Attended Code must be valid",
+      "detentionTravelWaitingCostsAmount, 10.011, LEGAL HELP, Detention Travel Waiting Costs Amount must be a valid monetary value",
+      "jrFormFillingAmount, 10.011, LEGAL HELP, JR Form Filling Amount must be a valid monetary value",
+      "adviceTypeCode, ABC, LEGAL HELP, Advice Type Code must be valid",
+      "medicalReportsCount, 11, LEGAL HELP, Medical Reports Count must be between 0 and 10",
+      "surgeryClientsCount, 21, LEGAL HELP, Surgery Clients Count must be between 1 and 20",
+      "surgeryMattersCount, 21, LEGAL HELP, Surgery Matters Count must be between 1 and 20",
+      "cmrhOralCount, 10, LEGAL HELP, CMRH Oral Count must be between 0 and 9",
+      "cmrhTelephoneCount, 10, LEGAL HELP, CMRH Telephone Count must be between 0 and 9",
+      "aitHearingCentreCode, 99, LEGAL HELP, AIT Hearing Centre Code must be valid",
+      "hoInterview, 12, LEGAL HELP, HO Interview must be between 0 and 9",
+      "localAuthorityNumber, ABC$, LEGAL HELP, Local Authority Number must contain only letters and numbers, and be a maximum of 30 characters"
+    })
+    void validateClaimIndividualInvalidFieldDisplayMessage(
+        String fieldName, String badValue, String areaOfLaw, String displayErrorMessage) {
+      ClaimResponse claim = getMinimumValidClaim();
+      setField(claim, fieldName, badValue);
+      final List<ValidationMessagePatch> errors =
+          jsonSchemaValidator.validate("claim", claim, AreaOfLaw.fromValue(areaOfLaw));
+      assertThat(errors)
+          .extracting(ValidationMessagePatch::getDisplayMessage)
+          .map("'%s'"::formatted)
+          .anyMatch(
+              msg -> msg.contains(displayErrorMessage),
+              "Display message didn't contain expected text: %s".formatted(displayErrorMessage));
+    }
+
     /**
      * Validates that providing a valid value for the specified field of a claim does not produce
      * any validation errors.
