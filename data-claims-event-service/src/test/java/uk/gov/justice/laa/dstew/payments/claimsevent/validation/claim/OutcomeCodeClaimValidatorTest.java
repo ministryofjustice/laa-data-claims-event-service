@@ -107,4 +107,5 @@ class OutcomeCodeClaimValidatorTest {
       assertThat(getClaimMessages(context, claimId.toString()).isEmpty()).isTrue();
     }
   }
+
 }
