@@ -108,7 +108,8 @@ class MandatoryFieldClaimValidatorTest {
         "uniqueFileNumber",
         "matterTypeCode",
         "stageReachedCode",
-        "isVatApplicable"
+        "isVatApplicable",
+        "outcomeCode",
       })
   @DisplayName("Should have error when mandatory fields missing")
   void shouldHaveErrorWhenMandatoryFieldsMissing(String mandatoryField) {
