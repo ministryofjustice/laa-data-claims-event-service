@@ -410,12 +410,12 @@ class JsonSchemaValidatorTest {
           .extracting(ValidationMessagePatch::getDisplayMessage)
           .anyMatch(
               msg -> msg.contains(displayMessage),
-              "Display message didn't contain expected text: %s".formatted(technicalError));
+              "Display message didn't contain expected text: %s".formatted(displayMessage));
     }
 
     @ParameterizedTest(name = "Invalid value for {0} should return error")
     @CsvFileSource(resources = "/testData/validateClaimIndividualInvalidFieldCrimeLower.csv")
-    void validateClaimIndividualInvalidFieldLegalHelpCrimeLower(
+    void validateClaimIndividualInvalidFieldCrimeLower(
         String fieldName, String badValue, String technicalError) {
       ClaimResponse claim = getMinimumValidClaim();
       setField(claim, fieldName, badValue);
@@ -435,7 +435,7 @@ class JsonSchemaValidatorTest {
           .extracting(ValidationMessagePatch::getDisplayMessage)
           .anyMatch(
               msg -> msg.contains(displayMessage),
-              "Display message didn't contain expected text: %s".formatted(technicalError));
+              "Display message didn't contain expected text: %s".formatted(displayMessage));
     }
 
     /**
@@ -448,7 +448,7 @@ class JsonSchemaValidatorTest {
      */
     @ParameterizedTest(name = "Invalid value for {0} should return error")
     @CsvFileSource(resources = "/testData/validateClaimIndividualInvalidFieldMediation.csv")
-    void validateClaimIndividualInvalidFieldLegalHelpMediation(
+    void validateClaimIndividualInvalidFieldMediation(
         String fieldName, String badValue, String technicalError) {
       ClaimResponse claim = getMinimumValidClaim();
       setField(claim, fieldName, badValue);
@@ -468,7 +468,7 @@ class JsonSchemaValidatorTest {
           .extracting(ValidationMessagePatch::getDisplayMessage)
           .anyMatch(
               msg -> msg.contains(displayMessage),
-              "Display message didn't contain expected text: %s".formatted(technicalError));
+              "Display message didn't contain expected text: %s".formatted(displayMessage));
     }
 
     @ParameterizedTest(name = "Invalid value {1} for {0} should return error")
