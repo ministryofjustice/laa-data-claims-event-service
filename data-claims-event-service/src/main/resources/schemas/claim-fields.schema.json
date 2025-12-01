@@ -319,7 +319,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Unique Client Number must be in the format DDMMYY/X/ZZZZ with valid date, and be a maximum of 15 characters"
+          "value": "Unique Client Number must be in the format DDMMYYYY/X/ZZZZ with valid date, and be a maximum of 15 characters"
         }
       ]
     },
@@ -455,7 +455,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Client 2 Unique Client Number must be in the format DDMMYY/X/ZZZZ with valid date, and be a maximum of 15 characters"
+          "value": "Client 2 Unique Client Number must be in the format DDMMYYYY/X/ZZZZ with valid date, and be a maximum of 15 characters"
         }
       ]
     },
