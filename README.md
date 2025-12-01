@@ -10,7 +10,7 @@ Includes the following subprojects:
 - `reference-provider-details-api` - OpenAPI specification for the Provider Details API used for
   generating model classes.
 
-## Usage
+## Usage 
 
 ### First time setup
 
