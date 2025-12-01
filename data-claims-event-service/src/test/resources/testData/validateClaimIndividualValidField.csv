@@ -1,0 +1,85 @@
+lineNumber, 2
+lineNumber, 2000
+adviceTime, 2
+travelTime, 2
+waitingTime, 2
+suspectsDefendantsCount, 10
+policeStationCourtAttendancesCount, 10
+scheduleReference, ShortNSweet
+scheduleReference, Valid123
+scheduleReference, 0U733A/2018-02.2
+caseReferenceNumber, CASE123
+caseReferenceNumber, SJ/4558-2018.275877
+caseReferenceNumber, CASE 123
+uniqueFileNumber, 010123/001
+crimeMatterTypeCode, 87
+crimeMatterTypeCode, 8
+accessPointCode, AP12345
+deliveryLocation, XY12345
+policeStationCourtPrisonId, C123
+dsccNumber, XYZ12345AB
+maatId, X
+maatId, 9
+maatId, XYZ12345A
+maatId, XYZ12345AB
+prisonLawPriorApprovalNumber, XYZ12345AB
+isDutySolicitor, true
+isDutySolicitor, false
+isYouthCourt, true
+isYouthCourt, false
+schemeId, AB12
+mediationSessionsCount, 10
+mediationTimeMinutes, 1000
+clientForename, Tom Marvolo Ridle
+clientForename, James Bond
+clientForename, Mrs Dsouza
+clientForename, Name That Is Thirty Characters
+clientForename, ÀçœñtëÐ Ñâmé
+clientSurname, Tom Marvolo Ridle
+clientSurname, James Bond
+clientSurname, Mrs Dsouza
+clientSurname, Name That Is Thirty Characters
+clientSurname, ÀçœñtëÐ Ñâmé
+client2Forename, Tom Marvolo Ridle
+client2Forename, James Bond
+client2Forename, Mrs Dsouza
+client2Forename, Name That Is Thirty Characters
+client2Forename, ÀçœñtëÐ Ñâmé
+client2Surname, Tom Marvolo Ridle
+client2Surname, James Bond
+client2Surname, Mrs Dsouza
+client2Surname, Name That Is Thirty Characters
+client2Surname, ÀçœñtëÐ Ñâmé
+caseStartDate, 2020-8-1
+caseStartDate, 2020-12-31
+representationOrderDate, 2020-8-1
+representationOrderDate, 2020-12-31
+clientDateOfBirth, 2020-8-1
+clientDateOfBirth, 2020-12-31
+client2DateOfBirth, 2020-8-1
+client2DateOfBirth, 2020-12-31
+uniqueClientNumber, 12121999/A/HELL
+uniqueClientNumber, 01011900/A/DSO
+uniqueClientNumber, 31122099/À/D123
+clientPostcode, AB12 9CD
+clientPostcode, A12 9CD
+clientPostcode, A129CD
+clientPostcode, A1B 9CD
+clientPostcode, NFA
+client2Postcode, AB12 9CD
+client2Postcode, A12 9CD
+client2Postcode, A129CD
+client2Postcode, A1B 9CD
+client2Postcode, NFA
+genderCode, M
+genderCode, F
+genderCode, U
+ethnicityCode, 00
+ethnicityCode, 16
+ethnicityCode, 99
+disabilityCode, VIS
+isLegallyAided, true
+isLegallyAided, false
+clientTypeCode, P
+clientTypeCode, C
+clientTypeCode, J
