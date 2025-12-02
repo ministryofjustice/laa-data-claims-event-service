@@ -9,10 +9,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
-import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.EventServiceIllegalArgumentException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.CategoryOfLawValidationService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.FeeDetailsResponseWrapper;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.ProviderDetailsService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.util.ClaimEffectiveDateUtil;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
@@ -33,22 +33,22 @@ public final class EffectiveCategoryOfLawClaimValidator implements ClaimValidato
 
   private final CategoryOfLawValidationService categoryOfLawValidationService;
   private final ClaimEffectiveDateUtil claimEffectiveDateUtil;
-  private final ProviderDetailsRestClient providerDetailsRestClient;
+  private final ProviderDetailsService providerDetailsService;
 
   /**
    * Constructs an instance of {@link EffectiveCategoryOfLawClaimValidator}.
    *
    * @param categoryOfLawValidationService the category of law validation service
    * @param claimEffectiveDateUtil the claim effective date util
-   * @param providerDetailsRestClient the provider details rest client
+   * @param providerDetailsService the provider details rest client
    */
   public EffectiveCategoryOfLawClaimValidator(
       CategoryOfLawValidationService categoryOfLawValidationService,
       ClaimEffectiveDateUtil claimEffectiveDateUtil,
-      ProviderDetailsRestClient providerDetailsRestClient) {
+      ProviderDetailsService providerDetailsService) {
     this.categoryOfLawValidationService = categoryOfLawValidationService;
     this.claimEffectiveDateUtil = claimEffectiveDateUtil;
-    this.providerDetailsRestClient = providerDetailsRestClient;
+    this.providerDetailsService = providerDetailsService;
   }
 
   @Override
@@ -109,7 +109,7 @@ public final class EffectiveCategoryOfLawClaimValidator implements ClaimValidato
 
   private List<String> getEffectiveCategoriesOfLaw(
       String officeCode, String areaOfLaw, LocalDate effectiveDate) {
-    return providerDetailsRestClient
+    return providerDetailsService
         .getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate)
         .blockOptional()
         .map(this::extractCategoriesFromSchedules)

@@ -15,3 +15,9 @@ spring:
 submission:
   validation:
     minimum-period: JAN-2018
+
+resilience4j.retry:
+  instances:
+    pdaRetry:
+      maxAttempts: 3
+      waitDuration: 500ms

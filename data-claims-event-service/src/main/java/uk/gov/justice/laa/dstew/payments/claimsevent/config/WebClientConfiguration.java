@@ -40,7 +40,7 @@ public class WebClientConfiguration {
    *     interacting with the Provider Details API.
    */
   @Bean
-  public ProviderDetailsRestClient providerDetailsService(
+  public ProviderDetailsRestClient providerDetailsClient(
       final ProviderDetailsApiProperties properties) {
     final WebClient webClient = createWebClient(properties);
     final WebClientAdapter webClientAdapter = WebClientAdapter.create(webClient);
