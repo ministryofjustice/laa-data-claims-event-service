@@ -30,6 +30,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.Disburseme
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.DuplicateClaimValidator;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.EffectiveCategoryOfLawClaimValidator;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.MandatoryFieldClaimValidator;
+import uk.gov.laa.springboot.metrics.aspect.annotations.SummaryMetric;
 
 /**
  * A service for validating submitted claims that are ready to process. Validation errors will
@@ -162,6 +163,9 @@ public class ClaimValidationService {
    * @param areaOfLaw the area of law for the parent submission: some validations change depending
    *     on the area of law.
    */
+  @SummaryMetric(
+      metricName = "claim_validation_time",
+      hintText = "Total time taken to validate claim (Including FSP validation time)")
   private void validateClaim(
       ClaimResponse claim,
       List<ClaimResponse> submissionClaims,
@@ -171,7 +175,6 @@ public class ClaimValidationService {
       SubmissionValidationContext context) {
 
     Assert.notNull(claim.getId(), "Claim ID must not be null");
-    eventServiceMetricService.startClaimValidationTimer(UUID.fromString(claim.getId()));
 
     FeeDetailsResponseWrapper feeDetailsResponseWrapper =
         feeDetailsResponseMap.get(claim.getFeeCode());
@@ -225,7 +228,9 @@ public class ClaimValidationService {
               }
             });
 
-    eventServiceMetricService.stopClaimValidationTimer(UUID.fromString(claim.getId()));
+    // fee calculation validation - done last after every other claim validation
+    feeCalculationService.validateFeeCalculation(
+        submissionId, claim, context, feeDetailsResponseWrapper.getFeeDetailsResponse(), areaOfLaw);
 
     // Check claim status and record metric
     recordClaimMetrics(claim, context);
@@ -257,7 +262,6 @@ public class ClaimValidationService {
   private void recordClaimMetrics(ClaimResponse claim, SubmissionValidationContext context) {
     Optional<ClaimValidationReport> claimReportOptional = context.getClaimReport(claim.getId());
     if (claimReportOptional.isEmpty()) {
-      eventServiceMetricService.incrementTotalClaimsValidatedAndValid();
       return;
     }
 

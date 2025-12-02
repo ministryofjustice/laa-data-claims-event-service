@@ -20,6 +20,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationRequest;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationResponse;
 import uk.gov.justice.laa.fee.scheme.model.ValidationMessagesInner;
+import uk.gov.laa.springboot.metrics.aspect.annotations.SummaryMetric;
 
 /**
  * Service responsible for validating the fee calculation response from the Fee Scheme Platform API.
@@ -39,6 +40,9 @@ public class FeeCalculationService {
    * @param claim the submitted claim
    * @param context the validation context to add errors to
    */
+  @SummaryMetric(
+      metricName = "fsp_validation_time",
+      hintText = "Total time taken to validate fee calculation using FSP API")
   public Optional<FeeCalculationResponse> calculateFee(
       ClaimResponse claim, SubmissionValidationContext context, AreaOfLaw areaOfLaw) {
     log.debug("Validating fee calculation for claim {}", claim.getId());

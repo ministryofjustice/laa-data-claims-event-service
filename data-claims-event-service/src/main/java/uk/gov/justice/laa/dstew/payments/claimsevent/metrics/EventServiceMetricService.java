@@ -35,12 +35,6 @@ public class EventServiceMetricService {
   private final Counter warningTypeCounter;
   private final Counter errorTypeCounter;
 
-  private final Summary fileParsingSummary;
-  private final HashMap<UUID, TimerLifecycle> fileParsingTimers;
-  private final Summary submissionValidationTimeSummary;
-  private final HashMap<UUID, TimerLifecycle> submissionValidationTimers;
-  private final Summary claimValidationTimeSummary;
-  private final HashMap<UUID, TimerLifecycle> claimValidationTimers;
   private final Summary fspValidationTimeSummary;
   private final HashMap<UUID, TimerLifecycle> fspValidationTimers;
 
@@ -106,36 +100,6 @@ public class EventServiceMetricService {
             .labelNames("error_source", "type", "message")
             .register(meterRegistry);
 
-    this.fileParsingSummary =
-        Summary.builder()
-            .name(METRIC_NAMESPACE + "file_parsing_time")
-            .help("Total time taken to parse bulk upload file")
-            .quantile(0.5, 0.05) // P50 with 5% error tolerance
-            .quantile(0.9, 0.02) // P90 with 2% error tolerance
-            .quantile(0.95, 0.01) // P95 with 1% error tolerance
-            .quantile(0.99, 0.001) // P99 with 0.1% error tolerance
-            .register(meterRegistry);
-    this.fileParsingTimers = new HashMap<>();
-    this.submissionValidationTimeSummary =
-        Summary.builder()
-            .name(METRIC_NAMESPACE + "submission_validation_time")
-            .help("Total time taken to validate claim (Include FSP validation time)")
-            .quantile(0.5, 0.05) // P50 with 5% error tolerance
-            .quantile(0.9, 0.02) // P90 with 2% error tolerance
-            .quantile(0.95, 0.01) // P95 with 1% error tolerance
-            .quantile(0.99, 0.001) // P99 with 0.1% error tolerance
-            .register(meterRegistry);
-    this.submissionValidationTimers = new HashMap<>();
-    this.claimValidationTimeSummary =
-        Summary.builder()
-            .name(METRIC_NAMESPACE + "claim_validation_time")
-            .help("Total time taken to validate claim (Including FSP validation time)")
-            .quantile(0.5, 0.05) // P50 with 5% error tolerance
-            .quantile(0.9, 0.02) // P90 with 2% error tolerance
-            .quantile(0.95, 0.01) // P95 with 1% error tolerance
-            .quantile(0.99, 0.001) // P99 with 0.1% error tolerance
-            .register(meterRegistry);
-    this.claimValidationTimers = new HashMap<>();
     this.fspValidationTimeSummary =
         Summary.builder()
             .name(METRIC_NAMESPACE + "fsp_validation_time")
@@ -241,106 +205,6 @@ public class EventServiceMetricService {
   }
 
   /**
-   * Starts a timer for a file parsing. If a timer was already started for this file, the old timer
-   * is removed.
-   *
-   * @param parsingReference the reference used for file parsing
-   */
-  public void startFileParsingTimer(UUID parsingReference) {
-    if (fileParsingTimers.containsKey(parsingReference)) {
-      log.warn(
-          "Timer already started for bulk submission {}, old timer will be removed",
-          parsingReference);
-    }
-    fileParsingTimers.put(
-        parsingReference,
-        new TimerLifecycle(this.fileParsingSummary.startTimer(), System.currentTimeMillis()));
-  }
-
-  /**
-   * Stops a timer for a file parsing and records the timer value.
-   *
-   * @param parsingReference the reference used for file parsing
-   */
-  public void stopFileParsingTimer(UUID parsingReference) {
-    TimerLifecycle timer = fileParsingTimers.remove(parsingReference);
-    if (!Objects.isNull(timer) && !Objects.isNull(timer.timer())) {
-      try (var timerResource = timer.timer()) {
-        double v = timerResource.observeDuration();
-        if (v > 2) {
-          log.warn("File parsing took {} seconds for submission {}", v, parsingReference);
-        }
-      }
-    }
-  }
-
-  /**
-   * Starts a timer for a submission validation. If a timer was already started for this submission,
-   * the old timer is removed.
-   *
-   * @param submissionId the ID of the submission to start the timer for
-   */
-  public void startSubmissionValidationTimer(UUID submissionId) {
-    if (submissionValidationTimers.containsKey(submissionId)) {
-      log.warn("Timer already started for submission {}, old timer will be removed", submissionId);
-    }
-    submissionValidationTimers.put(
-        submissionId,
-        new TimerLifecycle(
-            this.submissionValidationTimeSummary.startTimer(), System.currentTimeMillis()));
-  }
-
-  /**
-   * Stops a timer for a submission validation and records the timer value.
-   *
-   * @param claimId the ID of the claim the timer was started for.
-   */
-  public void stopSubmissionValidationTimer(UUID claimId) {
-    TimerLifecycle timer = submissionValidationTimers.remove(claimId);
-    if (!Objects.isNull(timer) && !Objects.isNull(timer.timer())) {
-      try (var timerResource = timer.timer()) {
-        double v = timerResource.observeDuration();
-        if (v > 2) {
-          log.info("Submission validation took {} seconds for claim {}", v, claimId);
-        }
-      }
-    }
-  }
-
-  /**
-   * Starts a timer for a claim validation. If a timer was already started for this claim, the old
-   * timer is removed.
-   *
-   * @param claimId the ID of the claim to start the timer for
-   */
-  public void startClaimValidationTimer(UUID claimId) {
-    if (claimValidationTimers.containsKey(claimId)) {
-      log.warn("Timer already started for claim {}, old timer will be removed", claimId);
-    }
-    claimValidationTimers.put(
-        claimId,
-        new TimerLifecycle(
-            this.claimValidationTimeSummary.startTimer(), System.currentTimeMillis()));
-  }
-
-  /**
-   * Stops a timer for a claim validation and records the timer value.
-   *
-   * @param claimId the ID of the claim the timer was started for.
-   */
-  public void stopClaimValidationTimer(UUID claimId) {
-    TimerLifecycle timer = claimValidationTimers.remove(claimId);
-    if (!Objects.isNull(timer) && !Objects.isNull(timer.timer())) {
-      try (var timerResource = timer.timer()) {
-        double v = timerResource.observeDuration();
-        if (v > 2) {
-          log.warn("Claim validation took {} seconds for claim {}", v, claimId);
-        }
-      }
-    }
-  }
-
-  /**
    * Starts a timer for a FSP validation. If a timer was already started for this claim, the old
    * timer is removed.
    *
@@ -379,9 +243,6 @@ public class EventServiceMetricService {
    */
   public void removeAllTimersOlderThanTotalMinutes(int minutes) {
     long currentTime = System.currentTimeMillis();
-    stopAllTimersForSet(fileParsingTimers, currentTime, minutes);
-    stopAllTimersForSet(submissionValidationTimers, currentTime, minutes);
-    stopAllTimersForSet(claimValidationTimers, currentTime, minutes);
     stopAllTimersForSet(fspValidationTimers, currentTime, minutes);
   }
 

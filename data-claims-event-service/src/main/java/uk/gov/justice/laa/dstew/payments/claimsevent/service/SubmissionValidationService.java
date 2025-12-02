@@ -20,6 +20,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricS
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.submission.SubmissionValidator;
+import uk.gov.laa.springboot.metrics.aspect.annotations.SummaryMetric;
 
 /**
  * A service responsible for validating claim submissions. Any errors found during validation will
@@ -42,9 +43,11 @@ public class SubmissionValidationService {
    *
    * @param submissionId the ID of the submission to validate
    */
+  @SummaryMetric(
+      metricName = "submission_validation_time",
+      hintText = "Total time taken to validate claim (Include FSP validation time)")
   public SubmissionValidationContext validateSubmission(UUID submissionId) {
     log.debug("Validating submission {}", submissionId);
-    eventServiceMetricService.startSubmissionValidationTimer(submissionId);
 
     SubmissionResponse submission = dataClaimsRestClient.getSubmission(submissionId).getBody();
     Assert.notNull(submission, "Submission not retrievable: " + submissionId.toString());
@@ -100,8 +103,6 @@ public class SubmissionValidationService {
     context
         .getSubmissionValidationErrors()
         .forEach(x -> eventServiceMetricService.recordValidationMessage(x, false));
-    // Stop submission validation timer
-    eventServiceMetricService.stopSubmissionValidationTimer(submissionId);
 
     dataClaimsRestClient.updateSubmission(submissionId.toString(), submissionPatch);
     dataClaimsRestClient.updateBulkSubmission(
