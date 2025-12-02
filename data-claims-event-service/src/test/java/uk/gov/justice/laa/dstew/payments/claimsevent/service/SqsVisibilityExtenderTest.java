@@ -1,6 +1,7 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -52,16 +53,24 @@ public class SqsVisibilityExtenderTest {
   public void testStart() throws InterruptedException {
 
     sqsVisibilityExtender.start(RECEIPT_HANDLE);
-    Thread.sleep(Duration.ofSeconds(2).toMillis());
+    await()
+        .atMost(Duration.ofSeconds(5))
+        .untilAsserted(
+            () -> {
+              verify(mockSqsClient, timeout(1000).atLeastOnce())
+                  .changeMessageVisibility(changeMessageVisibilityRequestArgumentCaptor.capture());
 
-    verify(mockSqsClient, timeout(1000).atLeastOnce())
-        .changeMessageVisibility(changeMessageVisibilityRequestArgumentCaptor.capture());
-    assertThat(changeMessageVisibilityRequestArgumentCaptor.getValue().receiptHandle())
-        .isEqualTo(RECEIPT_HANDLE);
-    assertThat(changeMessageVisibilityRequestArgumentCaptor.getValue().queueUrl())
-        .isEqualTo(QUEUE_URL);
-    assertThat(changeMessageVisibilityRequestArgumentCaptor.getValue().visibilityTimeout())
-        .isEqualTo(VISIBILITY_TIMEOUT_SECONDS);
+              verify(mockSqsClient, timeout(1000).atLeastOnce())
+                  .changeMessageVisibility(changeMessageVisibilityRequestArgumentCaptor.capture());
+              assertThat(changeMessageVisibilityRequestArgumentCaptor.getValue().receiptHandle())
+                  .isEqualTo(RECEIPT_HANDLE);
+              assertThat(changeMessageVisibilityRequestArgumentCaptor.getValue().queueUrl())
+                  .isEqualTo(QUEUE_URL);
+              assertThat(
+                      changeMessageVisibilityRequestArgumentCaptor.getValue().visibilityTimeout())
+                  .isEqualTo(VISIBILITY_TIMEOUT_SECONDS);
+            });
+
     sqsVisibilityExtender.close();
   }
 }
