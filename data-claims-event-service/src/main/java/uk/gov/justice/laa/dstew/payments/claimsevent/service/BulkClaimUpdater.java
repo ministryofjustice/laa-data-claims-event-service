@@ -1,20 +1,27 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
-import java.util.Collections;
+import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationSource.EVENT_SERVICE;
+
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPatch;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionClaim;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
+import uk.gov.justice.laa.dstew.payments.claimsevent.mapper.FeeCalculationPatchMapper;
+import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
+import uk.gov.justice.laa.fee.scheme.model.FeeCalculationResponse;
 
 /**
  * A service responsible for updating claim statuses in the Data Claims API.
@@ -27,10 +34,13 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 public class BulkClaimUpdater {
 
   private final DataClaimsRestClient dataClaimsRestClient;
+  private final FeeCalculationService feeCalculationService;
+  private final EventServiceMetricService eventServiceMetricService;
+  private final FeeCalculationPatchMapper feeCalculationPatchMapper;
 
   /**
-   * Update all claims in a submission via the Data Claims API, depending on the result of their
-   * validation.
+   * Calculates the fee for the claim using the Fee Scheme Platform API, and handles any returned
+   * errors.
    *
    * <ul>
    *   <li>If validation errors have been recorded, update the claim status to INVALID and send
@@ -39,67 +49,103 @@ public class BulkClaimUpdater {
    *   <li>If the context has a claim errors, then mark the claim as INVALID.
    * </ul>
    *
-   * @param submission the claim submission
+   * @param submissionId the submission ID
+   * @param claimResponses the list of claim responses
+   * @param areaOfLaw the area of law
    * @param context the submission validation context
+   * @param feeDetailsResponseMap the fee details response map
    */
-  public void updateClaims(SubmissionResponse submission, SubmissionValidationContext context) {
-    log.debug("Updating claims for submission {}", submission.getSubmissionId().toString());
+  public void updateClaims(
+      UUID submissionId,
+      List<ClaimResponse> claimResponses,
+      AreaOfLaw areaOfLaw,
+      SubmissionValidationContext context,
+      Map<String, FeeDetailsResponseWrapper> feeDetailsResponseMap) {
+    log.debug("Updating claims for submission {}", submissionId);
     AtomicInteger claimsUpdated = new AtomicInteger();
     AtomicInteger claimsFlaggedForRetry = new AtomicInteger();
 
-    List<SubmissionClaim> claims =
-        Optional.ofNullable(submission.getClaims()).orElse(Collections.emptyList());
+    claimResponses.forEach(
+        claim -> {
+          if (context.isFlaggedForRetry(claim.getId()) && !context.hasErrors(claim.getId())) {
+            log.debug("Claim {} is flagged for retry. Skipping update.", claim.getId());
+            claimsFlaggedForRetry.incrementAndGet();
+            return;
+          }
 
-    claims.stream()
-        .filter(claim -> ClaimStatus.READY_TO_PROCESS.equals(claim.getStatus()))
-        .forEach(
-            claim -> {
-              // Get claim ID
-              String claimId = claim.getClaimId().toString();
+          Optional<FeeCalculationResponse> feeCalculationResponse =
+              getFeeCalculationResponse(areaOfLaw, context, claim);
 
-              // Skip claims flagged for retry
-              if (context.isFlaggedForRetry(claimId) && !context.hasErrors(claimId)) {
-                log.debug("Claim {} is flagged for retry. Skipping update.", claim.getClaimId());
-                claimsFlaggedForRetry.incrementAndGet();
-                return;
-              }
+          FeeCalculationPatch feeCalculationPatch =
+              buildFeeCalculationPatch(
+                  feeCalculationResponse, feeDetailsResponseMap.get(claim.getFeeCode()));
 
-              // If a claim was found to be invalid, make the rest of the claims invalid
-              ClaimStatus claimStatus = getClaimStatus(claimId, context);
-              List<ValidationMessagePatch> claimMessages = getClaimMessages(claimId, context);
+          // If a claim was found to be invalid, make the rest of the claims invalid
+          ClaimStatus claimStatus = getClaimStatus(claim.getId(), context);
+          ClaimPatch claimPatch = buildClaimPatch(claim, feeCalculationPatch, context, claimStatus);
 
-              ClaimPatch claimPatch =
-                  ClaimPatch.builder()
-                      .id(claimId)
-                      .status(claimStatus)
-                      .validationMessages(claimMessages)
-                      .build();
-              dataClaimsRestClient.updateClaim(
-                  submission.getSubmissionId(), claim.getClaimId(), claimPatch);
-              log.debug("Claim {} status updated to {}", claimId, claimStatus);
-              claimsUpdated.getAndIncrement();
-            });
+          dataClaimsRestClient.updateClaim(
+              submissionId, UUID.fromString(claim.getId()), claimPatch);
+
+          log.debug("Claim {} status updated to {}", claim.getId(), claimStatus);
+          claimsUpdated.getAndIncrement();
+        });
     log.debug(
         "Claim updates completed for submission {}. Claims updated: {}. "
             + "Claim updates skipped: {}",
-        submission.getSubmissionId(),
+        submissionId,
         claimsUpdated.get(),
         claimsFlaggedForRetry.get());
   }
 
   private List<ValidationMessagePatch> getClaimMessages(
-      String claimId, SubmissionValidationContext context) {
+      final String claimId, final SubmissionValidationContext context) {
     return context.getClaimReport(claimId).stream()
         .map(ClaimValidationReport::getMessages)
         .flatMap(List::stream)
         .toList();
   }
 
-  private ClaimStatus getClaimStatus(String claimId, SubmissionValidationContext context) {
-    if (context.hasSubmissionLevelErrors() || context.hasErrors(claimId)) {
-      return ClaimStatus.INVALID;
-    } else {
-      return ClaimStatus.VALID;
-    }
+  private ClaimStatus getClaimStatus(
+      final String claimId, final SubmissionValidationContext context) {
+    return (context.hasSubmissionLevelErrors() || context.hasErrors(claimId))
+        ? ClaimStatus.INVALID
+        : ClaimStatus.VALID;
+  }
+
+  private Optional<FeeCalculationResponse> getFeeCalculationResponse(
+      final AreaOfLaw areaOfLaw,
+      final SubmissionValidationContext context,
+      final ClaimResponse claim) {
+    eventServiceMetricService.startFspValidationTimer(UUID.fromString(claim.getId()));
+
+    Optional<FeeCalculationResponse> feeCalculationResponse =
+        feeCalculationService.calculateFee(claim, context, areaOfLaw);
+
+    eventServiceMetricService.stopFspValidationTimer(UUID.fromString(claim.getId()));
+    return feeCalculationResponse;
+  }
+
+  private ClaimPatch buildClaimPatch(
+      final ClaimResponse claim,
+      final FeeCalculationPatch feeCalculationPatch,
+      final SubmissionValidationContext context,
+      final ClaimStatus claimStatus) {
+
+    List<ValidationMessagePatch> claimMessages = getClaimMessages(claim.getId(), context);
+    return ClaimPatch.builder()
+        .id(claim.getId())
+        .status(claimStatus)
+        .feeCalculationResponse(feeCalculationPatch)
+        .validationMessages(claimMessages)
+        .createdByUserId(EVENT_SERVICE)
+        .build();
+  }
+
+  private FeeCalculationPatch buildFeeCalculationPatch(
+      final Optional<FeeCalculationResponse> feeCalculationResponse,
+      final FeeDetailsResponseWrapper feeDetailsResponseWrapper) {
+    return feeCalculationPatchMapper.mapToFeeCalculationPatch(
+        feeCalculationResponse.orElse(null), feeDetailsResponseWrapper.getFeeDetailsResponse());
   }
 }

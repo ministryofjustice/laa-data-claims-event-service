@@ -268,7 +268,7 @@ public class EventServiceMetricService {
       try (var timerResource = timer.timer()) {
         double v = timerResource.observeDuration();
         if (v > 2) {
-          log.warn("File parsing took {} seconds for claim {}", v, parsingReference);
+          log.warn("File parsing took {} seconds for submission {}", v, parsingReference);
         }
       }
     }

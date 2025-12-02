@@ -60,7 +60,7 @@ public class SubmissionValidationService {
 
     // Only validate claims if no submission level validation errors have been recorded.
     if (!context.hasSubmissionLevelErrors()) {
-      claimValidationService.validateClaims(submission, context);
+      claimValidationService.validateAndUpdateClaims(submission, context);
     } else {
       eventServiceMetricService.incrementTotalSubmissionsValidatedWithSubmissionErrors();
     }
@@ -99,7 +99,6 @@ public class SubmissionValidationService {
     // Stop submission validation timer
     eventServiceMetricService.stopSubmissionValidationTimer(submissionId);
 
-    bulkClaimUpdater.updateClaims(submission, context);
     dataClaimsRestClient.updateSubmission(submissionId.toString(), submissionPatch);
     dataClaimsRestClient.updateBulkSubmission(
         String.valueOf(bulkSubmissionId), bulkSubmissionPatch);
