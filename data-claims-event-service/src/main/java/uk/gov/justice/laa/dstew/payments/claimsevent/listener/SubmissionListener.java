@@ -12,13 +12,13 @@ import org.springframework.stereotype.Component;
 import software.amazon.awssdk.services.sqs.model.Message;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.SubmissionEventProcessingException;
-import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.model.BulkSubmissionMessage;
 import uk.gov.justice.laa.dstew.payments.claimsevent.model.SubmissionEventType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.model.SubmissionValidationMessage;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.BulkParsingService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.SqsVisibilityExtender;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.SubmissionValidationService;
+import uk.gov.laa.springboot.metrics.aspect.annotations.SummaryMetric;
 
 /**
  * Listener for bulk submissions from the Data Claims service.
@@ -37,7 +37,6 @@ public class SubmissionListener {
   private final BulkParsingService bulkParsingService;
   private final SubmissionValidationService submissionValidationService;
   private final ObjectMapper objectMapper;
-  private final EventServiceMetricService eventServiceMetricService;
   private final ObjectProvider<SqsVisibilityExtender> sqsVisibilityExtenderProvider;
 
   /**
@@ -50,12 +49,10 @@ public class SubmissionListener {
   public SubmissionListener(
       BulkParsingService bulkParsingService,
       SubmissionValidationService submissionValidationService,
-      EventServiceMetricService eventServiceMetricService,
       @Qualifier("submissionEventMapper") ObjectMapper objectMapper,
       ObjectProvider<SqsVisibilityExtender> sqsVisibilityExtenderProvider) {
     this.bulkParsingService = bulkParsingService;
     this.submissionValidationService = submissionValidationService;
-    this.eventServiceMetricService = eventServiceMetricService;
     this.objectMapper = objectMapper;
     this.sqsVisibilityExtenderProvider = sqsVisibilityExtenderProvider;
   }
@@ -70,22 +67,22 @@ public class SubmissionListener {
   public void receiveSubmissionEvent(Message message) {
 
     UUID timerRef = UUID.randomUUID();
-    eventServiceMetricService.startFileParsingTimer(timerRef);
+    SubmissionEventType submissionEventType = getSubmissionEventType(message);
 
     String receiptHandle = message.receiptHandle();
 
     try (SqsVisibilityExtender extender = sqsVisibilityExtenderProvider.getObject()) {
       extender.start(receiptHandle);
-      SubmissionEventType submissionEventType = getSubmissionEventType(message);
-
-      processMessageByType(message, submissionEventType);
-
+      switch (submissionEventType) {
+        case SubmissionEventType.PARSE_BULK_SUBMISSION -> handleBulkSubmissionMessage(message);
+        case SubmissionEventType.VALIDATE_SUBMISSION -> handleSubmissionValidationMessage(message);
+        default ->
+            throw new SubmissionEventProcessingException(
+                "Unsupported submission event type: " + submissionEventType);
+      }
     } catch (SubmissionEventProcessingException | IllegalArgumentException ex) {
       log.error("Failed to process submission event. messageId={}", message.messageId(), ex);
       throw ex;
-
-    } finally {
-      eventServiceMetricService.stopFileParsingTimer(timerRef);
     }
   }
 
@@ -122,6 +119,9 @@ public class SubmissionListener {
     }
   }
 
+  @SummaryMetric(
+      metricName = "file_parsing_time",
+      hintText = "Total time taken to parse bulk upload file")
   private void handleBulkSubmissionMessage(Message message) {
     try {
       BulkSubmissionMessage bulkSubmissionMessage =
