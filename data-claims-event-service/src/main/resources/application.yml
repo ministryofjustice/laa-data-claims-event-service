@@ -9,7 +9,6 @@ spring:
   cloud:
     aws:
       sqs:
-        queue-not-found-strategy: fail
       region:
         static: ${AWS_REGION}
 
@@ -53,6 +52,9 @@ laa:
     accessToken: ${FEE_SCHEME_PLATFORM_API_ACCESS_TOKEN}
   bulk-claim-queue:
     name: ${BULK_CLAIM_QUEUE_NAME}
+    visibility-timeout-seconds: 600
+    visibility-extension-interval-seconds: 10
+
 
 submission:
   validation:

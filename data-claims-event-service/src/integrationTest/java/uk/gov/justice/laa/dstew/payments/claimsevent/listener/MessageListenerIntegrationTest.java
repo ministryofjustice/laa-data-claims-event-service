@@ -74,7 +74,7 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
             Parameter.param("area_of_law", AREA_OF_LAW.name()),
             Parameter.param("submission_period", "APR-2025")),
         "data-claims/get-submission/get-submissions-by-filter_no_content.json");
-
+    stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
     // when
     sendSubmissionValidationMessage();
 
@@ -260,7 +260,7 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
             Parameter.param("area_of_law", AREA_OF_LAW.name()),
             Parameter.param("submission_period", "APR-2025")),
         "data-claims/get-submission/get-submissions-by-filter.json");
-
+    stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
     // when
     sendSubmissionValidationMessage();
 
