@@ -4,7 +4,10 @@ import java.net.URI;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sqs.SqsClient;
@@ -36,13 +39,19 @@ public class SqsConfig {
       @Value("${spring.cloud.aws.region.static}") String region,
       @Value("${spring.cloud.aws.credentials.access-key}") String accessKey,
       @Value("${spring.cloud.aws.credentials.secret-key}") String secretKey,
-      @Value("${spring.cloud.aws.endpoint}") String endpoint) {
+      @Value("${spring.cloud.aws.endpoint}") String endpoint,
+      Environment environment) {
 
-    return SqsClient.builder()
-        .region(Region.of(region))
-        .credentialsProvider(
-            StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKey, secretKey)))
-        .endpointOverride(URI.create(endpoint))
-        .build();
+    return environment.acceptsProfiles(Profiles.of("test"))
+        ? SqsClient.builder()
+            .region(Region.of(region))
+            .credentialsProvider(
+                StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKey, secretKey)))
+            .endpointOverride(URI.create(endpoint))
+            .build()
+        : SqsClient.builder()
+            .region(Region.of(region))
+            .credentialsProvider(DefaultCredentialsProvider.builder().build())
+            .build();
   }
 }
