@@ -10,6 +10,7 @@ import static uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw.LEGAL
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -34,8 +35,6 @@ class FeeCalculationServiceTest {
 
   @Mock private FeeSchemeMapper feeSchemeMapper;
 
-  @Mock private FeeCalculationUpdaterService feeCalculationUpdaterService;
-
   @InjectMocks private FeeCalculationService feeCalculationService;
 
   @Nested
@@ -59,11 +58,11 @@ class FeeCalculationServiceTest {
       SubmissionValidationContext context = new SubmissionValidationContext();
       context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
 
-      feeCalculationService.validateFeeCalculation(
-          new UUID(1, 1), claim, context, null, LEGAL_HELP);
+      var actualResponse = feeCalculationService.calculateFee(claim, context, LEGAL_HELP);
 
       verify(feeSchemePlatformRestClient, times(1)).calculateFee(feeCalculationRequest);
       assertThat(context.hasErrors()).isFalse();
+      assertThat(actualResponse.get()).isEqualTo(feeCalculationResponse);
     }
 
     @Test
@@ -92,11 +91,11 @@ class FeeCalculationServiceTest {
       context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
 
       UUID submissionId = new UUID(1, 1);
-      feeCalculationService.validateFeeCalculation(submissionId, claim, context, null, LEGAL_HELP);
+      feeCalculationService.calculateFee(claim, context, LEGAL_HELP);
 
       verify(feeSchemePlatformRestClient, times(1)).calculateFee(feeCalculationRequest);
-      verify(feeCalculationUpdaterService, times(1))
-          .updateClaimWithFeeCalculationDetails(submissionId, claim, feeCalculationResponse, null);
+      /*   verify(feeCalculationUpdaterService, times(1))
+      .updateClaimWithFeeCalculationDetails(submissionId, claim, feeCalculationResponse, null);*/
 
       assertThat(context.hasErrors(claim.getId())).isTrue();
     }
@@ -117,12 +116,13 @@ class FeeCalculationServiceTest {
       SubmissionValidationContext context = new SubmissionValidationContext();
       context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
 
-      feeCalculationService.validateFeeCalculation(
-          new UUID(1, 1), claim, context, null, LEGAL_HELP);
+      var actualResponse = feeCalculationService.calculateFee(claim, context, LEGAL_HELP);
 
       verify(feeSchemePlatformRestClient, times(1)).calculateFee(feeCalculationRequest);
 
       assertThat(context.isFlaggedForRetry(claim.getId())).isTrue();
+
+      Assertions.assertTrue(actualResponse.isEmpty());
     }
 
     @Test
@@ -141,8 +141,7 @@ class FeeCalculationServiceTest {
       SubmissionValidationContext context = new SubmissionValidationContext();
       context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
 
-      feeCalculationService.validateFeeCalculation(
-          new UUID(1, 1), claim, context, null, LEGAL_HELP);
+      feeCalculationService.calculateFee(claim, context, LEGAL_HELP);
 
       verify(feeSchemePlatformRestClient, times(1)).calculateFee(feeCalculationRequest);
 
@@ -162,8 +161,7 @@ class FeeCalculationServiceTest {
       context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
       context.flagForRetry(claim.getId());
 
-      feeCalculationService.validateFeeCalculation(
-          new UUID(1, 1), claim, context, null, LEGAL_HELP);
+      feeCalculationService.calculateFee(claim, context, LEGAL_HELP);
 
       verifyNoInteractions(feeSchemeMapper);
       verifyNoInteractions(feeSchemePlatformRestClient);
