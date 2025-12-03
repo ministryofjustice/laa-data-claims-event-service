@@ -2,9 +2,17 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,10 +22,13 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.*;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPatch;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationPatch;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.mapper.FeeCalculationPatchMapper;
-import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationSource;
@@ -30,7 +41,6 @@ import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponse;
 class BulkClaimUpdaterTest {
 
   @Mock DataClaimsRestClient dataClaimsRestClient;
-  @Mock EventServiceMetricService mockEventServiceMetricService;
   @Mock FeeCalculationPatchMapper mockFeeCalculationPatchMapper;
   @Mock FeeCalculationService mockFeeCalculationService;
 
@@ -63,8 +73,6 @@ class BulkClaimUpdaterTest {
     // Then
     verify(dataClaimsRestClient, never()).updateClaim(any(), any(), any());
     verify(mockFeeCalculationService, never()).calculateFee(any(), any(), any());
-    verify(mockEventServiceMetricService, never()).startFspValidationTimer(any());
-    verify(mockEventServiceMetricService, never()).stopFspValidationTimer(any());
     verify(mockFeeCalculationPatchMapper, never()).mapToFeeCalculationPatch(any(), any());
   }
 
@@ -97,8 +105,6 @@ class BulkClaimUpdaterTest {
         context,
         feeDetailsResponseWrapperHashMap);
     // Then
-    verify(mockEventServiceMetricService).startFspValidationTimer(claimIdCaptor.capture());
-    verify(mockEventServiceMetricService).stopFspValidationTimer(claimIdCaptor.capture());
     verify(mockFeeCalculationService)
         .calculateFee(eq(claimResponse), eq(context), eq(AreaOfLaw.LEGAL_HELP));
     verify(dataClaimsRestClient, times(1))
@@ -133,8 +139,6 @@ class BulkClaimUpdaterTest {
         context,
         feeDetailsResponseWrapperHashMap);
     // Then
-    verify(mockEventServiceMetricService).startFspValidationTimer(claimIdCaptor.capture());
-    verify(mockEventServiceMetricService).stopFspValidationTimer(claimIdCaptor.capture());
     verify(mockFeeCalculationService)
         .calculateFee(eq(claimResponse), eq(context), eq(AreaOfLaw.LEGAL_HELP));
     verify(dataClaimsRestClient, times(1))
@@ -182,8 +186,6 @@ class BulkClaimUpdaterTest {
     verify(dataClaimsRestClient, times(2)).updateClaim(any(), any(), any());
     verify(mockFeeCalculationService, times(2)).calculateFee(any(), any(), any());
     verify(mockFeeCalculationPatchMapper, times(2)).mapToFeeCalculationPatch(any(), any());
-    verify(mockEventServiceMetricService, times(2)).startFspValidationTimer(any());
-    verify(mockEventServiceMetricService, times(2)).stopFspValidationTimer(any());
   }
 
   @Test
@@ -305,8 +307,6 @@ class BulkClaimUpdaterTest {
     // Should skip INVALID claim so only claim two exists
     verify(dataClaimsRestClient, never()).updateClaim(any(), any(), any());
     verify(mockFeeCalculationService, never()).calculateFee(any(), any(), any());
-    verify(mockEventServiceMetricService, never()).startFspValidationTimer(any());
-    verify(mockEventServiceMetricService, never()).stopFspValidationTimer(any());
     verify(mockFeeCalculationPatchMapper, never()).mapToFeeCalculationPatch(any(), any());
   }
 

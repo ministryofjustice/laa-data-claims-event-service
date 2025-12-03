@@ -76,6 +76,8 @@ public class SubmissionValidationService {
     } else {
       updatePatchToValidationSucceeded(submissionId, submissionPatch, bulkSubmissionPatch);
     }
+
+    return context;
   }
 
   @CounterMetric(
