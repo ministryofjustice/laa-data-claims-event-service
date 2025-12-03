@@ -4,6 +4,8 @@ import io.github.resilience4j.reactor.retry.RetryOperator;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import java.time.LocalDate;
+
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -16,16 +18,12 @@ import uk.gov.justice.laa.provider.model.ProviderFirmOfficeContractAndScheduleDt
  * @author Jose Carlos Arinero Adam
  */
 @Slf4j
+@RequiredArgsConstructor
 @Service
 public class ProviderDetailsService {
 
-  private final ProviderDetailsRestClient client;
+  private final ProviderDetailsRestClient providerDetailsRestClient;
   private final RetryRegistry retryRegistry;
-
-  public ProviderDetailsService(ProviderDetailsRestClient client, RetryRegistry retryRegistry) {
-    this.client = client;
-    this.retryRegistry = retryRegistry;
-  }
 
   /**
    * Retrieves the provider firm office contract and schedule information for a given office, area
@@ -45,7 +43,7 @@ public class ProviderDetailsService {
   public Mono<ProviderFirmOfficeContractAndScheduleDto> getProviderFirmSchedules(
       String officeCode, String areaOfLaw, LocalDate effectiveDate) {
     Retry retry = retryRegistry.retry("pdaRetry");
-    return client
+    return providerDetailsRestClient
         .getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate)
         .transformDeferred(RetryOperator.of(retry))
         .onErrorResume(
