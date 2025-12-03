@@ -34,17 +34,16 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.exception.ClaimCreateExcept
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.MatterStartCreateException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.SubmissionCreateException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.mapper.BulkSubmissionMapper;
-import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
+import uk.gov.laa.springboot.metrics.aspect.annotations.CounterMetric;
 
 /** Service responsible for retrieving bulk submissions and sending them to the Claims Data API. */
+@Slf4j
 @Service
 @AllArgsConstructor
-@Slf4j
 public class BulkParsingService {
 
   private final DataClaimsRestClient dataClaimsRestClient;
   private final BulkSubmissionMapper bulkSubmissionMapper;
-  private final EventServiceMetricService eventServiceMetricService;
 
   private static final int MAX_CONCURRENCY =
       Math.max(2, Runtime.getRuntime().availableProcessors());
@@ -117,6 +116,9 @@ public class BulkParsingService {
    * POST the submission to the Claims Data API. This variant keeps your original signature and just
    * logs the created ID.
    */
+  @CounterMetric(
+      metricName = "submissions_added",
+      hintText = "Total number of submissions created from message queue")
   protected String createSubmission(SubmissionPost submission) {
     log.info(
         "Creating submission for bulk [{}], period [{}], OAN [{}]",
@@ -137,8 +139,6 @@ public class BulkParsingService {
           "Failed to create submission. HTTP status: "
               + (response == null ? "null response" : response.getStatusCode()));
     }
-
-    eventServiceMetricService.incrementTotalSubmissionsCreated();
 
     String createdId = extractIdFromLocation(response);
     if (!StringUtils.hasText(createdId)) {
@@ -256,6 +256,9 @@ public class BulkParsingService {
    * @param claim populated ClaimPost (status MUST be set by the mapper in step 4)
    * @return created claim UUID (from Location header)
    */
+  @CounterMetric(
+      metricName = "claims_added",
+      hintText = "Total number of claims created from message queue")
   protected String createClaim(String submissionId, ClaimPost claim) {
     if (!StringUtils.hasText(submissionId)) {
       throw new ClaimCreateException("submissionId is required to create a claim");
@@ -279,8 +282,6 @@ public class BulkParsingService {
               + ". HTTP status: "
               + (response == null ? "null response" : response.getStatusCode()));
     }
-
-    eventServiceMetricService.incrementTotalClaimsCreated();
 
     String createdId = extractIdFromLocation(response);
     if (!StringUtils.hasText(createdId)) {
