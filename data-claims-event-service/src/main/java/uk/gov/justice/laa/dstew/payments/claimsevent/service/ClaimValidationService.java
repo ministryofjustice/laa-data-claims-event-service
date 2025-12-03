@@ -4,7 +4,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -163,10 +162,6 @@ public class ClaimValidationService {
                 default -> throw new EventServiceIllegalArgumentException("Unknown validator used");
               }
             });
-
-    // fee calculation validation - done last after every other claim validation
-    feeCalculationService.validateFeeCalculation(
-        submissionId, claim, context, feeDetailsResponseWrapper.getFeeDetailsResponse(), areaOfLaw);
 
     // Check claim status and record metric
     recordClaimMetrics(claim, context);
