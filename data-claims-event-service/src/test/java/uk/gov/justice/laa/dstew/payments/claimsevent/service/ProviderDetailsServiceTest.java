@@ -3,7 +3,11 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
+import io.github.resilience4j.retry.RetryRegistry;
 import java.time.LocalDate;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -20,7 +24,20 @@ class ProviderDetailsServiceTest {
 
   @Mock private ProviderDetailsRestClient client;
 
+  @Mock private RetryRegistry retryRegistry;
+
   @InjectMocks private ProviderDetailsService service;
+
+  @BeforeEach
+  void setup() {
+    Retry noOpRetry =
+        Retry.of(
+            "pdaRetry",
+            RetryConfig.custom()
+                .maxAttempts(1) // ✅ Only one attempt
+                .build());
+    when(retryRegistry.retry("pdaRetry")).thenReturn(noOpRetry);
+  }
 
   @Test
   void testGetProviderFirmSchedules() {

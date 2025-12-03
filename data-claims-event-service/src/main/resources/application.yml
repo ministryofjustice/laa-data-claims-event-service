@@ -64,3 +64,5 @@ resilience4j.retry:
     pdaRetry:
       maxAttempts: 3
       waitDuration: 500ms
+      retry-exceptions:
+        - java.lang.RuntimeException

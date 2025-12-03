@@ -1,7 +1,10 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
-import io.github.resilience4j.retry.annotation.Retry;
+import io.github.resilience4j.reactor.retry.RetryOperator;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryRegistry;
 import java.time.LocalDate;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
@@ -12,13 +15,16 @@ import uk.gov.justice.laa.provider.model.ProviderFirmOfficeContractAndScheduleDt
  *
  * @author Jose Carlos Arinero Adam
  */
+@Slf4j
 @Service
 public class ProviderDetailsService {
 
   private final ProviderDetailsRestClient client;
+  private final RetryRegistry retryRegistry;
 
-  public ProviderDetailsService(ProviderDetailsRestClient client) {
+  public ProviderDetailsService(ProviderDetailsRestClient client, RetryRegistry retryRegistry) {
     this.client = client;
+    this.retryRegistry = retryRegistry;
   }
 
   /**
@@ -36,9 +42,16 @@ public class ProviderDetailsService {
    *     contract and schedule details for the specified parameters
    * @throws IllegalArgumentException if any of the parameters are invalid
    */
-  @Retry(name = "pdaRetry")
   public Mono<ProviderFirmOfficeContractAndScheduleDto> getProviderFirmSchedules(
       String officeCode, String areaOfLaw, LocalDate effectiveDate) {
-    return client.getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate);
+    Retry retry = retryRegistry.retry("pdaRetry");
+    return client
+        .getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate)
+        .transformDeferred(RetryOperator.of(retry))
+        .onErrorResume(
+            e -> {
+              log.info("Failed after retries: {}", e.getMessage());
+              return Mono.error(e);
+            });
   }
 }
