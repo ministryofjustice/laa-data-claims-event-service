@@ -1,7 +1,7 @@
 plugins {
     id 'io.freefair.lombok' version '8.14'
     id("com.diffplug.spotless") version "7.2.1"
-    id 'uk.gov.laa.springboot.laa-spring-boot-gradle-plugin' version '1.2.4-b7f3c31-SNAPSHOT'
+    id 'uk.gov.laa.springboot.laa-spring-boot-gradle-plugin' version '1.2.4-a2a8b73-SNAPSHOT'
     id "io.sentry.jvm.gradle" version "5.12.2"
 }
 

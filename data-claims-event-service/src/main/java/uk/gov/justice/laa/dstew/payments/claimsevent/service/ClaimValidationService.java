@@ -19,7 +19,6 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessageType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.EventServiceIllegalArgumentException;
-import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
@@ -30,6 +29,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.Disburseme
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.DuplicateClaimValidator;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.EffectiveCategoryOfLawClaimValidator;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.MandatoryFieldClaimValidator;
+import uk.gov.laa.springboot.metrics.aspect.annotations.CounterMetric;
 import uk.gov.laa.springboot.metrics.aspect.annotations.SummaryMetric;
 
 /**
@@ -43,7 +43,6 @@ public class ClaimValidationService {
 
   private final CategoryOfLawValidationService categoryOfLawValidationService;
   private final DataClaimsRestClient dataClaimsRestClient;
-  private final EventServiceMetricService eventServiceMetricService;
   private final BulkClaimUpdater bulkClaimUpdater;
   private final List<ClaimValidator> claimValidator;
   private final int claimValidationBatchSize;
@@ -259,24 +258,35 @@ public class ClaimValidationService {
     }
   }
 
-  private void recordClaimMetrics(ClaimResponse claim, SubmissionValidationContext context) {
+  @CounterMetric(
+      metricName = "claims_validated_and_valid",
+      hintText = "Total number of claims validated and valid",
+      conditionalOnReturn = "null")
+  @CounterMetric(
+      metricName = "claims_validated_and_warnings_found",
+      hintText = "Total number of claims validated and have warnings",
+      conditionalOnReturn = "WARNING")
+  @CounterMetric(
+      metricName = "claims_validated_and_invalid",
+      hintText = "Total number of claims validated and invalid",
+      conditionalOnReturn = "ERROR")
+  @SuppressWarnings("UnusedReturnValue")
+  private ValidationMessageType recordClaimMetrics(
+      ClaimResponse claim, SubmissionValidationContext context) {
     Optional<ClaimValidationReport> claimReportOptional = context.getClaimReport(claim.getId());
-    if (claimReportOptional.isEmpty()) {
-      return;
+    if (claimReportOptional.isEmpty() || claimReportOptional.get().getMessages().isEmpty()) {
+      return null;
     }
 
-    List<ValidationMessagePatch> messages = claimReportOptional.get().getMessages();
+    List<ValidationMessageType> messages =
+        claimReportOptional.get().getMessages().stream()
+            .map(ValidationMessagePatch::getType)
+            .toList();
 
-    // Record all messages (Helps track most common errors found)
-    messages.forEach(x -> eventServiceMetricService.recordValidationMessage(x, true));
-
-    // Claim could have either errors or warnings so record both
-    if (messages.stream().anyMatch(x -> x.getType().equals(ValidationMessageType.ERROR))) {
-      eventServiceMetricService.incrementTotalClaimsValidatedAndErrorsFound();
-    }
-
-    if (messages.stream().anyMatch(x -> x.getType().equals(ValidationMessageType.WARNING))) {
-      eventServiceMetricService.incrementTotalClaimsValidatedAndWarningsFound();
+    if (messages.contains(ValidationMessageType.ERROR)) {
+      return ValidationMessageType.ERROR;
+    } else {
+      return ValidationMessageType.WARNING;
     }
   }
 }
