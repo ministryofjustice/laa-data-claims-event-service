@@ -19,6 +19,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.submission.SubmissionValidator;
+import uk.gov.laa.springboot.metrics.aspect.annotations.CounterMetric;
 import uk.gov.laa.springboot.metrics.aspect.annotations.SummaryMetric;
 
 /**
@@ -60,7 +61,7 @@ public class SubmissionValidationService {
         .forEach(validator -> validator.validate(submission, context));
 
     // Only validate claims if no submission level validation errors have been recorded.
-    if (context.hasSubmissionLevelErrors()) {
+    if (hasNoSubmissionLevelErrors(context)) {
       claimValidationService.validateAndUpdateClaims(submission, context);
     }
 
@@ -70,29 +71,57 @@ public class SubmissionValidationService {
     BulkSubmissionPatch bulkSubmissionPatch =
         new BulkSubmissionPatch().bulkSubmissionId(bulkSubmissionId);
     if (context.hasErrors()) {
-      log.debug(
-          "Validation completed for submission {} with errors: {}",
-          submissionId,
-          context.getSubmissionValidationErrors());
-      submissionPatch
-          .status(SubmissionStatus.VALIDATION_FAILED)
-          .validationMessages(context.getSubmissionValidationErrors());
-      bulkSubmissionPatch
-          .status(BulkSubmissionStatus.VALIDATION_FAILED)
-          .errorCode(BulkSubmissionErrorCode.V100)
-          .errorDescription(
-              "Validation completed for bulk submission %s with errors"
-                  .formatted(bulkSubmissionId));
+      populatePatchWithInvalid(
+          submissionId, context, submissionPatch, bulkSubmissionPatch, bulkSubmissionId);
     } else {
-      log.debug("Validation completed for submission {} with no errors", submissionId);
-      submissionPatch.status(SubmissionStatus.VALIDATION_SUCCEEDED);
-      bulkSubmissionPatch.status(BulkSubmissionStatus.VALIDATION_SUCCEEDED);
+      populatePatchWithValid(submissionId, submissionPatch, bulkSubmissionPatch);
     }
 
     dataClaimsRestClient.updateSubmission(submissionId.toString(), submissionPatch);
     dataClaimsRestClient.updateBulkSubmission(
         String.valueOf(bulkSubmissionId), bulkSubmissionPatch);
     return context;
+  }
+
+  @CounterMetric(
+      metricName = "valid_submissions",
+      hintText = "Total number submission which are valid")
+  private static void populatePatchWithValid(
+      UUID submissionId, SubmissionPatch submissionPatch, BulkSubmissionPatch bulkSubmissionPatch) {
+    log.debug("Validation completed for submission {} with no errors", submissionId);
+    submissionPatch.status(SubmissionStatus.VALIDATION_SUCCEEDED);
+    bulkSubmissionPatch.status(BulkSubmissionStatus.VALIDATION_SUCCEEDED);
+  }
+
+  @CounterMetric(
+      metricName = "invalid_submissions",
+      hintText = "Total number submission which are invalid")
+  private static void populatePatchWithInvalid(
+      UUID submissionId,
+      SubmissionValidationContext context,
+      SubmissionPatch submissionPatch,
+      BulkSubmissionPatch bulkSubmissionPatch,
+      UUID bulkSubmissionId) {
+    log.debug(
+        "Validation completed for submission {} with errors: {}",
+        submissionId,
+        context.getSubmissionValidationErrors());
+    submissionPatch
+        .status(SubmissionStatus.VALIDATION_FAILED)
+        .validationMessages(context.getSubmissionValidationErrors());
+    bulkSubmissionPatch
+        .status(BulkSubmissionStatus.VALIDATION_FAILED)
+        .errorCode(BulkSubmissionErrorCode.V100)
+        .errorDescription(
+            "Validation completed for bulk submission %s with errors".formatted(bulkSubmissionId));
+  }
+
+  @CounterMetric(
+      metricName = "submissions_with_errors",
+      hintText = "Total number of submissions with validation errors",
+      conditionalOnReturn = "false")
+  private static boolean hasNoSubmissionLevelErrors(SubmissionValidationContext context) {
+    return !context.hasSubmissionLevelErrors();
   }
 
   private SubmissionValidationContext initialiseValidationContext(SubmissionResponse submission) {

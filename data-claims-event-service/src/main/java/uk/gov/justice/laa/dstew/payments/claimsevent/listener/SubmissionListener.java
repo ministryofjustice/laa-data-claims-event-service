@@ -78,7 +78,6 @@ public class SubmissionListener {
       log.error("Failed to process submission event. messageId={}", message.messageId(), ex);
       throw ex;
     }
-
   }
 
   private SubmissionEventType getSubmissionEventType(Message message) {

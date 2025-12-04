@@ -4,6 +4,7 @@ import static org.testcontainers.containers.localstack.LocalStackContainer.Servi
 import static org.testcontainers.containers.localstack.LocalStackContainer.Service.SQS;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.prometheus.metrics.model.registry.PrometheusRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.localstack.LocalStackContainer;
 import org.testcontainers.utility.DockerImageName;
@@ -41,6 +43,9 @@ public class LocalstackBaseIntegrationTest {
   protected ObjectMapper objectMapper = new ObjectMapper();
 
   protected String queueUrl;
+
+  @MockitoBean
+  PrometheusRegistry prometheusRegistry;
 
   @DynamicPropertySource
   static void registerDynamicProperties(DynamicPropertyRegistry registry) {
