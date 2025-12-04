@@ -6,6 +6,7 @@ import io.awspring.cloud.sqs.annotation.SqsListener;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.services.sqs.model.Message;
@@ -16,6 +17,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.model.BulkSubmissionMessage
 import uk.gov.justice.laa.dstew.payments.claimsevent.model.SubmissionEventType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.model.SubmissionValidationMessage;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.BulkParsingService;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.SqsVisibilityExtender;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.SubmissionValidationService;
 
 /**
@@ -36,6 +38,7 @@ public class SubmissionListener {
   private final SubmissionValidationService submissionValidationService;
   private final ObjectMapper objectMapper;
   private final EventServiceMetricService eventServiceMetricService;
+  private final ObjectProvider<SqsVisibilityExtender> sqsVisibilityExtenderProvider;
 
   /**
    * Construct a new {@code SubmissionListener}.
@@ -48,11 +51,13 @@ public class SubmissionListener {
       BulkParsingService bulkParsingService,
       SubmissionValidationService submissionValidationService,
       EventServiceMetricService eventServiceMetricService,
-      @Qualifier("submissionEventMapper") ObjectMapper objectMapper) {
+      @Qualifier("submissionEventMapper") ObjectMapper objectMapper,
+      ObjectProvider<SqsVisibilityExtender> sqsVisibilityExtenderProvider) {
     this.bulkParsingService = bulkParsingService;
     this.submissionValidationService = submissionValidationService;
     this.eventServiceMetricService = eventServiceMetricService;
     this.objectMapper = objectMapper;
+    this.sqsVisibilityExtenderProvider = sqsVisibilityExtenderProvider;
   }
 
   /**
@@ -66,17 +71,22 @@ public class SubmissionListener {
 
     UUID timerRef = UUID.randomUUID();
     eventServiceMetricService.startFileParsingTimer(timerRef);
-    SubmissionEventType submissionEventType = getSubmissionEventType(message);
 
-    switch (submissionEventType) {
-      case SubmissionEventType.PARSE_BULK_SUBMISSION -> handleBulkSubmissionMessage(message);
-      case SubmissionEventType.VALIDATE_SUBMISSION -> handleSubmissionValidationMessage(message);
-      default ->
-          throw new SubmissionEventProcessingException(
-              "Unsupported submission event type: " + submissionEventType);
+    String receiptHandle = message.receiptHandle();
+
+    try (SqsVisibilityExtender extender = sqsVisibilityExtenderProvider.getObject()) {
+      extender.start(receiptHandle);
+      SubmissionEventType submissionEventType = getSubmissionEventType(message);
+
+      processMessageByType(message, submissionEventType);
+
+    } catch (SubmissionEventProcessingException | IllegalArgumentException ex) {
+      log.error("Failed to process submission event. messageId={}", message.messageId(), ex);
+      throw ex;
+
+    } finally {
+      eventServiceMetricService.stopFileParsingTimer(timerRef);
     }
-
-    eventServiceMetricService.stopFileParsingTimer(timerRef);
   }
 
   private SubmissionEventType getSubmissionEventType(Message message) {
@@ -85,6 +95,16 @@ public class SubmissionListener {
         .map(SubmissionEventType::valueOf)
         .orElseThrow(
             () -> new SubmissionEventProcessingException("Submission event type is missing"));
+  }
+
+  private void processMessageByType(Message message, SubmissionEventType submissionEventType) {
+    switch (submissionEventType) {
+      case PARSE_BULK_SUBMISSION -> handleBulkSubmissionMessage(message);
+      case VALIDATE_SUBMISSION -> handleSubmissionValidationMessage(message);
+      default ->
+          throw new SubmissionEventProcessingException(
+              "Unsupported submission event type: " + submissionEventType);
+    }
   }
 
   private void handleSubmissionValidationMessage(Message message) {

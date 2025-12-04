@@ -22,5 +22,4 @@ spring:
         secret-key: "dummy-secret-key"
       region:
         static: "us-east-1"
-      sqs:
-        endpoint: "http://localhost:4566"
+      endpoint: "http://localhost:4566"
