@@ -6,3 +6,11 @@ spring:
     aws:
       region:
         static: us-east-1
+
+resilience4j.retry:
+  instances:
+    pdaRetry:
+      maxAttempts: 3
+      waitDuration: 500ms
+      retry-exceptions:
+        - java.lang.RuntimeException

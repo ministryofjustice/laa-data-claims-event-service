@@ -27,6 +27,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.mockserver.client.MockServerClient;
+import org.mockserver.matchers.Times;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.Parameter;
@@ -188,6 +189,49 @@ public abstract class MockServerIntegrationTest {
                 .withStatusCode(HttpStatusCode.OK)
                 .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
                 .withBody(readJsonFromFile(expectedResponse)));
+  }
+
+  protected void stubForGetProviderOfficeWithTimes(
+      final String officeCode,
+      final List<Parameter> parameters,
+      final String expectedResponse,
+      int times)
+      throws Exception {
+    mockServerClient
+        .when(
+            HttpRequest.request()
+                .withMethod(HttpMethod.GET.toString())
+                .withPath(PROVIDER_OFFICES + officeCode + SCHEDULES_ENDPOINT)
+                .withQueryStringParameters(parameters),
+            Times.exactly(times))
+        .respond(
+            HttpResponse.response()
+                .withStatusCode(HttpStatusCode.OK)
+                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
+                .withBody(readJsonFromFile(expectedResponse)));
+  }
+
+  protected void stubForGetProviderOfficeReturnsError(
+      final String officeCode, final List<Parameter> parameters) throws Exception {
+    mockServerClient
+        .when(
+            HttpRequest.request()
+                .withMethod(HttpMethod.GET.toString())
+                .withPath(PROVIDER_OFFICES + officeCode + SCHEDULES_ENDPOINT)
+                .withQueryStringParameters(parameters))
+        .respond(HttpResponse.response().withStatusCode(HttpStatusCode.INTERNAL_SERVER_ERROR));
+  }
+
+  protected void stubForGetProviderOfficeReturnsErrorWithTimes(
+      final String officeCode, final List<Parameter> parameters, int times) {
+    mockServerClient
+        .when(
+            HttpRequest.request()
+                .withMethod(HttpMethod.GET.toString())
+                .withPath(PROVIDER_OFFICES + officeCode + SCHEDULES_ENDPOINT)
+                .withQueryStringParameters(parameters),
+            Times.exactly(times))
+        .respond(HttpResponse.response().withStatusCode(HttpStatusCode.INTERNAL_SERVER_ERROR));
   }
 
   protected void stubForGetSubmission(final UUID submissionId, final String expectedResponse)

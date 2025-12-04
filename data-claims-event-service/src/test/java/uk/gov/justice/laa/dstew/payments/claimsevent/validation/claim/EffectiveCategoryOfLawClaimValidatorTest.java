@@ -27,9 +27,9 @@ import reactor.core.publisher.Mono;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
-import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.CategoryOfLawValidationService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.FeeDetailsResponseWrapper;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.ProviderDetailsService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.util.ClaimEffectiveDateUtil;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
@@ -45,13 +45,13 @@ class EffectiveCategoryOfLawClaimValidatorTest {
 
   @Mock CategoryOfLawValidationService categoryOfLawValidationService;
   @Mock ClaimEffectiveDateUtil claimEffectiveDateUtil;
-  @Mock ProviderDetailsRestClient providerDetailsRestClient;
+  @Mock ProviderDetailsService providerDetailsService;
 
   @BeforeEach
   void beforeEach() {
     validator =
         new EffectiveCategoryOfLawClaimValidator(
-            categoryOfLawValidationService, claimEffectiveDateUtil, providerDetailsRestClient);
+            categoryOfLawValidationService, claimEffectiveDateUtil, providerDetailsService);
   }
 
   @Test
@@ -76,7 +76,7 @@ class EffectiveCategoryOfLawClaimValidatorTest {
                     .addScheduleLinesItem(
                         new FirmOfficeContractAndScheduleLine().categoryOfLaw("categoryOfLaw1")));
 
-    when(providerDetailsRestClient.getProviderFirmSchedules(
+    when(providerDetailsService.getProviderFirmSchedules(
             eq("officeAccountNumber"), eq(AreaOfLaw.LEGAL_HELP.getValue()), any(LocalDate.class)))
         .thenReturn(Mono.just(data));
 
@@ -115,7 +115,7 @@ class EffectiveCategoryOfLawClaimValidatorTest {
             .status(ClaimStatus.READY_TO_PROCESS)
             .matterTypeCode("ab:cd");
 
-    when(providerDetailsRestClient.getProviderFirmSchedules(
+    when(providerDetailsService.getProviderFirmSchedules(
             eq("officeAccountNumber"), eq(AreaOfLaw.LEGAL_HELP.getValue()), any(LocalDate.class)))
         .thenReturn(Mono.error(exception));
 

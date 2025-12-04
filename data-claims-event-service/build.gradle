@@ -85,6 +85,8 @@ dependencies {
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
     implementation 'com.networknt:json-schema-validator:1.5.8'
+    implementation 'io.github.resilience4j:resilience4j-spring-boot3:2.1.0'
+    implementation 'io.github.resilience4j:resilience4j-reactor:2.1.0'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.testcontainers:junit-jupiter'
@@ -93,6 +95,7 @@ dependencies {
     testImplementation 'org.testcontainers:localstack'
     testImplementation 'org.awaitility:awaitility'
     testImplementation 'org.mock-server:mockserver-client-java:5.15.0'
+    testImplementation("io.projectreactor:reactor-test:3.1.0.RELEASE")
 
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
