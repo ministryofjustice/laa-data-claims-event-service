@@ -28,9 +28,6 @@ public class ProviderDetailsServiceRetryTest extends MockServerIntegrationTest {
 
   @Autowired ProviderDetailsService providerDetailsService;
 
-  //  @Autowired
-  //    RetryRegistry registry;
-
   @Test
   void shouldRetryOnFailure() throws Exception {
     // given
