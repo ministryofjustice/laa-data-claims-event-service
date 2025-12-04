@@ -38,7 +38,6 @@ public class SubmissionListener {
   private final SubmissionValidationService submissionValidationService;
   private final ObjectMapper objectMapper;
   private final EventServiceMetricService eventServiceMetricService;
-  // private final SQSVisibilityExtender sqsVisibilityExtender;
   private final ObjectProvider<SqsVisibilityExtender> sqsVisibilityExtenderProvider;
 
   /**
@@ -58,7 +57,6 @@ public class SubmissionListener {
     this.submissionValidationService = submissionValidationService;
     this.eventServiceMetricService = eventServiceMetricService;
     this.objectMapper = objectMapper;
-    // this.sqsVisibilityExtender = sqSVisibilityExtender;
     this.sqsVisibilityExtenderProvider = sqsVisibilityExtenderProvider;
   }
 

@@ -13,15 +13,14 @@ public class SqsConfigTest {
   private static final String SECRET_KEY = "secretKey";
   private static final String ENDPOINT = "http://localhost:8080";
 
-  @DisplayName("Should have access key and secret key in test environment")
+  @DisplayName("Profile-test-wiremock-Should have access key and secret key in test environment")
   @Test
   public void testEnvironmentSqsConfig() {
     StandardEnvironment environment = new StandardEnvironment();
-    environment.setActiveProfiles("test");
+    environment.setActiveProfiles("test", "wiremock");
     SqsConfig sqsConfig = new SqsConfig();
     try (var actualResult =
-        sqsConfig.sqsClient(
-            Region.US_EAST_1.toString(), ACCESS_KEY, SECRET_KEY, ENDPOINT, environment)) {
+        sqsConfig.sqsClientLocal(Region.US_EAST_1.toString(), ACCESS_KEY, SECRET_KEY, ENDPOINT)) {
       var endpoint =
           actualResult
               .serviceClientConfiguration()
@@ -34,15 +33,11 @@ public class SqsConfigTest {
     }
   }
 
-  @DisplayName("Should not have access key and secret key in default environment")
+  @DisplayName("Profile-default-Should not have access key and secret key in default environment")
   @Test
   public void defaultEnvironmentSqsConfig() {
-    StandardEnvironment environment = new StandardEnvironment();
-    environment.setActiveProfiles("default");
     SqsConfig sqsConfig = new SqsConfig();
-    try (var actualResult =
-        sqsConfig.sqsClient(
-            Region.US_EAST_1.toString(), ACCESS_KEY, SECRET_KEY, ENDPOINT, environment)) {
+    try (var actualResult = sqsConfig.sqsClient(Region.US_EAST_1.toString())) {
       var endpoint =
           actualResult
               .serviceClientConfiguration()

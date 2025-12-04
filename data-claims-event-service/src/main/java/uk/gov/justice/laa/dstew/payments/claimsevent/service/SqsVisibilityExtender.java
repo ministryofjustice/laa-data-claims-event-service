@@ -42,9 +42,9 @@ public class SqsVisibilityExtender implements AutoCloseable {
   public SqsVisibilityExtender(
       final SqsClient sqsClient,
       final @Value("${laa.bulk-claim-queue.name}") String queueName,
-      final @Value("${laa.bulk-claim-queue.visibility-timeout-seconds:60}") int
+      final @Value("${laa.bulk-claim-queue.visibility-timeout-seconds:600}") int
               visibilityTimeoutSeconds,
-      final @Value("${laa.bulk-claim-queue.visibility-extension-interval-seconds:30}") int
+      final @Value("${laa.bulk-claim-queue.visibility-extension-interval-seconds:10}") int
               visibilityExtensionIntervalSeconds) {
     this.sqsClient = sqsClient;
     this.visibilityTimeoutSeconds = visibilityTimeoutSeconds;
