@@ -48,6 +48,14 @@ To aid with pushing test messages to the SQS queue, the following scripts are pr
 - `docker-scripts/publish-bulk-submission-event.sh`
 - `docker-scripts/publish-submission-validation-event.sh`
 
+### Set environment variables
+The following environment variables are required to connect to Localstack SQS:
+```sh
+export AWS_ACCESS_KEY_ID=test
+export AWS_SECRET_ACCESS_KEY=test
+export AWS_ENDPOINT_URL=http://localhost:4566
+```
+
 ### Run application
 
 `./gradlew bootRun`
