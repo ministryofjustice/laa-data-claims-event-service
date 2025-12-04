@@ -66,24 +66,19 @@ public class SubmissionListener {
   @SqsListener("${laa.bulk-claim-queue.name}")
   public void receiveSubmissionEvent(Message message) {
 
-    UUID timerRef = UUID.randomUUID();
-    SubmissionEventType submissionEventType = getSubmissionEventType(message);
-
     String receiptHandle = message.receiptHandle();
 
     try (SqsVisibilityExtender extender = sqsVisibilityExtenderProvider.getObject()) {
       extender.start(receiptHandle);
-      switch (submissionEventType) {
-        case SubmissionEventType.PARSE_BULK_SUBMISSION -> handleBulkSubmissionMessage(message);
-        case SubmissionEventType.VALIDATE_SUBMISSION -> handleSubmissionValidationMessage(message);
-        default ->
-            throw new SubmissionEventProcessingException(
-                "Unsupported submission event type: " + submissionEventType);
-      }
+      SubmissionEventType submissionEventType = getSubmissionEventType(message);
+
+      processMessageByType(message, submissionEventType);
+
     } catch (SubmissionEventProcessingException | IllegalArgumentException ex) {
       log.error("Failed to process submission event. messageId={}", message.messageId(), ex);
       throw ex;
     }
+
   }
 
   private SubmissionEventType getSubmissionEventType(Message message) {
