@@ -44,12 +44,12 @@ public class LocalstackBaseIntegrationTest {
 
   protected String queueUrl;
 
-  @MockitoBean
-  PrometheusRegistry prometheusRegistry;
+  @MockitoBean PrometheusRegistry prometheusRegistry;
 
   @DynamicPropertySource
   static void registerDynamicProperties(DynamicPropertyRegistry registry) {
-    registry.add("spring.cloud.aws.sqs.endpoint", () -> INSTANCE.getEndpointOverride(SNS).toString());
+    registry.add(
+        "spring.cloud.aws.sqs.endpoint", () -> INSTANCE.getEndpointOverride(SNS).toString());
     registry.add("spring.cloud.aws.credentials.access-key", INSTANCE::getAccessKey);
     registry.add("spring.cloud.aws.credentials.secret-key", INSTANCE::getSecretKey);
     registry.add("spring.cloud.aws.region.static", INSTANCE::getRegion);
