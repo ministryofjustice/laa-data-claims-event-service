@@ -23,7 +23,8 @@ public class MessageListenerBase {
 
   @DynamicPropertySource
   static void registerDynamicProperties(DynamicPropertyRegistry registry) {
-    registry.add("spring.cloud.aws.sqs.endpoint", () -> localStack.getEndpointOverride(SNS).toString());
+    registry.add(
+        "spring.cloud.aws.sqs.endpoint", () -> localStack.getEndpointOverride(SNS).toString());
     registry.add("spring.cloud.aws.credentials.access-key", localStack::getAccessKey);
     registry.add("spring.cloud.aws.credentials.secret-key", localStack::getSecretKey);
     registry.add("spring.cloud.aws.region.static", localStack::getRegion);
