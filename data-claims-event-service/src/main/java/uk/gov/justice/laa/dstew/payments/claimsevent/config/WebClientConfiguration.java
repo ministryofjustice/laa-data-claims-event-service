@@ -96,7 +96,8 @@ public class WebClientConfiguration {
                 configurer ->
                     configurer
                         .defaultCodecs()
-                        .maxInMemorySize(50 * 1024 * 1024) // 50 MB to cope with large bulk upload responses
+                        .maxInMemorySize(
+                            50 * 1024 * 1024) // 50 MB to cope with large bulk upload responses
                 )
             .build();
 
