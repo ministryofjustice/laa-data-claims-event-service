@@ -66,11 +66,28 @@ submission:
     minimum-period: ${SUBMISSION_VALIDATION_MINIMUM_PERIOD:APR-2025}
 
 
-
 resilience4j.retry:
   instances:
     pdaRetry:
       maxAttempts: 3
       waitDuration: 500ms
+      enableExponentialBackoff: true
+      exponentialBackoffMultiplier: 2
+      exponentialMaxWaitDuration: 5s
+      enableRandomizedWait: true
+      randomizedWaitFactor: 0.5
       retry-exceptions:
         - java.lang.RuntimeException
+
+resilience4j.ratelimiter:
+  instances:
+    pdaRateLimiterPerSecond:
+      limitForPeriod: ${PDA_RATELIMITER_PER_SECOND_LIMIT:1}
+      limitRefreshPeriod: ${PDA_RATELIMITER_PER_SECOND_PERIOD:1s}
+      timeoutDuration: ${PDA_RATELIMITER_TIMEOUT_DURATION:2s}
+      subscribeForEvents: true
+    pdaRateLimiterPerMinute:
+      limitForPeriod: ${PDA_RATELIMITER_PER_MINUTE_LIMIT:12}
+      limitRefreshPeriod: ${PDA_RATELIMITER_PER_MINUTE_PERIOD:1m}
+      timeoutDuration: ${PDA_RATELIMITER_TIMEOUT_DURATION:2s}
+      subscribeForEvents: false

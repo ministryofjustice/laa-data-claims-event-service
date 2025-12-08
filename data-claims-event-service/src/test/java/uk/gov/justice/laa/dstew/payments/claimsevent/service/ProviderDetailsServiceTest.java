@@ -3,9 +3,13 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.ratelimiter.RateLimiterConfig;
+import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
+import java.time.Duration;
 import java.time.LocalDate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,6 +30,8 @@ class ProviderDetailsServiceTest {
 
   @Mock private RetryRegistry retryRegistry;
 
+  @Mock private RateLimiterRegistry rateLimiterRegistry;
+
   @InjectMocks private ProviderDetailsService service;
 
   @BeforeEach
@@ -37,6 +43,17 @@ class ProviderDetailsServiceTest {
                 .maxAttempts(1) // ✅ Only one attempt
                 .build());
     when(retryRegistry.retry("pdaRetry")).thenReturn(noOpRetry);
+
+    RateLimiter noOpRateLimiter =
+        RateLimiter.of(
+            "pdaRateLimiter",
+            RateLimiterConfig.custom()
+                .limitForPeriod(Integer.MAX_VALUE)
+                .limitRefreshPeriod(Duration.ofSeconds(1))
+                .timeoutDuration(Duration.ZERO)
+                .build());
+    when(rateLimiterRegistry.rateLimiter("pdaRateLimiterPerSecond")).thenReturn(noOpRateLimiter);
+    when(rateLimiterRegistry.rateLimiter("pdaRateLimiterPerMinute")).thenReturn(noOpRateLimiter);
   }
 
   @Test

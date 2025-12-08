@@ -14,3 +14,14 @@ resilience4j.retry:
       waitDuration: 500ms
       retry-exceptions:
         - java.lang.RuntimeException
+
+resilience4j.ratelimiter:
+  instances:
+    pdaRateLimiterPerSecond:
+      limitForPeriod: 1000
+      limitRefreshPeriod: 1s
+      timeoutDuration: 0
+    pdaRateLimiterPerMinute:
+      limitForPeriod: 1000
+      limitRefreshPeriod: 1s
+      timeoutDuration: 0

@@ -1,5 +1,8 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
+import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
+import io.github.resilience4j.reactor.ratelimiter.operator.RateLimiterOperator;
 import io.github.resilience4j.reactor.retry.RetryOperator;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
@@ -23,6 +26,7 @@ public class ProviderDetailsService {
 
   private final ProviderDetailsRestClient providerDetailsRestClient;
   private final RetryRegistry retryRegistry;
+  private final RateLimiterRegistry rateLimiterRegistry;
 
   /**
    * Retrieves the provider firm office contract and schedule information for a given office, area
@@ -41,9 +45,13 @@ public class ProviderDetailsService {
    */
   public Mono<ProviderFirmOfficeContractAndScheduleDto> getProviderFirmSchedules(
       String officeCode, String areaOfLaw, LocalDate effectiveDate) {
+    RateLimiter perSecondLimiter = rateLimiterRegistry.rateLimiter("pdaRateLimiterPerSecond");
+    RateLimiter perMinuteLimiter = rateLimiterRegistry.rateLimiter("pdaRateLimiterPerMinute");
     Retry retry = retryRegistry.retry("pdaRetry");
     return providerDetailsRestClient
         .getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate)
+        .transformDeferred(RateLimiterOperator.of(perSecondLimiter))
+        .transformDeferred(RateLimiterOperator.of(perMinuteLimiter))
         .transformDeferred(RetryOperator.of(retry))
         .onErrorResume(
             e -> {
