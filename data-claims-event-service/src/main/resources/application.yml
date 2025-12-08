@@ -13,6 +13,10 @@ spring:
       region:
         static: ${AWS_REGION}
 
+logging:
+  level:
+    uk.gov.justice.laa.dstew.payments.claimsevent: ${APPLICATION_LOGGING_LEVEL:INFO}
+
 # used by actuator info endpoint
 info:
   app:
@@ -60,6 +64,7 @@ laa:
 submission:
   validation:
     minimum-period: ${SUBMISSION_VALIDATION_MINIMUM_PERIOD:APR-2025}
+
 
 
 resilience4j.retry:
