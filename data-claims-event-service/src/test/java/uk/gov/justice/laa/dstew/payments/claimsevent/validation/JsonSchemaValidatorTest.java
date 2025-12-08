@@ -388,7 +388,7 @@ class JsonSchemaValidatorTest {
      * @param badValue The invalid value assigned to the claim field.
      * @param technicalError The expected error message corresponding to the invalid field value.
      */
-    @ParameterizedTest(name = "Invalid value for {0} should return error")
+    @ParameterizedTest(name = "Invalid value {1} for {0} should return error")
     @CsvFileSource(resources = "/testData/validateClaimIndividualInvalidFieldLegalHelp.csv")
     void validateClaimIndividualInvalidFieldLegalHelp(
         String fieldName, String badValue, String technicalError) {
@@ -413,7 +413,7 @@ class JsonSchemaValidatorTest {
               "Display message didn't contain expected text: %s".formatted(displayMessage));
     }
 
-    @ParameterizedTest(name = "Invalid value for {0} should return error")
+    @ParameterizedTest(name = "Invalid value {1} for {0} should return error")
     @CsvFileSource(resources = "/testData/validateClaimIndividualInvalidFieldCrimeLower.csv")
     void validateClaimIndividualInvalidFieldCrimeLower(
         String fieldName, String badValue, String technicalError) {
@@ -446,7 +446,7 @@ class JsonSchemaValidatorTest {
      * @param badValue The invalid value assigned to the claim field.
      * @param technicalError The expected error message corresponding to the invalid field value.
      */
-    @ParameterizedTest(name = "Invalid value for {0} should return error")
+    @ParameterizedTest(name = "Invalid value {1} for {0} should return error")
     @CsvFileSource(resources = "/testData/validateClaimIndividualInvalidFieldMediation.csv")
     void validateClaimIndividualInvalidFieldMediation(
         String fieldName, String badValue, String technicalError) {
