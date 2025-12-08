@@ -83,6 +83,11 @@ env:
       secretKeyRef:
         name: laa-data-claims-event-service-secrets
         key: SUBMISSION_VALIDATION_MINIMUM_PERIOD
+  - name: APPLICATION_LOGGING_LEVEL
+    valueFrom:
+      secretKeyRef:
+        name: laa-data-claims-event-service-secrets
+        key: APPLICATION_LOGGING_LEVEL
   - name: JAVA_TOOL_OPTIONS
     value: "-XX:MaxDirectMemorySize=128m"
 

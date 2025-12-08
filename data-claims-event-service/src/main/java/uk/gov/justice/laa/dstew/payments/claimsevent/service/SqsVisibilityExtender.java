@@ -63,6 +63,8 @@ public class SqsVisibilityExtender implements AutoCloseable {
     this.queueUrl =
         sqsClient.getQueueUrl(GetQueueUrlRequest.builder().queueName(queueName).build()).queueUrl();
 
+    log.debug("Starting visibility extender for receiptHandle={}", receiptHandle);
+
     scheduledTask =
         scheduler.scheduleAtFixedRate(
             this::extendVisibility,
@@ -73,7 +75,10 @@ public class SqsVisibilityExtender implements AutoCloseable {
 
   private void extendVisibility() {
     try {
-      log.debug("Extending SQS visibility for receiptHandle={}", receiptHandle);
+      log.debug(
+          "Extending SQS visibility for receiptHandle={} by {} seconds",
+          receiptHandle,
+          visibilityTimeoutSeconds);
 
       ChangeMessageVisibilityRequest request =
           ChangeMessageVisibilityRequest.builder()
