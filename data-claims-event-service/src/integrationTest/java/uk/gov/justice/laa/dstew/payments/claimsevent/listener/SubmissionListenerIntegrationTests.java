@@ -22,7 +22,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.LocalstackBaseIntegrationTest;
-import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.model.SubmissionEventType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.BulkParsingService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.SubmissionValidationService;
@@ -41,8 +40,6 @@ public class SubmissionListenerIntegrationTests extends LocalstackBaseIntegratio
   @MockitoBean BulkParsingService bulkParsingService;
 
   @MockitoBean SubmissionValidationService submissionValidationService;
-
-  @MockitoBean EventServiceMetricService eventServiceMetricService;
 
   @Test
   @DisplayName("Should process parse bulk submission event")

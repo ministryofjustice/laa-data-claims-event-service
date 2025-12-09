@@ -34,12 +34,12 @@ public class SqsConfig {
    * @return an instance of {@link SqsClient} configured with the specified properties
    */
   @Bean
-  @Profile({"test", "wiremock"})
+  @Profile({"test", "wiremock", "local"})
   public SqsClient sqsClientLocal(
       @Value("${spring.cloud.aws.region.static}") String region,
       @Value("${spring.cloud.aws.credentials.access-key}") String accessKey,
       @Value("${spring.cloud.aws.credentials.secret-key}") String secretKey,
-      @Value("${spring.cloud.aws.endpoint}") String endpoint) {
+      @Value("${spring.cloud.aws.sqs.endpoint}") String endpoint) {
 
     return SqsClient.builder()
         .region(Region.of(region))
