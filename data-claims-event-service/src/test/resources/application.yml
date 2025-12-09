@@ -21,14 +21,3 @@ resilience4j.retry:
     pdaRetry:
       maxAttempts: 3
       waitDuration: 500ms
-
-resilience4j.ratelimiter:
-  instances:
-    pdaRateLimiterPerSecond:
-      limitForPeriod: 1000
-      limitRefreshPeriod: 1s
-      timeoutDuration: 0
-    pdaRateLimiterPerMinute:
-      limitForPeriod: 1000
-      limitRefreshPeriod: 1s
-      timeoutDuration: 0
