@@ -38,4 +38,11 @@ record ProviderDetailsCachedSchedules(
             window ->
                 !effectiveDate.isBefore(window.start()) && !effectiveDate.isAfter(window.end()));
   }
+
+  ProviderDetailsCachedSchedules refresh(Duration ttl) {
+    if (negative) {
+      return this;
+    }
+    return new ProviderDetailsCachedSchedules(value, windows, Instant.now().plus(ttl), false);
+  }
 }

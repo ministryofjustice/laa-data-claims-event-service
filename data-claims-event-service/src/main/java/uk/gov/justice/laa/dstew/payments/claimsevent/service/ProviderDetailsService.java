@@ -75,6 +75,7 @@ public class ProviderDetailsService {
             "ProviderDetails cache hit for key {} covering effective date {}",
             cacheKey,
             effectiveDate);
+        scheduleCache.put(cacheKey, cached.refresh(POSITIVE_CACHE_TTL));
         return Mono.just(cached.value());
       } else {
         log.debug(
