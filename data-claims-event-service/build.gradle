@@ -96,6 +96,7 @@ dependencies {
     testImplementation 'org.awaitility:awaitility'
     testImplementation 'org.mock-server:mockserver-client-java:5.15.0'
     testImplementation("io.projectreactor:reactor-test:3.1.0.RELEASE")
+    implementation 'io.sentry:sentry-spring-boot-starter-jakarta:8.28.0'
 
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 

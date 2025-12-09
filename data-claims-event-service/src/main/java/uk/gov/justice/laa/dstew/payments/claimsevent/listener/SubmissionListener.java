@@ -3,6 +3,7 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.listener;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.awspring.cloud.sqs.annotation.SqsListener;
+import io.sentry.Sentry;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
@@ -82,6 +83,7 @@ public class SubmissionListener {
 
     } catch (SubmissionEventProcessingException | IllegalArgumentException ex) {
       log.error("Failed to process submission event. messageId={}", message.messageId(), ex);
+      Sentry.captureException(ex);
       throw ex;
 
     } finally {
