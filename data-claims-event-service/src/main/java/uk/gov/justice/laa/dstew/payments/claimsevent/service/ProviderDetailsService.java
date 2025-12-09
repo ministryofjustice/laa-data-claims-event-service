@@ -65,23 +65,23 @@ public class ProviderDetailsService {
     ProviderDetailsCachedSchedules cached = scheduleCache.get(cacheKey);
     if (cached != null) {
       if (!cached.isValid()) {
-        log.info("ProviderDetails cache expired for key {}", cacheKey);
+        log.debug("ProviderDetails cache expired for key {}", cacheKey);
         scheduleCache.remove(cacheKey);
       } else if (cached.isNegative()) {
-        log.info("ProviderDetails negative cache hit for key {}", cacheKey);
+        log.debug("ProviderDetails negative cache hit for key {}", cacheKey);
         return Mono.empty();
       } else if (cached.covers(effectiveDate)) {
-        log.info(
+        log.debug(
             "ProviderDetails cache hit for key {} covering effective date {}",
             cacheKey,
             effectiveDate);
         return Mono.just(cached.value());
       } else {
-        log.info(
+        log.debug(
             "ProviderDetails cache miss for key {}: date {} not covered", cacheKey, effectiveDate);
       }
     } else {
-      log.info("ProviderDetails cache miss for key {}", cacheKey);
+      log.debug("ProviderDetails cache miss for key {}", cacheKey);
     }
 
     Retry retry = retryRegistry.retry("pdaRetry");
