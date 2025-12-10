@@ -35,6 +35,8 @@ public class ProviderDetailsService {
   private final RetryRegistry retryRegistry;
   private final Map<String, ProviderDetailsCachedSchedules> scheduleCache =
       new ConcurrentHashMap<>();
+  private final Map<String, ProviderDetailsCachedSchedules> negativeCache =
+      new ConcurrentHashMap<>();
   // Prevent concurrent cache-miss calls for the same office/area.
   private final Map<String, Mono<ProviderFirmOfficeContractAndScheduleDto>> inFlightCalls =
       new ConcurrentHashMap<>();
@@ -62,7 +64,9 @@ public class ProviderDetailsService {
   public Mono<ProviderFirmOfficeContractAndScheduleDto> getProviderFirmSchedules(
       String officeCode, String areaOfLaw, LocalDate effectiveDate) {
     String cacheKey = cacheKey(officeCode, areaOfLaw);
+    String negativeKey = negativeCacheKey(officeCode, areaOfLaw, effectiveDate);
     ProviderDetailsCachedSchedules cached = scheduleCache.get(cacheKey);
+    ProviderDetailsCachedSchedules cachedNegative = negativeCache.get(negativeKey);
     if (cached != null) {
       if (!cached.isValid()) {
         log.debug("ProviderDetails cache expired for key {}", cacheKey);
@@ -70,16 +74,30 @@ public class ProviderDetailsService {
       } else if (cached.isNegative()) {
         log.debug("ProviderDetails negative cache hit for key {}", cacheKey);
         return Mono.empty();
-      } else if (cached.covers(effectiveDate)) {
-        log.debug(
-            "ProviderDetails cache hit for key {} covering effective date {}",
-            cacheKey,
-            effectiveDate);
-        scheduleCache.put(cacheKey, cached.refresh(POSITIVE_CACHE_TTL));
-        return Mono.just(cached.value());
       } else {
         log.debug(
+            "ProviderDetails coverage windows for key {} when checking effective date {}: {}",
+            cacheKey,
+            effectiveDate,
+            cached.windows());
+        if (cached.covers(effectiveDate)) {
+          log.debug(
+              "ProviderDetails cache hit for key {} covering effective date {}",
+              cacheKey,
+              effectiveDate);
+          scheduleCache.put(cacheKey, cached.refresh(POSITIVE_CACHE_TTL));
+          return Mono.just(cached.value());
+        }
+        log.debug(
             "ProviderDetails cache miss for key {}: date {} not covered", cacheKey, effectiveDate);
+      }
+    } else if (cachedNegative != null) {
+      if (!cachedNegative.isValid()) {
+        log.debug("ProviderDetails negative cache expired for key {}", negativeKey);
+        negativeCache.remove(negativeKey);
+      } else {
+        log.debug("ProviderDetails negative cache hit for key {}", negativeKey);
+        return Mono.empty();
       }
     } else {
       log.debug("ProviderDetails cache miss for key {}", cacheKey);
@@ -92,19 +110,26 @@ public class ProviderDetailsService {
             key ->
                 providerDetailsRestClient
                     .getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate)
+                    .doOnSubscribe(
+                        subscription ->
+                            log.debug(
+                                "Calling PDA getProviderFirmSchedules for officeCode {}, areaOfLaw {}, effectiveDate {}",
+                                officeCode,
+                                areaOfLaw,
+                                effectiveDate))
                     .map(
                         dto -> {
                           cacheWindows(cacheKey, dto);
                           return dto;
                         })
-                    .switchIfEmpty(cacheNegative(cacheKey))
+                    .switchIfEmpty(cacheNegative(negativeKey))
                     .transformDeferred(RetryOperator.of(retry))
                     .cache())
         .doFinally(signalType -> inFlightCalls.remove(cacheKey));
   }
 
-  private Mono<ProviderFirmOfficeContractAndScheduleDto> cacheNegative(String cacheKey) {
-    scheduleCache.put(cacheKey, ProviderDetailsCachedSchedules.negative(NEGATIVE_CACHE_TTL));
+  private Mono<ProviderFirmOfficeContractAndScheduleDto> cacheNegative(String negativeKey) {
+    negativeCache.put(negativeKey, ProviderDetailsCachedSchedules.negative(NEGATIVE_CACHE_TTL));
     return Mono.empty();
   }
 
@@ -113,7 +138,7 @@ public class ProviderDetailsService {
    * false positives when there are gaps between contracts. Null starts/ends are treated as open
    * ranges.
    */
-  private Optional<ProviderDetailsCachedSchedules> computeCoverage(
+  private Optional<List<ProviderDetailsCoverageWindow>> computeCoverage(
       ProviderFirmOfficeContractAndScheduleDto dto) {
     if (dto.getSchedules() == null || dto.getSchedules().isEmpty()) {
       return Optional.empty();
@@ -131,18 +156,18 @@ public class ProviderDetailsService {
       return Optional.empty();
     }
 
-    return Optional.of(ProviderDetailsCachedSchedules.positive(dto, windows, POSITIVE_CACHE_TTL));
+    return Optional.of(windows);
   }
 
   private Optional<ProviderDetailsCoverageWindow> toWindow(
       FirmOfficeContractAndScheduleDetails schedule) {
     LocalDate start =
-        Stream.of(schedule.getScheduleStartDate(), schedule.getContractStartDate())
+        Stream.of(schedule.getScheduleStartDate())
             .filter(Objects::nonNull)
             .min(Comparator.naturalOrder())
             .orElse(LocalDate.MIN);
     LocalDate end =
-        Stream.of(schedule.getScheduleEndDate(), schedule.getContractEndDate())
+        Stream.of(schedule.getScheduleEndDate())
             .filter(Objects::nonNull)
             .max(Comparator.naturalOrder())
             .orElse(LocalDate.MAX);
@@ -181,8 +206,65 @@ public class ProviderDetailsService {
     return officeCode + "|" + areaOfLaw;
   }
 
+  private String negativeCacheKey(String officeCode, String areaOfLaw, LocalDate effectiveDate) {
+    return officeCode + "|" + areaOfLaw + "|" + effectiveDate;
+  }
+
   /** Cache the response along with its merged coverage windows. */
   private void cacheWindows(String cacheKey, ProviderFirmOfficeContractAndScheduleDto dto) {
-    computeCoverage(dto).ifPresent(window -> scheduleCache.put(cacheKey, window));
+    computeCoverage(dto)
+        .ifPresent(
+            newWindows -> {
+              ProviderDetailsCachedSchedules existing = scheduleCache.get(cacheKey);
+              if (existing != null && !existing.isNegative()) {
+                List<ProviderDetailsCoverageWindow> mergedWindows =
+                    mergeWindows(existing.windows(), newWindows);
+                ProviderFirmOfficeContractAndScheduleDto mergedDto =
+                    mergeSchedules(existing.value(), dto);
+                scheduleCache.put(
+                    cacheKey,
+                    ProviderDetailsCachedSchedules.positive(
+                        mergedDto, mergedWindows, POSITIVE_CACHE_TTL));
+              } else {
+                scheduleCache.put(
+                    cacheKey,
+                    ProviderDetailsCachedSchedules.positive(dto, newWindows, POSITIVE_CACHE_TTL));
+              }
+            });
+  }
+
+  private List<ProviderDetailsCoverageWindow> mergeWindows(
+      List<ProviderDetailsCoverageWindow> existing, List<ProviderDetailsCoverageWindow> incoming) {
+    return Stream.concat(existing.stream(), incoming.stream())
+        .sorted(Comparator.comparing(ProviderDetailsCoverageWindow::start))
+        .collect(ArrayList::new, this::mergeOrAdd, this::mergeLists);
+  }
+
+  private ProviderFirmOfficeContractAndScheduleDto mergeSchedules(
+      ProviderFirmOfficeContractAndScheduleDto existing,
+      ProviderFirmOfficeContractAndScheduleDto incoming) {
+    ProviderFirmOfficeContractAndScheduleDto merged = new ProviderFirmOfficeContractAndScheduleDto();
+    merged.setFirm(
+        incoming.getFirm() != null
+            ? incoming.getFirm()
+            : existing != null ? existing.getFirm() : null);
+    merged.setOffice(
+        incoming.getOffice() != null
+            ? incoming.getOffice()
+            : existing != null ? existing.getOffice() : null);
+    merged.setPds(
+        incoming.getPds() != null
+            ? incoming.getPds()
+            : existing != null ? existing.getPds() : null);
+
+    List<FirmOfficeContractAndScheduleDetails> schedules = new ArrayList<>();
+    if (existing != null && existing.getSchedules() != null) {
+      schedules.addAll(existing.getSchedules());
+    }
+    if (incoming.getSchedules() != null) {
+      schedules.addAll(incoming.getSchedules());
+    }
+    merged.setSchedules(schedules);
+    return merged;
   }
 }
