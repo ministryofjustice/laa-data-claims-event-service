@@ -7,6 +7,7 @@ import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,6 +24,8 @@ import uk.gov.justice.laa.provider.model.ProviderFirmOfficeSummary;
 
 @ExtendWith(MockitoExtension.class)
 class ProviderDetailsServiceTest {
+
+  private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
   @Mock private ProviderDetailsRestClient client;
 
@@ -53,7 +56,7 @@ class ProviderDetailsServiceTest {
             .build();
 
     // Simulate first 2 calls fail, third succeeds
-    when(client.getProviderFirmSchedules(anyString(), anyString(), eq(effectiveDate)))
+    when(client.getProviderFirmSchedules(anyString(), anyString(), eq(formatted(effectiveDate))))
         .thenReturn(Mono.just(expectedDto));
 
     // Act
@@ -70,7 +73,8 @@ class ProviderDetailsServiceTest {
             })
         .verifyComplete();
 
-    verify(client, times(1)).getProviderFirmSchedules(officeCode, "CIVIL", effectiveDate);
+    verify(client, times(1))
+        .getProviderFirmSchedules(officeCode, "CIVIL", formatted(effectiveDate));
   }
 
   @Test
@@ -81,7 +85,7 @@ class ProviderDetailsServiceTest {
     LocalDate effectiveDate = LocalDate.now();
 
     // Simulate all attempts fail
-    when(client.getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate))
+    when(client.getProviderFirmSchedules(officeCode, areaOfLaw, formatted(effectiveDate)))
         .thenReturn(Mono.error(new RuntimeException("Temporary error")));
 
     // Act
@@ -96,7 +100,8 @@ class ProviderDetailsServiceTest {
                     && throwable.getMessage().contains("Temporary error"))
         .verify();
 
-    verify(client, times(1)).getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate);
+    verify(client, times(1))
+        .getProviderFirmSchedules(officeCode, areaOfLaw, formatted(effectiveDate));
   }
 
   @Test
@@ -116,7 +121,7 @@ class ProviderDetailsServiceTest {
                         .build()))
             .build();
 
-    when(client.getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate))
+    when(client.getProviderFirmSchedules(officeCode, areaOfLaw, formatted(effectiveDate)))
         .thenReturn(Mono.just(expectedDto));
 
     StepVerifier.create(service.getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate))
@@ -127,7 +132,8 @@ class ProviderDetailsServiceTest {
         .expectNext(expectedDto)
         .verifyComplete();
 
-    verify(client, times(1)).getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate);
+    verify(client, times(1))
+        .getProviderFirmSchedules(officeCode, areaOfLaw, formatted(effectiveDate));
   }
 
   @Test
@@ -136,7 +142,7 @@ class ProviderDetailsServiceTest {
     String areaOfLaw = "CRIME";
     LocalDate effectiveDate = LocalDate.of(2024, 7, 1);
 
-    when(client.getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate))
+    when(client.getProviderFirmSchedules(officeCode, areaOfLaw, formatted(effectiveDate)))
         .thenReturn(Mono.empty());
 
     StepVerifier.create(service.getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate))
@@ -145,7 +151,8 @@ class ProviderDetailsServiceTest {
     StepVerifier.create(service.getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate))
         .verifyComplete();
 
-    verify(client, times(1)).getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate);
+    verify(client, times(1))
+        .getProviderFirmSchedules(officeCode, areaOfLaw, formatted(effectiveDate));
   }
 
   @Test
@@ -170,9 +177,10 @@ class ProviderDetailsServiceTest {
                         .build()))
             .build();
 
-    when(client.getProviderFirmSchedules(officeCode, areaOfLaw, firstDate))
+    when(client.getProviderFirmSchedules(officeCode, areaOfLaw, formatted(firstDate)))
         .thenReturn(Mono.just(firstDto));
-    when(client.getProviderFirmSchedules(officeCode, areaOfLaw, gapDate)).thenReturn(Mono.empty());
+    when(client.getProviderFirmSchedules(officeCode, areaOfLaw, formatted(gapDate)))
+        .thenReturn(Mono.empty());
 
     StepVerifier.create(service.getProviderFirmSchedules(officeCode, areaOfLaw, firstDate))
         .expectNext(firstDto)
@@ -181,8 +189,8 @@ class ProviderDetailsServiceTest {
     StepVerifier.create(service.getProviderFirmSchedules(officeCode, areaOfLaw, gapDate))
         .verifyComplete();
 
-    verify(client, times(1)).getProviderFirmSchedules(officeCode, areaOfLaw, firstDate);
-    verify(client, times(1)).getProviderFirmSchedules(officeCode, areaOfLaw, gapDate);
+    verify(client, times(1)).getProviderFirmSchedules(officeCode, areaOfLaw, formatted(firstDate));
+    verify(client, times(1)).getProviderFirmSchedules(officeCode, areaOfLaw, formatted(gapDate));
   }
 
   @Test
@@ -205,13 +213,13 @@ class ProviderDetailsServiceTest {
     ProviderFirmOfficeContractAndScheduleDto apr17ToAug20 =
         dtoWithWindow(officeCode, LocalDate.of(2017, 4, 1), LocalDate.of(2020, 8, 31));
 
-    when(client.getProviderFirmSchedules(officeCode, areaOfLaw, initial))
+    when(client.getProviderFirmSchedules(officeCode, areaOfLaw, formatted(initial)))
         .thenReturn(Mono.just(sept18ToAug19));
-    when(client.getProviderFirmSchedules(officeCode, areaOfLaw, extendEnd))
+    when(client.getProviderFirmSchedules(officeCode, areaOfLaw, formatted(extendEnd)))
         .thenReturn(Mono.just(sept18ToAug20));
-    when(client.getProviderFirmSchedules(officeCode, areaOfLaw, extendStart))
+    when(client.getProviderFirmSchedules(officeCode, areaOfLaw, formatted(extendStart)))
         .thenReturn(Mono.just(apr17ToMar18));
-    when(client.getProviderFirmSchedules(officeCode, areaOfLaw, gapFill))
+    when(client.getProviderFirmSchedules(officeCode, areaOfLaw, formatted(gapFill)))
         .thenReturn(Mono.just(apr17ToAug20));
 
     StepVerifier.create(service.getProviderFirmSchedules(officeCode, areaOfLaw, initial))
@@ -252,10 +260,11 @@ class ProviderDetailsServiceTest {
                 .expectNextMatches(dto -> dto.getSchedules().size() == 4 && covers(dto, date))
                 .verifyComplete());
 
-    verify(client, times(1)).getProviderFirmSchedules(officeCode, areaOfLaw, initial);
-    verify(client, times(1)).getProviderFirmSchedules(officeCode, areaOfLaw, extendEnd);
-    verify(client, times(1)).getProviderFirmSchedules(officeCode, areaOfLaw, extendStart);
-    verify(client, times(1)).getProviderFirmSchedules(officeCode, areaOfLaw, gapFill);
+    verify(client, times(1)).getProviderFirmSchedules(officeCode, areaOfLaw, formatted(initial));
+    verify(client, times(1)).getProviderFirmSchedules(officeCode, areaOfLaw, formatted(extendEnd));
+    verify(client, times(1))
+        .getProviderFirmSchedules(officeCode, areaOfLaw, formatted(extendStart));
+    verify(client, times(1)).getProviderFirmSchedules(officeCode, areaOfLaw, formatted(gapFill));
     verifyNoMoreInteractions(client);
   }
 
@@ -269,9 +278,9 @@ class ProviderDetailsServiceTest {
     ProviderFirmOfficeContractAndScheduleDto dto =
         dtoWithWindow(officeCode, otherDate, otherDate.plusDays(1));
 
-    when(client.getProviderFirmSchedules(officeCode, areaOfLaw, missingDate))
+    when(client.getProviderFirmSchedules(officeCode, areaOfLaw, formatted(missingDate)))
         .thenReturn(Mono.empty());
-    when(client.getProviderFirmSchedules(officeCode, areaOfLaw, otherDate))
+    when(client.getProviderFirmSchedules(officeCode, areaOfLaw, formatted(otherDate)))
         .thenReturn(Mono.just(dto));
 
     StepVerifier.create(service.getProviderFirmSchedules(officeCode, areaOfLaw, missingDate))
@@ -284,9 +293,14 @@ class ProviderDetailsServiceTest {
         .expectNext(dto)
         .verifyComplete();
 
-    verify(client, times(1)).getProviderFirmSchedules(officeCode, areaOfLaw, missingDate);
-    verify(client, times(1)).getProviderFirmSchedules(officeCode, areaOfLaw, otherDate);
+    verify(client, times(1))
+        .getProviderFirmSchedules(officeCode, areaOfLaw, formatted(missingDate));
+    verify(client, times(1)).getProviderFirmSchedules(officeCode, areaOfLaw, formatted(otherDate));
     verifyNoMoreInteractions(client);
+  }
+
+  private String formatted(LocalDate date) {
+    return FORMATTER.format(date);
   }
 
   private ProviderFirmOfficeContractAndScheduleDto dtoWithWindow(

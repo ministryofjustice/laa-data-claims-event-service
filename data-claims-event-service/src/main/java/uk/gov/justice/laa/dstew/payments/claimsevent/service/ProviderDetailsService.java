@@ -5,6 +5,7 @@ import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -45,6 +46,8 @@ public class ProviderDetailsService {
   private static final Duration NEGATIVE_CACHE_TTL = Duration.ofMinutes(5);
   // Positive cache window for successful schedule responses.
   private static final Duration POSITIVE_CACHE_TTL = Duration.ofMinutes(10);
+  private static final DateTimeFormatter EFFECTIVE_DATE_FORMATTER =
+      DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
   /**
    * Retrieves the provider firm office contract and schedule information for a given office, area
@@ -109,7 +112,8 @@ public class ProviderDetailsService {
             cacheKey,
             key ->
                 providerDetailsRestClient
-                    .getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate)
+                    .getProviderFirmSchedules(
+                        officeCode, areaOfLaw, formatEffectiveDate(effectiveDate))
                     .doOnSubscribe(
                         subscription ->
                             log.debug(
@@ -196,6 +200,13 @@ public class ProviderDetailsService {
   private void mergeLists(
       List<ProviderDetailsCoverageWindow> target, List<ProviderDetailsCoverageWindow> source) {
     source.forEach(window -> mergeOrAdd(target, window));
+  }
+
+  private String formatEffectiveDate(LocalDate effectiveDate) {
+    if (effectiveDate == null) {
+      return null;
+    }
+    return EFFECTIVE_DATE_FORMATTER.format(effectiveDate);
   }
 
   private LocalDate max(LocalDate left, LocalDate right) {
