@@ -16,7 +16,6 @@ spring:
 logging:
   level:
     uk.gov.justice.laa.dstew.payments.claimsevent: ${APPLICATION_LOGGING_LEVEL:INFO}
-    io.sentry: DEBUG
 
 # used by actuator info endpoint
 info:
@@ -52,7 +51,6 @@ sentry:
   logging:
     minimum-event-level: error
     minimum-breadcrumb-level: info
-  debug: true
 
 
 
