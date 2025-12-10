@@ -22,7 +22,8 @@ resources:
     cpu: 25m
     memory: 1G
 
-sentry:
-  enabled: true
-  environment: uat
-  tracesSampleRate: 0.25
+env:
+  - name: SENTRY_ENVIRONMENT
+    value: "uat"
+  - name: SENTRY_TRACES_SAMPLE_RATE
+    value: "0.25"
