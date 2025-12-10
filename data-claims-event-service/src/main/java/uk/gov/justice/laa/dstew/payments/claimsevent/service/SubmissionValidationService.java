@@ -20,7 +20,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationR
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.submission.SubmissionValidator;
 import uk.gov.laa.springboot.metrics.aspect.annotations.CounterMetric;
-import uk.gov.laa.springboot.metrics.aspect.annotations.SummaryMetric;
+import uk.gov.laa.springboot.metrics.aspect.annotations.SummaryTimerMetric;
 
 /**
  * A service responsible for validating claim submissions. Any errors found during validation will
@@ -42,7 +42,7 @@ public class SubmissionValidationService {
    *
    * @param submissionId the ID of the submission to validate
    */
-  @SummaryMetric(
+  @SummaryTimerMetric(
       metricName = "submission_validation_time",
       hintText = "Total time taken to validate claim (Include FSP validation time)")
   public SubmissionValidationContext validateSubmission(UUID submissionId) {

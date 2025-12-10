@@ -18,7 +18,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.model.SubmissionValidationM
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.BulkParsingService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.SqsVisibilityExtender;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.SubmissionValidationService;
-import uk.gov.laa.springboot.metrics.aspect.annotations.SummaryMetric;
+import uk.gov.laa.springboot.metrics.aspect.annotations.SummaryTimerMetric;
 
 /**
  * Listener for bulk submissions from the Data Claims service.
@@ -113,7 +113,7 @@ public class SubmissionListener {
     }
   }
 
-  @SummaryMetric(
+  @SummaryTimerMetric(
       metricName = "file_parsing_time",
       hintText = "Total time taken to parse bulk upload file")
   private void handleBulkSubmissionMessage(Message message) {

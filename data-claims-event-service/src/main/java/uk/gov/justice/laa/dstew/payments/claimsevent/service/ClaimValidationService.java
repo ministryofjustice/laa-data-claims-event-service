@@ -31,7 +31,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.DuplicateC
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.EffectiveCategoryOfLawClaimValidator;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.MandatoryFieldClaimValidator;
 import uk.gov.laa.springboot.metrics.aspect.annotations.CounterMetric;
-import uk.gov.laa.springboot.metrics.aspect.annotations.SummaryMetric;
+import uk.gov.laa.springboot.metrics.aspect.annotations.SummaryTimerMetric;
 
 /**
  * A service for validating submitted claims that are ready to process. Validation errors will
@@ -163,7 +163,7 @@ public class ClaimValidationService {
    * @param areaOfLaw the area of law for the parent submission: some validations change depending
    *     on the area of law.
    */
-  @SummaryMetric(
+  @SummaryTimerMetric(
       metricName = "claim_validation_time",
       hintText = "Total time taken to validate claim (Including FSP validation time)")
   private void validateClaim(
