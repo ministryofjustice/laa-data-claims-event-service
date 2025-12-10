@@ -125,15 +125,6 @@ class BulkClaimUpdaterTest {
             eq(claimResponse), eq(context), eq(AreaOfLaw.LEGAL_HELP)))
         .thenReturn(Optional.empty());
 
-    var feeCalculationPatch =
-        new FeeCalculationPatch().claimId(UUID.fromString(claimResponse.getId()));
-    //    when(mockFeeCalculationPatchMapper.mapToFeeCalculationPatch(
-    //            null,
-    //            feeDetailsResponseWrapperHashMap
-    //                .get(claimResponse.getFeeCode())
-    //                .getFeeDetailsResponse()))
-    //        .thenReturn(feeCalculationPatch);
-
     // When
     bulkClaimUpdater.updateClaims(
         SUBMISSION_ID,
@@ -146,17 +137,6 @@ class BulkClaimUpdaterTest {
     verify(mockEventServiceMetricService).stopFspValidationTimer(claimIdCaptor.capture());
     verify(mockFeeCalculationService)
         .calculateFee(eq(claimResponse), eq(context), eq(AreaOfLaw.LEGAL_HELP));
-    //    verify(dataClaimsRestClient, times(1))
-    //        .updateClaim(
-    //            submissionIdCaptor.capture(), claimIdCaptor.capture(),
-    // claimPatchCaptor.capture());
-    //    ClaimPatch capturedPatch = claimPatchCaptor.getValue();
-    //    assertThat(submissionIdCaptor.getValue()).isEqualTo(SUBMISSION_ID);
-    //    assertThat(claimIdCaptor.getValue()).isEqualTo(UUID.fromString(claimResponse.getId()));
-    //    assertThat(capturedPatch.getId()).isEqualTo(claimResponse.getId());
-    //    assertThat(capturedPatch.getFeeCalculationResponse()).isEqualTo(feeCalculationPatch);
-    //    assertThat(capturedPatch.getValidationMessages().isEmpty()).isTrue();
-    //    assertThat(capturedPatch.getStatus()).isEqualTo(ClaimStatus.VALID);
   }
 
   @Test
@@ -234,17 +214,6 @@ class BulkClaimUpdaterTest {
     ClaimPatch capturedPatch = claimPatchCaptor.getAllValues().getFirst();
     assertThat(capturedPatch.getId()).isEqualTo(validClaimResponse.getId());
     assertThat(capturedPatch.getStatus()).isEqualTo(ClaimStatus.VALID);
-    //    ClaimPatch capturedPatchTwo = claimPatchCaptor.getAllValues().get(0);
-    //    assertThat(capturedPatchTwo.getId()).isEqualTo(invalidClaimResponse.getId());
-    //    assertThat(capturedPatchTwo.getStatus()).isEqualTo(ClaimStatus.INVALID);
-    //    org.hamcrest.MatcherAssert.assertThat(
-    //        capturedPatchTwo.getValidationMessages(),
-    //        org.hamcrest.Matchers.contains(
-    //            org.hamcrest.beans.HasPropertyWithValue.hasProperty(
-    //                "displayMessage",
-    //                org.hamcrest.CoreMatchers.is(
-    //                    ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_ANOTHER_SUBMISSION
-    //                        .getDisplayMessage()))));
   }
 
   @Test
