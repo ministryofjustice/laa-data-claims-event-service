@@ -51,7 +51,6 @@ public interface FeeCalculationPatchMapper {
     if (Objects.isNull(target.getBoltOnDetails())) {
       target.setBoltOnDetails(new BoltOnPatch());
     }
-    target.getBoltOnDetails().setSchemeId(source.getSchemeId());
     target.getBoltOnDetails().setEscapeCaseFlag(source.getEscapeCaseFlag());
   }
 }
