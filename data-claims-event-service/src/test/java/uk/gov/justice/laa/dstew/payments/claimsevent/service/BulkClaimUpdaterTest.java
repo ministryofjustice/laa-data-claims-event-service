@@ -137,6 +137,15 @@ class BulkClaimUpdaterTest {
     verify(mockEventServiceMetricService).stopFspValidationTimer(claimIdCaptor.capture());
     verify(mockFeeCalculationService)
         .calculateFee(eq(claimResponse), eq(context), eq(AreaOfLaw.LEGAL_HELP));
+    verify(dataClaimsRestClient, times(1))
+        .updateClaim(
+            submissionIdCaptor.capture(), claimIdCaptor.capture(), claimPatchCaptor.capture());
+    ClaimPatch capturedPatch = claimPatchCaptor.getValue();
+    assertThat(submissionIdCaptor.getValue()).isEqualTo(SUBMISSION_ID);
+    assertThat(claimIdCaptor.getValue()).isEqualTo(UUID.fromString(claimResponse.getId()));
+    assertThat(capturedPatch.getId()).isEqualTo(claimResponse.getId());
+    assertThat(capturedPatch.getValidationMessages().isEmpty()).isFalse();
+    assertThat(capturedPatch.getStatus()).isEqualTo(ClaimStatus.INVALID);
     assertThat(context.hasClaimLevelErrors());
   }
 
@@ -199,9 +208,6 @@ class BulkClaimUpdaterTest {
                 .getFeeDetailsResponse()))
         .thenReturn(feeCalculationPatch);
 
-    //    context.addClaimError(
-    //        String.valueOf(invalidClaimResponse.getId()),
-    //        ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_ANOTHER_SUBMISSION);
     // When
     bulkClaimUpdater.updateClaims(
         SUBMISSION_ID,

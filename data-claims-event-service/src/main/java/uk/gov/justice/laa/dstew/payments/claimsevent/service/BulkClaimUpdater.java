@@ -74,32 +74,6 @@ public class BulkClaimUpdater {
             return;
           }
 
-          //          Optional<FeeCalculationResponse> feeCalculationResponse =
-          //              getFeeCalculationResponse(areaOfLaw, context, claim);
-          //
-          //          if (feeCalculationResponse.isPresent()) {
-          //            FeeCalculationPatch feeCalculationPatch =
-          //                buildFeeCalculationPatch(
-          //                    feeCalculationResponse,
-          // feeDetailsResponseMap.get(claim.getFeeCode()));
-          //
-          //            // If a claim was found to be invalid, make the rest of the claims invalid
-          //            ClaimStatus claimStatus = getClaimStatus(claim.getId(), context);
-          //            ClaimPatch claimPatch =
-          //                buildClaimPatch(claim, feeCalculationPatch, context, claimStatus);
-          //
-          //            dataClaimsRestClient.updateClaim(
-          //                submissionId, UUID.fromString(claim.getId()), claimPatch);
-          //
-          //            log.debug("Claim {} status updated to {}", claim.getId(), claimStatus);
-          //            claimsUpdated.getAndIncrement();
-          //          } else {
-          //            context.addClaimError(
-          //                claim.getId(),
-          //                ClaimValidationError.TECHNICAL_ERROR_FEE_CALCULATION_SERVICE,
-          //                claim.getFeeCode());
-          //          }
-
           Optional<FeeCalculationResponse> feeCalculationResponse =
               getFeeCalculationResponse(areaOfLaw, context, claim);
 
@@ -122,7 +96,7 @@ public class BulkClaimUpdater {
                     Optional.empty(), feeDetailsResponseMap.get(claim.getFeeCode()));
           }
 
-          // Get claim status and build claim patch
+          // If a claim was found to be invalid, make the rest of the claims invalid
           ClaimStatus claimStatus = getClaimStatus(claim.getId(), context);
           ClaimPatch claimPatch = buildClaimPatch(claim, feeCalculationPatch, context, claimStatus);
 
