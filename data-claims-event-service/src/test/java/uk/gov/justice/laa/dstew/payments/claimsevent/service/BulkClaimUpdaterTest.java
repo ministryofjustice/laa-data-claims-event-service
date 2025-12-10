@@ -137,6 +137,7 @@ class BulkClaimUpdaterTest {
     verify(mockEventServiceMetricService).stopFspValidationTimer(claimIdCaptor.capture());
     verify(mockFeeCalculationService)
         .calculateFee(eq(claimResponse), eq(context), eq(AreaOfLaw.LEGAL_HELP));
+    assertThat(context.hasClaimLevelErrors());
   }
 
   @Test
@@ -198,9 +199,9 @@ class BulkClaimUpdaterTest {
                 .getFeeDetailsResponse()))
         .thenReturn(feeCalculationPatch);
 
-    context.addClaimError(
-        String.valueOf(invalidClaimResponse.getId()),
-        ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_ANOTHER_SUBMISSION);
+    //    context.addClaimError(
+    //        String.valueOf(invalidClaimResponse.getId()),
+    //        ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_ANOTHER_SUBMISSION);
     // When
     bulkClaimUpdater.updateClaims(
         SUBMISSION_ID,
@@ -210,10 +211,21 @@ class BulkClaimUpdaterTest {
         feeDetailsResponseWrapperHashMap);
     // Then
     // Should skip INVALID claim so only claim two exists
-    verify(dataClaimsRestClient, times(1)).updateClaim(any(), any(), claimPatchCaptor.capture());
+    verify(dataClaimsRestClient, times(2)).updateClaim(any(), any(), claimPatchCaptor.capture());
     ClaimPatch capturedPatch = claimPatchCaptor.getAllValues().getFirst();
     assertThat(capturedPatch.getId()).isEqualTo(validClaimResponse.getId());
     assertThat(capturedPatch.getStatus()).isEqualTo(ClaimStatus.VALID);
+    ClaimPatch capturedPatchTwo = claimPatchCaptor.getAllValues().get(1);
+    assertThat(capturedPatchTwo.getId()).isEqualTo(invalidClaimResponse.getId());
+    assertThat(capturedPatchTwo.getStatus()).isEqualTo(ClaimStatus.INVALID);
+    org.hamcrest.MatcherAssert.assertThat(
+        capturedPatchTwo.getValidationMessages(),
+        org.hamcrest.Matchers.contains(
+            org.hamcrest.beans.HasPropertyWithValue.hasProperty(
+                "displayMessage",
+                org.hamcrest.CoreMatchers.is(
+                    ClaimValidationError.TECHNICAL_ERROR_FEE_CALCULATION_SERVICE
+                        .getDisplayMessage()))));
   }
 
   @Test
