@@ -155,7 +155,6 @@ public class BulkClaimUpdater {
       final Optional<FeeCalculationResponse> feeCalculationResponse,
       final FeeDetailsResponseWrapper feeDetailsResponseWrapper) {
     return feeCalculationPatchMapper.mapToFeeCalculationPatch(
-        feeCalculationResponse.orElse(null),
-        feeDetailsResponseWrapper.getFeeDetailsResponse());
+        feeCalculationResponse.orElse(null), feeDetailsResponseWrapper.getFeeDetailsResponse());
   }
 }
