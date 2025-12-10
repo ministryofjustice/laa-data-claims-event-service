@@ -17,8 +17,10 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
+import uk.gov.justice.laa.dstew.payments.claimsevent.exception.BulkClaimFeeCalculationNotFoundException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.mapper.FeeCalculationPatchMapper;
 import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationResponse;
@@ -76,19 +78,24 @@ public class BulkClaimUpdater {
           Optional<FeeCalculationResponse> feeCalculationResponse =
               getFeeCalculationResponse(areaOfLaw, context, claim);
 
-          FeeCalculationPatch feeCalculationPatch =
-              buildFeeCalculationPatch(
-                  feeCalculationResponse, feeDetailsResponseMap.get(claim.getFeeCode()));
+          if (feeCalculationResponse.isPresent()) {
+              FeeCalculationPatch feeCalculationPatch =
+                      buildFeeCalculationPatch(
+                              feeCalculationResponse, feeDetailsResponseMap.get(claim.getFeeCode()));
 
-          // If a claim was found to be invalid, make the rest of the claims invalid
-          ClaimStatus claimStatus = getClaimStatus(claim.getId(), context);
-          ClaimPatch claimPatch = buildClaimPatch(claim, feeCalculationPatch, context, claimStatus);
+              // If a claim was found to be invalid, make the rest of the claims invalid
+              ClaimStatus claimStatus = getClaimStatus(claim.getId(), context);
+              ClaimPatch claimPatch = buildClaimPatch(claim, feeCalculationPatch, context, claimStatus);
 
-          dataClaimsRestClient.updateClaim(
-              submissionId, UUID.fromString(claim.getId()), claimPatch);
+              dataClaimsRestClient.updateClaim(
+                      submissionId, UUID.fromString(claim.getId()), claimPatch);
 
-          log.debug("Claim {} status updated to {}", claim.getId(), claimStatus);
-          claimsUpdated.getAndIncrement();
+              log.debug("Claim {} status updated to {}", claim.getId(), claimStatus);
+              claimsUpdated.getAndIncrement();
+          } else {
+              context.addClaimError(claim.getId(), ClaimValidationError.TECHNICAL_ERROR_FEE_CALCULATION_SERVICE, claim.getFeeCode());
+          }
+
         });
     log.debug(
         "Claim updates completed for submission {}. Claims updated: {}. "
@@ -146,6 +153,6 @@ public class BulkClaimUpdater {
       final Optional<FeeCalculationResponse> feeCalculationResponse,
       final FeeDetailsResponseWrapper feeDetailsResponseWrapper) {
     return feeCalculationPatchMapper.mapToFeeCalculationPatch(
-        feeCalculationResponse.orElse(null), feeDetailsResponseWrapper.getFeeDetailsResponse());
+        feeCalculationResponse.orElseThrow(BulkClaimFeeCalculationNotFoundException::new), feeDetailsResponseWrapper.getFeeDetailsResponse());
   }
 }
