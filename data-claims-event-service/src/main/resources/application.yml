@@ -43,7 +43,6 @@ management:
       show-details: always
 
 sentry:
-  enabled: ${SENTRY_ENABLED:false}
   dsn: ${SENTRY_DSN:}
   environment: ${SENTRY_ENVIRONMENT:local}
   traces-sample-rate: ${SENTRY_TRACES_SAMPLE_RATE:1}
