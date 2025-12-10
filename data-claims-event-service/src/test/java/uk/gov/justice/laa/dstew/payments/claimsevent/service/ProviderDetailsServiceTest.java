@@ -184,4 +184,129 @@ class ProviderDetailsServiceTest {
     verify(client, times(1)).getProviderFirmSchedules(officeCode, areaOfLaw, firstDate);
     verify(client, times(1)).getProviderFirmSchedules(officeCode, areaOfLaw, gapDate);
   }
+
+  @Test
+  void cacheMergesWindowsAcrossMultipleMissesAndReusesHits() {
+    String officeCode = "0P322F";
+    String areaOfLaw = "LEGAL HELP";
+
+    LocalDate initial = LocalDate.of(2019, 8, 20);
+    LocalDate covered = LocalDate.of(2018, 11, 21);
+    LocalDate extendEnd = LocalDate.of(2019, 9, 26);
+    LocalDate extendStart = LocalDate.of(2017, 6, 27);
+    LocalDate gapFill = LocalDate.of(2018, 7, 30);
+
+    ProviderFirmOfficeContractAndScheduleDto sept18ToAug19 =
+        dtoWithWindow(officeCode, LocalDate.of(2018, 9, 1), LocalDate.of(2019, 8, 31));
+    ProviderFirmOfficeContractAndScheduleDto sept18ToAug20 =
+        dtoWithWindow(officeCode, LocalDate.of(2018, 9, 1), LocalDate.of(2020, 8, 31));
+    ProviderFirmOfficeContractAndScheduleDto apr17ToMar18 =
+        dtoWithWindow(officeCode, LocalDate.of(2017, 4, 1), LocalDate.of(2018, 3, 31));
+    ProviderFirmOfficeContractAndScheduleDto apr17ToAug20 =
+        dtoWithWindow(officeCode, LocalDate.of(2017, 4, 1), LocalDate.of(2020, 8, 31));
+
+    when(client.getProviderFirmSchedules(officeCode, areaOfLaw, initial))
+        .thenReturn(Mono.just(sept18ToAug19));
+    when(client.getProviderFirmSchedules(officeCode, areaOfLaw, extendEnd))
+        .thenReturn(Mono.just(sept18ToAug20));
+    when(client.getProviderFirmSchedules(officeCode, areaOfLaw, extendStart))
+        .thenReturn(Mono.just(apr17ToMar18));
+    when(client.getProviderFirmSchedules(officeCode, areaOfLaw, gapFill))
+        .thenReturn(Mono.just(apr17ToAug20));
+
+    StepVerifier.create(service.getProviderFirmSchedules(officeCode, areaOfLaw, initial))
+        .expectNext(sept18ToAug19)
+        .verifyComplete();
+
+    StepVerifier.create(service.getProviderFirmSchedules(officeCode, areaOfLaw, covered))
+        .expectNext(sept18ToAug19)
+        .verifyComplete();
+
+    StepVerifier.create(service.getProviderFirmSchedules(officeCode, areaOfLaw, extendEnd))
+        .expectNext(sept18ToAug20)
+        .verifyComplete();
+
+    StepVerifier.create(service.getProviderFirmSchedules(officeCode, areaOfLaw, extendStart))
+        .expectNext(apr17ToMar18)
+        .verifyComplete();
+
+    StepVerifier.create(service.getProviderFirmSchedules(officeCode, areaOfLaw, gapFill))
+        .expectNext(apr17ToAug20)
+        .verifyComplete();
+
+    List<LocalDate> cachedDates =
+        List.of(
+            LocalDate.of(2019, 8, 5),
+            LocalDate.of(2019, 4, 29),
+            LocalDate.of(2018, 5, 30),
+            LocalDate.of(2019, 4, 12),
+            LocalDate.of(2019, 1, 22),
+            LocalDate.of(2018, 3, 26),
+            LocalDate.of(2017, 11, 10),
+            LocalDate.of(2018, 10, 1),
+            LocalDate.of(2019, 2, 28));
+
+    cachedDates.forEach(
+        date ->
+            StepVerifier.create(service.getProviderFirmSchedules(officeCode, areaOfLaw, date))
+                .expectNextMatches(dto -> dto.getSchedules().size() == 4 && covers(dto, date))
+                .verifyComplete());
+
+    verify(client, times(1)).getProviderFirmSchedules(officeCode, areaOfLaw, initial);
+    verify(client, times(1)).getProviderFirmSchedules(officeCode, areaOfLaw, extendEnd);
+    verify(client, times(1)).getProviderFirmSchedules(officeCode, areaOfLaw, extendStart);
+    verify(client, times(1)).getProviderFirmSchedules(officeCode, areaOfLaw, gapFill);
+    verifyNoMoreInteractions(client);
+  }
+
+  @Test
+  void negativeCacheIsScopedToEffectiveDate() {
+    String officeCode = "NEG_OFFICE";
+    String areaOfLaw = "CRIME";
+    LocalDate missingDate = LocalDate.of(2020, 1, 1);
+    LocalDate otherDate = LocalDate.of(2020, 2, 1);
+
+    ProviderFirmOfficeContractAndScheduleDto dto =
+        dtoWithWindow(officeCode, otherDate, otherDate.plusDays(1));
+
+    when(client.getProviderFirmSchedules(officeCode, areaOfLaw, missingDate))
+        .thenReturn(Mono.empty());
+    when(client.getProviderFirmSchedules(officeCode, areaOfLaw, otherDate))
+        .thenReturn(Mono.just(dto));
+
+    StepVerifier.create(service.getProviderFirmSchedules(officeCode, areaOfLaw, missingDate))
+        .verifyComplete();
+
+    StepVerifier.create(service.getProviderFirmSchedules(officeCode, areaOfLaw, missingDate))
+        .verifyComplete();
+
+    StepVerifier.create(service.getProviderFirmSchedules(officeCode, areaOfLaw, otherDate))
+        .expectNext(dto)
+        .verifyComplete();
+
+    verify(client, times(1)).getProviderFirmSchedules(officeCode, areaOfLaw, missingDate);
+    verify(client, times(1)).getProviderFirmSchedules(officeCode, areaOfLaw, otherDate);
+    verifyNoMoreInteractions(client);
+  }
+
+  private ProviderFirmOfficeContractAndScheduleDto dtoWithWindow(
+      String officeCode, LocalDate start, LocalDate end) {
+    return ProviderFirmOfficeContractAndScheduleDto.builder()
+        .office(ProviderFirmOfficeSummary.builder().firmOfficeCode(officeCode).build())
+        .schedules(
+            List.of(
+                FirmOfficeContractAndScheduleDetails.builder()
+                    .scheduleStartDate(start)
+                    .scheduleEndDate(end)
+                    .build()))
+        .build();
+  }
+
+  private boolean covers(ProviderFirmOfficeContractAndScheduleDto dto, LocalDate effectiveDate) {
+    return dto.getSchedules().stream()
+        .anyMatch(
+            schedule ->
+                !effectiveDate.isBefore(schedule.getScheduleStartDate())
+                    && !effectiveDate.isAfter(schedule.getScheduleEndDate()));
+  }
 }

@@ -243,7 +243,8 @@ public class ProviderDetailsService {
   private ProviderFirmOfficeContractAndScheduleDto mergeSchedules(
       ProviderFirmOfficeContractAndScheduleDto existing,
       ProviderFirmOfficeContractAndScheduleDto incoming) {
-    ProviderFirmOfficeContractAndScheduleDto merged = new ProviderFirmOfficeContractAndScheduleDto();
+    ProviderFirmOfficeContractAndScheduleDto merged =
+        new ProviderFirmOfficeContractAndScheduleDto();
     merged.setFirm(
         incoming.getFirm() != null
             ? incoming.getFirm()
