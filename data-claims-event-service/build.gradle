@@ -2,7 +2,10 @@ plugins {
     id 'io.freefair.lombok' version '8.14'
     id("com.diffplug.spotless") version "7.2.1"
     id 'uk.gov.laa.springboot.laa-spring-boot-gradle-plugin' version '1.0.4'
+    id "io.sentry.jvm.gradle" version "5.12.2"
 }
+
+def versions = [sentry : '8.28.0']
 
 test {
     useJUnitPlatform()
@@ -32,6 +35,12 @@ dependencyManagement {
     imports {
         // Upgrade to fix vulnerabilities in netty
         mavenBom('io.netty:netty-bom:4.2.5.Final')
+    }
+    dependencies {
+        dependencySet(group: 'io.sentry', version: versions.sentry) {
+            entry 'sentry-spring-boot-starter'
+            entry 'sentry-logback'
+        }
     }
 }
 
@@ -96,6 +105,10 @@ dependencies {
     testImplementation 'org.awaitility:awaitility'
     testImplementation 'org.mock-server:mockserver-client-java:5.15.0'
     testImplementation("io.projectreactor:reactor-test:3.1.0.RELEASE")
+    // Sentry
+    implementation platform("io.sentry:sentry-bom:$versions.sentry")
+    implementation "io.sentry:sentry-logback:$versions.sentry"
+    implementation "io.sentry:sentry-spring-boot-starter-jakarta:$versions.sentry"
 
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
