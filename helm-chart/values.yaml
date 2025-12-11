@@ -90,15 +90,6 @@ env:
         key: APPLICATION_LOGGING_LEVEL
   - name: JAVA_TOOL_OPTIONS
     value: "-XX:MaxDirectMemorySize=128m"
-  - name: SENTRY_DSN
-    valueFrom:
-      secretKeyRef:
-        name: laa-data-claims-event-service-secrets
-        key: SENTRY_DSN
-  - name: SENTRY_ENVIRONMENT
-    value: "production"
-  - name: SENTRY_TRACES_SAMPLE_RATE
-    value: "0.2"
 
 grafana:
   enabled: true
@@ -117,3 +108,8 @@ resources:
   requests:
     cpu: 25m
     memory: 1G
+
+sentry:
+  enabled: true
+  environment: production
+  tracesSampleRate: 0.2
