@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import org.junit.jupiter.api.*;
 import org.mockserver.model.HttpRequest;
@@ -33,7 +32,6 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
 
   public static final String PROVIDER_OFFICES = "/api/v1/provider-offices/";
   public static final String SCHEDULES_ENDPOINT = "/schedules";
-  private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy");
   private ProviderDetailsRestClient providerDetailsRestClient;
 
   @BeforeEach
@@ -236,8 +234,7 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
 
       // When
       Mono<ProviderFirmOfficeContractAndScheduleDto> result =
-          providerDetailsRestClient.getProviderFirmSchedules(
-              officeCode, areaOfLaw, DATE_FORMATTER.format(effectiveDate));
+          providerDetailsRestClient.getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate);
 
       // Then
       Optional<ProviderFirmOfficeContractAndScheduleDto> providerFirmSummary =
@@ -273,8 +270,7 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
 
       // When
       Mono<ProviderFirmOfficeContractAndScheduleDto> result =
-          providerDetailsRestClient.getProviderFirmSchedules(
-              officeCode, areaOfLaw, DATE_FORMATTER.format(effectiveDate));
+          providerDetailsRestClient.getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate);
 
       // Then
       Optional<ProviderFirmOfficeContractAndScheduleDto> providerFirmSummary =
@@ -308,7 +304,7 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
       // When
       Mono<ProviderFirmOfficeContractAndScheduleDto> result =
           providerDetailsRestClient
-              .getProviderFirmSchedules(officeCode, areaOfLaw, DATE_FORMATTER.format(effectiveDate))
+              .getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate)
               .onErrorResume(throwable -> Mono.empty());
 
       // Then
@@ -339,8 +335,7 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
 
       // When
       Mono<ProviderFirmOfficeContractAndScheduleDto> result =
-          providerDetailsRestClient.getProviderFirmSchedules(
-              officeCode, areaOfLaw, DATE_FORMATTER.format(effectiveDate));
+          providerDetailsRestClient.getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate);
 
       // Then
       assertThatThrownBy(result::block)
@@ -369,8 +364,7 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
 
       // When
       Mono<ProviderFirmOfficeContractAndScheduleDto> result =
-          providerDetailsRestClient.getProviderFirmSchedules(
-              officeCode, areaOfLaw, DATE_FORMATTER.format(effectiveDate));
+          providerDetailsRestClient.getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate);
 
       // Then
       assertThatThrownBy(result::block)

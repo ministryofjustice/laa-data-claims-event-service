@@ -105,8 +105,8 @@ class ProviderDetailsServiceCacheIntegrationTest extends MockServerIntegrationTe
   @Test
   void shouldCacheNegativeResponsesPerEffectiveDate() throws Exception {
     String officeCode = "NEG_0P322F";
-    LocalDate missingDate = LocalDate.of(2020, 1, 1);
-    LocalDate otherDate = LocalDate.of(2020, 2, 1);
+    LocalDate missingDate = LocalDate.of(2009, 1, 1);
+    LocalDate otherDate = LocalDate.of(2009, 2, 1);
 
     stubNegative(officeCode, missingDate);
     stubCoverage(officeCode, otherDate, otherDate, otherDate.plusMonths(1));
@@ -155,6 +155,11 @@ class ProviderDetailsServiceCacheIntegrationTest extends MockServerIntegrationTe
   }
 
   private void stubNegative(String officeCode, LocalDate effectiveDate) {
+    HttpResponse negativeResponse =
+        HttpResponse.response()
+            .withStatusCode(HttpStatusCode.NO_CONTENT)
+            .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+    // Strict expectation with formatted query params
     mockServerClient
         .when(
             request()
@@ -164,10 +169,7 @@ class ProviderDetailsServiceCacheIntegrationTest extends MockServerIntegrationTe
                     new Parameter("areaOfLaw", AREA_OF_LAW),
                     new Parameter("effectiveDate", FORMATTER.format(effectiveDate))),
             Times.exactly(1))
-        .respond(
-            HttpResponse.response()
-                .withStatusCode(HttpStatusCode.NO_CONTENT)
-                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN_VALUE));
+        .respond(negativeResponse);
   }
 
   private void verifyCall(String officeCode, LocalDate effectiveDate, int times) {

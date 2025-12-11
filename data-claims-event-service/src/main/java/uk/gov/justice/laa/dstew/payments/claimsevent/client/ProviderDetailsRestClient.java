@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.client;
 
+import java.time.LocalDate;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -59,6 +60,6 @@ public interface ProviderDetailsRestClient {
   Mono<ProviderFirmOfficeContractAndScheduleDto> getProviderFirmSchedules(
       final @PathVariable String officeCode,
       final @RequestParam(required = false) String areaOfLaw,
-      final @RequestParam(required = false) @DateTimeFormat(pattern = "dd-MM-yyyy") String
+      final @RequestParam(required = false) @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate
               effectiveDate);
 }
