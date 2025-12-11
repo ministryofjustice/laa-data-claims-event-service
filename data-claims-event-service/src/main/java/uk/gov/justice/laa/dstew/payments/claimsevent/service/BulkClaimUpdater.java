@@ -19,7 +19,6 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.mapper.FeeCalculationPatchMapper;
 import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
-import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationResponse;
@@ -77,23 +76,12 @@ public class BulkClaimUpdater {
           Optional<FeeCalculationResponse> feeCalculationResponse =
               getFeeCalculationResponse(areaOfLaw, context, claim);
 
-          FeeCalculationPatch feeCalculationPatch;
+          FeeCalculationPatch feeCalculationPatch = null;
 
           if (feeCalculationResponse.isPresent()) {
             feeCalculationPatch =
                 buildFeeCalculationPatch(
-                    feeCalculationResponse, feeDetailsResponseMap.get(claim.getFeeCode()));
-          } else {
-            // Add error to context when fee calculation is missing
-            context.addClaimError(
-                claim.getId(),
-                ClaimValidationError.TECHNICAL_ERROR_FEE_CALCULATION_SERVICE,
-                claim.getFeeCode());
-
-            // Build a patch with default or empty values to proceed
-            feeCalculationPatch =
-                buildFeeCalculationPatch(
-                    Optional.empty(), feeDetailsResponseMap.get(claim.getFeeCode()));
+                    feeCalculationResponse.get(), feeDetailsResponseMap.get(claim.getFeeCode()));
           }
 
           // If a claim was found to be invalid, make the rest of the claims invalid
@@ -160,9 +148,9 @@ public class BulkClaimUpdater {
   }
 
   private FeeCalculationPatch buildFeeCalculationPatch(
-      final Optional<FeeCalculationResponse> feeCalculationResponse,
+      final FeeCalculationResponse feeCalculationResponse,
       final FeeDetailsResponseWrapper feeDetailsResponseWrapper) {
     return feeCalculationPatchMapper.mapToFeeCalculationPatch(
-        feeCalculationResponse.orElse(null), feeDetailsResponseWrapper.getFeeDetailsResponse());
+        feeCalculationResponse, feeDetailsResponseWrapper.getFeeDetailsResponse());
   }
 }

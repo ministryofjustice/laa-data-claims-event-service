@@ -125,6 +125,14 @@ class BulkClaimUpdaterTest {
             eq(claimResponse), eq(context), eq(AreaOfLaw.LEGAL_HELP)))
         .thenReturn(Optional.empty());
 
+    //    var feeCalculationPatch =
+    //            new FeeCalculationPatch().claimId(UUID.fromString(claimResponse.getId()));
+    //    when(mockFeeCalculationPatchMapper.mapToFeeCalculationPatch(
+    //            null,
+    //            feeDetailsResponseWrapperHashMap
+    //                    .get(claimResponse.getFeeCode())
+    //                    .getFeeDetailsResponse()))
+    //            .thenReturn(feeCalculationPatch);
     // When
     bulkClaimUpdater.updateClaims(
         SUBMISSION_ID,
@@ -144,9 +152,9 @@ class BulkClaimUpdaterTest {
     assertThat(submissionIdCaptor.getValue()).isEqualTo(SUBMISSION_ID);
     assertThat(claimIdCaptor.getValue()).isEqualTo(UUID.fromString(claimResponse.getId()));
     assertThat(capturedPatch.getId()).isEqualTo(claimResponse.getId());
-    assertThat(capturedPatch.getValidationMessages().isEmpty()).isFalse();
-    assertThat(capturedPatch.getStatus()).isEqualTo(ClaimStatus.INVALID);
-    assertThat(context.hasClaimLevelErrors());
+    assertThat(capturedPatch.getFeeCalculationResponse()).isEqualTo(null);
+    assertThat(capturedPatch.getValidationMessages().isEmpty()).isTrue();
+    assertThat(capturedPatch.getStatus()).isEqualTo(ClaimStatus.VALID);
   }
 
   @Test
@@ -208,6 +216,9 @@ class BulkClaimUpdaterTest {
                 .getFeeDetailsResponse()))
         .thenReturn(feeCalculationPatch);
 
+    context.addClaimError(
+        String.valueOf(invalidClaimResponse.getId()),
+        ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_ANOTHER_SUBMISSION);
     // When
     bulkClaimUpdater.updateClaims(
         SUBMISSION_ID,
@@ -230,7 +241,7 @@ class BulkClaimUpdaterTest {
             org.hamcrest.beans.HasPropertyWithValue.hasProperty(
                 "displayMessage",
                 org.hamcrest.CoreMatchers.is(
-                    ClaimValidationError.TECHNICAL_ERROR_FEE_CALCULATION_SERVICE
+                    ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_ANOTHER_SUBMISSION
                         .getDisplayMessage()))));
   }
 
