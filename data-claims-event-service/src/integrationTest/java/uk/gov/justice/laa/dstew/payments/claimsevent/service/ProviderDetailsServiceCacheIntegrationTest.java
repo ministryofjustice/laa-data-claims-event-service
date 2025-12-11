@@ -170,6 +170,7 @@ class ProviderDetailsServiceCacheIntegrationTest extends MockServerIntegrationTe
                     new Parameter("effectiveDate", FORMATTER.format(effectiveDate))),
             Times.exactly(1))
         .respond(negativeResponse);
+
   }
 
   private void verifyCall(String officeCode, LocalDate effectiveDate, int times) {
