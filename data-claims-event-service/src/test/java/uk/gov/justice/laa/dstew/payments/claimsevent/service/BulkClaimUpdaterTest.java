@@ -125,14 +125,14 @@ class BulkClaimUpdaterTest {
             eq(claimResponse), eq(context), eq(AreaOfLaw.LEGAL_HELP)))
         .thenReturn(Optional.empty());
 
-    //    var feeCalculationPatch =
-    //            new FeeCalculationPatch().claimId(UUID.fromString(claimResponse.getId()));
-    //    when(mockFeeCalculationPatchMapper.mapToFeeCalculationPatch(
-    //            null,
-    //            feeDetailsResponseWrapperHashMap
-    //                    .get(claimResponse.getFeeCode())
-    //                    .getFeeDetailsResponse()))
-    //            .thenReturn(feeCalculationPatch);
+    var feeCalculationPatch =
+        new FeeCalculationPatch().claimId(UUID.fromString(claimResponse.getId()));
+    when(mockFeeCalculationPatchMapper.mapToFeeCalculationPatch(
+            null,
+            feeDetailsResponseWrapperHashMap
+                .get(claimResponse.getFeeCode())
+                .getFeeDetailsResponse()))
+        .thenReturn(feeCalculationPatch);
     // When
     bulkClaimUpdater.updateClaims(
         SUBMISSION_ID,
