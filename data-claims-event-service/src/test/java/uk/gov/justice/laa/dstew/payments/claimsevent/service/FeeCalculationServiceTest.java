@@ -192,16 +192,31 @@ class FeeCalculationServiceTest {
       when(feeSchemeMapper.mapToFeeCalculationRequest(claim, LEGAL_HELP))
           .thenReturn(feeCalculationRequest);
       when(feeSchemePlatformRestClient.calculateFee(feeCalculationRequest))
-          .thenReturn(ResponseEntity.internalServerError().build());
+          .thenThrow(
+              new WebClientResponseException(
+                  HttpStatus.INTERNAL_SERVER_ERROR,
+                  "Internal Server Error",
+                  null,
+                  null,
+                  null,
+                  null));
 
       SubmissionValidationContext context = new SubmissionValidationContext();
       context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
 
-      feeCalculationService.calculateFee(claim, context, LEGAL_HELP);
+      var actualResponse = feeCalculationService.calculateFee(claim, context, LEGAL_HELP);
 
       verify(feeSchemePlatformRestClient, times(1)).calculateFee(feeCalculationRequest);
 
-      assertThat(context.isFlaggedForRetry(claim.getId())).isTrue();
+      Assertions.assertTrue(actualResponse.isEmpty());
+      var actualClaimValidationReport = context.getClaimReport(claim.getId()).get();
+      assertThat(actualClaimValidationReport.getMessages())
+          .extracting(ValidationMessagePatch::getDisplayMessage)
+          .contains(
+              ClaimValidationError.TECHNICAL_ERROR_FEE_CALCULATION_SERVICE.getDisplayMessage());
+      assertThat(actualClaimValidationReport.getMessages())
+          .extracting(ValidationMessagePatch::getTechnicalMessage)
+          .contains("500 Internal Server Error");
     }
 
     @Test

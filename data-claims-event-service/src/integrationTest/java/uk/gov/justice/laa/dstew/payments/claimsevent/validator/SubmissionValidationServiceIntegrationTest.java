@@ -229,7 +229,7 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
               .getClaimReport("f6bde766-a0a3-483b-bf13-bef888b4f06e")
               .get()
               .getMessages();
-      var filteredMessagePath =
+      var filteredMessagePatch =
           validationMessagePatches.stream()
               .filter(
                   validationMessagePatch ->
@@ -240,7 +240,7 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
                                   .getDisplayMessage()))
               .toList();
 
-      Assertions.assertFalse(filteredMessagePath.isEmpty());
+      Assertions.assertFalse(filteredMessagePatch.isEmpty());
     }
   }
 }
