@@ -64,7 +64,7 @@ public class ProviderDetailsServiceRetryTest extends MockServerIntegrationTest {
   @Test
   void shouldRetryOnFailure_successAtThird() throws Exception {
     // given
-    LocalDate effectiveDate = LocalDate.now();
+    LocalDate effectiveDate = LocalDate.of(2010, 1, 1);
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
     stubForGetProviderOfficeReturnsErrorWithTimes(
         OFFICE_CODE,
@@ -92,7 +92,10 @@ public class ProviderDetailsServiceRetryTest extends MockServerIntegrationTest {
     mockServerClient.verify(
         request()
             .withMethod("GET")
-            .withPath("/api/v1/provider-offices/" + OFFICE_CODE + "/schedules"),
+            .withPath("/api/v1/provider-offices/" + OFFICE_CODE + "/schedules")
+            .withQueryStringParameters(
+                new Parameter("areaOfLaw", AreaOfLaw.LEGAL_HELP.getValue()),
+                new Parameter("effectiveDate", formatter.format(effectiveDate))),
         VerificationTimes.exactly(3));
   }
 }
