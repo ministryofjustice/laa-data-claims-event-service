@@ -124,7 +124,6 @@ public interface BulkSubmissionMapper {
   @Mapping(target = "caseReferenceNumber", source = "caseRefNumber")
   @Mapping(target = "uniqueFileNumber", source = "ufn")
   @Mapping(target = "caseStartDate", source = "caseStartDate")
-  @Mapping(target = "caseConcludedDate", source = "workConcludedDate")
   @Mapping(target = "representationOrderDate", source = "repOrderDate")
   @Mapping(target = "matterTypeCode", source = "matterType")
   @Mapping(target = "crimeMatterTypeCode", source = "crimeMatterType")
@@ -217,8 +216,13 @@ public interface BulkSubmissionMapper {
         claimPost.setStageReachedCode(outcome.getMatterType());
         claimPost.setNetWaitingCostsAmount(outcome.getTravelWaitingCosts());
         claimPost.setTravelWaitingCostsAmount(outcome.getTravelCosts());
+        claimPost.setCaseConcludedDate(outcome.getWorkConcludedDate());
       }
-      case LEGAL_HELP -> claimPost.setTravelWaitingCostsAmount(outcome.getTravelWaitingCosts());
+      case LEGAL_HELP -> {
+        claimPost.setTravelWaitingCostsAmount(outcome.getTravelWaitingCosts());
+        claimPost.setCaseConcludedDate(outcome.getWorkConcludedDate());
+      }
+      case MEDIATION -> claimPost.setCaseConcludedDate(outcome.getMedConcludedDate());
       default -> {
         // No area-of-law specific adjustments needed
       }

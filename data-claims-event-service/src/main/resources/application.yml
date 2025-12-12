@@ -42,6 +42,15 @@ management:
     health:
       show-details: always
 
+sentry:
+  dsn: ${SENTRY_DSN:}
+  environment: ${SENTRY_ENVIRONMENT:local}
+  traces-sample-rate: ${SENTRY_TRACES_SAMPLE_RATE:1}
+  send-default-pii: false
+  logging:
+    minimum-event-level: error
+    minimum-breadcrumb-level: info
+
 laa:
   provider-details-api:
     host: ${PROVIDER_DETAILS_API_HOSTNAME}
@@ -60,11 +69,9 @@ laa:
     visibility-timeout-seconds: 600
     visibility-extension-interval-seconds: 10
 
-
 submission:
   validation:
     minimum-period: ${SUBMISSION_VALIDATION_MINIMUM_PERIOD:APR-2025}
-
 
 resilience4j.retry:
   instances:

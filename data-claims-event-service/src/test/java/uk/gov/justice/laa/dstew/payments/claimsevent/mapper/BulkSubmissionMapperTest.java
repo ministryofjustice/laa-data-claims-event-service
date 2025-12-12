@@ -17,6 +17,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.*;
 
@@ -71,56 +72,57 @@ class BulkSubmissionMapperTest {
     assertThat(result.getCreatedByUserId()).isEqualTo(EVENT_SERVICE);
   }
 
-  @Test
-  void shouldMapOutcomesToClaimPosts() throws IOException {
-    String json = Files.readString(Path.of("src/test/resources/bulk-submission-response.json"));
+  @ParameterizedTest
+  @CsvSource({
+    "src/test/resources/bulk-submission-response.json, LEGAL_HELP",
+    "src/test/resources/bulk-submission-response-crime-lower.json, CRIME_LOWER",
+    "src/test/resources/bulk-submission-response-mediation.json, MEDIATION"
+  })
+  void shouldMapOutcomesToClaimPostsAndApplyPostMappingAdjustments(
+      String filePath, String areaOfLawName) throws IOException {
+    String json = Files.readString(Path.of(filePath));
     GetBulkSubmission200Response bulkSubmission =
         objectMapper.readValue(json, GetBulkSubmission200Response.class);
+    AreaOfLaw areaOfLaw = AreaOfLaw.valueOf(areaOfLawName);
 
-    var claims = mapper.mapToClaimPosts(bulkSubmission.getDetails().getOutcomes(), LEGAL_HELP);
+    var claims = mapper.mapToClaimPosts(bulkSubmission.getDetails().getOutcomes(), areaOfLaw);
 
     assertThat(claims).hasSize(1);
     ClaimPost claim = claims.getFirst();
     assertThat(claim.getStatus()).isEqualTo(ClaimStatus.READY_TO_PROCESS);
-    assertThat(claim.getScheduleReference()).isEqualTo("01/2Q286D/2024/01");
-    assertThat(claim.getCaseReferenceNumber()).isEqualTo("JI/OKUSU");
-    assertThat(claim.getUniqueFileNumber()).isEqualTo("220422/013");
-    assertThat(claim.getRepresentationOrderDate()).isEqualTo("2024-05-15");
-    assertThat(claim.getStageReachedCode()).isEqualTo("PROK");
-    assertThat(claim.getCaseStageCode()).isEqualTo("FPC01");
-    assertThat(claim.getStandardFeeCategoryCode()).isEqualTo("1A-LSF");
-    assertThat(claim.getMedicalReportsCount()).isEqualTo(3);
-    assertThat(claim.getSurgeryClientsCount()).isEqualTo(4);
-    assertThat(claim.getSurgeryMattersCount()).isEqualTo(2);
-    assertThat(claim.getMatterTypeCode()).isEqualTo("FAMX:FAPP");
-    assertThat(claim.getNetWaitingCostsAmount()).isNull();
-    assertThat(claim.getTravelWaitingCostsAmount())
-        .isEqualTo(bulkSubmission.getDetails().getOutcomes().getFirst().getTravelWaitingCosts());
-    assertThat(claim.getCreatedByUserId()).isEqualTo(EVENT_SERVICE);
-  }
-
-  @Test
-  void shouldMapOutcomesToClaimPostsAndMapMatterTypeToStageReachedCode() throws IOException {
-    String json =
-        Files.readString(Path.of("src/test/resources/bulk-submission-response-crime-lower.json"));
-    GetBulkSubmission200Response bulkSubmission =
-        objectMapper.readValue(json, GetBulkSubmission200Response.class);
-
-    var claims = mapper.mapToClaimPosts(bulkSubmission.getDetails().getOutcomes(), CRIME_LOWER);
-
-    assertThat(claims).hasSize(1);
-    ClaimPost claim = claims.getFirst();
-    assertThat(claim.getStatus()).isEqualTo(ClaimStatus.READY_TO_PROCESS);
-    assertThat(claim.getStageReachedCode()).isEqualTo("FAMX");
-    assertThat(claim.getMatterTypeCode()).isEqualTo("FAMX");
-    assertThat(claim.getCreatedByUserId()).isEqualTo(EVENT_SERVICE);
     BulkSubmissionOutcome bulkSubmissionOutcome =
         bulkSubmission.getDetails().getOutcomes().getFirst();
-    assertThat(claim.getTravelWaitingCostsAmount())
-        .isEqualTo(bulkSubmissionOutcome.getTravelCosts());
-    assertThat(claim.getNetWaitingCostsAmount())
-        .isEqualTo(bulkSubmissionOutcome.getTravelWaitingCosts());
-    assertThat(claim.getIsVatApplicable()).isTrue();
+    switch (areaOfLaw) {
+      case LEGAL_HELP -> {
+        assertThat(claim.getCaseConcludedDate()).isEqualTo("2023-09-30");
+        assertThat(claim.getStageReachedCode()).isEqualTo("PROK");
+        assertThat(claim.getStandardFeeCategoryCode()).isEqualTo("1A-LSF");
+        assertThat(claim.getMatterTypeCode()).isEqualTo("FAMX:FAPP");
+        assertThat(claim.getIsVatApplicable()).isFalse();
+        assertThat(claim.getNetWaitingCostsAmount()).isNull();
+        assertThat(claim.getMedicalReportsCount()).isEqualTo(3);
+        assertThat(claim.getSurgeryClientsCount()).isEqualTo(4);
+        assertThat(claim.getSurgeryMattersCount()).isEqualTo(2);
+      }
+      case CRIME_LOWER -> {
+        assertThat(claim.getCaseConcludedDate()).isEqualTo("2023-09-30");
+        assertThat(claim.getStageReachedCode()).isEqualTo("FAMX");
+        assertThat(claim.getTravelWaitingCostsAmount())
+            .isEqualTo(bulkSubmissionOutcome.getTravelCosts());
+        assertThat(claim.getNetWaitingCostsAmount())
+            .isEqualTo(bulkSubmissionOutcome.getTravelWaitingCosts());
+        assertThat(claim.getIsVatApplicable()).isTrue();
+      }
+      case MEDIATION -> {
+        assertThat(claim.getCaseConcludedDate()).isEqualTo("2024-09-30");
+        assertThat(claim.getStageReachedCode()).isEqualTo("PROK");
+      }
+    }
+    assertThat(claim.getCaseStageCode()).isEqualTo("FPC01");
+    assertThat(claim.getUniqueFileNumber()).isEqualTo("220422/013");
+    assertThat(claim.getCaseReferenceNumber()).isEqualTo("JI/OKUSU");
+    assertThat(claim.getScheduleReference()).isEqualTo("01/2Q286D/2024/01");
+    assertThat(claim.getCreatedByUserId()).isEqualTo(EVENT_SERVICE);
   }
 
   @Test
