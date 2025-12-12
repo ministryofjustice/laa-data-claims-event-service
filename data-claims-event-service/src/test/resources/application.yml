@@ -15,6 +15,9 @@ spring:
 submission:
   validation:
     minimum-period: JAN-2018
+claim:
+  validation:
+    claim-validation-batch-size: ${CLAIM_VALIDATION_BATCH_SIZE:100}
 
 resilience4j.retry:
   instances:

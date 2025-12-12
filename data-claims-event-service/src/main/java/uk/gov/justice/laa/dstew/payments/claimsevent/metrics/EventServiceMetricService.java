@@ -301,7 +301,7 @@ public class EventServiceMetricService {
       try (var timerResource = timer.timer()) {
         double v = timerResource.observeDuration();
         if (v > 2) {
-          log.warn("Submission validation took {} seconds for claim {}", v, claimId);
+          log.info("Submission validation took {} seconds for claim {}", v, claimId);
         }
       }
     }
