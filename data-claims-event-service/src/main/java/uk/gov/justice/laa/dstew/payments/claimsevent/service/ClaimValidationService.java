@@ -1,6 +1,9 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -12,8 +15,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionClaim;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResultSet;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessageType;
@@ -55,32 +57,70 @@ public class ClaimValidationService {
   public void validateAndUpdateClaims(
       SubmissionResponse submission, SubmissionValidationContext context) {
 
-    List<ClaimResponse> submissionClaims =
-        submission.getClaims().stream()
-            .filter(claim -> ClaimStatus.READY_TO_PROCESS.equals(claim.getStatus()))
-            .map(SubmissionClaim::getClaimId)
-            .map(
-                claimId ->
-                    dataClaimsRestClient.getClaim(submission.getSubmissionId(), claimId).getBody())
-            .toList();
+    int pageNumber = 0;
+    Integer totalPages = Integer.MAX_VALUE;
 
-    Map<String, FeeDetailsResponseWrapper> feeDetailsResponseMap =
-        categoryOfLawValidationService.getFeeDetailsResponseForAllFeeCodesInClaims(
-            submissionClaims);
+    List<ClaimResponse> submissionClaimsToSave = new ArrayList<>(Collections.emptyList());
+    Map<String, FeeDetailsResponseWrapper> feeDetailsResponseMap = new HashMap<>();
 
-    submissionClaims.forEach(
-        claim ->
-            validateClaim(
-                claim,
-                submissionClaims,
-                feeDetailsResponseMap,
-                submission.getAreaOfLaw(),
-                submission.getOfficeAccountNumber(),
-                context));
-    // Update claims status after validations
+    // Loop over multiple pages in order to process claims in batches
+    while (pageNumber < totalPages) {
+
+      ClaimResultSet claims =
+          dataClaimsRestClient
+              .getClaims(
+                  submission.getOfficeAccountNumber(),
+                  String.valueOf(submission.getSubmissionId()),
+                  Collections.emptyList(),
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  pageNumber,
+                  250,
+                  null)
+              .getBody();
+
+      if (claims == null) {
+        throw new EventServiceIllegalArgumentException("Claims response is null from Claims API");
+      }
+
+      log.info(
+          "Validating claims page {} from submission {}", pageNumber, submission.getSubmissionId());
+
+      // Set total pages
+      totalPages = claims.getTotalPages();
+
+      List<ClaimResponse> submissionClaims = claims.getContent();
+
+      feeDetailsResponseMap.putAll(
+          categoryOfLawValidationService.getFeeDetailsResponseForAllFeeCodesInClaims(
+              submissionClaims));
+
+      submissionClaims.forEach(
+          claim ->
+              validateClaim(
+                  claim,
+                  submissionClaims,
+                  feeDetailsResponseMap,
+                  submission.getAreaOfLaw(),
+                  submission.getOfficeAccountNumber(),
+                  context));
+
+      submissionClaimsToSave.addAll(submissionClaims);
+
+      // Increment page number
+      pageNumber++;
+    }
+
+    log.debug(
+        "Saving all claims for submission {} to Data Claims API", submission.getSubmissionId());
+
+    // Update claims status after all validations
     bulkClaimUpdater.updateClaims(
         submission.getSubmissionId(),
-        submissionClaims,
+        submissionClaimsToSave,
         submission.getAreaOfLaw(),
         context,
         feeDetailsResponseMap);
