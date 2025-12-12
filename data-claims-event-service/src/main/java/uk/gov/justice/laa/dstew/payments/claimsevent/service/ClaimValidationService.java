@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -44,18 +45,31 @@ public class ClaimValidationService {
   private final EventServiceMetricService eventServiceMetricService;
   private final BulkClaimUpdater bulkClaimUpdater;
   private final List<ClaimValidator> claimValidator;
+  private final int claimValidationBatchSize;
 
+  /**
+   * Claim validation service constructor.
+   *
+   * @param categoryOfLawValidationService The category of law validation service
+   * @param dataClaimsRestClient The data claims rest client
+   * @param eventServiceMetricService The event service
+   * @param bulkClaimUpdater The bulk claim updater
+   * @param claimValidator The claim validator
+   * @param claimValidationBatchSize The batch size of claims to validate at once
+   */
   public ClaimValidationService(
       CategoryOfLawValidationService categoryOfLawValidationService,
       DataClaimsRestClient dataClaimsRestClient,
       EventServiceMetricService eventServiceMetricService,
       BulkClaimUpdater bulkClaimUpdater,
-      List<ClaimValidator> claimValidator) {
+      List<ClaimValidator> claimValidator,
+      @Value("${claim.validation.claim-validation-batch-size}") int claimValidationBatchSize) {
     this.categoryOfLawValidationService = categoryOfLawValidationService;
     this.dataClaimsRestClient = dataClaimsRestClient;
     this.eventServiceMetricService = eventServiceMetricService;
     this.bulkClaimUpdater = bulkClaimUpdater;
     this.claimValidator = claimValidator;
+    this.claimValidationBatchSize = claimValidationBatchSize;
   }
 
   /**
@@ -84,7 +98,7 @@ public class ClaimValidationService {
                   null,
                   null,
                   pageNumber,
-                  100,
+                  claimValidationBatchSize,
                   "id,asc")
               .getBody();
 
@@ -121,7 +135,8 @@ public class ClaimValidationService {
       pageNumber++;
 
       log.debug(
-          "Saving claims from page {} for submission {} to Data Claims API", pageNumber,
+          "Saving claims from page {} for submission {} to Data Claims API",
+          pageNumber,
           submission.getSubmissionId());
 
       // Update claims status after all validations
@@ -132,9 +147,7 @@ public class ClaimValidationService {
           context,
           feeDetailsResponseMap);
     }
-
   }
-
 
   /**
    * Validates the provided claim by performing various checks such as: - JSON schema validation , -
@@ -143,11 +156,11 @@ public class ClaimValidationService {
    * errors encountered during the validation process are added to the submission validation
    * context.
    *
-   * @param claim                 the claim object to validate
+   * @param claim the claim object to validate
    * @param feeDetailsResponseMap a map containing FeeDetailsResponse and their corresponding
-   *                              feeCodes
-   * @param areaOfLaw             the area of law for the parent submission: some validations change
-   *                              depending on the area of law.
+   *     feeCodes
+   * @param areaOfLaw the area of law for the parent submission: some validations change depending
+   *     on the area of law.
    */
   private void validateClaim(
       ClaimResponse claim,
@@ -193,19 +206,21 @@ public class ClaimValidationService {
                 case BasicClaimValidator validator -> validator.validate(claim, context);
                 case ClaimWithAreaOfLawValidator validator ->
                     validator.validate(claim, context, areaOfLaw);
-                case EffectiveCategoryOfLawClaimValidator validator -> validator.validate(
-                    claim, context, areaOfLaw, officeCode, feeDetailsResponseMap);
+                case EffectiveCategoryOfLawClaimValidator validator ->
+                    validator.validate(
+                        claim, context, areaOfLaw, officeCode, feeDetailsResponseMap);
                 case DisbursementClaimStartDateValidator validator ->
                     validator.validate(claim, context, feeCalculationType);
                 case MandatoryFieldClaimValidator validator ->
                     validator.validate(claim, context, areaOfLaw, feeCalculationType);
-                case DuplicateClaimValidator validator -> validator.validate(
-                    claim,
-                    context,
-                    areaOfLaw,
-                    officeCode,
-                    submissionClaims,
-                    feeCalculationType);
+                case DuplicateClaimValidator validator ->
+                    validator.validate(
+                        claim,
+                        context,
+                        areaOfLaw,
+                        officeCode,
+                        submissionClaims,
+                        feeCalculationType);
                 default -> throw new EventServiceIllegalArgumentException("Unknown validator used");
               }
             });
