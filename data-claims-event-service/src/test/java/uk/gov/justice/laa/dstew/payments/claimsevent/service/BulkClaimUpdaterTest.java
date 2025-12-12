@@ -125,15 +125,6 @@ class BulkClaimUpdaterTest {
             eq(claimResponse), eq(context), eq(AreaOfLaw.LEGAL_HELP)))
         .thenReturn(Optional.empty());
 
-    var feeCalculationPatch =
-        new FeeCalculationPatch().claimId(UUID.fromString(claimResponse.getId()));
-    when(mockFeeCalculationPatchMapper.mapToFeeCalculationPatch(
-            null,
-            feeDetailsResponseWrapperHashMap
-                .get(claimResponse.getFeeCode())
-                .getFeeDetailsResponse()))
-        .thenReturn(feeCalculationPatch);
-
     // When
     bulkClaimUpdater.updateClaims(
         SUBMISSION_ID,
@@ -153,7 +144,7 @@ class BulkClaimUpdaterTest {
     assertThat(submissionIdCaptor.getValue()).isEqualTo(SUBMISSION_ID);
     assertThat(claimIdCaptor.getValue()).isEqualTo(UUID.fromString(claimResponse.getId()));
     assertThat(capturedPatch.getId()).isEqualTo(claimResponse.getId());
-    assertThat(capturedPatch.getFeeCalculationResponse()).isEqualTo(feeCalculationPatch);
+    assertThat(capturedPatch.getFeeCalculationResponse()).isEqualTo(null);
     assertThat(capturedPatch.getValidationMessages().isEmpty()).isTrue();
     assertThat(capturedPatch.getStatus()).isEqualTo(ClaimStatus.VALID);
   }

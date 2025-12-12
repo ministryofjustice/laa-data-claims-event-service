@@ -1,6 +1,7 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate;
 
 import java.util.List;
+import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -39,8 +40,8 @@ public final class DuplicateClaimCrimeLowerValidationServiceStrategy
           getDuplicateClaimsInCurrentSubmission(
               claimsToCompare,
               claimToCompare ->
-                  feeCode.equals(claimToCompare.getFeeCode())
-                      && uniqueFileNumber.equals(claimToCompare.getUniqueFileNumber()));
+                  Objects.equals(feeCode, claimToCompare.getFeeCode())
+                      && Objects.equals(uniqueFileNumber, claimToCompare.getUniqueFileNumber()));
 
       List<ClaimResponse> officeDuplicateClaims =
           getDuplicateClaimsInPreviousSubmission(
