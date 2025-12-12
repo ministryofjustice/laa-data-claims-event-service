@@ -18,10 +18,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.mapper.FeeSchemeMapper;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationRequest;
@@ -101,8 +105,8 @@ class FeeCalculationServiceTest {
     }
 
     @Test
-    @DisplayName("404 Not found response results in claim being flagged for retry")
-    void notFoundResponseResultsInClaimBeingFlaggedForRetry() {
+    @DisplayName("404 Not found response results in claims error")
+    void notFoundResponseResultsInValidClaim() {
 
       ClaimResponse claim = new ClaimResponse().id("claimId").feeCode("feeCode");
 
@@ -111,7 +115,14 @@ class FeeCalculationServiceTest {
       when(feeSchemeMapper.mapToFeeCalculationRequest(claim, LEGAL_HELP))
           .thenReturn(feeCalculationRequest);
       when(feeSchemePlatformRestClient.calculateFee(feeCalculationRequest))
-          .thenReturn(ResponseEntity.notFound().build());
+          .thenThrow(
+              new WebClientResponseException(
+                  HttpStatus.NOT_FOUND,
+                  "Not Found\",\"message\":\"Start Date is required for feeCode: CAPA",
+                  null,
+                  null,
+                  null,
+                  null));
 
       SubmissionValidationContext context = new SubmissionValidationContext();
       context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
@@ -120,9 +131,54 @@ class FeeCalculationServiceTest {
 
       verify(feeSchemePlatformRestClient, times(1)).calculateFee(feeCalculationRequest);
 
-      assertThat(context.isFlaggedForRetry(claim.getId())).isTrue();
+      Assertions.assertTrue(actualResponse.isEmpty());
+      var actualClaimValidationReport = context.getClaimReport(claim.getId()).get();
+
+      assertThat(actualClaimValidationReport.getMessages())
+          .extracting(ValidationMessagePatch::getDisplayMessage)
+          .contains(
+              ClaimValidationError.INVALID_FEE_CALCULATION_VALIDATION_FAILED.getDisplayMessage());
+      assertThat(actualClaimValidationReport.getMessages())
+          .extracting(ValidationMessagePatch::getTechnicalMessage)
+          .contains("404 Not Found\",\"message\":\"Start Date is required for feeCode: CAPA");
+    }
+
+    @Test
+    @DisplayName("400 Not found response results in claims error")
+    void badRequestResponseResultsInValidClaim() {
+      ClaimResponse claim = new ClaimResponse().id("claimId").feeCode("feeCode");
+
+      FeeCalculationRequest feeCalculationRequest = new FeeCalculationRequest().feeCode("feeCode");
+
+      when(feeSchemeMapper.mapToFeeCalculationRequest(claim, LEGAL_HELP))
+          .thenReturn(feeCalculationRequest);
+      when(feeSchemePlatformRestClient.calculateFee(feeCalculationRequest))
+          .thenThrow(
+              new WebClientResponseException(
+                  HttpStatus.BAD_REQUEST,
+                  "Bad Request\",\"message\":\"invalid",
+                  null,
+                  null,
+                  null,
+                  null));
+
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
+
+      var actualResponse = feeCalculationService.calculateFee(claim, context, LEGAL_HELP);
+
+      verify(feeSchemePlatformRestClient, times(1)).calculateFee(feeCalculationRequest);
 
       Assertions.assertTrue(actualResponse.isEmpty());
+      var actualClaimValidationReport = context.getClaimReport(claim.getId()).get();
+
+      assertThat(actualClaimValidationReport.getMessages())
+          .extracting(ValidationMessagePatch::getDisplayMessage)
+          .contains(
+              ClaimValidationError.INVALID_FEE_CALCULATION_VALIDATION_FAILED.getDisplayMessage());
+      assertThat(actualClaimValidationReport.getMessages())
+          .extracting(ValidationMessagePatch::getTechnicalMessage)
+          .contains("400 Bad Request\",\"message\":\"invalid");
     }
 
     @Test
