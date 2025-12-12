@@ -75,6 +75,10 @@ public class SubmissionValidationService {
           "Validation completed for submission {} with errors: {}",
           submissionId,
           context.getSubmissionValidationErrors());
+      log.debug(
+          "Validation completed for submission {} with no of claims errors: {}",
+          submissionId,
+          context.getClaimReports().size());
       submissionPatch
           .status(SubmissionStatus.VALIDATION_FAILED)
           .validationMessages(context.getSubmissionValidationErrors());

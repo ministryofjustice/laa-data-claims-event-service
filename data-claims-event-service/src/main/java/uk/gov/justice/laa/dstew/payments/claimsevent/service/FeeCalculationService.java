@@ -74,31 +74,18 @@ public class FeeCalculationService {
             }
           }
         }
+
       } catch (WebClientResponseException ex) {
         handleWebClientError(ex, claim, context);
-      } catch (Exception ex) {
-        handleUnexpectedError(ex, claim, context);
       }
     }
     log.debug("Fee calculation validation completed for claim {}", claim.getId());
     return Optional.ofNullable(feeCalculationResponse);
   }
 
-  private void handleUnexpectedError(
-      Exception ex, ClaimResponse claim, SubmissionValidationContext context) {
-    log.error("Unexpected error during fee calculation", ex);
-    context.addClaimMessages(
-        claim.getId(),
-        getValidationMessagePatches(
-            ex, ClaimValidationError.TECHNICAL_ERROR_FEE_CALCULATION_SERVICE));
-  }
-
   private void handleWebClientError(
       WebClientResponseException ex, ClaimResponse claim, SubmissionValidationContext context) {
-    ClaimValidationError errorType =
-        (ex instanceof WebClientResponseException.BadRequest)
-            ? ClaimValidationError.INVALID_FEE_CALCULATION_VALIDATION_FAILED
-            : ClaimValidationError.TECHNICAL_ERROR_FEE_CALCULATION_SERVICE;
+    ClaimValidationError errorType = getClaimValidationError(ex);
 
     log.error(
         "Fee calculation request failed with status {}: {}",
@@ -117,5 +104,12 @@ public class FeeCalculationService {
             .technicalMessage(ex.getMessage())
             .source(claimValidationError.getSource())
             .type(claimValidationError.getType()));
+  }
+
+  private static ClaimValidationError getClaimValidationError(WebClientResponseException ex) {
+    return switch (ex.getStatusCode().value()) {
+      case 400, 404 -> ClaimValidationError.INVALID_FEE_CALCULATION_VALIDATION_FAILED;
+      default -> ClaimValidationError.TECHNICAL_ERROR_FEE_CALCULATION_SERVICE;
+    };
   }
 }
