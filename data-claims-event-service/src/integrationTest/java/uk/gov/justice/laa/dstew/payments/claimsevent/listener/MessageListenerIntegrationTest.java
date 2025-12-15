@@ -66,7 +66,7 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
             .status(SubmissionStatus.VALIDATION_SUCCEEDED)
             .build();
     stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodySucceeded);
-    stubReturnNoClaims(SUBMISSION_ID);
+    stubReturnNoClaims();
 
     getStubForGetSubmissionByCriteria(
         List.of(
@@ -252,7 +252,7 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
             .status(SubmissionStatus.VALIDATION_FAILED)
             .build();
     stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodySucceeded);
-    stubReturnNoClaims(SUBMISSION_ID);
+    stubReturnNoClaims();
 
     getStubForGetSubmissionByCriteria(
         List.of(
