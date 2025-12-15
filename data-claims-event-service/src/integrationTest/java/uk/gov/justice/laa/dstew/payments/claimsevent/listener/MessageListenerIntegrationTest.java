@@ -99,7 +99,6 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
             .status(SubmissionStatus.VALIDATION_SUCCEEDED)
             .build();
     stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodySucceeded);
-    stubForGetClaim(SUBMISSION_ID, CLAIM_ID, "data-claims/get-claim/get-claim-2.json");
 
     getStubForGetSubmissionByCriteria(
         List.of(
@@ -113,7 +112,7 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
         List.of(new Parameter("areaOfLaw", AREA_OF_LAW.getValue())),
         "provider-details/get-firm-schedules-openapi-200.json");
 
-    stubForGetClaims(Collections.emptyList(), "data-claims/get-claims/no-claims.json");
+    stubForGetClaims(Collections.emptyList(), "data-claims/get-claims/claim-two-claims.json");
     // fee-calculation
     stubForPostFeeCalculation("fee-scheme/post-fee-calculation-200.json");
     // Stub patch claim
@@ -148,9 +147,6 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
             .status(SubmissionStatus.VALIDATION_SUCCEEDED)
             .build();
     stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodySucceeded);
-    // this returns the caseStartDate as 2025-01-01 which is more than 3 months old for the given
-    // submission period: APR-2025 (end date: 30-APR-2025)
-    stubForGetClaim(SUBMISSION_ID, CLAIM_ID, "data-claims/get-claim/get-claim-disbursement.json");
 
     getStubForGetSubmissionByCriteria(
         List.of(
@@ -164,7 +160,10 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
         List.of(new Parameter("areaOfLaw", AREA_OF_LAW.getValue())),
         "provider-details/get-firm-schedules-openapi-200.json");
 
-    stubForGetClaims(Collections.emptyList(), "data-claims/get-claims/no-claims.json");
+    // this returns the caseStartDate as 2025-01-01 which is more than 3 months old for the given
+    // submission period: APR-2025 (end date: 30-APR-2025)
+    stubForGetClaims(
+        Collections.emptyList(), "data-claims/get-claims/claim-disbursement-claims.json");
     // fee-calculation
     stubForPostFeeCalculation("fee-scheme/post-fee-calculation-200.json");
     // Stub patch claim
@@ -199,12 +198,6 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
             .status(SubmissionStatus.VALIDATION_SUCCEEDED)
             .build();
     stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodySucceeded);
-    // this returns the caseStartDate as 2025-03-01 which is less than 3 months old for the given
-    // submission period: APR-2025 (end date: 30-APR-2025)
-    stubForGetClaim(
-        SUBMISSION_ID,
-        CLAIM_ID,
-        "data-claims/get-claim/get-claim-disb-case-start-date-within-3-months.json");
 
     getStubForGetSubmissionByCriteria(
         List.of(
@@ -218,7 +211,11 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
         List.of(new Parameter("areaOfLaw", AREA_OF_LAW.getValue())),
         "provider-details/get-firm-schedules-openapi-200.json");
 
-    stubForGetClaims(Collections.emptyList(), "data-claims/get-claims/no-claims.json");
+    // this returns the caseStartDate as 2025-03-01 which is less than 3 months old for the given
+    // submission period: APR-2025 (end date: 30-APR-2025)
+    stubForGetClaims(
+        Collections.emptyList(),
+        "data-claims/get-claims/claim-disbursement-within-3-month-claims.json");
     // fee-calculation
     stubForPostFeeCalculation("fee-scheme/post-fee-calculation-200.json");
     // Stub patch claim
