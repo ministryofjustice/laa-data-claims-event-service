@@ -16,12 +16,14 @@ record ProviderDetailsCachedSchedules(
   static ProviderDetailsCachedSchedules positive(
       ProviderFirmOfficeContractAndScheduleDto value,
       List<ProviderDetailsCoverageWindow> windows,
-      Duration ttl) {
-    return new ProviderDetailsCachedSchedules(value, windows, Instant.now().plus(ttl), false);
+      Duration timeToLive) {
+    return new ProviderDetailsCachedSchedules(
+        value, windows, Instant.now().plus(timeToLive), false);
   }
 
-  static ProviderDetailsCachedSchedules negative(Duration ttl) {
-    return new ProviderDetailsCachedSchedules(null, List.of(), Instant.now().plus(ttl), true);
+  static ProviderDetailsCachedSchedules negative(Duration timeToLive) {
+    return new ProviderDetailsCachedSchedules(
+        null, List.of(), Instant.now().plus(timeToLive), true);
   }
 
   boolean isNegative() {
@@ -39,10 +41,11 @@ record ProviderDetailsCachedSchedules(
                 !effectiveDate.isBefore(window.start()) && !effectiveDate.isAfter(window.end()));
   }
 
-  ProviderDetailsCachedSchedules refresh(Duration ttl) {
+  ProviderDetailsCachedSchedules refresh(Duration timeToLive) {
     if (negative) {
       return this;
     }
-    return new ProviderDetailsCachedSchedules(value, windows, Instant.now().plus(ttl), false);
+    return new ProviderDetailsCachedSchedules(
+        value, windows, Instant.now().plus(timeToLive), false);
   }
 }

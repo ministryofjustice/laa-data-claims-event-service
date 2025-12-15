@@ -42,9 +42,9 @@ public class ProviderDetailsService {
       new ConcurrentHashMap<>();
 
   // Short-lived negative cache to avoid hammering PDA when no schedules exist for a key.
-  private static final Duration NEGATIVE_CACHE_TTL = Duration.ofMinutes(5);
+  private static final Duration NEGATIVE_CACHE_TIME_TO_LIVE = Duration.ofMinutes(5);
   // Positive cache window for successful schedule responses.
-  private static final Duration POSITIVE_CACHE_TTL = Duration.ofMinutes(10);
+  private static final Duration POSITIVE_CACHE_TIME_TO_LIVE = Duration.ofMinutes(10);
 
   /**
    * Retrieves the provider firm office contract and schedule information for a given office, area
@@ -94,7 +94,7 @@ public class ProviderDetailsService {
               "ProviderDetails cache hit for key {} covering effective date {}",
               cacheKey,
               effectiveDate);
-          scheduleCache.put(cacheKey, cached.refresh(POSITIVE_CACHE_TTL));
+          scheduleCache.put(cacheKey, cached.refresh(POSITIVE_CACHE_TIME_TO_LIVE));
           return Mono.just(cached.value());
         }
         log.debug(
@@ -130,7 +130,8 @@ public class ProviderDetailsService {
   }
 
   private Mono<ProviderFirmOfficeContractAndScheduleDto> cacheNegative(String negativeKey) {
-    negativeCache.put(negativeKey, ProviderDetailsCachedSchedules.negative(NEGATIVE_CACHE_TTL));
+    negativeCache.put(
+        negativeKey, ProviderDetailsCachedSchedules.negative(NEGATIVE_CACHE_TIME_TO_LIVE));
     return Mono.empty();
   }
 
@@ -225,11 +226,12 @@ public class ProviderDetailsService {
                 scheduleCache.put(
                     cacheKey,
                     ProviderDetailsCachedSchedules.positive(
-                        mergedDto, mergedWindows, POSITIVE_CACHE_TTL));
+                        mergedDto, mergedWindows, POSITIVE_CACHE_TIME_TO_LIVE));
               } else {
                 scheduleCache.put(
                     cacheKey,
-                    ProviderDetailsCachedSchedules.positive(dto, newWindows, POSITIVE_CACHE_TTL));
+                    ProviderDetailsCachedSchedules.positive(
+                        dto, newWindows, POSITIVE_CACHE_TIME_TO_LIVE));
               }
             });
   }
