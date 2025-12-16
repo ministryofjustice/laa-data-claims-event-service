@@ -98,6 +98,23 @@ class UniqueFileNumberClaimValidatorTest {
         context, claimId, ClaimValidationError.INVALID_DATE_IN_UNIQUE_FILE_NUMBER);
   }
 
+  @Test
+  @DisplayName("Should not add duplicate errors if the field is already in error")
+  void shouldNotAddDuplicateErrorsIfTheFieldIsAlreadyInError() {
+    // Given
+    String claimId = new UUID(1, 1).toString();
+    ClaimResponse claimResponse = new ClaimResponse().id(claimId).uniqueFileNumber("010124/123");
+
+    SubmissionValidationContext context = new SubmissionValidationContext();
+    context.addClaimError(claimId, ClaimValidationError.INVALID_DATE_IN_UNIQUE_FILE_NUMBER);
+    // When
+    validator.validate(claimResponse, context);
+    // Then
+    assertThat(context.getClaimReports().size()).isEqualTo(1);
+    assertContextClaimError(
+        context, claimId, ClaimValidationError.INVALID_DATE_IN_UNIQUE_FILE_NUMBER);
+  }
+
   @ParameterizedTest
   @ValueSource(strings = {"999999/001", "320101/001", "000000/001", "311102/001", "290225/001"})
   @DisplayName("Should have errors if date is not correct")
