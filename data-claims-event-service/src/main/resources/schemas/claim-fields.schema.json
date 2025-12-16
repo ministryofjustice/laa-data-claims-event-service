@@ -282,6 +282,9 @@
     "total_value": {
       "type": "number"
     },
+    "total_warnings": {
+      "type": "number"
+    },
     "client_forename": {
       "type": "string",
       "pattern": "^[\\p{L}\\p{N}\\p{Zs}\\-''&]{1,30}$",
