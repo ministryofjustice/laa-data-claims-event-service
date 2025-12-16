@@ -172,7 +172,7 @@ public interface DataClaimsRestClient {
         claimStatuses,
         pageNumber,
         pageSize,
-        sort);
+        sort != null ? sort.toString() : null);
   }
 
   /**
@@ -204,7 +204,7 @@ public interface DataClaimsRestClient {
       @RequestParam(value = "claim_statuses", required = false) List<ClaimStatus> claimStatuses,
       @RequestParam(value = "page", required = false) Integer page,
       @RequestParam(value = "size", required = false) Integer size,
-      @RequestParam(value = "sort", required = false) Sort sort);
+      @RequestParam(value = "sort", required = false) String sort);
 
   /**
    * Get a specific claim for a submission.

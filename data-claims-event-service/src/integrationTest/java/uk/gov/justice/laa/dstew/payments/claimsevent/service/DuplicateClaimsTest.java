@@ -3,7 +3,11 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.mockserver.model.Parameter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -50,12 +54,7 @@ public class DuplicateClaimsTest extends MockServerIntegrationTest {
       stubForPathSubmissionWithClaimsId(SUBMISSION_ID, CLAIM_ID);
       stubForPathSubmissionWithClaimsId(SUBMISSION_ID, CLAIM_ID_2);
 
-      // claims
-      stubForGetClaim(
-          SUBMISSION_ID, UUID.fromString(CLAIM_ID_2), "data-claims/get-claim/get-claim-1.json");
-      stubForGetClaim(
-          SUBMISSION_ID, UUID.fromString(CLAIM_ID), "data-claims/get-claim/get-claim-1.json");
-
+      stubForGetClaims(Collections.emptyList(), "data-claims/get-claims/two-claims.json");
       stubForGetClaims(Collections.emptyList(), "data-claims/get-claims/no-claims.json");
       // provider-details
       stubForGetProviderOffice(

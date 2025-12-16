@@ -1182,7 +1182,7 @@
         "desi_acc_rep": null,
         "disability": "NCD",
         "dscc_number": null,
-        "irc_surgery": "N",
+        "irc_surgery": false,
         "legacy_case": false,
         "line_number": null,
         "matter_type": "IAXL:IIRC",

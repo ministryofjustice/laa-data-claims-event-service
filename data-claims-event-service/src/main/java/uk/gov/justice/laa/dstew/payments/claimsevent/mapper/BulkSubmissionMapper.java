@@ -152,7 +152,7 @@ public interface BulkSubmissionMapper {
   @Mapping(target = "isToleranceApplicable", source = "toleranceIndicator")
   @Mapping(target = "isSubstantiveHearing", source = "substantiveHearing")
   @Mapping(target = "isIrcSurgery", source = "ircSurgery")
-  @Mapping(target = "courtLocationCode", source = "courtLocation")
+  @Mapping(target = "courtLocationCode", source = "courtLocationHpcds")
   @Mapping(target = "aitHearingCentreCode", source = "aitHearingCentre")
   @Mapping(target = "meetingsAttendedCode", source = "meetingsAttended")
   @Mapping(target = "adviceTypeCode", source = "typeOfAdvice")
