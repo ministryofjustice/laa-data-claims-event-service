@@ -343,5 +343,124 @@ class DuplicateClaimCrimeLowerValidationServiceStrategyTest {
           ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_EXISTING_SUBMISSION);
       assertThat(context.hasErrors(claim2.getId())).isFalse();
     }
+
+    @Test
+    @DisplayName("Crime lower claims - Fee Code PROD success validation")
+    void crimeLowerClaimDuplicateWithProdFeeCodeSuccess() {
+      // Given
+      ClaimResponse claim1 =
+          new ClaimResponse()
+              .id("claimId1")
+              .feeCode("PROD")
+              .caseConcludedDate("caseConcludedDate1")
+              .status(ClaimStatus.READY_TO_PROCESS);
+      ClaimResponse claim2 =
+          new ClaimResponse()
+              .id("claimId2")
+              .feeCode("PROD")
+              .caseConcludedDate("caseConcludedDate2")
+              .status(ClaimStatus.READY_TO_PROCESS);
+
+      List<ClaimResponse> submissionClaims = List.of(claim1, claim2);
+
+      when(dataClaimsRestClient.getClaims(
+              any(), any(), any(), any(), any(), any(), any(), any(), any()))
+          .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
+
+      SubmissionValidationContext context = new SubmissionValidationContext();
+
+      // When
+      duplicateClaimValidationService.validateDuplicateClaims(
+          claim1, submissionClaims, "officeCode", context, FeeCalculationType.FIXED.toString());
+
+      // Then
+      assertThat(context.hasErrors()).isFalse();
+    }
+
+    @Test
+    @DisplayName(
+        "Crime lower claims - Fee Code PROD fails validation, duplicate in same submission")
+    void crimeLowerClaimDuplicateWithProdFeeCodeDuplicateInSameSubmission() {
+      // Given
+      ClaimResponse claim1 =
+          new ClaimResponse()
+              .id("claimId1")
+              .feeCode("PROD")
+              .caseConcludedDate("caseConcludedDate1")
+              .status(ClaimStatus.READY_TO_PROCESS);
+      ClaimResponse claim2 =
+          new ClaimResponse()
+              .id("claimId2")
+              .feeCode("PROD")
+              .caseConcludedDate("caseConcludedDate1")
+              .status(ClaimStatus.READY_TO_PROCESS);
+
+      List<ClaimResponse> submissionClaims = List.of(claim1, claim2);
+
+      when(dataClaimsRestClient.getClaims(
+              any(), any(), any(), any(), any(), any(), any(), any(), any()))
+          .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
+
+      SubmissionValidationContext context = new SubmissionValidationContext();
+
+      // When
+      duplicateClaimValidationService.validateDuplicateClaims(
+          claim1, submissionClaims, "officeCode", context, FeeCalculationType.FIXED.toString());
+
+      // Then
+      assertThat(context.hasErrors()).isTrue();
+      assertContextClaimError(
+          context,
+          claim1.getId(),
+          ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_EXISTING_SUBMISSION);
+    }
+
+    @Test
+    @DisplayName(
+        "Crime lower claims - Fee Code PROD fails validation, duplicate in another submission")
+    void crimeLowerClaimDuplicateWithProdFeeCodeDuplicateInAnotherSubmission() {
+      // Given
+      ClaimResponse claim1 =
+          new ClaimResponse()
+              .id("claimId1")
+              .submissionId("submissionId")
+              .feeCode("PROD")
+              .caseConcludedDate("caseConcludedDate1")
+              .status(ClaimStatus.READY_TO_PROCESS);
+
+      ClaimResponse otherClaim =
+          new ClaimResponse()
+              .id("claimId2")
+              .submissionId("submissionId2")
+              .feeCode("PROD")
+              .caseConcludedDate("caseConcludedDate1")
+              .status(ClaimStatus.VALID);
+
+      List<ClaimResponse> submissionClaims = List.of(claim1);
+
+      ClaimResultSet claimResultSet = new ClaimResultSet();
+      claimResultSet.content(List.of(otherClaim));
+
+      when(dataClaimsRestClient.getClaims(
+              any(), any(), any(), any(), any(), any(), any(), any(), any()))
+          .thenReturn(ResponseEntity.of(Optional.of(claimResultSet)));
+
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(
+          List.of(
+              new ClaimValidationReport(claim1.getId()),
+              new ClaimValidationReport(claim1.getId())));
+
+      // When
+      duplicateClaimValidationService.validateDuplicateClaims(
+          claim1, submissionClaims, "officeCode", context, FeeCalculationType.FIXED.toString());
+
+      // Then
+      assertThat(context.hasErrors(claim1.getId())).isTrue();
+      assertContextClaimError(
+          context,
+          claim1.getId(),
+          ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_ANOTHER_SUBMISSION);
+    }
   }
 }
