@@ -34,7 +34,7 @@ jacocoTestCoverageVerification {
 dependencyManagement {
     imports {
         // Upgrade to fix vulnerabilities in netty
-        mavenBom('io.netty:netty-bom:4.2.5.Final')
+        mavenBom('io.netty:netty-bom:4.2.9.Final')
     }
     dependencies {
         dependencySet(group: 'io.sentry', version: versions.sentry) {
