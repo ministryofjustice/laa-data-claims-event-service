@@ -15,10 +15,13 @@ public interface ClaimValidator {
   int priority();
 
   /**
-   * Validates the given claim within the provided submission validation context.
+   * Checks whether any validation error message associated with the given claim contains the
+   * specified text.
    *
-   * @param claim the claim to validate
-   * @param context the submission validation context
+   * @param claim the claim whose validation messages should be checked
+   * @param context the validation context providing access to claim reports
+   * @param stringToMatch the text to search for within validation message display content
+   * @return {@code true} if any message contains the specified text; {@code false} otherwise
    */
   default boolean isErrorPresent(
       ClaimResponse claim, SubmissionValidationContext context, String stringToMatch) {
