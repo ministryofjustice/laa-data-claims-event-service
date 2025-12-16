@@ -18,6 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.model.ProviderDetailsCachedSchedules;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.model.ProviderDetailsCoverageWindow;
 import uk.gov.justice.laa.provider.model.FirmOfficeContractAndScheduleDetails;
 import uk.gov.justice.laa.provider.model.ProviderFirmOfficeContractAndScheduleDto;
 
@@ -65,45 +67,88 @@ public class ProviderDetailsService {
       String officeCode, String areaOfLaw, LocalDate effectiveDate) {
     String cacheKey = cacheKey(officeCode, areaOfLaw);
     String negativeKey = negativeCacheKey(officeCode, areaOfLaw, effectiveDate);
-    ProviderDetailsCachedSchedules cached = scheduleCache.get(cacheKey);
-    ProviderDetailsCachedSchedules cachedNegative = negativeCache.get(negativeKey);
-    if (cachedNegative != null) {
-      if (!cachedNegative.isValid()) {
-        log.debug("ProviderDetails negative cache expired for key {}", negativeKey);
-        negativeCache.remove(negativeKey);
-      } else {
-        log.debug("ProviderDetails negative cache hit for key {}", negativeKey);
-        return Mono.empty();
-      }
-    }
-    if (cached != null) {
-      if (!cached.isValid()) {
-        log.debug("ProviderDetails cache expired for key {}", cacheKey);
-        scheduleCache.remove(cacheKey);
-      } else if (cached.isNegative()) {
-        log.debug("ProviderDetails negative cache hit for key {}", cacheKey);
-        return Mono.empty();
-      } else {
-        log.debug(
-            "ProviderDetails coverage windows for key {} when checking effective date {}: {}",
-            cacheKey,
-            effectiveDate,
-            cached.windows());
-        if (cached.covers(effectiveDate)) {
-          log.debug(
-              "ProviderDetails cache hit for key {} covering effective date {}",
-              cacheKey,
-              effectiveDate);
-          scheduleCache.put(cacheKey, cached.refresh(POSITIVE_CACHE_TIME_TO_LIVE));
-          return Mono.just(cached.value());
-        }
-        log.debug(
-            "ProviderDetails cache miss for key {}: date {} not covered", cacheKey, effectiveDate);
-      }
-    } else {
-      log.debug("ProviderDetails cache miss for key {}", cacheKey);
+    Optional<Mono<ProviderFirmOfficeContractAndScheduleDto>> negativeCacheHit =
+        handleNegativeCache(negativeKey);
+    if (negativeCacheHit.isPresent()) {
+      return negativeCacheHit.get();
     }
 
+    Optional<Mono<ProviderFirmOfficeContractAndScheduleDto>> positiveCacheHit =
+        handlePositiveCache(cacheKey, effectiveDate);
+    if (positiveCacheHit.isPresent()) {
+      return positiveCacheHit.get();
+    }
+
+    return fetchAndCache(officeCode, areaOfLaw, effectiveDate, cacheKey, negativeKey);
+  }
+
+  private Mono<ProviderFirmOfficeContractAndScheduleDto> cacheNegative(String negativeKey) {
+    negativeCache.put(
+        negativeKey, ProviderDetailsCachedSchedules.negative(NEGATIVE_CACHE_TIME_TO_LIVE));
+    return Mono.empty();
+  }
+
+  /** Returns a cached negative result if it is still valid, otherwise clears it. */
+  private Optional<Mono<ProviderFirmOfficeContractAndScheduleDto>> handleNegativeCache(
+      String negativeKey) {
+    ProviderDetailsCachedSchedules cachedNegative = negativeCache.get(negativeKey);
+    if (cachedNegative == null) {
+      return Optional.empty();
+    }
+    if (!cachedNegative.isValid()) {
+      log.debug("ProviderDetails negative cache expired for key {}", negativeKey);
+      negativeCache.remove(negativeKey);
+      return Optional.empty();
+    }
+    log.debug("ProviderDetails negative cache hit for key {}", negativeKey);
+    return Optional.of(Mono.empty());
+  }
+
+  /**
+   * Returns a cached positive result when valid and covering the requested date; refreshes TTL on
+   * hit.
+   */
+  private Optional<Mono<ProviderFirmOfficeContractAndScheduleDto>> handlePositiveCache(
+      String cacheKey, LocalDate effectiveDate) {
+    ProviderDetailsCachedSchedules cached = scheduleCache.get(cacheKey);
+    if (cached == null) {
+      log.debug("ProviderDetails cache miss for key {}", cacheKey);
+      return Optional.empty();
+    }
+    if (!cached.isValid()) {
+      log.debug("ProviderDetails cache expired for key {}", cacheKey);
+      scheduleCache.remove(cacheKey);
+      return Optional.empty();
+    }
+    if (cached.isNegative()) {
+      log.debug("ProviderDetails negative cache hit for key {}", cacheKey);
+      return Optional.of(Mono.empty());
+    }
+    log.debug(
+        "ProviderDetails coverage windows for key {} when checking effective date {}: {}",
+        cacheKey,
+        effectiveDate,
+        cached.windows());
+    if (cached.covers(effectiveDate)) {
+      log.debug(
+          "ProviderDetails cache hit for key {} covering effective date {}",
+          cacheKey,
+          effectiveDate);
+      scheduleCache.put(cacheKey, cached.refresh(POSITIVE_CACHE_TIME_TO_LIVE));
+      return Optional.of(Mono.just(cached.value()));
+    }
+    log.debug(
+        "ProviderDetails cache miss for key {}: date {} not covered", cacheKey, effectiveDate);
+    return Optional.empty();
+  }
+
+  /** Invokes PDA, then caches positive or negative results, sharing in-flight calls. */
+  private Mono<ProviderFirmOfficeContractAndScheduleDto> fetchAndCache(
+      String officeCode,
+      String areaOfLaw,
+      LocalDate effectiveDate,
+      String cacheKey,
+      String negativeKey) {
     Retry retry = retryRegistry.retry("pdaRetry");
     return inFlightCalls
         .computeIfAbsent(
@@ -127,12 +172,6 @@ public class ProviderDetailsService {
                     .transformDeferred(RetryOperator.of(retry))
                     .cache())
         .doFinally(signalType -> inFlightCalls.remove(cacheKey));
-  }
-
-  private Mono<ProviderFirmOfficeContractAndScheduleDto> cacheNegative(String negativeKey) {
-    negativeCache.put(
-        negativeKey, ProviderDetailsCachedSchedules.negative(NEGATIVE_CACHE_TIME_TO_LIVE));
-    return Mono.empty();
   }
 
   /**
@@ -161,6 +200,7 @@ public class ProviderDetailsService {
     return Optional.of(windows);
   }
 
+  /** Builds a coverage window for a schedule if end is not before start. */
   private Optional<ProviderDetailsCoverageWindow> toWindow(
       FirmOfficeContractAndScheduleDetails schedule) {
     LocalDate start =
@@ -179,6 +219,7 @@ public class ProviderDetailsService {
     return Optional.of(new ProviderDetailsCoverageWindow(start, end));
   }
 
+  /** Merges an adjacent/overlapping window into the tail of the list or adds a new window. */
   private void mergeOrAdd(
       List<ProviderDetailsCoverageWindow> windows, ProviderDetailsCoverageWindow next) {
     if (windows.isEmpty()) {
@@ -195,19 +236,23 @@ public class ProviderDetailsService {
     }
   }
 
+  /** Merges all windows from source into target in order. */
   private void mergeLists(
       List<ProviderDetailsCoverageWindow> target, List<ProviderDetailsCoverageWindow> source) {
     source.forEach(window -> mergeOrAdd(target, window));
   }
 
+  /** Returns the max of two dates. */
   private LocalDate max(LocalDate left, LocalDate right) {
     return left.isAfter(right) ? left : right;
   }
 
+  /** Creates a cache key for positive cache lookups. */
   private String cacheKey(String officeCode, String areaOfLaw) {
     return officeCode + "|" + areaOfLaw;
   }
 
+  /** Creates a cache key for negative cache scoped to the effective date. */
   private String negativeCacheKey(String officeCode, String areaOfLaw, LocalDate effectiveDate) {
     return officeCode + "|" + areaOfLaw + "|" + effectiveDate;
   }
@@ -236,6 +281,7 @@ public class ProviderDetailsService {
             });
   }
 
+  /** Merges cached and incoming coverage windows into a single ordered list. */
   private List<ProviderDetailsCoverageWindow> mergeWindows(
       List<ProviderDetailsCoverageWindow> existing, List<ProviderDetailsCoverageWindow> incoming) {
     return Stream.concat(existing.stream(), incoming.stream())
@@ -243,6 +289,7 @@ public class ProviderDetailsService {
         .collect(ArrayList::new, this::mergeOrAdd, this::mergeLists);
   }
 
+  /** Combines cached and incoming DTO data, appending schedule lists. */
   private ProviderFirmOfficeContractAndScheduleDto mergeSchedules(
       ProviderFirmOfficeContractAndScheduleDto existing,
       ProviderFirmOfficeContractAndScheduleDto incoming) {
