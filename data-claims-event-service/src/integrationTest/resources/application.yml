@@ -45,3 +45,6 @@ server:
 submission:
   validation:
     minimum-period: APR-2025
+claim:
+  validation:
+    claim-validation-batch-size: 100

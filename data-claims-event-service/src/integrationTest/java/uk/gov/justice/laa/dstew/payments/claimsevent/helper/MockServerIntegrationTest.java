@@ -290,14 +290,13 @@ public abstract class MockServerIntegrationTest {
                 .withBody(json(readJsonFromFile(expectedResponse))));
   }
 
-  protected void stubReturnNoClaims(UUID submissionId) throws Exception {
+  protected void stubReturnNoClaims() throws Exception {
     String expectedBody = readJsonFromFile("data-claims/get-claims/no-claims.json");
     mockServerClient
         .when(
             HttpRequest.request()
                 .withMethod(HttpMethod.GET.toString())
-                .withPath(API_VERSION_0 + "claims")
-                .withQueryStringParameter("submissionId", submissionId.toString()))
+                .withPath(API_VERSION_0 + "claims"))
         .respond(
             HttpResponse.response()
                 .withStatusCode(HttpStatusCode.OK)
