@@ -45,7 +45,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Unique File Number must be in the format DDMMYY/NNN (6 digits forward slash 3 digits)"
+          "value": "Unique File Number (UFN) must be in the format DDMMYY/NNN with a date in the past"
         }
       ]
     },

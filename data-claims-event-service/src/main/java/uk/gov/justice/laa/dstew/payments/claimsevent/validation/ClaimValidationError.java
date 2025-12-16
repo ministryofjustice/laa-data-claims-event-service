@@ -26,7 +26,7 @@ public enum ClaimValidationError {
       EVENT_SERVICE,
       ValidationMessageType.ERROR),
   INVALID_DATE_IN_UNIQUE_FILE_NUMBER(
-      "Unique file ID must be in the format DDMMYY/NNN with a date in the past",
+      "Unique File Number (UFN) must be in the format DDMMYY/NNN with a date in the past",
       null,
       EVENT_SERVICE,
       ValidationMessageType.ERROR),
