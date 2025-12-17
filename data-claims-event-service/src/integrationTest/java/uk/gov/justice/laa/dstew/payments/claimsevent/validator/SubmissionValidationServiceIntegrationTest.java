@@ -215,7 +215,7 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
               new Parameter("effectiveDate", "14-08-2025")),
           "provider-details/get-firm-schedules-openapi-200.json");
 
-      stubForPostFeeCalculationReturnError("fee-scheme/post-fee-calculation-200.json");
+      stubForPostFeeCalculationReturnError("fee-scheme/post-fee-calculation-404.json");
 
       stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
 
