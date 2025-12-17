@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
@@ -19,6 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResultSet;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionClaim;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
@@ -36,6 +38,7 @@ import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponse;
 @ExtendWith(MockitoExtension.class)
 class ClaimValidationServiceTest {
 
+  public static final int CLAIM_VALIDATION_BATCH_SIZE = 100;
   ClaimValidationService claimValidationService;
 
   @Mock CategoryOfLawValidationService categoryOfLawValidationService;
@@ -67,7 +70,8 @@ class ClaimValidationServiceTest {
                 claimWithAreaOfLawValidator,
                 effectiveCategoryOfLawClaimValidator,
                 mandatoryFieldClaimValidator,
-                duplicateClaimValidator));
+                duplicateClaimValidator),
+            CLAIM_VALIDATION_BATCH_SIZE);
 
     lenient().when(basicClaimValidator.priority()).thenReturn(1);
     lenient().when(claimWithAreaOfLawValidator.priority()).thenReturn(1);
@@ -98,15 +102,31 @@ class ClaimValidationServiceTest {
             .id(claimId.toString())
             .feeCode("feeCode1")
             .status(ClaimStatus.READY_TO_PROCESS);
-    when(dataClaimsRestClient.getClaim(submissionId, claimId))
-        .thenReturn(ResponseEntity.ok(claimOne));
     ClaimResponse claimTwo =
         new ClaimResponse()
             .id(claimIdTwo.toString())
             .feeCode("feeCode1")
             .status(ClaimStatus.READY_TO_PROCESS);
-    when(dataClaimsRestClient.getClaim(submissionId, claimIdTwo))
-        .thenReturn(ResponseEntity.ok(claimTwo));
+    ClaimResultSet claimResultSet =
+        ClaimResultSet.builder()
+            .number(1)
+            .totalPages(1)
+            .totalElements(2)
+            .content(Arrays.asList(claimOne, claimTwo))
+            .build();
+    when(dataClaimsRestClient.getClaims(
+            "officeAccountNumber",
+            String.valueOf(submissionId),
+            Collections.emptyList(),
+            null,
+            null,
+            null,
+            null,
+            null,
+            0,
+            CLAIM_VALIDATION_BATCH_SIZE,
+            "id,asc"))
+        .thenReturn(ResponseEntity.ok(claimResultSet));
     HashMap<String, FeeDetailsResponseWrapper> feeDetailsResponseMap = new HashMap<>();
     FeeDetailsResponse feeDetailsResponse =
         new FeeDetailsResponse().categoryOfLawCode("categoryOfLaw1").feeType("feeType");

@@ -476,7 +476,7 @@ class JsonSchemaValidatorTest {
       "uniqueClientNumber, '$£%^&*(', LEGAL HELP, 'Unique Client Number must be in the format DDMMYYYY/X/ZZZZ with valid date, and be a maximum of 15 characters'",
       "client2Ucn, '12121999-A-ABCD', LEGAL HELP, Client 2 Unique Client Number must be in the format DDMMYYYY/X/ZZZZ with valid date, and be a maximum of 15 characters'",
       "caseReferenceNumber, 'Case:Ref:123', LEGAL HELP, Case Reference Number must contain only letters, numbers, forward slashes, periods, hyphens, and spaces, and be a maximum of 30 characters",
-      "uniqueFileNumber, '010123-001', LEGAL HELP, Unique File Number must be in the format DDMMYY/NNN (6 digits forward slash 3 digits)",
+      "uniqueFileNumber, '010123-001', LEGAL HELP, Unique File Number (UFN) must be in the format DDMMYY/NNN with a date in the past",
       "caseStartDate, '1899-12-31', LEGAL HELP, Case Start Date must be a valid date in the format DD/MM/YYYY",
       "caseConcludedDate, '1899-12-31', LEGAL HELP, Case Concluded Date must be a valid date in the format DD/MM/YYYY",
       "crimeMatterTypeCode, '123', CRIME LOWER, Crime Lower Matter Type Code must be exactly 2 digits",

@@ -25,7 +25,9 @@ public final class UniqueFileNumberClaimValidator implements BasicClaimValidator
   @Override
   public void validate(ClaimResponse claim, SubmissionValidationContext context) {
     String uniqueFileNumber = claim.getUniqueFileNumber();
-    if (uniqueFileNumber != null && uniqueFileNumber.length() > 1) {
+    if (uniqueFileNumber != null
+        && uniqueFileNumber.length() > 1
+        && !isErrorPresent(claim, context, "Unique File Number")) {
       try {
         LocalDate date = UniqueFileNumberUtil.parse(uniqueFileNumber);
         if (date.isAfter(LocalDate.now())) {

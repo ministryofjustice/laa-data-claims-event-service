@@ -1,19 +1,19 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionClaim;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResultSet;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessageType;
@@ -38,7 +38,6 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.MandatoryF
  */
 @Slf4j
 @Service
-@AllArgsConstructor
 public class ClaimValidationService {
 
   private final CategoryOfLawValidationService categoryOfLawValidationService;
@@ -46,6 +45,32 @@ public class ClaimValidationService {
   private final EventServiceMetricService eventServiceMetricService;
   private final BulkClaimUpdater bulkClaimUpdater;
   private final List<ClaimValidator> claimValidator;
+  private final int claimValidationBatchSize;
+
+  /**
+   * Claim validation service constructor.
+   *
+   * @param categoryOfLawValidationService The category of law validation service
+   * @param dataClaimsRestClient The data claims rest client
+   * @param eventServiceMetricService The event service
+   * @param bulkClaimUpdater The bulk claim updater
+   * @param claimValidator The claim validator
+   * @param claimValidationBatchSize The batch size of claims to validate at once
+   */
+  public ClaimValidationService(
+      CategoryOfLawValidationService categoryOfLawValidationService,
+      DataClaimsRestClient dataClaimsRestClient,
+      EventServiceMetricService eventServiceMetricService,
+      BulkClaimUpdater bulkClaimUpdater,
+      List<ClaimValidator> claimValidator,
+      @Value("${claim.validation.claim-validation-batch-size}") int claimValidationBatchSize) {
+    this.categoryOfLawValidationService = categoryOfLawValidationService;
+    this.dataClaimsRestClient = dataClaimsRestClient;
+    this.eventServiceMetricService = eventServiceMetricService;
+    this.bulkClaimUpdater = bulkClaimUpdater;
+    this.claimValidator = claimValidator;
+    this.claimValidationBatchSize = claimValidationBatchSize;
+  }
 
   /**
    * Validate a list of claims in a submission and Updates it in the Data Claims API.
@@ -55,35 +80,73 @@ public class ClaimValidationService {
   public void validateAndUpdateClaims(
       SubmissionResponse submission, SubmissionValidationContext context) {
 
-    List<ClaimResponse> submissionClaims =
-        submission.getClaims().stream()
-            .filter(claim -> ClaimStatus.READY_TO_PROCESS.equals(claim.getStatus()))
-            .map(SubmissionClaim::getClaimId)
-            .map(
-                claimId ->
-                    dataClaimsRestClient.getClaim(submission.getSubmissionId(), claimId).getBody())
-            .toList();
+    int pageNumber = 0;
+    Integer totalPages = Integer.MAX_VALUE;
 
-    Map<String, FeeDetailsResponseWrapper> feeDetailsResponseMap =
-        categoryOfLawValidationService.getFeeDetailsResponseForAllFeeCodesInClaims(
-            submissionClaims);
+    // Loop over multiple pages in order to process claims in batches
+    while (pageNumber < totalPages) {
 
-    submissionClaims.forEach(
-        claim ->
-            validateClaim(
-                claim,
-                submissionClaims,
-                feeDetailsResponseMap,
-                submission.getAreaOfLaw(),
-                submission.getOfficeAccountNumber(),
-                context));
-    // Update claims status after validations
-    bulkClaimUpdater.updateClaims(
-        submission.getSubmissionId(),
-        submissionClaims,
-        submission.getAreaOfLaw(),
-        context,
-        feeDetailsResponseMap);
+      ClaimResultSet claims =
+          dataClaimsRestClient
+              .getClaims(
+                  submission.getOfficeAccountNumber(),
+                  String.valueOf(submission.getSubmissionId()),
+                  Collections.emptyList(),
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  pageNumber,
+                  claimValidationBatchSize,
+                  "id,asc")
+              .getBody();
+
+      if (claims == null) {
+        throw new EventServiceIllegalArgumentException("Claims response is null from Claims API");
+      }
+
+      log.info(
+          "Validating claims page {} from submission {}", pageNumber, submission.getSubmissionId());
+
+      // Set total pages
+      totalPages = claims.getTotalPages();
+
+      List<ClaimResponse> submissionClaims = claims.getContent();
+
+      Map<String, FeeDetailsResponseWrapper> feeDetailsResponseMap =
+          categoryOfLawValidationService.getFeeDetailsResponseForAllFeeCodesInClaims(
+              submissionClaims);
+
+      List<ClaimResponse> finalSubmissionClaims = submissionClaims;
+
+      // Submit validation tasks for each claim
+      for (ClaimResponse claim : submissionClaims) {
+        validateClaim(
+            claim,
+            finalSubmissionClaims,
+            feeDetailsResponseMap,
+            submission.getAreaOfLaw(),
+            submission.getOfficeAccountNumber(),
+            context);
+      }
+
+      // Increment page number
+      pageNumber++;
+
+      log.debug(
+          "Saving claims from page {} for submission {} to Data Claims API",
+          pageNumber,
+          submission.getSubmissionId());
+
+      // Update claims status after all validations
+      bulkClaimUpdater.updateClaims(
+          submission.getSubmissionId(),
+          submissionClaims,
+          submission.getAreaOfLaw(),
+          context,
+          feeDetailsResponseMap);
+    }
   }
 
   /**

@@ -34,7 +34,7 @@ jacocoTestCoverageVerification {
 dependencyManagement {
     imports {
         // Upgrade to fix vulnerabilities in netty
-        mavenBom('io.netty:netty-bom:4.2.5.Final')
+        mavenBom('io.netty:netty-bom:4.2.9.Final')
     }
     dependencies {
         dependencySet(group: 'io.sentry', version: versions.sentry) {
@@ -63,7 +63,7 @@ dependencies {
     implementation project(':reference-provider-details-api')
     implementation project(':reference-fee-scheme-platform-api')
 
-    implementation 'uk.gov.justice.laa.datastewardship.payments:data-claims-api-models:9af1556'
+    implementation 'uk.gov.justice.laa.datastewardship.payments:data-claims-api-models:dd2b551'
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-registry-prometheus'

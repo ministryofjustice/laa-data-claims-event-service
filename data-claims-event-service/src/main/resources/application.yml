@@ -72,11 +72,19 @@ laa:
 submission:
   validation:
     minimum-period: ${SUBMISSION_VALIDATION_MINIMUM_PERIOD:APR-2025}
+claim:
+  validation:
+    claim-validation-batch-size: ${CLAIM_VALIDATION_BATCH_SIZE:100}
 
 resilience4j.retry:
   instances:
     pdaRetry:
-      maxAttempts: 3
+      maxAttempts: 5
       waitDuration: 500ms
+      enableExponentialBackoff: true
+      exponentialBackoffMultiplier: 2
+      exponentialMaxWaitDuration: 5s
+      enableRandomizedWait: true
+      randomizedWaitFactor: 0.5
       retry-exceptions:
         - java.lang.RuntimeException

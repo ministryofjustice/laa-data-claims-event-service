@@ -53,7 +53,7 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
       // Given
       stubForGetSubmission(submissionId, "data-claims/get-submission/get-submission-APR-25.json");
       stubForUpdateSubmission(submissionId);
-      stubReturnNoClaims(submissionId);
+      stubReturnNoClaims();
       stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
 
       getStubForGetSubmissionByCriteria(
@@ -161,7 +161,7 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
       // Given
       stubForGetSubmission(submissionId, "data-claims/get-submission/get-submission-APR-25.json");
       stubForUpdateSubmission(submissionId);
-      stubReturnNoClaims(submissionId);
+      stubReturnNoClaims();
       stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
 
       getStubForGetSubmissionByCriteria(
