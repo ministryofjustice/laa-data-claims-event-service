@@ -202,10 +202,7 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
               Parameter.param("area_of_law", AREA_OF_LAW.name()),
               Parameter.param("submission_period", "APR-2025")),
           "data-claims/get-submission/get-submissions-by-filter_no_content.json");
-      stubForGetClaim(
-          submissionId,
-          UUID.fromString("f6bde766-a0a3-483b-bf13-bef888b4f06e"),
-          "data-claims/get-claim/get-claim-1.json");
+      stubForGetClaims(Collections.emptyList(), "data-claims/get-claims/claim-two-claims.json");
 
       stubForGetClaims(Collections.emptyList(), "data-claims/get-claims/no-claims.json");
 
