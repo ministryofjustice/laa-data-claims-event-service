@@ -161,6 +161,18 @@ public abstract class MockServerIntegrationTest {
                 .withBody(readJsonFromFile(expectedResponse)));
   }
 
+  protected void stubForPostFeeCalculationReturnError(final String expectedResponse)
+      throws Exception {
+    mockServerClient
+        .when(
+            HttpRequest.request().withMethod(HttpMethod.POST.toString()).withPath(FEE_CALCULATION))
+        .respond(
+            HttpResponse.response()
+                .withStatusCode(HttpStatusCode.NOT_FOUND)
+                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
+                .withBody(readJsonFromFile(expectedResponse)));
+  }
+
   protected void stubForGetFeeDetails(final String feeCode, final String expectedResponse)
       throws Exception {
     mockServerClient

@@ -5,12 +5,10 @@ import static uk.gov.justice.laa.dstew.payments.claimsevent.ContextUtil.assertCo
 import static uk.gov.justice.laa.dstew.payments.claimsevent.ContextUtil.assertContextHasNoErrors;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.service.DuplicateClaimsTest.BULK_SUBMISSION_ID;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.*;
 import org.mockserver.model.Parameter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,6 +19,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MessageListenerBase;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MockServerIntegrationTest;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.SubmissionValidationService;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationError;
 
@@ -184,6 +183,61 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
           OFFICE_CODE,
           AREA_OF_LAW,
           "APR-2025");
+    }
+  }
+
+  @Nested
+  class SubmissionValidation {
+    @DisplayName(
+        "Should set the SubmissionValidationContext to valid message  when FSP return 404 for a claim")
+    @Test
+    void shouldSetSubmissionStatusToValidationFailedWhenFspReturn404ForAClaim() throws Exception {
+
+      stubForGetSubmission(
+          submissionId, "data-claims/get-submission/get-submission-with-claim.json");
+      stubForUpdateSubmission(submissionId);
+      getStubForGetSubmissionByCriteria(
+          List.of(
+              Parameter.param("offices", OFFICE_CODE),
+              Parameter.param("area_of_law", AREA_OF_LAW.name()),
+              Parameter.param("submission_period", "APR-2025")),
+          "data-claims/get-submission/get-submissions-by-filter_no_content.json");
+      stubForGetClaims(Collections.emptyList(), "data-claims/get-claims/claim-two-claims.json");
+
+      stubForGetClaims(Collections.emptyList(), "data-claims/get-claims/no-claims.json");
+
+      stubForUpdateClaim(submissionId, UUID.fromString("f6bde766-a0a3-483b-bf13-bef888b4f06e"));
+
+      stubForGetProviderOffice(
+          OFFICE_CODE,
+          List.of(
+              new Parameter("areaOfLaw", AREA_OF_LAW.getValue()),
+              new Parameter("effectiveDate", "14-08-2025")),
+          "provider-details/get-firm-schedules-openapi-200.json");
+
+      stubForPostFeeCalculationReturnError("fee-scheme/post-fee-calculation-404.json");
+
+      stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
+
+      SubmissionValidationContext submissionValidationContext =
+          submissionValidationService.validateSubmission(submissionId);
+      var validationMessagePatches =
+          submissionValidationContext
+              .getClaimReport("f6bde766-a0a3-483b-bf13-bef888b4f06e")
+              .get()
+              .getMessages();
+      var filteredMessagePatch =
+          validationMessagePatches.stream()
+              .filter(
+                  validationMessagePatch ->
+                      validationMessagePatch
+                          .getDisplayMessage()
+                          .equals(
+                              ClaimValidationError.INVALID_FEE_CALCULATION_VALIDATION_FAILED
+                                  .getDisplayMessage()))
+              .toList();
+
+      Assertions.assertFalse(filteredMessagePatch.isEmpty());
     }
   }
 }
