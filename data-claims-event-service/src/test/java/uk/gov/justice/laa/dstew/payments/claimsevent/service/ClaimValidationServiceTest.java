@@ -25,7 +25,6 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionClaim;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
-import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.BasicClaimValidator;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.ClaimValidator;
@@ -53,7 +52,6 @@ class ClaimValidationServiceTest {
   @Mock StubBasicClaimValidator basicClaimValidator;
   @Mock StubClaimWithAreaOfLawValidator claimWithAreaOfLawValidator;
   @Mock EffectiveCategoryOfLawClaimValidator effectiveCategoryOfLawClaimValidator;
-  @Mock EventServiceMetricService eventServiceMetricService;
   @Mock MandatoryFieldClaimValidator mandatoryFieldClaimValidator;
   @Mock DuplicateClaimValidator duplicateClaimValidator;
 
@@ -63,7 +61,6 @@ class ClaimValidationServiceTest {
         new ClaimValidationService(
             categoryOfLawValidationService,
             dataClaimsRestClient,
-            eventServiceMetricService,
             bulkClaimUpdater,
             Arrays.asList(
                 basicClaimValidator,

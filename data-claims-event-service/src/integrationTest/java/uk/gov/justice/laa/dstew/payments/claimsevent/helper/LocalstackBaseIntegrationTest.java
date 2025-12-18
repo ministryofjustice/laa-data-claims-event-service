@@ -4,6 +4,7 @@ import static org.testcontainers.containers.localstack.LocalStackContainer.Servi
 import static org.testcontainers.containers.localstack.LocalStackContainer.Service.SQS;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.prometheus.metrics.model.registry.PrometheusRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.localstack.LocalStackContainer;
 import org.testcontainers.utility.DockerImageName;
@@ -42,9 +44,12 @@ public class LocalstackBaseIntegrationTest {
 
   protected String queueUrl;
 
+  @MockitoBean PrometheusRegistry prometheusRegistry;
+
   @DynamicPropertySource
   static void registerDynamicProperties(DynamicPropertyRegistry registry) {
-    registry.add("spring.cloud.aws.endpoint", () -> INSTANCE.getEndpointOverride(SNS).toString());
+    registry.add(
+        "spring.cloud.aws.sqs.endpoint", () -> INSTANCE.getEndpointOverride(SNS).toString());
     registry.add("spring.cloud.aws.credentials.access-key", INSTANCE::getAccessKey);
     registry.add("spring.cloud.aws.credentials.secret-key", INSTANCE::getSecretKey);
     registry.add("spring.cloud.aws.region.static", INSTANCE::getRegion);
