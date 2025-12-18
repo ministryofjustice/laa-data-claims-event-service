@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
@@ -103,6 +104,7 @@ class BulkSubmissionMapperTest {
         assertThat(claim.getMedicalReportsCount()).isEqualTo(3);
         assertThat(claim.getSurgeryClientsCount()).isEqualTo(4);
         assertThat(claim.getSurgeryMattersCount()).isEqualTo(2);
+        assertThat(claim.getDetentionTravelWaitingCostsAmount()).isEqualByComparingTo("12");
       }
       case CRIME_LOWER -> {
         assertThat(claim.getCaseConcludedDate()).isEqualTo("2023-09-30");
@@ -142,6 +144,28 @@ class BulkSubmissionMapperTest {
     assertThat(matterStartPost.getCreatedByUserId()).isEqualTo(EVENT_SERVICE);
     assertThat(matterStartPost.getDeliveryLocation()).isEqualTo("test-loc");
     assertThat(matterStartPost.getProcurementAreaCode()).isEqualTo("PA00136");
+  }
+
+  @Test
+  void shouldMapValueOfCostsPaNumberAndLegalHelpTravelCosts() {
+    BulkSubmissionOutcome outcome =
+        new BulkSubmissionOutcome()
+            .valueOfCosts(new BigDecimal("150.75"))
+            .costsDamagesRecovered(new BigDecimal("999.99"))
+            .paNumber("PA-123")
+            .prisonLawPriorApproval("SHOULD_NOT_BE_USED")
+            .travelCosts(new BigDecimal("12.50"))
+            .detentionTravelWaitingCosts(new BigDecimal("1.00"))
+            .travelWaitingCosts(new BigDecimal("3.25"))
+            .workConcludedDate("2024-01-01");
+
+    ClaimPost claim = mapper.mapToClaimPost(outcome, LEGAL_HELP);
+
+    assertThat(claim.getCostsDamagesRecoveredAmount()).isEqualByComparingTo("150.75");
+    assertThat(claim.getPrisonLawPriorApprovalNumber()).isEqualTo("PA-123");
+    assertThat(claim.getDetentionTravelWaitingCostsAmount()).isEqualByComparingTo("12.50");
+    assertThat(claim.getTravelWaitingCostsAmount()).isEqualByComparingTo("3.25");
+    assertThat(claim.getCaseConcludedDate()).isEqualTo("2024-01-01");
   }
 
   @Test
