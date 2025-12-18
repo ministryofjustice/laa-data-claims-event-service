@@ -34,18 +34,39 @@ public final class DuplicateClaimCrimeLowerValidationServiceStrategy
           filterCurrentClaimWithValidStatusAndWithinPeriod(claim, submissionClaims);
 
       String feeCode = claim.getFeeCode();
-      String uniqueFileNumber = claim.getUniqueFileNumber();
 
-      List<ClaimResponse> submissionDuplicateClaims =
-          getDuplicateClaimsInCurrentSubmission(
-              claimsToCompare,
-              claimToCompare ->
-                  Objects.equals(feeCode, claimToCompare.getFeeCode())
-                      && Objects.equals(uniqueFileNumber, claimToCompare.getUniqueFileNumber()));
+      List<ClaimResponse> submissionDuplicateClaims;
+      List<ClaimResponse> officeDuplicateClaims;
 
-      List<ClaimResponse> officeDuplicateClaims =
-          getDuplicateClaimsInPreviousSubmission(
-              officeCode, feeCode, uniqueFileNumber, null, null, submissionClaims);
+      if ("PROD".equals(feeCode)) {
+        String caseConcludedDate = claim.getCaseConcludedDate();
+        submissionDuplicateClaims =
+            getDuplicateClaimsInCurrentSubmission(
+                claimsToCompare,
+                claimToCompare ->
+                    Objects.equals(feeCode, claimToCompare.getFeeCode())
+                        && Objects.equals(
+                            caseConcludedDate, claimToCompare.getCaseConcludedDate()));
+        officeDuplicateClaims =
+            getDuplicateClaimsInPreviousSubmission(
+                    officeCode, feeCode, null, null, null, submissionClaims)
+                .stream()
+                .filter(
+                    claimToCompare ->
+                        Objects.equals(caseConcludedDate, claimToCompare.getCaseConcludedDate()))
+                .toList();
+      } else {
+        String uniqueFileNumber = claim.getUniqueFileNumber();
+        submissionDuplicateClaims =
+            getDuplicateClaimsInCurrentSubmission(
+                claimsToCompare,
+                claimToCompare ->
+                    Objects.equals(feeCode, claimToCompare.getFeeCode())
+                        && Objects.equals(uniqueFileNumber, claimToCompare.getUniqueFileNumber()));
+        officeDuplicateClaims =
+            getDuplicateClaimsInPreviousSubmission(
+                officeCode, feeCode, uniqueFileNumber, null, null, submissionClaims);
+      }
 
       if (!submissionDuplicateClaims.isEmpty()) {
         log.debug("Duplicate claims found in submission");
