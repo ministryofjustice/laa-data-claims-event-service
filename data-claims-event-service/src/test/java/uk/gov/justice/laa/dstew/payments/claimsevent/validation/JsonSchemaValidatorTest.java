@@ -479,7 +479,7 @@ class JsonSchemaValidatorTest {
       "uniqueFileNumber, '010123-001', LEGAL HELP, Unique File Number (UFN) must be in the format DDMMYY/NNN with a date in the past",
       "caseStartDate, '1899-12-31', LEGAL HELP, Case Start Date must be a valid date in the format DD/MM/YYYY",
       "caseConcludedDate, '1899-12-31', LEGAL HELP, Case Concluded Date must be a valid date in the format DD/MM/YYYY",
-      "crimeMatterTypeCode, '123', CRIME LOWER, Crime Lower Matter Type Code must be exactly 2 digits",
+      "crimeMatterTypeCode, '123', CRIME LOWER, Crime Lower Matter Type Code must be one of the permitted values. Please refer to the guidance.",
       "feeCode, 'ABC_90', LEGAL HELP, Fee Code must contain only letters and numbers, and be a maximum of 10 characters",
       "procurementAreaCode, 'aa543', LEGAL HELP, Procurement Area Code must be 2 uppercase letters followed by 5 digits",
       "accessPointCode, 'ap12543', LEGAL HELP, Access Point Code must be in the format AP##### (AP followed by 5 digits)",
