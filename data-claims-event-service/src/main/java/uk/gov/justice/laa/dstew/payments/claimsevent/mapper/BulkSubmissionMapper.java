@@ -162,14 +162,14 @@ public interface BulkSubmissionMapper {
   @Mapping(target = "disbursementsVatAmount", source = "disbursementsVat")
   @Mapping(target = "detentionTravelWaitingCostsAmount", source = "detentionTravelWaitingCosts")
   @Mapping(target = "jrFormFillingAmount", source = "jrFormFilling")
-  @Mapping(target = "costsDamagesRecoveredAmount", source = "costsDamagesRecovered")
+  @Mapping(target = "costsDamagesRecoveredAmount", source = "valueOfCosts")
   @Mapping(target = "adjournedHearingFeeAmount", source = "adjournedHearingFee")
   @Mapping(target = "isVatApplicable", source = "vatIndicator", defaultValue = "false")
   @Mapping(target = "isLondonRate", source = "londonNonlondonRate")
   @Mapping(target = "isAdditionalTravelPayment", source = "additionalTravelPayment")
   @Mapping(target = "cmrhOralCount", source = "cmrhOral")
   @Mapping(target = "cmrhTelephoneCount", source = "cmrhTelephone")
-  @Mapping(target = "prisonLawPriorApprovalNumber", source = "prisonLawPriorApproval")
+  @Mapping(target = "prisonLawPriorApprovalNumber", source = "paNumber")
   @Mapping(target = "isEligibleClient", source = "eligibleClient")
   @Mapping(target = "uniqueClientNumber", source = "ucn")
   @Mapping(target = "clientPostcode", source = "clientPostCode")
@@ -220,6 +220,7 @@ public interface BulkSubmissionMapper {
       }
       case LEGAL_HELP -> {
         claimPost.setTravelWaitingCostsAmount(outcome.getTravelWaitingCosts());
+        claimPost.setDetentionTravelWaitingCostsAmount(outcome.getTravelCosts());
         claimPost.setCaseConcludedDate(outcome.getWorkConcludedDate());
       }
       case MEDIATION -> claimPost.setCaseConcludedDate(outcome.getMedConcludedDate());
