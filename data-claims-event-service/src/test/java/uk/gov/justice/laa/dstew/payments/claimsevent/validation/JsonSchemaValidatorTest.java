@@ -17,6 +17,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
@@ -25,8 +26,10 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvFileSource;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.core.io.ClassPathResource;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
@@ -355,6 +358,25 @@ class JsonSchemaValidatorTest {
       assertThat(errors).isEmpty();
     }
 
+    static Stream<Arguments> areaOfLawAndCodes() {
+      return Stream.of(null, "")
+          .flatMap(
+              code ->
+                  Stream.of(AreaOfLaw.values()).map(areaOfLaw -> Arguments.of(areaOfLaw, code)));
+    }
+
+    @ParameterizedTest(name = "AreaOfLaw={0}, code=\"{1}\" should produce no errors")
+    @MethodSource("areaOfLawAndCodes")
+    void validateNoErrorForNullOrEmptyCrimeMatterTypeCode(
+        AreaOfLaw areaOfLaw, String matterTypeCode) {
+      Object claim = getMinimumValidClaim();
+      String fieldName = toCamelCase("crime_matter_type_code");
+      setField(claim, fieldName, matterTypeCode);
+      final List<ValidationMessagePatch> errors =
+          jsonSchemaValidator.validate("claim", claim, areaOfLaw);
+      assertThat(errors).isEmpty();
+    }
+
     /**
      * Validates that an error is returned when a field in the JSON object contains an invalid data
      * type. The method performs validation against a JSON schema for a given field, using invalid
@@ -479,7 +501,7 @@ class JsonSchemaValidatorTest {
       "uniqueFileNumber, '010123-001', LEGAL HELP, Unique File Number (UFN) must be in the format DDMMYY/NNN with a date in the past",
       "caseStartDate, '1899-12-31', LEGAL HELP, Case Start Date must be a valid date in the format DD/MM/YYYY",
       "caseConcludedDate, '1899-12-31', LEGAL HELP, Case Concluded Date must be a valid date in the format DD/MM/YYYY",
-      "crimeMatterTypeCode, '123', CRIME LOWER, Crime Lower Matter Type Code must be exactly 2 digits",
+      "crimeMatterTypeCode, '123', CRIME LOWER, Crime Lower Matter Type Code must be one of the permitted values. Please refer to the guidance.",
       "feeCode, 'ABC_90', LEGAL HELP, Fee Code must contain only letters and numbers, and be a maximum of 10 characters",
       "procurementAreaCode, 'aa543', LEGAL HELP, Procurement Area Code must be 2 uppercase letters followed by 5 digits",
       "accessPointCode, 'ap12543', LEGAL HELP, Access Point Code must be in the format AP##### (AP followed by 5 digits)",

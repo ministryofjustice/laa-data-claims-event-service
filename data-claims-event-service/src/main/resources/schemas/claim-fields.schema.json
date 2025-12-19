@@ -85,11 +85,11 @@
     },
     "crime_matter_type_code": {
       "type": "string",
-      "pattern": "^[0-9]{1,2}$",
+      "pattern": "^(?:$|0[1-9]|[1-9]|1[0-3]|1[56]|1[89]|2[13]|3[3-8])$",
       "validationErrorMessages": [
         {
-          "key": "CRIME LOWER",
-          "value": "Crime Lower Matter Type Code must be exactly 2 digits"
+          "key": "ALL",
+          "value": "Crime Lower Matter Type Code must be one of the permitted values. Please refer to the guidance."
         }
       ]
     },
