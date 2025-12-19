@@ -10,8 +10,7 @@ services:
         - GIT_PACKAGE_USER=${GIT_PACKAGE_USER}
         - GIT_PACKAGE_KEY=${GIT_PACKAGE_KEY}
     ports:
-      - "8091:8091"
-      - "8095:8095"
+      - "8182:8081"
     environment:
       - CLAIMS_API_HOSTNAME=http://host.docker.internal:8080
       - CLAIMS_API_ACCESS_TOKEN=f67f968e-b479-4e61-b66e-f57984931e56
