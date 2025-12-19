@@ -3,12 +3,16 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.validator;
 import static org.assertj.core.api.Assertions.assertThat;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.ContextUtil.assertContextClaimError;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.ContextUtil.assertContextHasNoErrors;
-import static uk.gov.justice.laa.dstew.payments.claimsevent.service.DuplicateClaimsTest.BULK_SUBMISSION_ID;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockserver.model.Parameter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -16,8 +20,12 @@ import org.springframework.boot.testcontainers.context.ImportTestcontainers;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessageType;
+import uk.gov.justice.laa.dstew.payments.claimsevent.ContextUtil;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MessageListenerBase;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MockServerIntegrationTest;
+import uk.gov.justice.laa.dstew.payments.claimsevent.service.DuplicateClaimsTest;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.SubmissionValidationService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
@@ -41,7 +49,10 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
 
   @Autowired protected SubmissionValidationService submissionValidationService;
 
-  UUID submissionId = UUID.fromString("0561d67b-30ed-412e-8231-f6296a53538d");
+  private static final UUID SUBMISSION_ID = UUID.fromString("0561d67b-30ed-412e-8231-f6296a53538d");
+  private static final UUID BULK_SUBMISSION_ID =
+      UUID.fromString("3fa85f64-5717-4562-b3fc-2c963f66afa6");
+  private static final String CLAIM_ID = "f6bde766-a0a3-483b-bf13-bef888b4f06e";
 
   @Nested
   @DisplayName("Submission period tests")
@@ -51,10 +62,10 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
     @DisplayName("Should have no errors with submission period in the past")
     void shouldHaveNoErrorsWithSubmissionPeriodInThePast() throws Exception {
       // Given
-      stubForGetSubmission(submissionId, "data-claims/get-submission/get-submission-APR-25.json");
-      stubForUpdateSubmission(submissionId);
+      stubForGetSubmission(SUBMISSION_ID, "data-claims/get-submission/get-submission-APR-25.json");
+      stubForUpdateSubmission(SUBMISSION_ID);
       stubReturnNoClaims();
-      stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
+      stubForUpdateBulkSubmission(DuplicateClaimsTest.BULK_SUBMISSION_ID);
 
       getStubForGetSubmissionByCriteria(
           List.of(
@@ -65,7 +76,7 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
 
       // When
       SubmissionValidationContext submissionValidationContext =
-          submissionValidationService.validateSubmission(submissionId);
+          submissionValidationService.validateSubmission(SUBMISSION_ID);
 
       // Then
       assertContextHasNoErrors(submissionValidationContext);
@@ -75,9 +86,9 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
     @DisplayName("Should have one error with submission period before APR-2025")
     void shouldHaveOneErrorWithSubmissionPeriodIsBeforeMinimumPeriod() throws Exception {
       // Given
-      stubForGetSubmission(submissionId, "data-claims/get-submission/get-submission-MAR-25.json");
-      stubForUpdateSubmission(submissionId);
-      stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
+      stubForGetSubmission(SUBMISSION_ID, "data-claims/get-submission/get-submission-MAR-25.json");
+      stubForUpdateSubmission(SUBMISSION_ID);
+      stubForUpdateBulkSubmission(DuplicateClaimsTest.BULK_SUBMISSION_ID);
 
       getStubForGetSubmissionByCriteria(
           List.of(
@@ -88,7 +99,7 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
 
       // When
       SubmissionValidationContext submissionValidationContext =
-          submissionValidationService.validateSubmission(submissionId);
+          submissionValidationService.validateSubmission(SUBMISSION_ID);
 
       // Then
       assertThat(submissionValidationContext.getSubmissionValidationErrors().size()).isEqualTo(1);
@@ -103,9 +114,9 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
     @DisplayName("Should have one error with submission period in same month as current")
     void shouldHaveOneErrorWithSubmissionPeriodInSameMonthAsCurrent() throws Exception {
       // Given
-      stubForGetSubmission(submissionId, "data-claims/get-submission/get-submission-MAY-25.json");
-      stubForUpdateSubmission(submissionId);
-      stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
+      stubForGetSubmission(SUBMISSION_ID, "data-claims/get-submission/get-submission-MAY-25.json");
+      stubForUpdateSubmission(SUBMISSION_ID);
+      stubForUpdateBulkSubmission(DuplicateClaimsTest.BULK_SUBMISSION_ID);
 
       getStubForGetSubmissionByCriteria(
           List.of(
@@ -116,7 +127,7 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
 
       // When
       SubmissionValidationContext submissionValidationContext =
-          submissionValidationService.validateSubmission(submissionId);
+          submissionValidationService.validateSubmission(SUBMISSION_ID);
 
       // Then
       assertThat(submissionValidationContext.getSubmissionValidationErrors().size()).isEqualTo(1);
@@ -130,9 +141,9 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
     @DisplayName("Should have one error with submission period in the future")
     void shouldHaveOneErrorWithSubmissionPeriodInTheFuture() throws Exception {
       // Given
-      stubForGetSubmission(submissionId, "data-claims/get-submission/get-submission-SEP-25.json");
-      stubForUpdateSubmission(submissionId);
-      stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
+      stubForGetSubmission(SUBMISSION_ID, "data-claims/get-submission/get-submission-SEP-25.json");
+      stubForUpdateSubmission(SUBMISSION_ID);
+      stubForUpdateBulkSubmission(DuplicateClaimsTest.BULK_SUBMISSION_ID);
 
       getStubForGetSubmissionByCriteria(
           List.of(
@@ -143,7 +154,7 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
 
       // When
       SubmissionValidationContext submissionValidationContext =
-          submissionValidationService.validateSubmission(submissionId);
+          submissionValidationService.validateSubmission(SUBMISSION_ID);
 
       // Then
       assertThat(submissionValidationContext.getSubmissionValidationErrors().size()).isEqualTo(1);
@@ -159,10 +170,10 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
     void shouldHaveOneErrorWithSubmissionPeriodWithCombinationOfOfficeAreaOfLawSubmissionPeriod()
         throws Exception {
       // Given
-      stubForGetSubmission(submissionId, "data-claims/get-submission/get-submission-APR-25.json");
-      stubForUpdateSubmission(submissionId);
+      stubForGetSubmission(SUBMISSION_ID, "data-claims/get-submission/get-submission-APR-25.json");
+      stubForUpdateSubmission(SUBMISSION_ID);
       stubReturnNoClaims();
-      stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
+      stubForUpdateBulkSubmission(DuplicateClaimsTest.BULK_SUBMISSION_ID);
 
       getStubForGetSubmissionByCriteria(
           List.of(
@@ -173,7 +184,7 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
 
       // When
       SubmissionValidationContext submissionValidationContext =
-          submissionValidationService.validateSubmission(submissionId);
+          submissionValidationService.validateSubmission(SUBMISSION_ID);
 
       // Then
       assertThat(submissionValidationContext.getSubmissionValidationErrors().size()).isEqualTo(1);
@@ -194,8 +205,8 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
     void shouldSetSubmissionStatusToValidationFailedWhenFspReturn404ForAClaim() throws Exception {
 
       stubForGetSubmission(
-          submissionId, "data-claims/get-submission/get-submission-with-claim.json");
-      stubForUpdateSubmission(submissionId);
+          SUBMISSION_ID, "data-claims/get-submission/get-submission-with-claim.json");
+      stubForUpdateSubmission(SUBMISSION_ID);
       getStubForGetSubmissionByCriteria(
           List.of(
               Parameter.param("offices", OFFICE_CODE),
@@ -206,7 +217,7 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
 
       stubForGetClaims(Collections.emptyList(), "data-claims/get-claims/no-claims.json");
 
-      stubForUpdateClaim(submissionId, UUID.fromString("f6bde766-a0a3-483b-bf13-bef888b4f06e"));
+      stubForUpdateClaim(SUBMISSION_ID, UUID.fromString(CLAIM_ID));
 
       stubForGetProviderOffice(
           OFFICE_CODE,
@@ -217,15 +228,12 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
 
       stubForPostFeeCalculationReturnError("fee-scheme/post-fee-calculation-404.json");
 
-      stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
+      stubForUpdateBulkSubmission(DuplicateClaimsTest.BULK_SUBMISSION_ID);
 
       SubmissionValidationContext submissionValidationContext =
-          submissionValidationService.validateSubmission(submissionId);
+          submissionValidationService.validateSubmission(SUBMISSION_ID);
       var validationMessagePatches =
-          submissionValidationContext
-              .getClaimReport("f6bde766-a0a3-483b-bf13-bef888b4f06e")
-              .get()
-              .getMessages();
+          submissionValidationContext.getClaimReport(CLAIM_ID).get().getMessages();
       var filteredMessagePatch =
           validationMessagePatches.stream()
               .filter(
@@ -238,6 +246,76 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
               .toList();
 
       Assertions.assertFalse(filteredMessagePatch.isEmpty());
+    }
+  }
+
+  @Nested
+  @DisplayName("Claim level validation tests")
+  class ClaimLevelValidationTests {
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("crimeLowerClaimScenarios")
+    void shouldValidateCrimeLowerClaimsCorrectly(
+        String displayName, String claimsJson, Consumer<SubmissionValidationContext> assertion)
+        throws Exception {
+
+      // Given
+      stubForGetSubmission(
+          SUBMISSION_ID, "data-claims/get-submission/get-submission-with-claim-crime-lower.json");
+      stubForUpdateSubmission(SUBMISSION_ID);
+
+      stubForGetProviderOffice(
+          OFFICE_CODE,
+          List.of(new Parameter("areaOfLaw", AreaOfLaw.CRIME_LOWER.getValue())),
+          "provider-details/get-firm-schedules-openapi-200.json");
+
+      stubForGetClaims(Collections.emptyList(), claimsJson);
+      stubForGetFeeDetails("CAPA", "fee-scheme/get-fee-details-200.json");
+      stubForPostFeeCalculation("fee-scheme/post-fee-calculation-200.json");
+      stubForUpdateClaim(SUBMISSION_ID, UUID.fromString(CLAIM_ID));
+      stubForUpdateSubmission(SUBMISSION_ID);
+      stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
+
+      getStubForGetSubmissionByCriteria(
+          List.of(
+              Parameter.param("offices", OFFICE_CODE),
+              Parameter.param("area_of_law", AreaOfLaw.CRIME_LOWER.name()),
+              Parameter.param("submission_period", "APR-2025")),
+          "data-claims/get-submission/get-submissions-by-filter_no_content.json");
+
+      // When
+      SubmissionValidationContext context =
+          submissionValidationService.validateSubmission(SUBMISSION_ID);
+
+      // Then
+      assertion.accept(context);
+    }
+
+    static Stream<Arguments> crimeLowerClaimScenarios() {
+      return Stream.of(
+          Arguments.of(
+              "Should have no errors when the claim has valid values",
+              "data-claims/get-claims/claim-valid.json",
+              (Consumer<SubmissionValidationContext>) ContextUtil::assertContextHasNoErrors),
+          Arguments.of(
+              "Should have an error when the crime matter type code is invalid",
+              "data-claims/get-claims/claim-invalid-crime-matter-type-code.json",
+              (Consumer<SubmissionValidationContext>)
+                  context -> {
+                    ValidationMessagePatch expected =
+                        new ValidationMessagePatch()
+                            .type(ValidationMessageType.ERROR)
+                            .source("Data-Claims-Event-Service")
+                            .displayMessage(
+                                "Crime Lower Matter Type Code must be one of the permitted values. Please refer to the guidance.")
+                            .technicalMessage(
+                                "crime_matter_type_code: does not match the regex pattern ^(?:$|0[1-9]|[1-9]|1[0-3]|1[56]|1[89]|2[13]|3[3-8])$ (provided value: 99)");
+
+                    ValidationMessagePatch actual =
+                        context.getClaimReports().getFirst().getMessages().getFirst();
+
+                    assertThat(actual).usingRecursiveComparison().isEqualTo(expected);
+                  }));
     }
   }
 }
