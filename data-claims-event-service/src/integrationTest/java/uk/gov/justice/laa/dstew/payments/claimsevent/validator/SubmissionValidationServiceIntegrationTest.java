@@ -25,7 +25,6 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessageType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.ContextUtil;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MessageListenerBase;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MockServerIntegrationTest;
-import uk.gov.justice.laa.dstew.payments.claimsevent.service.DuplicateClaimsTest;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.SubmissionValidationService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
@@ -65,7 +64,7 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
       stubForGetSubmission(SUBMISSION_ID, "data-claims/get-submission/get-submission-APR-25.json");
       stubForUpdateSubmission(SUBMISSION_ID);
       stubReturnNoClaims();
-      stubForUpdateBulkSubmission(DuplicateClaimsTest.BULK_SUBMISSION_ID);
+      stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
 
       getStubForGetSubmissionByCriteria(
           List.of(
@@ -88,7 +87,7 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
       // Given
       stubForGetSubmission(SUBMISSION_ID, "data-claims/get-submission/get-submission-MAR-25.json");
       stubForUpdateSubmission(SUBMISSION_ID);
-      stubForUpdateBulkSubmission(DuplicateClaimsTest.BULK_SUBMISSION_ID);
+      stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
 
       getStubForGetSubmissionByCriteria(
           List.of(
@@ -116,7 +115,7 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
       // Given
       stubForGetSubmission(SUBMISSION_ID, "data-claims/get-submission/get-submission-MAY-25.json");
       stubForUpdateSubmission(SUBMISSION_ID);
-      stubForUpdateBulkSubmission(DuplicateClaimsTest.BULK_SUBMISSION_ID);
+      stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
 
       getStubForGetSubmissionByCriteria(
           List.of(
@@ -143,7 +142,7 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
       // Given
       stubForGetSubmission(SUBMISSION_ID, "data-claims/get-submission/get-submission-SEP-25.json");
       stubForUpdateSubmission(SUBMISSION_ID);
-      stubForUpdateBulkSubmission(DuplicateClaimsTest.BULK_SUBMISSION_ID);
+      stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
 
       getStubForGetSubmissionByCriteria(
           List.of(
@@ -173,7 +172,7 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
       stubForGetSubmission(SUBMISSION_ID, "data-claims/get-submission/get-submission-APR-25.json");
       stubForUpdateSubmission(SUBMISSION_ID);
       stubReturnNoClaims();
-      stubForUpdateBulkSubmission(DuplicateClaimsTest.BULK_SUBMISSION_ID);
+      stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
 
       getStubForGetSubmissionByCriteria(
           List.of(
@@ -228,7 +227,7 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
 
       stubForPostFeeCalculationReturnError("fee-scheme/post-fee-calculation-404.json");
 
-      stubForUpdateBulkSubmission(DuplicateClaimsTest.BULK_SUBMISSION_ID);
+      stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
 
       SubmissionValidationContext submissionValidationContext =
           submissionValidationService.validateSubmission(SUBMISSION_ID);
