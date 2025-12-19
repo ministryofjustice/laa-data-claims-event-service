@@ -85,7 +85,7 @@
     },
     "crime_matter_type_code": {
       "type": "string",
-      "pattern": "^(?:0[1-9]|[1-9]|1[0-3]|1[56]|1[89]|2[13]|3[3-8])$",
+      "pattern": "^(?:$|0[1-9]|[1-9]|1[0-3]|1[56]|1[89]|2[13]|3[3-8])$",
       "validationErrorMessages": [
         {
           "key": "CRIME LOWER",

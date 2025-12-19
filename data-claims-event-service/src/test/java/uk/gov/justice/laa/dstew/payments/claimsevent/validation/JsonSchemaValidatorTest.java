@@ -17,6 +17,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
@@ -25,8 +26,10 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvFileSource;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.core.io.ClassPathResource;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
@@ -352,6 +355,25 @@ class JsonSchemaValidatorTest {
       setField(claim, fieldName, null);
       final List<ValidationMessagePatch> errors =
           jsonSchemaValidator.validate("claim", claim, AreaOfLaw.LEGAL_HELP);
+      assertThat(errors).isEmpty();
+    }
+
+    static Stream<Arguments> areaOfLawAndCodes() {
+      return Stream.of(null, "")
+          .flatMap(
+              code ->
+                  Stream.of(AreaOfLaw.values()).map(areaOfLaw -> Arguments.of(areaOfLaw, code)));
+    }
+
+    @ParameterizedTest(name = "AreaOfLaw={0}, code=\"{1}\" should produce no errors")
+    @MethodSource("areaOfLawAndCodes")
+    void validateNoErrorForNullOrEmptyCrimeMatterTypeCode(
+        AreaOfLaw areaOfLaw, String matterTypeCode) {
+      Object claim = getMinimumValidClaim();
+      String fieldName = toCamelCase("crime_matter_type_code");
+      setField(claim, fieldName, matterTypeCode);
+      final List<ValidationMessagePatch> errors =
+          jsonSchemaValidator.validate("claim", claim, areaOfLaw);
       assertThat(errors).isEmpty();
     }
 
