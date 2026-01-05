@@ -7,8 +7,10 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        - GIT_PACKAGE_USER=${GIT_PACKAGE_USER}
-        - GIT_PACKAGE_KEY=${GIT_PACKAGE_KEY}
+        - BUILD_SOURCE=internal
+      secrets:
+        - github_actor
+        - github_token
     ports:
       - "8182:8081"
     environment:
