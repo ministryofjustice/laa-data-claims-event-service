@@ -113,6 +113,32 @@ class StageReachedClaimValidatorTest {
   }
 
   @Test
+  void shouldNotAddDuplicateRegexValidationError() {
+    UUID claimId = new UUID(1, 1);
+    ClaimResponse claim =
+        new ClaimResponse()
+            .id(claimId.toString())
+            .feeCode("feeCode1")
+            .caseStartDate("2025-08-14")
+            .status(ClaimStatus.READY_TO_PROCESS)
+            .uniqueFileNumber("010101/123")
+            .stageReachedCode("YOUX"); // invalid stage reached code
+
+    SubmissionValidationContext context = new SubmissionValidationContext();
+    context.addClaimError(
+        claim.getId(),
+        "stage_reached_code: does not match regex pattern",
+        "Stage Reached Code must be exactly 2 alphanumeric characters for Legal Help claims",
+        "event-service");
+
+    // Run validation
+    validator.validate(claim, context, AreaOfLaw.CRIME_LOWER);
+
+    // Only one error should exist
+    assertThat(getClaimMessages(context, claimId.toString()).size()).isEqualTo(1);
+  }
+
+  @Test
   void exceptionIsThrownForUnrecognisedAreaOfLaw() {
     UUID claimId = new UUID(1, 1);
     ClaimResponse claim = new ClaimResponse().id(claimId.toString());

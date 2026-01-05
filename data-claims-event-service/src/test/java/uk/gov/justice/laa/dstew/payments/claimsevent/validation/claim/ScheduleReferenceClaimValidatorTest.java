@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.core.io.ClassPathResource;
@@ -93,5 +94,34 @@ class ScheduleReferenceClaimValidatorTest {
     } else {
       assertThat(getClaimMessages(context, claimId.toString()).isEmpty()).isTrue();
     }
+  }
+
+  @Test
+  void shouldNotAddDuplicateRegexValidationError() {
+    UUID claimId = new UUID(1, 1);
+    ClaimResponse claim =
+        new ClaimResponse()
+            .id(claimId.toString())
+            .feeCode("feeCode1")
+            .caseStartDate("2025-08-14")
+            .caseConcludedDate("2025-09-14")
+            .caseReferenceNumber("123")
+            .scheduleReference("ABCDEFGHIJKLMNOPQRST123") // invalid schedule reference
+            .status(ClaimStatus.READY_TO_PROCESS)
+            .uniqueFileNumber("010101/123")
+            .matterTypeCode("ab12:bc24");
+
+    SubmissionValidationContext context = new SubmissionValidationContext();
+    context.addClaimError(
+        claim.getId(),
+        "schedule_reference: does not match regex pattern",
+        "ScheduleReference must be a maximum of 20 characters",
+        "event-service");
+
+    // Run validation
+    validator.validate(claim, context, AreaOfLaw.LEGAL_HELP);
+
+    // Only one error should exist
+    assertThat(getClaimMessages(context, claimId.toString()).size()).isEqualTo(1);
   }
 }

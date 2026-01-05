@@ -45,6 +45,11 @@ public abstract class RegexClaimValidator extends SchemaValidator implements Cla
       String fieldName,
       String regex,
       SubmissionValidationContext context) {
+    // if the JsonSchemaValidator has already found an error for this field for this claimId, skip
+    // regex validation to avoid adding duplicate errors.
+    if (hasFieldSchemaValidationError(claim, context, fieldName)) {
+      return;
+    }
     String technicalMessage =
         String.format(
             "%s (%s): does not match the regex pattern %s (provided value: %s)",

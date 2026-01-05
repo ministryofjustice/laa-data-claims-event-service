@@ -27,7 +27,7 @@ public final class UniqueFileNumberClaimValidator implements BasicClaimValidator
     String uniqueFileNumber = claim.getUniqueFileNumber();
     if (uniqueFileNumber != null
         && uniqueFileNumber.length() > 1
-        && !isErrorPresent(claim, context, "Unique File Number")) {
+        && !hasFieldSchemaValidationError(claim, context, "unique_file_number")) {
       try {
         LocalDate date = UniqueFileNumberUtil.parse(uniqueFileNumber);
         if (date.isAfter(LocalDate.now())) {
