@@ -8,11 +8,13 @@ import java.io.IOException;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.core.io.ClassPathResource;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.SchemaValidationConfig;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
@@ -68,5 +70,31 @@ class MatterTypeClaimValidatorTest {
     } else {
       assertThat(getClaimMessages(context, claimId.toString()).isEmpty()).isTrue();
     }
+  }
+
+  @Test
+  void shouldNotAddDuplicateRegexValidationError() {
+    UUID claimId = new UUID(1, 1);
+    ClaimResponse claim =
+        new ClaimResponse()
+            .id(claimId.toString())
+            .feeCode("feeCode1")
+            .caseStartDate("2025-08-14")
+            .status(ClaimStatus.READY_TO_PROCESS)
+            .uniqueFileNumber("010101/123")
+            .matterTypeCode("ABCDE:ABCDE"); // invalid matter type code
+
+    SubmissionValidationContext context = new SubmissionValidationContext();
+    context.addClaimError(
+        claim.getId(),
+        "matter_type_code: does not match regex pattern",
+        "Each Matter Type Code 1 and 2 must be 4 characters",
+        "event-service");
+
+    // Run validation
+    validator.validate(claim, context, AreaOfLaw.LEGAL_HELP);
+
+    // Only one error should exist
+    assertThat(getClaimMessages(context, claimId.toString()).size()).isEqualTo(1);
   }
 }

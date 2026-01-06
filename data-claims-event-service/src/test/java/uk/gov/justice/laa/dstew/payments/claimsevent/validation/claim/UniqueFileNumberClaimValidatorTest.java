@@ -103,16 +103,21 @@ class UniqueFileNumberClaimValidatorTest {
   void shouldNotAddDuplicateErrorsIfTheFieldIsAlreadyInError() {
     // Given
     String claimId = new UUID(1, 1).toString();
-    ClaimResponse claimResponse = new ClaimResponse().id(claimId).uniqueFileNumber("010124/123");
+    ClaimResponse claimResponse =
+        new ClaimResponse().id(claimId).uniqueFileNumber("01010124/123"); // invalid date
 
     SubmissionValidationContext context = new SubmissionValidationContext();
-    context.addClaimError(claimId, ClaimValidationError.INVALID_DATE_IN_UNIQUE_FILE_NUMBER);
+    context.addClaimError(
+        claimId,
+        "unique_file_number: does not match regex pattern",
+        ClaimValidationError.INVALID_DATE_IN_UNIQUE_FILE_NUMBER.getDisplayMessage(),
+        "event-service");
     // When
     validator.validate(claimResponse, context);
     // Then
     assertThat(context.getClaimReports().size()).isEqualTo(1);
-    assertContextClaimError(
-        context, claimId, ClaimValidationError.INVALID_DATE_IN_UNIQUE_FILE_NUMBER);
+    assertThat(context.getClaimReport(claimId).get().getMessages().getFirst().getDisplayMessage())
+        .isEqualTo(ClaimValidationError.INVALID_DATE_IN_UNIQUE_FILE_NUMBER.getDisplayMessage());
   }
 
   @ParameterizedTest
