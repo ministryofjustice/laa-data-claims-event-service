@@ -43,7 +43,7 @@ services:
       - DEBUG=1
       - AWS_DEFAULT_REGION=us-east-1
     volumes:
-      - "./docker-scripts/init-localstack.sh:/etc/localstack/init/ready.d/init-localstack.sh"
+      - "./docker-config/init-localstack.sh:/etc/localstack/init/ready.d/init-localstack.sh"
       - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
   data-claim-api-wiremock:
@@ -57,7 +57,7 @@ services:
         "--verbose",
       ]
     volumes:
-      - ./wiremock/mappings/data-claims-api:/home/wiremock/mappings
+      - ./docker-config/wiremock/mappings/data-claims-api:/home/wiremock/mappings
     restart: always
     ports:
       - "8190:8080"
@@ -72,7 +72,7 @@ services:
         "--verbose",
       ]
     volumes:
-      - ./wiremock/mappings/fee-scheme-platform-api:/home/wiremock/mappings
+      - ./docker-config/wiremock/mappings/fee-scheme-platform-api:/home/wiremock/mappings
     restart: always
     ports:
       - "8191:8080"
@@ -87,7 +87,16 @@ services:
         "--verbose",
       ]
     volumes:
-      - ./wiremock/mappings/provider-details-api:/home/wiremock/mappings
+      - ./docker-config/wiremock/mappings/provider-details-api:/home/wiremock/mappings
     restart: always
     ports:
       - "8192:8080"
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker-config/prometheus.yml:/etc/prometheus/prometheus.yml
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

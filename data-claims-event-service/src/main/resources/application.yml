@@ -68,6 +68,10 @@ laa:
     name: ${BULK_CLAIM_QUEUE_NAME}
     visibility-timeout-seconds: 600
     visibility-extension-interval-seconds: 10
+  springboot:
+    starter:
+      metrics:
+        metric-name-prefix: claims_event_service
 
 submission:
   validation:

@@ -16,10 +16,11 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
-import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.submission.SubmissionValidator;
+import uk.gov.laa.springboot.metrics.aspect.annotations.CounterMetric;
+import uk.gov.laa.springboot.metrics.aspect.annotations.SummaryTimerMetric;
 
 /**
  * A service responsible for validating claim submissions. Any errors found during validation will
@@ -35,16 +36,17 @@ public class SubmissionValidationService {
   private final BulkClaimUpdater bulkClaimUpdater;
   private final DataClaimsRestClient dataClaimsRestClient;
   private final List<SubmissionValidator> submissionValidatorList;
-  private final EventServiceMetricService eventServiceMetricService;
 
   /**
    * Validates a claim submission inside the provided submissionResponse.
    *
    * @param submissionId the ID of the submission to validate
    */
+  @SummaryTimerMetric(
+      metricName = "submission_validation_time",
+      hintText = "Total time taken to validate claim (Include FSP validation time)")
   public SubmissionValidationContext validateSubmission(UUID submissionId) {
     log.debug("Validating submission {}", submissionId);
-    eventServiceMetricService.startSubmissionValidationTimer(submissionId);
 
     SubmissionResponse submission = dataClaimsRestClient.getSubmission(submissionId).getBody();
     Assert.notNull(submission, "Submission not retrievable: " + submissionId.toString());
@@ -59,10 +61,8 @@ public class SubmissionValidationService {
         .forEach(validator -> validator.validate(submission, context));
 
     // Only validate claims if no submission level validation errors have been recorded.
-    if (!context.hasSubmissionLevelErrors()) {
+    if (hasNoSubmissionLevelErrors(context)) {
       claimValidationService.validateAndUpdateClaims(submission, context);
-    } else {
-      eventServiceMetricService.incrementTotalSubmissionsValidatedWithSubmissionErrors();
     }
 
     // Update submission and bulk submission status after completion
@@ -71,42 +71,57 @@ public class SubmissionValidationService {
     BulkSubmissionPatch bulkSubmissionPatch =
         new BulkSubmissionPatch().bulkSubmissionId(bulkSubmissionId);
     if (context.hasErrors()) {
-      log.debug(
-          "Validation completed for submission {} with errors: {}",
-          submissionId,
-          context.getSubmissionValidationErrors());
-      log.debug(
-          "Validation completed for submission {} with no of claims errors: {}",
-          submissionId,
-          context.getClaimReports().size());
-      submissionPatch
-          .status(SubmissionStatus.VALIDATION_FAILED)
-          .validationMessages(context.getSubmissionValidationErrors());
-      eventServiceMetricService.incrementTotalInvalidSubmissions();
-      bulkSubmissionPatch
-          .status(BulkSubmissionStatus.VALIDATION_FAILED)
-          .errorCode(BulkSubmissionErrorCode.V100)
-          .errorDescription(
-              "Validation completed for bulk submission %s with errors"
-                  .formatted(bulkSubmissionId));
+      populatePatchWithInvalid(
+          submissionId, context, submissionPatch, bulkSubmissionPatch, bulkSubmissionId);
     } else {
-      log.debug("Validation completed for submission {} with no errors", submissionId);
-      submissionPatch.status(SubmissionStatus.VALIDATION_SUCCEEDED);
-      eventServiceMetricService.incrementTotalValidSubmissions();
-      bulkSubmissionPatch.status(BulkSubmissionStatus.VALIDATION_SUCCEEDED);
+      populatePatchWithValid(submissionId, submissionPatch, bulkSubmissionPatch);
     }
-
-    // Record what submission errors were found
-    context
-        .getSubmissionValidationErrors()
-        .forEach(x -> eventServiceMetricService.recordValidationMessage(x, false));
-    // Stop submission validation timer
-    eventServiceMetricService.stopSubmissionValidationTimer(submissionId);
 
     dataClaimsRestClient.updateSubmission(submissionId.toString(), submissionPatch);
     dataClaimsRestClient.updateBulkSubmission(
         String.valueOf(bulkSubmissionId), bulkSubmissionPatch);
     return context;
+  }
+
+  @CounterMetric(
+      metricName = "valid_submissions",
+      hintText = "Total number submission which are valid")
+  private static void populatePatchWithValid(
+      UUID submissionId, SubmissionPatch submissionPatch, BulkSubmissionPatch bulkSubmissionPatch) {
+    log.debug("Validation completed for submission {} with no errors", submissionId);
+    submissionPatch.status(SubmissionStatus.VALIDATION_SUCCEEDED);
+    bulkSubmissionPatch.status(BulkSubmissionStatus.VALIDATION_SUCCEEDED);
+  }
+
+  @CounterMetric(
+      metricName = "invalid_submissions",
+      hintText = "Total number submission which are invalid")
+  private static void populatePatchWithInvalid(
+      UUID submissionId,
+      SubmissionValidationContext context,
+      SubmissionPatch submissionPatch,
+      BulkSubmissionPatch bulkSubmissionPatch,
+      UUID bulkSubmissionId) {
+    log.debug(
+        "Validation completed for submission {} with errors: {}",
+        submissionId,
+        context.getSubmissionValidationErrors());
+    submissionPatch
+        .status(SubmissionStatus.VALIDATION_FAILED)
+        .validationMessages(context.getSubmissionValidationErrors());
+    bulkSubmissionPatch
+        .status(BulkSubmissionStatus.VALIDATION_FAILED)
+        .errorCode(BulkSubmissionErrorCode.V100)
+        .errorDescription(
+            "Validation completed for bulk submission %s with errors".formatted(bulkSubmissionId));
+  }
+
+  @CounterMetric(
+      metricName = "submissions_with_errors",
+      hintText = "Total number of submissions with validation errors",
+      conditionalOnReturn = "false")
+  private static boolean hasNoSubmissionLevelErrors(SubmissionValidationContext context) {
+    return !context.hasSubmissionLevelErrors();
   }
 
   private SubmissionValidationContext initialiseValidationContext(SubmissionResponse submission) {
