@@ -279,9 +279,6 @@
         }
       ]
     },
-    "total_value": {
-      "type": "number"
-    },
     "total_warnings": {
       "type": "number"
     },
