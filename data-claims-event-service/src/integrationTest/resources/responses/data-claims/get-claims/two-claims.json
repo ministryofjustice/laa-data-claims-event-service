@@ -105,8 +105,7 @@
       "ait_hearing_centre_code": "string",
       "is_substantive_hearing": true,
       "ho_interview": 0,
-      "local_authority_number": "string",
-      "total_value": "23.45"
+      "local_authority_number": "string"
     },
     {
       "id": "f6bde766-a0a3-483b-bf13-bef888b4f06e",
@@ -139,7 +138,6 @@
       "mediation_time_minutes": null,
       "outreach_location": null,
       "referral_source": null,
-      "total_value": null,
       "client_forename": "Shannoy",
       "client_surname": "McLeod",
       "client_date_of_birth": "1996-08-07",
