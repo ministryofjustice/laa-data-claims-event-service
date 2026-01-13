@@ -153,7 +153,6 @@ class BulkSubmissionMapperTest {
             .valueOfCosts(new BigDecimal("150.75"))
             .costsDamagesRecovered(new BigDecimal("999.99"))
             .paNumber("PA-123")
-            .prisonLawPriorApproval("SHOULD_NOT_BE_USED")
             .travelCosts(new BigDecimal("12.50"))
             .detentionTravelWaitingCosts(new BigDecimal("1.00"))
             .travelWaitingCosts(new BigDecimal("3.25"))
