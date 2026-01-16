@@ -3,6 +3,7 @@ plugins {
     id("com.diffplug.spotless") version "7.2.1"
     id 'uk.gov.laa.springboot.laa-spring-boot-gradle-plugin' version '1.0.4'
     id "io.sentry.jvm.gradle" version "5.12.2"
+    id 'au.com.dius.pact' version '4.6.19'
 }
 
 def versions = [sentry : '8.28.0']
@@ -113,6 +114,36 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    testImplementation 'au.com.dius.pact.consumer:junit5:4.6.19'
+}
+
+// To keep pact stuff separate
+sourceSets {
+    pactTest {
+        java.srcDir file('src/pactTest/java')
+        resources.srcDir file('src/pactTest/resources')
+        compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
+        runtimeClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
+    }
+}
+
+configurations {
+    pactTestImplementation.extendsFrom testImplementation
+    pactTestRuntimeOnly.extendsFrom testRuntimeOnly
+}
+
+tasks.register('pactTest', Test) {
+    description = 'Runs the pact tests.'
+    group = 'verification'
+    testClassesDirs = sourceSets.pactTest.output.classesDirs
+    classpath = sourceSets.pactTest.runtimeClasspath
+    useJUnitPlatform()
+    // Resolve the directory path to a String for the system property
+    systemProperty 'pact.rootDir', layout.buildDirectory.dir("pacts").get().asFile.path
+}
+
+tasks.named('processPactTestResources') {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
 
 spotless {
@@ -138,6 +169,21 @@ tasks.register("checkstyleStaged", Checkstyle) {
 
     classpath = sourceSets.main.compileClasspath
 }
+
+pact {
+    publish {
+        pactBrokerUrl = project.findProperty('pactBrokerUrl') ?: System.getenv('PACT_BROKER_URL') ?: 'http://localhost:9292'
+        pactBrokerUsername = project.findProperty('pactBrokerUsername') ?: System.getenv('PACT_BROKER_USERNAME') ?: 'ABC'
+        pactBrokerPassword = project.findProperty('pactBrokerPassword') ?: System.getenv('PACT_BROKER_PASSWORD') ?: 'ABC'
+
+
+        pactDirectory = layout.buildDirectory.dir("pacts").get().asFile.path
+
+        consumerVersion = project.version != 'unspecified' ? project.version : '1.0.0'
+        tags = ['dev', 'local']
+    }
+}
+
 
 testlogger {
     theme 'mocha'

@@ -22,7 +22,9 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResultSet;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.CreateClaim201Response;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.CreateMatterStart201Response;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.CreateSubmission201Response;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetBulkSubmission200Response;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.MatterStartPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
@@ -69,7 +71,8 @@ public interface DataClaimsRestClient {
    *     Location} header points to the created resource
    */
   @PostExchange("/submissions")
-  ResponseEntity<Void> createSubmission(@RequestBody SubmissionPost submission);
+  ResponseEntity<CreateSubmission201Response> createSubmission(
+      @RequestBody SubmissionPost submission);
 
   /**
    * Update (patch) an existing submission's fields (typically status).
@@ -127,7 +130,7 @@ public interface DataClaimsRestClient {
    *     header points to the created resource
    */
   @PostExchange("/submissions/{id}/claims")
-  ResponseEntity<Void> createClaim(
+  ResponseEntity<CreateClaim201Response> createClaim(
       @PathVariable("id") String submissionId, @RequestBody ClaimPost claim);
 
   /**

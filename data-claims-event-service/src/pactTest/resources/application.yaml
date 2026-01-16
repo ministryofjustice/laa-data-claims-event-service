@@ -1,0 +1,26 @@
+laa:
+  bulk-claim-queue:
+    name: test-queue-name
+
+spring:
+  cloud:
+    aws:
+      endpoint: http://localhost:4566
+      credentials:
+        access-key: dummy-access-key
+        secret-key: dummy-secret-key
+      region:
+        static: us-east-1
+
+submission:
+  validation:
+    minimum-period: JAN-2018
+claim:
+  validation:
+    claim-validation-batch-size: ${CLAIM_VALIDATION_BATCH_SIZE:100}
+
+resilience4j.retry:
+  instances:
+    pdaRetry:
+      maxAttempts: 3
+      waitDuration: 500ms
