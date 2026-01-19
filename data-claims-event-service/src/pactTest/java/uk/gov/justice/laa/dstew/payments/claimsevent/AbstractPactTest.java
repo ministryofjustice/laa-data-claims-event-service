@@ -1,8 +1,5 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -26,9 +23,4 @@ public abstract class AbstractPactTest {
   @MockitoBean SubmissionListener submissionListener;
 
   @MockitoBean SqsClient sqsClient;
-
-  public static String readJsonFromFile(final String fileName) throws Exception {
-    Path path = Paths.get("src/pactTest/resources/responses/", fileName);
-    return Files.readString(path);
-  }
 }

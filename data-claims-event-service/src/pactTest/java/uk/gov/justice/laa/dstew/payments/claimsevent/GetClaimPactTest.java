@@ -41,8 +41,8 @@ public final class GetClaimPactTest extends AbstractPactTest {
   public RequestResponsePact getClaim200(PactDslWithProvider builder) {
     // Defines expected 200 response for existing claim using matchers
     return builder
-        .given("a claim exists for the given submission")
-        .uponReceiving("a request to fetch a specific claim")
+        .given("a claim exists")
+        .uponReceiving("a request to fetch a existing claim")
         .matchPath("/api/v0/submissions/(" + UUID_REGEX + ")/claims/(" + UUID_REGEX + ")")
         .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
         .method("GET")

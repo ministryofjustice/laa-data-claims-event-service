@@ -3,6 +3,7 @@ package uk.gov.justice.laa.dstew.payments.claimsevent;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import au.com.dius.pact.consumer.dsl.LambdaDsl;
 import au.com.dius.pact.consumer.dsl.PactDslWithProvider;
 import au.com.dius.pact.consumer.junit.MockServerConfig;
 import au.com.dius.pact.consumer.junit5.PactConsumerTest;
@@ -10,6 +11,7 @@ import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.core.model.RequestResponsePact;
 import au.com.dius.pact.core.model.annotations.Pact;
 import java.util.Map;
+import java.util.UUID;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -41,7 +43,6 @@ public final class PostMatterStartsPactTest extends AbstractPactTest {
   @SneakyThrows
   @Pact(consumer = CONSUMER)
   public RequestResponsePact postMatterStart201(PactDslWithProvider builder) {
-    String postMatterStartResponse = readJsonFromFile("post-matter-start-201.json");
     // Defines expected 201 response for successfully submitting a valid matter start.
     return builder
         .given("the system is ready to process a valid matter start")
@@ -53,14 +54,17 @@ public final class PostMatterStartsPactTest extends AbstractPactTest {
         .willRespondWith()
         .status(201)
         .headers(Map.of("Content-Type", "application/json"))
-        .body(postMatterStartResponse)
+        .body(
+            LambdaDsl.newJsonBody(
+                    body ->
+                        body.uuid("id", UUID.fromString("3fa85f64-5717-4562-b3fc-2c963f66afa6")))
+                .build())
         .toPact();
   }
 
   @SneakyThrows
   @Pact(consumer = CONSUMER)
   public RequestResponsePact postMatterStart400(PactDslWithProvider builder) {
-    String postMatterStartsResponse = readJsonFromFile("post-matter-start-201.json");
     // Defines expected 400 response for uploading invalid matter start
     return builder
         .given("the matter start request contains invalid data")
@@ -72,7 +76,11 @@ public final class PostMatterStartsPactTest extends AbstractPactTest {
         .willRespondWith()
         .status(400)
         .headers(Map.of("Content-Type", "application/json"))
-        .body(postMatterStartsResponse)
+        .body(
+            LambdaDsl.newJsonBody(
+                    body ->
+                        body.uuid("id", UUID.fromString("3fa85f64-5717-4562-b3fc-2c963f66afa6")))
+                .build())
         .toPact();
   }
 

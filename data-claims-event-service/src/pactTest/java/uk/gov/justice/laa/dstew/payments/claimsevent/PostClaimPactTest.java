@@ -3,6 +3,7 @@ package uk.gov.justice.laa.dstew.payments.claimsevent;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import au.com.dius.pact.consumer.dsl.LambdaDsl;
 import au.com.dius.pact.consumer.dsl.PactDslWithProvider;
 import au.com.dius.pact.consumer.junit.MockServerConfig;
 import au.com.dius.pact.consumer.junit5.PactConsumerTest;
@@ -10,6 +11,7 @@ import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.core.model.RequestResponsePact;
 import au.com.dius.pact.core.model.annotations.Pact;
 import java.util.Map;
+import java.util.UUID;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -41,7 +43,6 @@ public final class PostClaimPactTest extends AbstractPactTest {
   @SneakyThrows
   @Pact(consumer = CONSUMER)
   public RequestResponsePact postClaim201(PactDslWithProvider builder) {
-    String postClaimResponse = readJsonFromFile("post-claim-201.json");
     // Defines expected 201 response for successfully submitting a valid claim.
     return builder
         .given("the system is ready to process a valid claim")
@@ -53,14 +54,17 @@ public final class PostClaimPactTest extends AbstractPactTest {
         .willRespondWith()
         .status(201)
         .headers(Map.of("Content-Type", "application/json"))
-        .body(postClaimResponse)
+        .body(
+            LambdaDsl.newJsonBody(
+                    body ->
+                        body.uuid("id", UUID.fromString("d4e3fa24-7d1f-4710-b7a7-0debe88421aa")))
+                .build())
         .toPact();
   }
 
   @SneakyThrows
   @Pact(consumer = CONSUMER)
   public RequestResponsePact postClaim400(PactDslWithProvider builder) {
-    String postClaimResponse = readJsonFromFile("post-claim-201.json");
     // Defines expected 400 response for uploading invalid claim
     return builder
         .given("the claim request contains invalid data")
@@ -72,7 +76,11 @@ public final class PostClaimPactTest extends AbstractPactTest {
         .willRespondWith()
         .status(400)
         .headers(Map.of("Content-Type", "application/json"))
-        .body(postClaimResponse)
+        .body(
+            LambdaDsl.newJsonBody(
+                    body ->
+                        body.uuid("id", UUID.fromString("d4e3fa24-7d1f-4710-b7a7-0debe88421aa")))
+                .build())
         .toPact();
   }
 
