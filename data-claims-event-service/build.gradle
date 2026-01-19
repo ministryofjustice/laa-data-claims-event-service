@@ -176,7 +176,6 @@ pact {
         pactBrokerUsername = project.findProperty('pactBrokerUsername') ?: System.getenv('PACT_BROKER_USERNAME') ?: 'ABC'
         pactBrokerPassword = project.findProperty('pactBrokerPassword') ?: System.getenv('PACT_BROKER_PASSWORD') ?: 'ABC'
 
-
         pactDirectory = layout.buildDirectory.dir("pacts").get().asFile.path
 
         consumerVersion = project.version != 'unspecified' ? project.version : '1.0.0'

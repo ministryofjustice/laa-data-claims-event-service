@@ -19,8 +19,6 @@ public abstract class AbstractPactTest {
   protected final UUID bulkSubmissionId = UUID.fromString("3fa85f64-5717-4562-b3fc-2c963f66afa6");
   protected final UUID submissionId = UUID.fromString("3fa85f64-5717-4562-b3fc-2c963f66afa6");
   protected final UUID claimId = UUID.fromString("d4e3fa24-7d1f-4710-b7a7-0debe88421aa");
-  protected final UUID matterStartId = UUID.fromString("b2946085-44fd-477f-a827-1e12c44a89ab");
-  protected final UUID messageId = UUID.fromString("1b60f94e-d29c-4522-9cb5-2e21dbe9a871");
 
   public static String readJsonFromFile(final String fileName) throws Exception {
     Path path = Paths.get("src/pactTest/resources/responses/", fileName);
