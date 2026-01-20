@@ -135,6 +135,14 @@ configurations {
 tasks.register('pactTest', Test) {
     description = 'Runs the pact tests.'
     group = 'verification'
+
+    def pactsDir = layout.buildDirectory.dir("pacts").get().asFile
+    doFirst {
+        if (pactsDir.exists()) {
+            pactsDir.deleteDir()
+        }
+    }
+
     testClassesDirs = sourceSets.pactTest.output.classesDirs
     classpath = sourceSets.pactTest.runtimeClasspath
     useJUnitPlatform()
