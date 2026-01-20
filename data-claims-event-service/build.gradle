@@ -64,7 +64,7 @@ dependencies {
     implementation project(':reference-provider-details-api')
     implementation project(':reference-fee-scheme-platform-api')
 
-    implementation 'uk.gov.justice.laa.datastewardship.payments:data-claims-api-models:cdc7766'
+    implementation 'uk.gov.justice.laa.datastewardship.payments:data-claims-api-models:353c257'
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-registry-prometheus'
@@ -186,8 +186,24 @@ pact {
 
         pactDirectory = layout.buildDirectory.dir("pacts").get().asFile.path
 
-        consumerVersion = project.version != 'unspecified' ? project.version : '1.0.0'
-        tags = ['dev', 'local']
+        def projectVersion = project.version != 'unspecified' ? project.version : '1.0.0';
+        def gitSha = providers.environmentVariable('GIT_SHA').getOrNull()
+
+        // If we have a SHA, append it to the version for uniqueness
+        consumerVersion = gitSha ? "${projectVersion}-${gitSha}" : projectVersion
+
+        // Define the branch from a property, environment variable, or fallback to 'main'
+        def branchName = providers.environmentVariable('GIT_BRANCH').getOrElse('main')
+
+        // For newer Pact Brokers (Recommended)
+        consumerBranch = branchName
+        // For older Brokers/compatibility
+        tags = [branchName]
+
+        // Optional: add a generic 'dev' tag for anything not on main
+        if (branchName != 'main' && branchName != 'master') {
+            tags.add('dev')
+        }
     }
 }
 

@@ -98,7 +98,6 @@ public final class GetClaimsPactTest extends AbstractPactTest {
                             claim.numberType("mediation_time_minutes", 0);
                             claim.stringType("outreach_location", "string");
                             claim.stringType("referral_source", "string");
-                            claim.numberType("total_value", 0);
                             claim.stringType("client_forename", "string");
                             claim.stringType("client_surname", "string");
                             claim.stringType("client_date_of_birth", "string");
