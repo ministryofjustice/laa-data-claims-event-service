@@ -108,7 +108,7 @@ public final class GetSubmissionsPactTest extends AbstractPactTest {
   public RequestResponsePact getSubmissionsEmpty200(PactDslWithProvider builder) {
     // Defines expected 200 response for submission search, even when empty
     return builder
-        .given("no submission exist for search criteria")
+        .given("no submission exists")
         .uponReceiving("a search request for submissions that returns no results")
         .path("/api/v0/submissions")
         .matchQuery("submission_id", UUID_REGEX)
