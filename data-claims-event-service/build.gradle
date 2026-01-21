@@ -133,6 +133,7 @@ configurations {
 }
 
 tasks.register('pactTest', Test) {
+    systemProperty 'pact.verifier.publishResults', 'true'
     systemProperty "pact.content_type.override.application/json", "application/json;charset=utf-8"
 
     description = 'Runs the pact tests.'
@@ -195,7 +196,7 @@ pact {
         consumerVersion = gitSha ? "${projectVersion}-${gitSha}" : projectVersion
 
         // Define the branch from a property, environment variable, or fallback to 'main'
-        def branchName = 'main'//providers.environmentVariable('GIT_BRANCH').getOrElse('main')
+        def branchName = providers.environmentVariable('GIT_BRANCH').getOrElse('main')
 
         // For newer Pact Brokers (Recommended)
         consumerBranch = branchName
