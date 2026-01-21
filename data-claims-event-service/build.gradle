@@ -133,11 +133,7 @@ configurations {
 }
 
 tasks.register('pactTest', Test) {
-    systemProperty 'pact.verifier.publishResults', 'true'
     systemProperty "pact.content_type.override.application/json", "application/json;charset=utf-8"
-
-    systemProperty 'pact.provider.version',
-            System.getenv('GIT_SHA') ?: 'local'
 
     description = 'Runs the pact tests.'
     group = 'verification'
