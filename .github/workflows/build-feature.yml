@@ -31,11 +31,12 @@ jobs:
 
   pact-test:
     needs: [ build ]
-    uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/pact-and-publish.yml@story/pact-publish
+    uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/pact/pact-and-publish.yml@story/pact-publish
     permissions:
       contents: write
       packages: write
     with:
+      pacticipant_name: "laa-data-claims-event-service"
       pact_test_task: "pactTest"
       publish_pact_results: true #todo revert this to false
     secrets:

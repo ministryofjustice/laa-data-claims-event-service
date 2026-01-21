@@ -12,7 +12,8 @@ public abstract class AbstractPactTest {
 
   protected static final String UUID_REGEX =
       "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
-  protected static final String ANY_FORMAT_REGEX = "(.*?)";
+  protected static final String ANY_FORMAT_REGEX =
+      "([a-zA-Z0-9 !\"£$%^&*()_+\\-=\\[\\]{};'#:@~,./<>?\\\\|`¬]+)";
   protected static final String ANY_NUMBER_REGEX = "([0-9]+)";
 
   protected final List<String> userOffices = List.of("ABC123", "XYZ789");
