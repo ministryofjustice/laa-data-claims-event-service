@@ -56,3 +56,13 @@ jobs:
           IMAGES=$(helm get manifest ${{ inputs.deployment_name }} | yq -o=json '.' | jq -sc '[.[] | select(.kind == "Deployment") | select(.spec.template.spec.containers[0].image | contains("${{ steps.login-ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY }}")) | {image_version_tag: .metadata.labels.appVersion, release_tag: .metadata.name}]')
           echo "images=$IMAGES" >> $GITHUB_OUTPUT
           echo "Deployed Images: $(echo $IMAGES | jq)"
+
+      - name: Record deployment to pact broker
+        id: record-deployment-to-pact-broker
+        uses: ministryofjustice/laa-ccms-common-workflows/.github/actions/pact-record-deployment@story/pact-publish
+        with:
+          pacticipant: 'laa-data-claims-event-service'
+          environment: ${{ inputs.environment }}
+          pact_broker_url: ${{ secrets.pact_broker_url }}
+          pact_broker_username: ${{ secrets.pact_broker_username }}
+          pact_broker_password: ${{ secrets.pact_broker_password }}
