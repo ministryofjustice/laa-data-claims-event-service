@@ -41,7 +41,7 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
 
   private static final String OFFICE_CODE = "AQ2B3C";
   private static final AreaOfLaw AREA_OF_LAW = AreaOfLaw.LEGAL_HELP;
-  private static final String API_VERSION_0 = "/api/v0/";
+  private static final String API_VERSION_1 = "/api/v1/";
   private static final UUID SUBMISSION_ID = UUID.fromString("0561d67b-30ed-412e-8231-f6296a53538d");
   private static final UUID BULK_SUBMISSION_ID =
       UUID.fromString("3fa85f64-5717-4562-b3fc-2c963f66afa6");
@@ -295,10 +295,10 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
 
   private void verifySubmissionRequestInvocation() {
     mockServerClient.verify(
-        request().withMethod("GET").withPath(API_VERSION_0 + "submissions/" + SUBMISSION_ID));
-    mockServerClient.verify(request().withMethod("GET").withPath(API_VERSION_0 + "submissions"));
+        request().withMethod("GET").withPath(API_VERSION_1 + "submissions/" + SUBMISSION_ID));
+    mockServerClient.verify(request().withMethod("GET").withPath(API_VERSION_1 + "submissions"));
     mockServerClient.verify(
-        request().withMethod("PATCH").withPath(API_VERSION_0 + "submissions/" + SUBMISSION_ID),
+        request().withMethod("PATCH").withPath(API_VERSION_1 + "submissions/" + SUBMISSION_ID),
         VerificationTimes.exactly(2));
   }
 
@@ -313,13 +313,13 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
     mockServerClient.verify(
         request()
             .withMethod("PATCH")
-            .withPath(API_VERSION_0 + "submissions/" + SUBMISSION_ID + "/claims/" + CLAIM_ID)
+            .withPath(API_VERSION_1 + "submissions/" + SUBMISSION_ID + "/claims/" + CLAIM_ID)
             .withBody(json(objectMapper.writeValueAsString(feeCalculationPatch))),
         VerificationTimes.exactly(1));
     mockServerClient.verify(
         request()
             .withMethod("PATCH")
-            .withPath(API_VERSION_0 + "submissions/" + SUBMISSION_ID + "/claims/" + CLAIM_ID)
+            .withPath(API_VERSION_1 + "submissions/" + SUBMISSION_ID + "/claims/" + CLAIM_ID)
             .withBody(json(objectMapper.writeValueAsString(validClaimPatch))),
         VerificationTimes.exactly(1));
   }
@@ -341,7 +341,7 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
     mockServerClient.verify(
         request()
             .withMethod("PATCH")
-            .withPath(API_VERSION_0 + "submissions/" + SUBMISSION_ID + "/claims/" + CLAIM_ID)
+            .withPath(API_VERSION_1 + "submissions/" + SUBMISSION_ID + "/claims/" + CLAIM_ID)
             .withBody(json(objectMapper.writeValueAsString(invalidClaimPatch))),
         VerificationTimes.exactly(1));
   }

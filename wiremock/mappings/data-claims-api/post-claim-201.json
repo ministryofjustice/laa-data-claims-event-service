@@ -1,13 +1,13 @@
 {
   "request": {
     "method": "POST",
-    "urlPathPattern": "/api/v0/submissions/[a-f0-9\\-]+/claims"
+    "urlPathPattern": "/api/v1/submissions/[a-f0-9\\-]+/claims"
   },
   "response": {
     "status": 201,
     "headers": {
       "Content-Type": "application/json",
-      "Location": "http://localhost:8190/api/v0/submissions/3fa85f64-5717-4562-b3fc-2c963f66afa6/claims/5521d90b-4383-42e7-91b3-69be3e28768e"
+      "Location": "http://localhost:8190/api/v1/submissions/3fa85f64-5717-4562-b3fc-2c963f66afa6/claims/5521d90b-4383-42e7-91b3-69be3e28768e"
     },
     "jsonBody": {
       "id": "5521d90b-4383-42e7-91b3-69be3e28768e"
