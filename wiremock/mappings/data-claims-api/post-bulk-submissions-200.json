@@ -1,7 +1,7 @@
 {
   "request": {
     "method": "POST",
-    "urlPath": "/api/v0/bulk-submissions",
+    "urlPath": "/api/v1/bulk-submissions",
     "bodyPatterns": [
       {
         "doesNotMatch": ".*error\\.csv.*"
@@ -12,7 +12,7 @@
     "status": 200,
     "headers": {
       "Content-Type": "application/json",
-      "Location": "/api/v0/bulk-submissions/0561d67b-30ed-412e-8231-f6296a53538d"
+      "Location": "/api/v1/bulk-submissions/0561d67b-30ed-412e-8231-f6296a53538d"
     },
     "jsonBody": {
       "submissionId": "1879c83c-5b3e-4872-b9e4-45e60656be61",

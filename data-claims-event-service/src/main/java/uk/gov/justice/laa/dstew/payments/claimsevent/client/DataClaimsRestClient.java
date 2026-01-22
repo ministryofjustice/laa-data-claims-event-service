@@ -36,7 +36,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionsResultSet;
  * API.
  */
 @HttpExchange(
-    value = "/api/v0",
+    value = "/api/v1",
     accept = MediaType.APPLICATION_JSON_VALUE,
     contentType = MediaType.APPLICATION_JSON_VALUE)
 public interface DataClaimsRestClient {
