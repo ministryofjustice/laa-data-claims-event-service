@@ -98,14 +98,8 @@ public interface DataClaimsRestClient {
    * submittedDateFrom, submittedDateTo, areaOfLaw, submissionPeriod.
    *
    * @param offices list of office account numbers
-   * @param submissionId submission UUID
-   * @param submittedDateFrom submitted date from
-   * @param submittedDateTo submitted date to
    * @param areaOfLaw area of law
    * @param submissionPeriod submission period
-   * @param page page number
-   * @param size page size
-   * @param sort sort order
    * @return returns a list of paginated claim submissions (status code 200)
    */
   @GetExchange("/submissions")
