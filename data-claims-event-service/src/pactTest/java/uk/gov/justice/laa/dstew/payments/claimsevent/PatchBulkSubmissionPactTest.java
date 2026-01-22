@@ -31,7 +31,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.config.ClaimsApiPactTestCon
 @PactTestFor(providerName = AbstractPactTest.PROVIDER)
 @MockServerConfig(port = "1241") // Same as Claims API URL port
 @Import(ClaimsApiPactTestConfig.class)
-@DisplayName("PATCH: /api/v0/bulk-submissions PACT tests")
+@DisplayName("PATCH: /api/v1/bulk-submissions PACT tests")
 public final class PatchBulkSubmissionPactTest extends AbstractPactTest {
 
   @Autowired DataClaimsRestClient dataClaimsRestClient;
@@ -43,7 +43,7 @@ public final class PatchBulkSubmissionPactTest extends AbstractPactTest {
     return builder
         .given("the system is ready to update a bulk submission")
         .uponReceiving("a patch bulk submission request updating status only")
-        .matchPath("/api/v0/bulk-submissions/(" + UUID_REGEX + ")")
+        .matchPath("/api/v1/bulk-submissions/(" + UUID_REGEX + ")")
         .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
         .method("PATCH")
         .body(objectMapper.writeValueAsString(getBulkSubmissionPatch()))
@@ -60,7 +60,7 @@ public final class PatchBulkSubmissionPactTest extends AbstractPactTest {
     return builder
         .given("the bulk submission patch contains invalid data")
         .uponReceiving("a request to patch a bulk submission with invalid data")
-        .matchPath("/api/v0/bulk-submissions/(" + UUID_REGEX + ")")
+        .matchPath("/api/v1/bulk-submissions/(" + UUID_REGEX + ")")
         .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
         .method("PATCH")
         .body(objectMapper.writeValueAsString(getBulkSubmissionPatch()))

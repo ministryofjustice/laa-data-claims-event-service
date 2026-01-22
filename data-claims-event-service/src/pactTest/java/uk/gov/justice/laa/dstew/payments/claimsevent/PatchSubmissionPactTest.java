@@ -33,7 +33,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.config.ClaimsApiPactTestCon
 @PactTestFor(providerName = AbstractPactTest.PROVIDER)
 @MockServerConfig(port = "1240") // Same as Claims API URL port
 @Import(ClaimsApiPactTestConfig.class)
-@DisplayName("PATCH: /api/v0/submissions PACT tests")
+@DisplayName("PATCH: /api/v1/submissions PACT tests")
 public final class PatchSubmissionPactTest extends AbstractPactTest {
 
   @Autowired DataClaimsRestClient dataClaimsRestClient;
@@ -45,7 +45,7 @@ public final class PatchSubmissionPactTest extends AbstractPactTest {
     return builder
         .given("the system is ready to update a submission")
         .uponReceiving("a patch submission request updating status only")
-        .matchPath("/api/v0/submissions/(" + UUID_REGEX + ")")
+        .matchPath("/api/v1/submissions/(" + UUID_REGEX + ")")
         .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
         .method("PATCH")
         .body(objectMapper.writeValueAsString(getSubmissionPatch()))
@@ -62,7 +62,7 @@ public final class PatchSubmissionPactTest extends AbstractPactTest {
     return builder
         .given("the submission patch contains invalid data")
         .uponReceiving("a request to patch a submission with invalid data")
-        .matchPath("/api/v0/submissions/(" + UUID_REGEX + ")")
+        .matchPath("/api/v1/submissions/(" + UUID_REGEX + ")")
         .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
         .method("PATCH")
         .body(objectMapper.writeValueAsString(getSubmissionPatch()))

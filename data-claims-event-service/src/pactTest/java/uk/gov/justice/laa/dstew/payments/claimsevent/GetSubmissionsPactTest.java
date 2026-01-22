@@ -30,7 +30,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.config.ClaimsApiPactTestCon
 @PactTestFor(providerName = AbstractPactTest.PROVIDER)
 @MockServerConfig(port = "1242") // Same as Claims API URL port
 @Import(ClaimsApiPactTestConfig.class)
-@DisplayName("GET: /api/v0/submissions PACT tests")
+@DisplayName("GET: /api/v1/submissions PACT tests")
 public final class GetSubmissionsPactTest extends AbstractPactTest {
 
   @Autowired DataClaimsRestClient dataClaimsRestClient;
@@ -42,7 +42,7 @@ public final class GetSubmissionsPactTest extends AbstractPactTest {
     return builder
         .given("a submission exists for the search criteria")
         .uponReceiving("a search request for submissions")
-        .path("/api/v0/submissions")
+        .path("/api/v1/submissions")
         .matchQuery("offices", "([A-Z0-9]{6})")
         .matchQuery("area_of_law", "(LEGAL_HELP|CRIME_LOWER|MEDIATION)")
         .queryMatchingDate("submission_period", "MMM-2025")
@@ -93,7 +93,7 @@ public final class GetSubmissionsPactTest extends AbstractPactTest {
     return builder
         .given("no submission exists")
         .uponReceiving("a search request for submissions that returns no results")
-        .path("/api/v0/submissions")
+        .path("/api/v1/submissions")
         .matchQuery("offices", "([A-Z0-9]{6})")
         .matchQuery("area_of_law", "(LEGAL_HELP|CRIME_LOWER|MEDIATION)")
         .queryMatchingDate("submission_period", "MMM-2025")

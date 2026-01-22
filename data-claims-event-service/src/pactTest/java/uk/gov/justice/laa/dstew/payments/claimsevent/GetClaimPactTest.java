@@ -31,7 +31,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.config.ClaimsApiPactTestCon
 @PactTestFor(providerName = AbstractPactTest.PROVIDER)
 @MockServerConfig(port = "1232") // Same as Claims API URL port
 @Import(ClaimsApiPactTestConfig.class)
-@DisplayName("GET: /api/v0/submissions/{}/claims/{} PACT tests")
+@DisplayName("GET: /api/v1/submissions/{}/claims/{} PACT tests")
 public final class GetClaimPactTest extends AbstractPactTest {
 
   @Autowired DataClaimsRestClient dataClaimsRestClient;
@@ -43,7 +43,7 @@ public final class GetClaimPactTest extends AbstractPactTest {
     return builder
         .given("a claim exists")
         .uponReceiving("a request to fetch a existing claim")
-        .matchPath("/api/v0/submissions/(" + UUID_REGEX + ")/claims/(" + UUID_REGEX + ")")
+        .matchPath("/api/v1/submissions/(" + UUID_REGEX + ")/claims/(" + UUID_REGEX + ")")
         .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
         .method("GET")
         .willRespondWith()
@@ -216,7 +216,7 @@ public final class GetClaimPactTest extends AbstractPactTest {
     return builder
         .given("no claim exists")
         .uponReceiving("a request to fetch a non-existent claim")
-        .matchPath("/api/v0/submissions/(" + UUID_REGEX + ")/claims/(" + UUID_REGEX + ")")
+        .matchPath("/api/v1/submissions/(" + UUID_REGEX + ")/claims/(" + UUID_REGEX + ")")
         .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
         .method("GET")
         .willRespondWith()
@@ -232,7 +232,7 @@ public final class GetClaimPactTest extends AbstractPactTest {
     return builder
         .given("no claim exists")
         .uponReceiving("a request to fetch a claim from a non-existent submission")
-        .matchPath("/api/v0/submissions/(" + UUID_REGEX + ")/claims/(" + UUID_REGEX + ")")
+        .matchPath("/api/v1/submissions/(" + UUID_REGEX + ")/claims/(" + UUID_REGEX + ")")
         .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
         .method("GET")
         .willRespondWith()

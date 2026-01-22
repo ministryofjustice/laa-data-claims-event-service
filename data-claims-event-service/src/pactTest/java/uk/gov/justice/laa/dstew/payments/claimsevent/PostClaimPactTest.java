@@ -35,7 +35,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.config.ClaimsApiPactTestCon
 @PactTestFor(providerName = AbstractPactTest.PROVIDER)
 @MockServerConfig(port = "1237") // Same as Claims API URL port
 @Import(ClaimsApiPactTestConfig.class)
-@DisplayName("POST: /api/v0/submissions/{}/claims PACT tests")
+@DisplayName("POST: /api/v1/submissions/{}/claims PACT tests")
 public final class PostClaimPactTest extends AbstractPactTest {
 
   @Autowired DataClaimsRestClient dataClaimsRestClient;
@@ -47,7 +47,7 @@ public final class PostClaimPactTest extends AbstractPactTest {
     return builder
         .given("the system is ready to process a valid claim")
         .uponReceiving("a new claim request")
-        .matchPath("/api/v0/submissions/(" + UUID_REGEX + ")/claims")
+        .matchPath("/api/v1/submissions/(" + UUID_REGEX + ")/claims")
         .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
         .method("POST")
         .body(objectMapper.writeValueAsString(getClaimPost()))
@@ -70,7 +70,7 @@ public final class PostClaimPactTest extends AbstractPactTest {
     return builder
         .given("the claim request contains invalid data")
         .uponReceiving("a request to create a claim with invalid data")
-        .matchPath("/api/v0/submissions/(" + UUID_REGEX + ")/claims")
+        .matchPath("/api/v1/submissions/(" + UUID_REGEX + ")/claims")
         .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
         .method("POST")
         .body(objectMapper.writeValueAsString(getClaimPost()))

@@ -36,7 +36,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.config.ClaimsApiPactTestCon
 @PactTestFor(providerName = AbstractPactTest.PROVIDER)
 @MockServerConfig(port = "1236") // Same as Claims API URL port
 @Import(ClaimsApiPactTestConfig.class)
-@DisplayName("POST: /api/v0/submissions PACT tests")
+@DisplayName("POST: /api/v1/submissions PACT tests")
 public final class PostSubmissionPactTest extends AbstractPactTest {
 
   @Autowired DataClaimsRestClient dataClaimsRestClient;
@@ -48,7 +48,7 @@ public final class PostSubmissionPactTest extends AbstractPactTest {
     return builder
         .given("the system is ready to process a valid submission")
         .uponReceiving("a new submission request")
-        .path("/api/v0/submissions")
+        .path("/api/v1/submissions")
         .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
         .method("POST")
         .body(objectMapper.writeValueAsString(getSubmissionPost()))
@@ -71,7 +71,7 @@ public final class PostSubmissionPactTest extends AbstractPactTest {
     return builder
         .given("the system rejects an invalid submission")
         .uponReceiving("a request to create a submission with invalid data")
-        .path("/api/v0/submissions")
+        .path("/api/v1/submissions")
         .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
         .method("POST")
         .body(objectMapper.writeValueAsString(getSubmissionPost()))
