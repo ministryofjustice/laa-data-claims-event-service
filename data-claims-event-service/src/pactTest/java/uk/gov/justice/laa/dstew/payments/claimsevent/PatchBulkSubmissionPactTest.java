@@ -46,6 +46,7 @@ public final class PatchBulkSubmissionPactTest extends AbstractPactTest {
         .matchPath("/api/v0/bulk-submissions/(" + UUID_REGEX + ")")
         .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
         .method("PATCH")
+        .body(objectMapper.writeValueAsString(getBulkSubmissionPatch()))
         .matchHeader("Content-Type", "application/json")
         .willRespondWith()
         .status(204)
@@ -62,6 +63,7 @@ public final class PatchBulkSubmissionPactTest extends AbstractPactTest {
         .matchPath("/api/v0/bulk-submissions/(" + UUID_REGEX + ")")
         .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
         .method("PATCH")
+        .body(objectMapper.writeValueAsString(getBulkSubmissionPatch()))
         .matchHeader("Content-Type", "application/json")
         .willRespondWith()
         .status(400)
@@ -72,10 +74,7 @@ public final class PatchBulkSubmissionPactTest extends AbstractPactTest {
   @DisplayName("Verify 204 response for patch bulk submission status only")
   @PactTestFor(pactMethod = "patchBulkSubmissionStatusOnly")
   void verify204Response() {
-    BulkSubmissionPatch patch =
-        new BulkSubmissionPatch()
-            .bulkSubmissionId(bulkSubmissionId)
-            .status(BulkSubmissionStatus.PARSING_COMPLETED);
+    BulkSubmissionPatch patch = getBulkSubmissionPatch();
 
     ResponseEntity<Void> response =
         dataClaimsRestClient.updateBulkSubmission(bulkSubmissionId.toString(), patch);
@@ -87,12 +86,15 @@ public final class PatchBulkSubmissionPactTest extends AbstractPactTest {
   @DisplayName("Verify 400 response")
   @PactTestFor(pactMethod = "patchBulkSubmission400")
   void verify400Response() {
-    BulkSubmissionPatch patch =
-        new BulkSubmissionPatch()
-            .bulkSubmissionId(bulkSubmissionId)
-            .status(BulkSubmissionStatus.PARSING_COMPLETED);
+    BulkSubmissionPatch patch = getBulkSubmissionPatch();
     assertThrows(
         BadRequest.class,
         () -> dataClaimsRestClient.updateBulkSubmission(bulkSubmissionId.toString(), patch));
+  }
+
+  private BulkSubmissionPatch getBulkSubmissionPatch() {
+    return new BulkSubmissionPatch()
+        .bulkSubmissionId(bulkSubmissionId)
+        .status(BulkSubmissionStatus.PARSING_COMPLETED);
   }
 }

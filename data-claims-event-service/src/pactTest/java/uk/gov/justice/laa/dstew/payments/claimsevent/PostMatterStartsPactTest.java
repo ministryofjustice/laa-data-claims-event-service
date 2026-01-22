@@ -50,6 +50,7 @@ public final class PostMatterStartsPactTest extends AbstractPactTest {
         .matchPath("/api/v0/submissions/(" + UUID_REGEX + ")/matter-starts")
         .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
         .method("POST")
+        .body(objectMapper.writeValueAsString(getMatterStartPost()))
         .matchHeader("Content-Type", "application/json")
         .willRespondWith()
         .status(201)
@@ -72,15 +73,11 @@ public final class PostMatterStartsPactTest extends AbstractPactTest {
         .matchPath("/api/v0/submissions/(" + UUID_REGEX + ")/matter-starts")
         .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
         .method("POST")
+        .body(objectMapper.writeValueAsString(getMatterStartPost()))
         .matchHeader("Content-Type", "application/json")
         .willRespondWith()
         .status(400)
         .headers(Map.of("Content-Type", "application/json"))
-        .body(
-            LambdaDsl.newJsonBody(
-                    body ->
-                        body.uuid("id", UUID.fromString("3fa85f64-5717-4562-b3fc-2c963f66afa6")))
-                .build())
         .toPact();
   }
 
@@ -88,12 +85,7 @@ public final class PostMatterStartsPactTest extends AbstractPactTest {
   @DisplayName("Verify 201 response")
   @PactTestFor(pactMethod = "postMatterStart201")
   void verify201Response() {
-    MatterStartPost matterStartPost =
-        new MatterStartPost()
-            .mediationType(MediationType.MDAC_ALL_ISSUES_CO)
-            .createdByUserId("test-user")
-            .accessPointCode("A0001")
-            .scheduleReference("SCH123");
+    MatterStartPost matterStartPost = getMatterStartPost();
 
     ResponseEntity<CreateMatterStart201Response> response =
         dataClaimsRestClient.createMatterStart(submissionId.toString(), matterStartPost);
@@ -101,16 +93,19 @@ public final class PostMatterStartsPactTest extends AbstractPactTest {
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
   }
 
+  private static MatterStartPost getMatterStartPost() {
+    return new MatterStartPost()
+        .mediationType(MediationType.MDAC_ALL_ISSUES_CO)
+        .createdByUserId("test-user")
+        .accessPointCode("A0001")
+        .scheduleReference("SCH123");
+  }
+
   @Test
   @DisplayName("Verify 400 response")
   @PactTestFor(pactMethod = "postMatterStart400")
   void verify400Response() {
-    MatterStartPost matterStartPost =
-        new MatterStartPost()
-            .mediationType(MediationType.MDAC_ALL_ISSUES_CO)
-            .createdByUserId("test-user")
-            .accessPointCode("A0001")
-            .scheduleReference("SCH123");
+    MatterStartPost matterStartPost = getMatterStartPost();
 
     assertThrows(
         BadRequest.class,

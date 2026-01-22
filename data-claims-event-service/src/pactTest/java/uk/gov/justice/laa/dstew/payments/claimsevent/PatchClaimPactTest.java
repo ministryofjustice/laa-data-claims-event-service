@@ -9,6 +9,7 @@ import au.com.dius.pact.consumer.junit5.PactConsumerTest;
 import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.core.model.RequestResponsePact;
 import au.com.dius.pact.core.model.annotations.Pact;
+import java.util.List;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,6 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.reactive.function.client.WebClientResponseException.BadRequest;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.ClaimsApiPactTestConfig;
 
@@ -46,6 +48,7 @@ public final class PatchClaimPactTest extends AbstractPactTest {
         .matchPath("/api/v0/submissions/(" + UUID_REGEX + ")/claims/(" + UUID_REGEX + ")")
         .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
         .method("PATCH")
+        .body(objectMapper.writeValueAsString(getClaimPatch()))
         .matchHeader("Content-Type", "application/json")
         .willRespondWith()
         .status(204)
@@ -62,6 +65,7 @@ public final class PatchClaimPactTest extends AbstractPactTest {
         .matchPath("/api/v0/submissions/(" + UUID_REGEX + ")/claims/(" + UUID_REGEX + ")")
         .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
         .method("PATCH")
+        .body(objectMapper.writeValueAsString(getClaimPatch()))
         .matchHeader("Content-Type", "application/json")
         .willRespondWith()
         .status(400)
@@ -72,18 +76,25 @@ public final class PatchClaimPactTest extends AbstractPactTest {
   @DisplayName("Verify 204 response for patch claim status only")
   @PactTestFor(pactMethod = "patchClaimStatus")
   void verify204Response() {
-    ClaimPatch patch = new ClaimPatch().id(claimId.toString()).status(ClaimStatus.VALID);
+    ClaimPatch patch = getClaimPatch();
 
     ResponseEntity<Void> response = dataClaimsRestClient.updateClaim(submissionId, claimId, patch);
     assertThat(response).isNotNull();
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
   }
 
+  private ClaimPatch getClaimPatch() {
+    return new ClaimPatch()
+        .id(claimId.toString())
+        .status(ClaimStatus.VALID)
+        .validationMessages(List.of(new ValidationMessagePatch()));
+  }
+
   @Test
   @DisplayName("Verify 400 response")
   @PactTestFor(pactMethod = "patchClaim400")
   void verify400Response() {
-    ClaimPatch patch = new ClaimPatch().id(claimId.toString()).status(ClaimStatus.VALID);
+    ClaimPatch patch = getClaimPatch();
     assertThrows(
         BadRequest.class, () -> dataClaimsRestClient.updateClaim(submissionId, claimId, patch));
   }

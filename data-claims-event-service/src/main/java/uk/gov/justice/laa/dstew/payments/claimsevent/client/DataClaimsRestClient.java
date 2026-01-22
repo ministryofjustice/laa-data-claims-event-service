@@ -1,6 +1,5 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.client;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -112,14 +111,8 @@ public interface DataClaimsRestClient {
   @GetExchange("/submissions")
   ResponseEntity<SubmissionsResultSet> getSubmissions(
       @RequestParam(value = "offices") List<String> offices,
-      @RequestParam(value = "submission_id", required = false) String submissionId,
-      @RequestParam(value = "submitted_date_from", required = false) LocalDate submittedDateFrom,
-      @RequestParam(value = "submitted_date_to", required = false) LocalDate submittedDateTo,
       @RequestParam(value = "area_of_law", required = false) AreaOfLaw areaOfLaw,
-      @RequestParam(value = "submission_period", required = false) String submissionPeriod,
-      @RequestParam(value = "page", required = false) Integer page,
-      @RequestParam(value = "size", required = false) Integer size,
-      @RequestParam(value = "sort", required = false) String sort);
+      @RequestParam(value = "submission_period", required = false) String submissionPeriod);
 
   /**
    * Add a claim to a submission.

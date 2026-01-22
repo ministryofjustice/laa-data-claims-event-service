@@ -209,7 +209,7 @@ public final class GetBulkSubmissionPactTest extends AbstractPactTest {
   public RequestResponsePact getBulkSubmission404(PactDslWithProvider builder) {
     // Defines expected 404 response for missing submission
     return builder
-        .given("no submission exists")
+        .given("no bulk submission exists")
         .uponReceiving("a request to fetch a non-existent bulk submission")
         .matchPath("/api/v0/bulk-submissions/(" + UUID_REGEX + ")")
         .method("GET")

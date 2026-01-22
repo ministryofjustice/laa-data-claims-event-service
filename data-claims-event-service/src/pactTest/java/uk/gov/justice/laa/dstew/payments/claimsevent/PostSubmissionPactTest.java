@@ -25,6 +25,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.CreateSubmission201Response;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPost;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.ClaimsApiPactTestConfig;
 
@@ -50,6 +51,7 @@ public final class PostSubmissionPactTest extends AbstractPactTest {
         .path("/api/v0/submissions")
         .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
         .method("POST")
+        .body(objectMapper.writeValueAsString(getSubmissionPost()))
         .matchHeader("Content-Type", "application/json")
         .willRespondWith()
         .status(201)
@@ -67,11 +69,12 @@ public final class PostSubmissionPactTest extends AbstractPactTest {
   public RequestResponsePact postSubmission400(PactDslWithProvider builder) {
     // Defines expected 400 response for uploading invalid submission
     return builder
-        .given("the submission file contains invalid data")
+        .given("the system rejects an invalid submission")
         .uponReceiving("a request to create a submission with invalid data")
         .path("/api/v0/submissions")
         .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
         .method("POST")
+        .body(objectMapper.writeValueAsString(getSubmissionPost()))
         .matchHeader("Content-Type", "application/json")
         .willRespondWith()
         .status(400)
@@ -83,14 +86,7 @@ public final class PostSubmissionPactTest extends AbstractPactTest {
   @DisplayName("Verify 201 response")
   @PactTestFor(pactMethod = "postSubmission201")
   void verify201Response() {
-    SubmissionPost submissionPost =
-        new SubmissionPost()
-            .bulkSubmissionId(bulkSubmissionId)
-            .submissionId(submissionId)
-            .submissionPeriod("APR-2025")
-            .areaOfLaw(AreaOfLaw.LEGAL_HELP)
-            .numberOfClaims(2)
-            .officeAccountNumber("ABC123");
+    SubmissionPost submissionPost = getSubmissionPost();
 
     ResponseEntity<CreateSubmission201Response> response =
         dataClaimsRestClient.createSubmission(submissionPost);
@@ -99,18 +95,24 @@ public final class PostSubmissionPactTest extends AbstractPactTest {
     assertThat(response.getBody().getId()).isEqualTo(submissionId);
   }
 
+  private SubmissionPost getSubmissionPost() {
+    return new SubmissionPost()
+        .bulkSubmissionId(bulkSubmissionId)
+        .submissionId(submissionId)
+        .submissionPeriod("APR-2025")
+        .areaOfLaw(AreaOfLaw.LEGAL_HELP)
+        .numberOfClaims(2)
+        .officeAccountNumber("ABC123")
+        .providerUserId("test-user")
+        .status(SubmissionStatus.READY_FOR_VALIDATION)
+        .createdByUserId("test-user");
+  }
+
   @Test
   @DisplayName("Verify 400 response")
   @PactTestFor(pactMethod = "postSubmission400")
   void verify400Response() {
-    SubmissionPost submissionPost =
-        new SubmissionPost()
-            .bulkSubmissionId(bulkSubmissionId)
-            .submissionId(submissionId)
-            .submissionPeriod("APR-2025")
-            .areaOfLaw(AreaOfLaw.LEGAL_HELP)
-            .numberOfClaims(2)
-            .officeAccountNumber("ABC123");
+    SubmissionPost submissionPost = getSubmissionPost();
     assertThrows(BadRequest.class, () -> dataClaimsRestClient.createSubmission(submissionPost));
   }
 }

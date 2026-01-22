@@ -50,6 +50,7 @@ public final class PostClaimPactTest extends AbstractPactTest {
         .matchPath("/api/v0/submissions/(" + UUID_REGEX + ")/claims")
         .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
         .method("POST")
+        .body(objectMapper.writeValueAsString(getClaimPost()))
         .matchHeader("Content-Type", "application/json")
         .willRespondWith()
         .status(201)
@@ -72,15 +73,11 @@ public final class PostClaimPactTest extends AbstractPactTest {
         .matchPath("/api/v0/submissions/(" + UUID_REGEX + ")/claims")
         .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
         .method("POST")
+        .body(objectMapper.writeValueAsString(getClaimPost()))
         .matchHeader("Content-Type", "application/json")
         .willRespondWith()
         .status(400)
         .headers(Map.of("Content-Type", "application/json"))
-        .body(
-            LambdaDsl.newJsonBody(
-                    body ->
-                        body.uuid("id", UUID.fromString("d4e3fa24-7d1f-4710-b7a7-0debe88421aa")))
-                .build())
         .toPact();
   }
 
@@ -88,12 +85,7 @@ public final class PostClaimPactTest extends AbstractPactTest {
   @DisplayName("Verify 201 response")
   @PactTestFor(pactMethod = "postClaim201")
   void verify201Response() {
-    ClaimPost claimPost =
-        new ClaimPost()
-            .id(claimId.toString())
-            .submissionId(submissionId.toString())
-            .createdByUserId("test-user")
-            .status(ClaimStatus.READY_TO_PROCESS);
+    ClaimPost claimPost = getClaimPost();
 
     ResponseEntity<CreateClaim201Response> response =
         dataClaimsRestClient.createClaim(submissionId.toString(), claimPost);
@@ -102,16 +94,21 @@ public final class PostClaimPactTest extends AbstractPactTest {
     assertThat(response.getBody().getId()).isEqualTo(claimId);
   }
 
+  private ClaimPost getClaimPost() {
+    return new ClaimPost()
+        .id(claimId.toString())
+        .submissionId(submissionId.toString())
+        .createdByUserId("test-user")
+        .lineNumber(1)
+        .matterTypeCode("ABC")
+        .status(ClaimStatus.READY_TO_PROCESS);
+  }
+
   @Test
   @DisplayName("Verify 400 response")
   @PactTestFor(pactMethod = "postClaim400")
   void verify400Response() {
-    ClaimPost claimPost =
-        new ClaimPost()
-            .id(claimId.toString())
-            .submissionId(submissionId.toString())
-            .createdByUserId("test-user")
-            .status(ClaimStatus.READY_TO_PROCESS);
+    ClaimPost claimPost = getClaimPost();
 
     assertThrows(
         BadRequest.class,

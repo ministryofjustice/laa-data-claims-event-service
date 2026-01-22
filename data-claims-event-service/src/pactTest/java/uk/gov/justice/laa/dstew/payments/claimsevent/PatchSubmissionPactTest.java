@@ -9,6 +9,7 @@ import au.com.dius.pact.consumer.junit5.PactConsumerTest;
 import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.core.model.RequestResponsePact;
 import au.com.dius.pact.core.model.annotations.Pact;
+import java.util.List;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,6 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.reactive.function.client.WebClientResponseException.BadRequest;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.ClaimsApiPactTestConfig;
 
@@ -46,6 +48,7 @@ public final class PatchSubmissionPactTest extends AbstractPactTest {
         .matchPath("/api/v0/submissions/(" + UUID_REGEX + ")")
         .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
         .method("PATCH")
+        .body(objectMapper.writeValueAsString(getSubmissionPatch()))
         .matchHeader("Content-Type", "application/json")
         .willRespondWith()
         .status(204)
@@ -62,6 +65,7 @@ public final class PatchSubmissionPactTest extends AbstractPactTest {
         .matchPath("/api/v0/submissions/(" + UUID_REGEX + ")")
         .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
         .method("PATCH")
+        .body(objectMapper.writeValueAsString(getSubmissionPatch()))
         .matchHeader("Content-Type", "application/json")
         .willRespondWith()
         .status(400)
@@ -72,10 +76,7 @@ public final class PatchSubmissionPactTest extends AbstractPactTest {
   @DisplayName("Verify 204 response for patch submission status only")
   @PactTestFor(pactMethod = "patchSubmissionStatusOnly")
   void verify204Response() {
-    SubmissionPatch submissionPatch =
-        new SubmissionPatch()
-            .submissionId(submissionId)
-            .status(SubmissionStatus.VALIDATION_SUCCEEDED);
+    SubmissionPatch submissionPatch = getSubmissionPatch();
 
     ResponseEntity<Void> response =
         dataClaimsRestClient.updateSubmission(submissionId.toString(), submissionPatch);
@@ -83,14 +84,18 @@ public final class PatchSubmissionPactTest extends AbstractPactTest {
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
   }
 
+  private SubmissionPatch getSubmissionPatch() {
+    return new SubmissionPatch()
+        .submissionId(submissionId)
+        .status(SubmissionStatus.VALIDATION_SUCCEEDED)
+        .validationMessages(List.of(new ValidationMessagePatch()));
+  }
+
   @Test
   @DisplayName("Verify 400 response")
   @PactTestFor(pactMethod = "patchSubmission400")
   void verify400Response() {
-    SubmissionPatch submissionPatch =
-        new SubmissionPatch()
-            .submissionId(submissionId)
-            .status(SubmissionStatus.VALIDATION_SUCCEEDED);
+    SubmissionPatch submissionPatch = getSubmissionPatch();
     assertThrows(
         BadRequest.class,
         () -> dataClaimsRestClient.updateSubmission(submissionId.toString(), submissionPatch));

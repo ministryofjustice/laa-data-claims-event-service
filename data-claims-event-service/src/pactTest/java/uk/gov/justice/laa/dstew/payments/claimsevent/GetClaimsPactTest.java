@@ -47,12 +47,12 @@ public final class GetClaimsPactTest extends AbstractPactTest {
         .path("/api/v0/claims")
         .matchQuery("submission_id", UUID_REGEX)
         .matchQuery("office_code", "([A-Z0-9]{6})")
-        .matchQuery("submission_statuses", ANY_FORMAT_REGEX)
+        .matchQuery("submission_statuses", enumValuesToRegex(SubmissionStatus.class))
         .matchQuery("fee_code", ANY_FORMAT_REGEX)
         .matchQuery("unique_file_number", ANY_FORMAT_REGEX)
         .matchQuery("unique_client_number", ANY_FORMAT_REGEX)
         .matchQuery("unique_case_id", ANY_FORMAT_REGEX)
-        .matchQuery("claim_statuses", ANY_FORMAT_REGEX)
+        .matchQuery("claim_statuses", enumValuesToRegex(ClaimStatus.class))
         .matchQuery("page", ANY_NUMBER_REGEX)
         .matchQuery("size", ANY_NUMBER_REGEX)
         .matchQuery("sort", "(asc|desc)")
@@ -171,7 +171,6 @@ public final class GetClaimsPactTest extends AbstractPactTest {
                             claim.stringType("local_authority_number", "string");
                             claim.stringType("submission_period", "string");
                             claim.stringType("created_by_user_id", "string");
-                            claim.numberType("total_warnings", 0);
                             claim.object(
                                 "fee_calculation_response",
                                 fee -> {
@@ -241,12 +240,12 @@ public final class GetClaimsPactTest extends AbstractPactTest {
         .matchQuery("office_code", "([A-Z0-9]{6})")
         .matchQuery("submission_id", UUID_REGEX)
         .matchQuery("office_code", "([A-Z0-9]{6})")
-        .matchQuery("submission_statuses", ANY_FORMAT_REGEX)
+        .matchQuery("submission_statuses", enumValuesToRegex(SubmissionStatus.class))
         .matchQuery("fee_code", ANY_FORMAT_REGEX)
         .matchQuery("unique_file_number", ANY_FORMAT_REGEX)
         .matchQuery("unique_client_number", ANY_FORMAT_REGEX)
         .matchQuery("unique_case_id", ANY_FORMAT_REGEX)
-        .matchQuery("claim_statuses", ANY_FORMAT_REGEX)
+        .matchQuery("claim_statuses", enumValuesToRegex(ClaimStatus.class))
         .matchQuery("page", ANY_NUMBER_REGEX)
         .matchQuery("size", ANY_NUMBER_REGEX)
         .matchQuery("sort", "(asc|desc)")

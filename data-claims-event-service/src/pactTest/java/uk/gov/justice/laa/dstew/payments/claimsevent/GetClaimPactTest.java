@@ -156,7 +156,6 @@ public final class GetClaimPactTest extends AbstractPactTest {
                       body.stringType("local_authority_number", "string");
                       body.stringType("submission_period", "string");
                       body.stringType("created_by_user_id", "string");
-                      body.numberType("total_warnings", 0);
                       body.object(
                           "fee_calculation_response",
                           fee -> {
@@ -231,7 +230,7 @@ public final class GetClaimPactTest extends AbstractPactTest {
   public RequestResponsePact getClaimNoSubmission404(PactDslWithProvider builder) {
     // Defines expected 404 response for when either submission or claim does not exist
     return builder
-        .given("no submission exists")
+        .given("no claim exists")
         .uponReceiving("a request to fetch a claim from a non-existent submission")
         .matchPath("/api/v0/submissions/(" + UUID_REGEX + ")/claims/(" + UUID_REGEX + ")")
         .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
