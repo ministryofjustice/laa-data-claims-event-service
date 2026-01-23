@@ -28,6 +28,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionOutcome;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPost;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.CreateClaim201Response;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.CreateMatterStart201Response;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetBulkSubmission200Response;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetBulkSubmission200ResponseDetails;
@@ -251,7 +252,8 @@ class BulkParsingServiceTest {
     claim.setLineNumber(1);
 
     final HttpHeaders headers = new HttpHeaders();
-    final ResponseEntity<Void> response = new ResponseEntity<>(headers, HttpStatus.CREATED);
+    final ResponseEntity<CreateClaim201Response> response =
+        new ResponseEntity<>(headers, HttpStatus.CREATED);
 
     when(dataClaimsRestClient.createClaim(eq("sub1"), eq(claim))).thenReturn(response);
 

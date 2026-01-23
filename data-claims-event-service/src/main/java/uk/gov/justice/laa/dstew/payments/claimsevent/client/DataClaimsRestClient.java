@@ -1,6 +1,5 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.client;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -22,7 +21,9 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResultSet;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.CreateClaim201Response;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.CreateMatterStart201Response;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.CreateSubmission201Response;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetBulkSubmission200Response;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.MatterStartPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
@@ -69,7 +70,8 @@ public interface DataClaimsRestClient {
    *     Location} header points to the created resource
    */
   @PostExchange("/submissions")
-  ResponseEntity<Void> createSubmission(@RequestBody SubmissionPost submission);
+  ResponseEntity<CreateSubmission201Response> createSubmission(
+      @RequestBody SubmissionPost submission);
 
   /**
    * Update (patch) an existing submission's fields (typically status).
@@ -96,27 +98,15 @@ public interface DataClaimsRestClient {
    * submittedDateFrom, submittedDateTo, areaOfLaw, submissionPeriod.
    *
    * @param offices list of office account numbers
-   * @param submissionId submission UUID
-   * @param submittedDateFrom submitted date from
-   * @param submittedDateTo submitted date to
    * @param areaOfLaw area of law
    * @param submissionPeriod submission period
-   * @param page page number
-   * @param size page size
-   * @param sort sort order
    * @return returns a list of paginated claim submissions (status code 200)
    */
   @GetExchange("/submissions")
   ResponseEntity<SubmissionsResultSet> getSubmissions(
       @RequestParam(value = "offices") List<String> offices,
-      @RequestParam(value = "submission_id", required = false) String submissionId,
-      @RequestParam(value = "submitted_date_from", required = false) LocalDate submittedDateFrom,
-      @RequestParam(value = "submitted_date_to", required = false) LocalDate submittedDateTo,
       @RequestParam(value = "area_of_law", required = false) AreaOfLaw areaOfLaw,
-      @RequestParam(value = "submission_period", required = false) String submissionPeriod,
-      @RequestParam(value = "page", required = false) Integer page,
-      @RequestParam(value = "size", required = false) Integer size,
-      @RequestParam(value = "sort", required = false) String sort);
+      @RequestParam(value = "submission_period", required = false) String submissionPeriod);
 
   /**
    * Add a claim to a submission.
@@ -127,7 +117,7 @@ public interface DataClaimsRestClient {
    *     header points to the created resource
    */
   @PostExchange("/submissions/{id}/claims")
-  ResponseEntity<Void> createClaim(
+  ResponseEntity<CreateClaim201Response> createClaim(
       @PathVariable("id") String submissionId, @RequestBody ClaimPost claim);
 
   /**
