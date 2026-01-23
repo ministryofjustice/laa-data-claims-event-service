@@ -78,14 +78,15 @@ public final class PatchClaimPactTest extends AbstractPactTest {
   void verify204Response() {
     ClaimPatch patch = getClaimPatch();
 
-    ResponseEntity<Void> response = dataClaimsRestClient.updateClaim(submissionId, claimId, patch);
+    ResponseEntity<Void> response =
+        dataClaimsRestClient.updateClaim(SUBMISSION_ID, CLAIM_ID, patch);
     assertThat(response).isNotNull();
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
   }
 
   private ClaimPatch getClaimPatch() {
     return new ClaimPatch()
-        .id(claimId.toString())
+        .id(CLAIM_ID.toString())
         .status(ClaimStatus.VALID)
         .validationMessages(List.of(new ValidationMessagePatch()));
   }
@@ -96,6 +97,6 @@ public final class PatchClaimPactTest extends AbstractPactTest {
   void verify400Response() {
     ClaimPatch patch = getClaimPatch();
     assertThrows(
-        BadRequest.class, () -> dataClaimsRestClient.updateClaim(submissionId, claimId, patch));
+        BadRequest.class, () -> dataClaimsRestClient.updateClaim(SUBMISSION_ID, CLAIM_ID, patch));
   }
 }

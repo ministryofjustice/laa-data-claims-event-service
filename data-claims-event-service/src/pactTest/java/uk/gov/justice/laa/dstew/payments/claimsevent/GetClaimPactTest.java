@@ -11,7 +11,6 @@ import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.core.model.RequestResponsePact;
 import au.com.dius.pact.core.model.annotations.Pact;
 import java.util.Map;
-import java.util.UUID;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -42,7 +41,7 @@ public final class GetClaimPactTest extends AbstractPactTest {
     // Defines expected 200 response for existing claim using matchers
     return builder
         .given("a claim exists")
-        .uponReceiving("a request to fetch a existing claim")
+        .uponReceiving("a request to fetch an existing claim")
         .matchPath("/api/v1/submissions/(" + UUID_REGEX + ")/claims/(" + UUID_REGEX + ")")
         .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
         .method("GET")
@@ -52,9 +51,8 @@ public final class GetClaimPactTest extends AbstractPactTest {
         .body(
             LambdaDsl.newJsonBody(
                     body -> {
-                      body.uuid("id", UUID.fromString("d4e3fa24-7d1f-4710-b7a7-0debe88421aa"));
-                      body.uuid(
-                          "submission_id", UUID.fromString("3fa85f64-5717-4562-b3fc-2c963f66afa6"));
+                      body.uuid("id", CLAIM_ID);
+                      body.uuid("submission_id", SUBMISSION_ID);
                       body.stringType("status", "READY_TO_PROCESS");
                       body.stringType("schedule_reference", "string");
                       body.numberType("line_number", 0);
@@ -160,12 +158,8 @@ public final class GetClaimPactTest extends AbstractPactTest {
                           "fee_calculation_response",
                           fee -> {
                             fee.stringType("calculated_fee_detail_id", "string");
-                            fee.uuid(
-                                "claim_summary_fee_id",
-                                UUID.fromString("3fa85f64-5717-4562-b3fc-2c963f66afa6"));
-                            fee.uuid(
-                                "claim_id",
-                                UUID.fromString("3fa85f64-5717-4562-b3fc-2c963f66afa6"));
+                            fee.uuid("claim_summary_fee_id", CLAIM_SUMMARY_FEE_ID);
+                            fee.uuid("claim_id", CLAIM_ID);
                             fee.stringType("fee_code", "string");
                             fee.stringType("fee_code_description", "string");
                             fee.stringType("fee_type", "HOURLY");
@@ -245,24 +239,24 @@ public final class GetClaimPactTest extends AbstractPactTest {
   @DisplayName("Verify 200 response")
   @PactTestFor(pactMethod = "getClaim200")
   void verify200Response() {
-    ClaimResponse claimResponse = dataClaimsRestClient.getClaim(submissionId, claimId).getBody();
+    ClaimResponse claimResponse = dataClaimsRestClient.getClaim(SUBMISSION_ID, CLAIM_ID).getBody();
 
     assertThat(claimResponse).isNotNull();
-    assertThat(claimResponse.getId()).isEqualTo(claimId.toString());
-    assertThat(claimResponse.getSubmissionId()).isEqualTo(submissionId.toString());
+    assertThat(claimResponse.getId()).isEqualTo(CLAIM_ID.toString());
+    assertThat(claimResponse.getSubmissionId()).isEqualTo(SUBMISSION_ID.toString());
   }
 
   @Test
   @DisplayName("Verify 404 response")
   @PactTestFor(pactMethod = "getClaim404")
   void verify404Response() {
-    assertThrows(NotFound.class, () -> dataClaimsRestClient.getClaim(submissionId, claimId));
+    assertThrows(NotFound.class, () -> dataClaimsRestClient.getClaim(SUBMISSION_ID, CLAIM_ID));
   }
 
   @Test
   @DisplayName("Verify 404 response no submission")
   @PactTestFor(pactMethod = "getClaimNoSubmission404")
   void verify404ResponseNoSubmission() {
-    assertThrows(NotFound.class, () -> dataClaimsRestClient.getClaim(submissionId, claimId));
+    assertThrows(NotFound.class, () -> dataClaimsRestClient.getClaim(SUBMISSION_ID, CLAIM_ID));
   }
 }

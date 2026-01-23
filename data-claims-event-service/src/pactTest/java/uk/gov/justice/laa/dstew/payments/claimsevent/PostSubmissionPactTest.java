@@ -11,7 +11,6 @@ import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.core.model.RequestResponsePact;
 import au.com.dius.pact.core.model.annotations.Pact;
 import java.util.Map;
-import java.util.UUID;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -56,11 +55,7 @@ public final class PostSubmissionPactTest extends AbstractPactTest {
         .willRespondWith()
         .status(201)
         .headers(Map.of("Content-Type", "application/json"))
-        .body(
-            LambdaDsl.newJsonBody(
-                    body ->
-                        body.uuid("id", UUID.fromString("3fa85f64-5717-4562-b3fc-2c963f66afa6")))
-                .build())
+        .body(LambdaDsl.newJsonBody(body -> body.uuid("id", SUBMISSION_ID)).build())
         .toPact();
   }
 
@@ -92,13 +87,13 @@ public final class PostSubmissionPactTest extends AbstractPactTest {
         dataClaimsRestClient.createSubmission(submissionPost);
     assertThat(response).isNotNull();
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-    assertThat(response.getBody().getId()).isEqualTo(submissionId);
+    assertThat(response.getBody().getId()).isEqualTo(SUBMISSION_ID);
   }
 
   private SubmissionPost getSubmissionPost() {
     return new SubmissionPost()
-        .bulkSubmissionId(bulkSubmissionId)
-        .submissionId(submissionId)
+        .bulkSubmissionId(BULK_SUBMISSION_ID)
+        .submissionId(SUBMISSION_ID)
         .submissionPeriod("APR-2025")
         .areaOfLaw(AreaOfLaw.LEGAL_HELP)
         .numberOfClaims(2)

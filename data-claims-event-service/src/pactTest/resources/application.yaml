@@ -1,29 +1,7 @@
-laa:
-  bulk-claim-queue:
-    name: test-queue-name
+aws:
+  region: eu-west-1
 
-spring:
-  cloud:
-    aws:
-      endpoint: http://localhost:4566
-      credentials:
-        access-key: dummy-access-key
-        secret-key: dummy-secret-key
-      region:
-        static: us-east-1
-
-submission:
-  validation:
-    minimum-period: JAN-2018
-claim:
-  validation:
-    claim-validation-batch-size: ${CLAIM_VALIDATION_BATCH_SIZE:100}
-
-resilience4j.retry:
-  instances:
-    pdaRetry:
-      maxAttempts: 3
-      waitDuration: 500ms
-
-AWS_REGION: eu-west-1
-CLAIMS_API_ACCESS_TOKEN: f67f968e-b479-4e61-b66e-f57984931e56
+claims:
+  api:
+    access:
+      token: f67f968e-b479-4e61-b66e-f57984931e56

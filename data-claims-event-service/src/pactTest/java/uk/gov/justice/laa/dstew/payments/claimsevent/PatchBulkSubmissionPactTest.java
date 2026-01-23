@@ -77,7 +77,7 @@ public final class PatchBulkSubmissionPactTest extends AbstractPactTest {
     BulkSubmissionPatch patch = getBulkSubmissionPatch();
 
     ResponseEntity<Void> response =
-        dataClaimsRestClient.updateBulkSubmission(bulkSubmissionId.toString(), patch);
+        dataClaimsRestClient.updateBulkSubmission(BULK_SUBMISSION_ID.toString(), patch);
     assertThat(response).isNotNull();
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
   }
@@ -89,12 +89,12 @@ public final class PatchBulkSubmissionPactTest extends AbstractPactTest {
     BulkSubmissionPatch patch = getBulkSubmissionPatch();
     assertThrows(
         BadRequest.class,
-        () -> dataClaimsRestClient.updateBulkSubmission(bulkSubmissionId.toString(), patch));
+        () -> dataClaimsRestClient.updateBulkSubmission(BULK_SUBMISSION_ID.toString(), patch));
   }
 
   private BulkSubmissionPatch getBulkSubmissionPatch() {
     return new BulkSubmissionPatch()
-        .bulkSubmissionId(bulkSubmissionId)
+        .bulkSubmissionId(BULK_SUBMISSION_ID)
         .status(BulkSubmissionStatus.PARSING_COMPLETED);
   }
 }

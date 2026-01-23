@@ -11,7 +11,6 @@ import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.core.model.RequestResponsePact;
 import au.com.dius.pact.core.model.annotations.Pact;
 import java.util.Map;
-import java.util.UUID;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -55,11 +54,7 @@ public final class PostMatterStartsPactTest extends AbstractPactTest {
         .willRespondWith()
         .status(201)
         .headers(Map.of("Content-Type", "application/json"))
-        .body(
-            LambdaDsl.newJsonBody(
-                    body ->
-                        body.uuid("id", UUID.fromString("3fa85f64-5717-4562-b3fc-2c963f66afa6")))
-                .build())
+        .body(LambdaDsl.newJsonBody(body -> body.uuid("id", MATTER_START_ID)).build())
         .toPact();
   }
 
@@ -88,7 +83,7 @@ public final class PostMatterStartsPactTest extends AbstractPactTest {
     MatterStartPost matterStartPost = getMatterStartPost();
 
     ResponseEntity<CreateMatterStart201Response> response =
-        dataClaimsRestClient.createMatterStart(submissionId.toString(), matterStartPost);
+        dataClaimsRestClient.createMatterStart(SUBMISSION_ID.toString(), matterStartPost);
     assertThat(response).isNotNull();
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
   }
@@ -109,6 +104,6 @@ public final class PostMatterStartsPactTest extends AbstractPactTest {
 
     assertThrows(
         BadRequest.class,
-        () -> dataClaimsRestClient.createMatterStart(submissionId.toString(), matterStartPost));
+        () -> dataClaimsRestClient.createMatterStart(SUBMISSION_ID.toString(), matterStartPost));
   }
 }

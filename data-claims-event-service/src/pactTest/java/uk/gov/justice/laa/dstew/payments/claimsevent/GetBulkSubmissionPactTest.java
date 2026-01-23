@@ -11,7 +11,6 @@ import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.core.model.RequestResponsePact;
 import au.com.dius.pact.core.model.annotations.Pact;
 import java.util.Map;
-import java.util.UUID;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -52,9 +51,7 @@ public final class GetBulkSubmissionPactTest extends AbstractPactTest {
         .body(
             LambdaDsl.newJsonBody(
                     body -> {
-                      body.uuid(
-                          "bulk_submission_id",
-                          UUID.fromString("3fa85f64-5717-4562-b3fc-2c963f66afa6"));
+                      body.uuid("bulk_submission_id", BULK_SUBMISSION_ID);
                       body.stringType("status", "READY_FOR_PARSING");
                       body.stringType("created_by_user_id", "string");
                       body.stringType("error_code", "P100");
@@ -224,10 +221,10 @@ public final class GetBulkSubmissionPactTest extends AbstractPactTest {
   @PactTestFor(pactMethod = "getBulkSubmission200")
   void verify200Response() {
     GetBulkSubmission200Response response =
-        dataClaimsRestClient.getBulkSubmission(bulkSubmissionId).getBody();
+        dataClaimsRestClient.getBulkSubmission(BULK_SUBMISSION_ID).getBody();
 
     assertThat(response).isNotNull();
-    assertThat(response.getBulkSubmissionId()).isEqualTo(bulkSubmissionId);
+    assertThat(response.getBulkSubmissionId()).isEqualTo(BULK_SUBMISSION_ID);
   }
 
   @Test
@@ -235,6 +232,6 @@ public final class GetBulkSubmissionPactTest extends AbstractPactTest {
   @PactTestFor(pactMethod = "getBulkSubmission404")
   void verify404Response() {
     assertThrows(
-        NotFound.class, () -> dataClaimsRestClient.getBulkSubmission(bulkSubmissionId).getBody());
+        NotFound.class, () -> dataClaimsRestClient.getBulkSubmission(BULK_SUBMISSION_ID).getBody());
   }
 }

@@ -274,8 +274,8 @@ public final class GetClaimsPactTest extends AbstractPactTest {
     ClaimResultSet claims =
         dataClaimsRestClient
             .getClaims(
-                userOffices.get(0),
-                submissionId.toString(),
+                USER_OFFICES.get(0),
+                SUBMISSION_ID.toString(),
                 List.of(SubmissionStatus.VALIDATION_SUCCEEDED),
                 "FEE_10",
                 "UFN",
@@ -297,8 +297,8 @@ public final class GetClaimsPactTest extends AbstractPactTest {
     ClaimResultSet claims =
         dataClaimsRestClient
             .getClaims(
-                userOffices.get(0),
-                submissionId.toString(),
+                USER_OFFICES.get(0),
+                SUBMISSION_ID.toString(),
                 List.of(SubmissionStatus.VALIDATION_SUCCEEDED),
                 "FEE_10",
                 "UFN",

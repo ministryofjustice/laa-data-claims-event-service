@@ -57,17 +57,14 @@ public final class GetSubmissionPactTest extends AbstractPactTest {
   private static DslPart getSubmissionResponse() {
     return LambdaDsl.newJsonBody(
             body -> {
-              body.uuid("submission_id", UUID.fromString("3fa85f64-5717-4562-b3fc-2c963f66afa6"));
-              body.uuid(
-                  "bulk_submission_id", UUID.fromString("3fa85f64-5717-4562-b3fc-2c963f66afa6"));
+              body.uuid("submission_id", SUBMISSION_ID);
+              body.uuid("bulk_submission_id", BULK_SUBMISSION_ID);
               body.stringType("office_account_number", "string");
               body.stringType("submission_period", "string");
               body.stringType("area_of_law", "CRIME LOWER");
               body.stringType("provider_user_id", "string");
               body.stringType("status", "CREATED");
-              body.uuid(
-                  "previous_submission_id",
-                  UUID.fromString("3fa85f64-5717-4562-b3fc-2c963f66afa6"));
+              body.uuid("previous_submission_id", UUID.randomUUID());
               body.booleanType("is_nil_submission", true);
               body.numberType("number_of_claims", 0);
               body.numberType("calculated_total_amount", 0);
@@ -77,7 +74,7 @@ public final class GetSubmissionPactTest extends AbstractPactTest {
                   "claims",
                   1,
                   claim -> {
-                    claim.uuid("claim_id", UUID.fromString("3fa85f64-5717-4562-b3fc-2c963f66afa6"));
+                    claim.uuid("claim_id", CLAIM_ID);
                     claim.stringType("status", "READY_TO_PROCESS");
                   });
             })
@@ -103,16 +100,16 @@ public final class GetSubmissionPactTest extends AbstractPactTest {
   @DisplayName("Verify 200 response")
   @PactTestFor(pactMethod = "getSubmission200")
   void verify200Response() {
-    SubmissionResponse submission = dataClaimsRestClient.getSubmission(submissionId).getBody();
+    SubmissionResponse submission = dataClaimsRestClient.getSubmission(SUBMISSION_ID).getBody();
 
     assertThat(submission).isNotNull();
-    assertThat(submission.getSubmissionId()).isEqualTo(submissionId);
+    assertThat(submission.getSubmissionId()).isEqualTo(SUBMISSION_ID);
   }
 
   @Test
   @DisplayName("Verify 404 response")
   @PactTestFor(pactMethod = "getSubmission404")
   void verify404Response() {
-    assertThrows(NotFound.class, () -> dataClaimsRestClient.getSubmission(submissionId).getBody());
+    assertThrows(NotFound.class, () -> dataClaimsRestClient.getSubmission(SUBMISSION_ID).getBody());
   }
 }

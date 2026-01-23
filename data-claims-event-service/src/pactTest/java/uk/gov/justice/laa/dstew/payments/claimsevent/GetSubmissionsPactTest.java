@@ -58,20 +58,14 @@ public final class GetSubmissionsPactTest extends AbstractPactTest {
                           "content",
                           1,
                           submission -> {
-                            submission.uuid(
-                                "submission_id",
-                                UUID.fromString("3fa85f64-5717-4562-b3fc-2c963f66afa6"));
-                            submission.uuid(
-                                "bulk_submission_id",
-                                UUID.fromString("3fa85f64-5717-4562-b3fc-2c963f66afa6"));
+                            submission.uuid("submission_id", SUBMISSION_ID);
+                            submission.uuid("bulk_submission_id", BULK_SUBMISSION_ID);
                             submission.stringType("office_account_number", "string");
                             submission.stringType("submission_period", "string");
                             submission.stringType("area_of_law", "CRIME LOWER");
                             submission.stringType("provider_user_id", "string");
                             submission.stringType("status", "CREATED");
-                            submission.uuid(
-                                "previous_submission_id",
-                                UUID.fromString("3fa85f64-5717-4562-b3fc-2c963f66afa6"));
+                            submission.uuid("previous_submission_id", UUID.randomUUID());
                             submission.booleanType("is_nil_submission", true);
                             submission.numberType("number_of_claims", 0);
                             submission.datetime("submitted", "yyyy-MM-dd'T'HH:mm:ssXXX");
@@ -121,7 +115,7 @@ public final class GetSubmissionsPactTest extends AbstractPactTest {
   void verify200Response() {
     SubmissionsResultSet submission =
         dataClaimsRestClient
-            .getSubmissions(userOffices, AreaOfLaw.LEGAL_HELP, "APR-2025")
+            .getSubmissions(USER_OFFICES, AreaOfLaw.LEGAL_HELP, "APR-2025")
             .getBody();
 
     assertThat(submission.getContent().size()).isEqualTo(1);
@@ -133,7 +127,7 @@ public final class GetSubmissionsPactTest extends AbstractPactTest {
   void verify200ResponseEmpty() {
     SubmissionsResultSet submission =
         dataClaimsRestClient
-            .getSubmissions(userOffices, AreaOfLaw.LEGAL_HELP, "APR-2025")
+            .getSubmissions(USER_OFFICES, AreaOfLaw.LEGAL_HELP, "APR-2025")
             .getBody();
 
     assertThat(submission.getContent().isEmpty()).isTrue();

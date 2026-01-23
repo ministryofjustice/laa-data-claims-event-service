@@ -11,7 +11,6 @@ import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.core.model.RequestResponsePact;
 import au.com.dius.pact.core.model.annotations.Pact;
 import java.util.Map;
-import java.util.UUID;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -55,11 +54,7 @@ public final class PostClaimPactTest extends AbstractPactTest {
         .willRespondWith()
         .status(201)
         .headers(Map.of("Content-Type", "application/json"))
-        .body(
-            LambdaDsl.newJsonBody(
-                    body ->
-                        body.uuid("id", UUID.fromString("d4e3fa24-7d1f-4710-b7a7-0debe88421aa")))
-                .build())
+        .body(LambdaDsl.newJsonBody(body -> body.uuid("id", CLAIM_ID)).build())
         .toPact();
   }
 
@@ -88,16 +83,16 @@ public final class PostClaimPactTest extends AbstractPactTest {
     ClaimPost claimPost = getClaimPost();
 
     ResponseEntity<CreateClaim201Response> response =
-        dataClaimsRestClient.createClaim(submissionId.toString(), claimPost);
+        dataClaimsRestClient.createClaim(SUBMISSION_ID.toString(), claimPost);
     assertThat(response).isNotNull();
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-    assertThat(response.getBody().getId()).isEqualTo(claimId);
+    assertThat(response.getBody().getId()).isEqualTo(CLAIM_ID);
   }
 
   private ClaimPost getClaimPost() {
     return new ClaimPost()
-        .id(claimId.toString())
-        .submissionId(submissionId.toString())
+        .id(CLAIM_ID.toString())
+        .submissionId(SUBMISSION_ID.toString())
         .createdByUserId("test-user")
         .lineNumber(1)
         .matterTypeCode("ABC")
@@ -112,6 +107,6 @@ public final class PostClaimPactTest extends AbstractPactTest {
 
     assertThrows(
         BadRequest.class,
-        () -> dataClaimsRestClient.createClaim(submissionId.toString(), claimPost));
+        () -> dataClaimsRestClient.createClaim(SUBMISSION_ID.toString(), claimPost));
   }
 }

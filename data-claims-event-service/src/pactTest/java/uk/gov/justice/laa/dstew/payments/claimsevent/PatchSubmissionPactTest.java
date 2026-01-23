@@ -79,14 +79,14 @@ public final class PatchSubmissionPactTest extends AbstractPactTest {
     SubmissionPatch submissionPatch = getSubmissionPatch();
 
     ResponseEntity<Void> response =
-        dataClaimsRestClient.updateSubmission(submissionId.toString(), submissionPatch);
+        dataClaimsRestClient.updateSubmission(SUBMISSION_ID.toString(), submissionPatch);
     assertThat(response).isNotNull();
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
   }
 
   private SubmissionPatch getSubmissionPatch() {
     return new SubmissionPatch()
-        .submissionId(submissionId)
+        .submissionId(SUBMISSION_ID)
         .status(SubmissionStatus.VALIDATION_SUCCEEDED)
         .validationMessages(List.of(new ValidationMessagePatch()));
   }
@@ -98,6 +98,6 @@ public final class PatchSubmissionPactTest extends AbstractPactTest {
     SubmissionPatch submissionPatch = getSubmissionPatch();
     assertThrows(
         BadRequest.class,
-        () -> dataClaimsRestClient.updateSubmission(submissionId.toString(), submissionPatch));
+        () -> dataClaimsRestClient.updateSubmission(SUBMISSION_ID.toString(), submissionPatch));
   }
 }
