@@ -56,7 +56,9 @@ jobs:
       ecr_role_to_assume: ${{ secrets.ECR_ROLE_TO_ASSUME }}
 
   deploy-uat:
-    needs: [ ecr-publish-image ]
+    needs:
+      - ecr-publish-image
+      - pact-test
     permissions:
       id-token: write
       contents: read
@@ -68,7 +70,10 @@ jobs:
     secrets: inherit
 
   deploy-staging:
-    needs: [ ecr-publish-image, deploy-uat ]
+    needs:
+      - ecr-publish-image
+      - pact-test
+      - deploy-uat
     permissions:
       id-token: write
       contents: read
@@ -80,7 +85,10 @@ jobs:
     secrets: inherit
 
   deploy-production:
-    needs: [ ecr-publish-image, deploy-staging ]
+    needs:
+      - ecr-publish-image
+      - pact-test
+      - deploy-staging
     permissions:
       id-token: write
       contents: read
