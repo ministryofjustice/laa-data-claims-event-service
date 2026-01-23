@@ -41,7 +41,7 @@ public final class PostMatterStartsPactTest extends AbstractPactTest {
 
   @SneakyThrows
   @Pact(consumer = CONSUMER)
-  public RequestResponsePact postMatterStart201(PactDslWithProvider builder) {
+  RequestResponsePact postMatterStart201(PactDslWithProvider builder) {
     // Defines expected 201 response for successfully submitting a valid matter start.
     return builder
         .given("the system is ready to process a valid matter start")
@@ -60,7 +60,7 @@ public final class PostMatterStartsPactTest extends AbstractPactTest {
 
   @SneakyThrows
   @Pact(consumer = CONSUMER)
-  public RequestResponsePact postMatterStart400(PactDslWithProvider builder) {
+  RequestResponsePact postMatterStart400(PactDslWithProvider builder) {
     // Defines expected 400 response for uploading invalid matter start
     return builder
         .given("the matter start request contains invalid data")

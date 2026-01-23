@@ -42,7 +42,7 @@ public final class PostSubmissionPactTest extends AbstractPactTest {
 
   @SneakyThrows
   @Pact(consumer = CONSUMER)
-  public RequestResponsePact postSubmission201(PactDslWithProvider builder) {
+  RequestResponsePact postSubmission201(PactDslWithProvider builder) {
     // Defines expected 201 response for successfully submitting valid submission using matchers
     return builder
         .given("the system is ready to process a valid submission")
@@ -61,7 +61,7 @@ public final class PostSubmissionPactTest extends AbstractPactTest {
 
   @SneakyThrows
   @Pact(consumer = CONSUMER)
-  public RequestResponsePact postSubmission400(PactDslWithProvider builder) {
+  RequestResponsePact postSubmission400(PactDslWithProvider builder) {
     // Defines expected 400 response for uploading invalid submission
     return builder
         .given("the system rejects an invalid submission")

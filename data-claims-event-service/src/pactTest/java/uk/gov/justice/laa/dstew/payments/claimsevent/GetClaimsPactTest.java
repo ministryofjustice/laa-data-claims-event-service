@@ -39,7 +39,7 @@ public final class GetClaimsPactTest extends AbstractPactTest {
 
   @SneakyThrows
   @Pact(consumer = CONSUMER)
-  public RequestResponsePact getClaims200(PactDslWithProvider builder) {
+  RequestResponsePact getClaims200(PactDslWithProvider builder) {
     // Defines expected 200 response for claims response using matchers
     return builder
         .given("claims exist for the search criteria")
@@ -231,7 +231,7 @@ public final class GetClaimsPactTest extends AbstractPactTest {
 
   @SneakyThrows
   @Pact(consumer = CONSUMER)
-  public RequestResponsePact getClaimsEmpty200(PactDslWithProvider builder) {
+  RequestResponsePact getClaimsEmpty200(PactDslWithProvider builder) {
     // Defines expected 200 response for empty search using matchers
     return builder
         .given("no claims exist for the search criteria")

@@ -39,7 +39,7 @@ public final class GetSubmissionPactTest extends AbstractPactTest {
 
   @SneakyThrows
   @Pact(consumer = CONSUMER)
-  public RequestResponsePact getSubmission200(PactDslWithProvider builder) {
+  RequestResponsePact getSubmission200(PactDslWithProvider builder) {
     // Defines expected 200 response for existing submission using matchers
     return builder
         .given("a submission exists")
@@ -83,7 +83,7 @@ public final class GetSubmissionPactTest extends AbstractPactTest {
 
   @SneakyThrows
   @Pact(consumer = CONSUMER)
-  public RequestResponsePact getSubmission404(PactDslWithProvider builder) {
+  RequestResponsePact getSubmission404(PactDslWithProvider builder) {
     // Defines expected 404 response for missing submission
     return builder
         .given("no submission exists")

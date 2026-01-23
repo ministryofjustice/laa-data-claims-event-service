@@ -41,7 +41,7 @@ public final class PostClaimPactTest extends AbstractPactTest {
 
   @SneakyThrows
   @Pact(consumer = CONSUMER)
-  public RequestResponsePact postClaim201(PactDslWithProvider builder) {
+  RequestResponsePact postClaim201(PactDslWithProvider builder) {
     // Defines expected 201 response for successfully submitting a valid claim.
     return builder
         .given("the system is ready to process a valid claim")
@@ -60,7 +60,7 @@ public final class PostClaimPactTest extends AbstractPactTest {
 
   @SneakyThrows
   @Pact(consumer = CONSUMER)
-  public RequestResponsePact postClaim400(PactDslWithProvider builder) {
+  RequestResponsePact postClaim400(PactDslWithProvider builder) {
     // Defines expected 400 response for uploading invalid claim
     return builder
         .given("the claim request contains invalid data")

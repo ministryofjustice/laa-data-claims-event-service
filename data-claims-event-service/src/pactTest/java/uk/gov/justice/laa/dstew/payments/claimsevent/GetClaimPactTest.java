@@ -37,7 +37,7 @@ public final class GetClaimPactTest extends AbstractPactTest {
 
   @SneakyThrows
   @Pact(consumer = CONSUMER)
-  public RequestResponsePact getClaim200(PactDslWithProvider builder) {
+  RequestResponsePact getClaim200(PactDslWithProvider builder) {
     // Defines expected 200 response for existing claim using matchers
     return builder
         .given("a claim exists")
@@ -205,7 +205,7 @@ public final class GetClaimPactTest extends AbstractPactTest {
 
   @SneakyThrows
   @Pact(consumer = CONSUMER)
-  public RequestResponsePact getClaim404(PactDslWithProvider builder) {
+  RequestResponsePact getClaim404(PactDslWithProvider builder) {
     // Defines expected 404 response for when either submission or claim does not exist
     return builder
         .given("no claim exists")
@@ -221,7 +221,7 @@ public final class GetClaimPactTest extends AbstractPactTest {
 
   @SneakyThrows
   @Pact(consumer = CONSUMER)
-  public RequestResponsePact getClaimNoSubmission404(PactDslWithProvider builder) {
+  RequestResponsePact getClaimNoSubmission404(PactDslWithProvider builder) {
     // Defines expected 404 response for when either submission or claim does not exist
     return builder
         .given("no claim exists")

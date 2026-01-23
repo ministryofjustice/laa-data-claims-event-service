@@ -37,7 +37,7 @@ public final class GetBulkSubmissionPactTest extends AbstractPactTest {
 
   @SneakyThrows
   @Pact(consumer = CONSUMER)
-  public RequestResponsePact getBulkSubmission200(PactDslWithProvider builder) {
+  RequestResponsePact getBulkSubmission200(PactDslWithProvider builder) {
     // Defines expected 200 response for existing bulk submission
     return builder
         .given("a bulk submission exists")
@@ -203,7 +203,7 @@ public final class GetBulkSubmissionPactTest extends AbstractPactTest {
 
   @SneakyThrows
   @Pact(consumer = CONSUMER)
-  public RequestResponsePact getBulkSubmission404(PactDslWithProvider builder) {
+  RequestResponsePact getBulkSubmission404(PactDslWithProvider builder) {
     // Defines expected 404 response for missing submission
     return builder
         .given("no bulk submission exists")

@@ -37,7 +37,7 @@ public final class GetSubmissionsPactTest extends AbstractPactTest {
 
   @SneakyThrows
   @Pact(consumer = CONSUMER)
-  public RequestResponsePact getSubmissions200(PactDslWithProvider builder) {
+  RequestResponsePact getSubmissions200(PactDslWithProvider builder) {
     // Defines expected 200 response for submission search
     return builder
         .given("a submission exists for the search criteria")
@@ -82,7 +82,7 @@ public final class GetSubmissionsPactTest extends AbstractPactTest {
 
   @SneakyThrows
   @Pact(consumer = CONSUMER)
-  public RequestResponsePact getSubmissionsEmpty200(PactDslWithProvider builder) {
+  RequestResponsePact getSubmissionsEmpty200(PactDslWithProvider builder) {
     // Defines expected 200 response for submission search, even when empty
     return builder
         .given("no submission exists")

@@ -40,7 +40,7 @@ public final class PatchClaimPactTest extends AbstractPactTest {
 
   @SneakyThrows
   @Pact(consumer = CONSUMER)
-  public RequestResponsePact patchClaimStatus(PactDslWithProvider builder) {
+  RequestResponsePact patchClaimStatus(PactDslWithProvider builder) {
     // Defines expected 204 response for successfully updating a claim
     return builder
         .given("the system is ready to update a claim")
@@ -57,7 +57,7 @@ public final class PatchClaimPactTest extends AbstractPactTest {
 
   @SneakyThrows
   @Pact(consumer = CONSUMER)
-  public RequestResponsePact patchClaim400(PactDslWithProvider builder) {
+  RequestResponsePact patchClaim400(PactDslWithProvider builder) {
     // Defines expected 400 response for uploading invalid claim
     return builder
         .given("the claim patch contains invalid data")

@@ -38,7 +38,7 @@ public final class PatchBulkSubmissionPactTest extends AbstractPactTest {
 
   @SneakyThrows
   @Pact(consumer = CONSUMER)
-  public RequestResponsePact patchBulkSubmissionStatusOnly(PactDslWithProvider builder) {
+  RequestResponsePact patchBulkSubmissionStatusOnly(PactDslWithProvider builder) {
     // Defines expected 204 response for successfully updating a bulk submission
     return builder
         .given("the system is ready to update a bulk submission")
@@ -55,7 +55,7 @@ public final class PatchBulkSubmissionPactTest extends AbstractPactTest {
 
   @SneakyThrows
   @Pact(consumer = CONSUMER)
-  public RequestResponsePact patchBulkSubmission400(PactDslWithProvider builder) {
+  RequestResponsePact patchBulkSubmission400(PactDslWithProvider builder) {
     // Defines expected 400 response for uploading invalid bulk submission
     return builder
         .given("the bulk submission patch contains invalid data")

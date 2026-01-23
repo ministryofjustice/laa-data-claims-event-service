@@ -40,7 +40,7 @@ public final class PatchSubmissionPactTest extends AbstractPactTest {
 
   @SneakyThrows
   @Pact(consumer = CONSUMER)
-  public RequestResponsePact patchSubmissionStatusOnly(PactDslWithProvider builder) {
+  RequestResponsePact patchSubmissionStatusOnly(PactDslWithProvider builder) {
     // Defines expected 204 response for successfully updating a submission
     return builder
         .given("the system is ready to update a submission")
@@ -57,7 +57,7 @@ public final class PatchSubmissionPactTest extends AbstractPactTest {
 
   @SneakyThrows
   @Pact(consumer = CONSUMER)
-  public RequestResponsePact patchSubmission400(PactDslWithProvider builder) {
+  RequestResponsePact patchSubmission400(PactDslWithProvider builder) {
     // Defines expected 400 response for uploading invalid submission
     return builder
         .given("the submission patch contains invalid data")

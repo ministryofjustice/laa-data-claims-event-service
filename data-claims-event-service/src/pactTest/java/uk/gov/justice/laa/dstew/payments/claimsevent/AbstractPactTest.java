@@ -8,8 +8,8 @@ import software.amazon.awssdk.services.sqs.SqsClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.listener.SubmissionListener;
 
 public abstract class AbstractPactTest {
-  public static final String CONSUMER = "laa-data-claims-event-service";
-  public static final String PROVIDER = "laa-data-claims-api";
+  protected static final String CONSUMER = "laa-data-claims-event-service";
+  protected static final String PROVIDER = "laa-data-claims-api";
 
   protected static final String UUID_REGEX =
       "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
