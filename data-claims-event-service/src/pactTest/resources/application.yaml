@@ -1,7 +1,2 @@
-aws:
-  region: eu-west-1
-
-claims:
-  api:
-    access:
-      token: f67f968e-b479-4e61-b66e-f57984931e56
+AWS_REGION: eu-west-1
+CLAIMS_API_ACCESS_TOKEN: f67f968e-b479-4e61-b66e-f57984931e56
