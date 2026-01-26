@@ -25,6 +25,21 @@ jobs:
       gh_token: ${{ secrets.GITHUB_TOKEN }}
       aws_region: ${{ vars.AWS_REGION }}
 
+  pact-test:
+    needs: [ assemble ]
+    uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/pact-and-publish.yml@story/pact-publish
+    permissions:
+      contents: write
+      packages: write
+    with:
+      pacticipant_name: "laa-data-claims-event-service"
+      pact_test_task: "pactTest"
+    secrets:
+      gh_token: ${{ secrets.GITHUB_TOKEN }}
+      pact_broker_url: ${{ secrets.PACT_BROKER_URL }}
+      pact_broker_username: ${{ secrets.PACT_BROKER_USERNAME }}
+      pact_broker_password: ${{ secrets.PACT_BROKER_PASSWORD }}
+
   ecr-publish-image:
     needs: [ assemble ]
     uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/ecr-publish-image.yml@v1
@@ -43,6 +58,7 @@ jobs:
   deploy-uat:
     needs:
       - ecr-publish-image
+      - pact-test
     permissions:
       id-token: write
       contents: read
@@ -56,6 +72,7 @@ jobs:
   deploy-staging:
     needs:
       - ecr-publish-image
+      - pact-test
       - deploy-uat
     permissions:
       id-token: write
@@ -70,6 +87,7 @@ jobs:
   deploy-production:
     needs:
       - ecr-publish-image
+      - pact-test
       - deploy-staging
     permissions:
       id-token: write
