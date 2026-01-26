@@ -22,6 +22,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Can I deploy?
+        id: can-i-deploy
+        uses: ministryofjustice/laa-ccms-common-workflows/.github/actions/pact-can-i-deploy@story/pact-publish
+        with:
+          pacticipant: 'laa-data-claims-event-service'
+          environment: ${{ inputs.environment }}
+          pact_broker_url: 'https://laa-data-pact-broker.apps.live.cloud-platform.service.justice.gov.uk/'
+          pact_broker_username: ${{ secrets.pact_broker_username }}
+          pact_broker_password: ${{ secrets.pact_broker_password }}
+
       - name: Authenticate to the cluster
         run: |
           echo "${{ secrets.kube_cert }}" > ca.crt
@@ -63,6 +73,6 @@ jobs:
         with:
           pacticipant: 'laa-data-claims-event-service'
           environment: ${{ inputs.environment }}
-          pact_broker_url: ${{ secrets.pact_broker_url }}
+          pact_broker_url: 'https://laa-data-pact-broker.apps.live.cloud-platform.service.justice.gov.uk/'
           pact_broker_username: ${{ secrets.pact_broker_username }}
           pact_broker_password: ${{ secrets.pact_broker_password }}

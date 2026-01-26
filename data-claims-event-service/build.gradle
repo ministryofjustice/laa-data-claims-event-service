@@ -184,7 +184,7 @@ tasks.register("checkstyleStaged", Checkstyle) {
 
 pact {
     publish {
-        pactBrokerUrl = project.findProperty('pactBrokerUrl') ?: System.getenv('PACT_BROKER_URL') ?: 'http://localhost:9292'
+        pactBrokerUrl = project.findProperty('pactBrokerUrl') ?: System.getenv('PACT_BROKER_URL') ?: 'https://laa-data-pact-broker.apps.live.cloud-platform.service.justice.gov.uk/'
         pactBrokerUsername = project.findProperty('pactBrokerUsername') ?: System.getenv('PACT_BROKER_USERNAME') ?: 'ABC'
         pactBrokerPassword = project.findProperty('pactBrokerPassword') ?: System.getenv('PACT_BROKER_PASSWORD') ?: 'ABC'
 
@@ -193,16 +193,16 @@ pact {
         def projectVersion = project.version != 'unspecified' ? project.version : '1.0.0';
         def gitSha = providers.environmentVariable('GIT_SHA').getOrNull()
 
-        // If we have a SHA, append it to the version for uniqueness
-        consumerVersion = gitSha ? "${projectVersion}-${gitSha}" : projectVersion
-
         // Define the branch from a property, environment variable, or fallback to 'main'
         def branchName = providers.environmentVariable('GIT_BRANCH').getOrElse('main')
+
+        // If we have a SHA, append it to the version for uniqueness
+        consumerVersion = gitSha ? gitSha : projectVersion
 
         // For newer Pact Brokers (Recommended)
         consumerBranch = branchName
         // For older Brokers/compatibility
-        tags = [branchName]
+        tags = [branchName, projectVersion]
 
         // Optional: add a generic 'dev' tag for anything not on main
         if (branchName != 'main' && branchName != 'master') {
