@@ -9,6 +9,10 @@ on:
       deployment_name:
         required: true
         type: string
+      claim_api_environment_name:
+        required: true
+        type: string
+        description: The name of the environment which Claims API is deployed to
       image_tag:
         required: true
         type: string
@@ -30,7 +34,7 @@ jobs:
         uses: ministryofjustice/laa-ccms-common-workflows/.github/actions/pact-can-i-deploy@story/pact-publish
         with:
           pacticipant: 'laa-data-claims-event-service'
-          environment: ${{ inputs.environment }}
+          environment: ${{ inputs.claim_api_environment_name }}
           pact_broker_url: 'https://laa-data-pact-broker.apps.live.cloud-platform.service.justice.gov.uk/'
           pact_broker_username: ${{ secrets.pact_broker_username }}
           pact_broker_password: ${{ secrets.pact_broker_password }}
@@ -75,7 +79,7 @@ jobs:
         uses: ministryofjustice/laa-ccms-common-workflows/.github/actions/pact-record-deployment@story/pact-publish
         with:
           pacticipant: 'laa-data-claims-event-service'
-          environment: ${{ inputs.environment }}
+          environment: ${{ inputs.claim_api_environment_name }}
           pact_broker_url: 'https://laa-data-pact-broker.apps.live.cloud-platform.service.justice.gov.uk/'
           pact_broker_username: ${{ secrets.pact_broker_username }}
           pact_broker_password: ${{ secrets.pact_broker_password }}
