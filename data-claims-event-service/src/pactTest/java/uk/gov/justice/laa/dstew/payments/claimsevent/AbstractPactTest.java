@@ -14,7 +14,9 @@ public abstract class AbstractPactTest {
   protected static final String UUID_REGEX =
       "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
   protected static final String ANY_FORMAT_REGEX = "([a-zA-Z0-9_]+)";
-  protected static final String ANY_NUMBER_REGEX = "([0-9]+)";
+
+  // Any number, but not 0 alone.
+  protected static final String ANY_NUMBER_REGEX = "([1-9][0-9]*|[0-9]{2,})";
 
   protected static <E extends Enum<E>> String enumValuesToRegex(Class<E> enumClass) {
     return "("

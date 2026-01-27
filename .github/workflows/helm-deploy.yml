@@ -25,16 +25,6 @@ jobs:
       - name: Set branch name
         run: echo "GIT_BRANCH=${GITHUB_HEAD_REF:-${GITHUB_REF_NAME}}" >> $GITHUB_ENV
 
-      - name: Run Claims API PACT Verification
-        id: trigger-claims-api-pact-verification
-        uses: ministryofjustice/laa-data-claims-api/.github/workflows/actions/verify_pact_consumer@bug/pact_webhook_fix
-        with:
-          consumer: 'laa-data-claims-event-service'
-          consumer-branch: ${{ env.GIT_BRANCH }}
-          gh-token: ${{ secrets.GH_CLAIMS_PAT_TOKEN }}
-          pact-broker-username: ${{ secrets.PACT_BROKER_USERNAME }}
-          pact-broker-password: ${{ secrets.PACT_BROKER_PASSWORD }}
-
       - name: Can I deploy?
         id: can-i-deploy
         uses: ministryofjustice/laa-ccms-common-workflows/.github/actions/pact-can-i-deploy@story/pact-publish
