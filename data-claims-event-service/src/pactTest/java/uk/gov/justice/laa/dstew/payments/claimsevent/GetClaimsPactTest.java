@@ -282,7 +282,7 @@ public final class GetClaimsPactTest extends AbstractPactTest {
                 "UCN",
                 "case_id",
                 List.of(ClaimStatus.VALID),
-                0,
+                1,
                 10,
                 "asc")
             .getBody();
@@ -305,7 +305,7 @@ public final class GetClaimsPactTest extends AbstractPactTest {
                 "UCN",
                 "case_id",
                 List.of(ClaimStatus.VALID),
-                0,
+                1,
                 10,
                 "asc")
             .getBody();
