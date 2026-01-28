@@ -39,7 +39,7 @@ jobs:
       pacticipant_name: "laa-data-claims-event-service"
       pact_test_task: "pactTest"
       publish_pact_results: 'true'
-      enable_can_i_merge: 'true'
+      enable_can_i_merge: true
       provider_name: "laa-data-claims-api"
     secrets:
       gh_token: ${{ secrets.GITHUB_TOKEN }}
