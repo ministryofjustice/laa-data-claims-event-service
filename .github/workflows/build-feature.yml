@@ -19,6 +19,8 @@ jobs:
       contents: write
       packages: write
     with:
+      java_version: '25'
+      java_distribution: 'corretto'
       integration_test_task: "integrationTest"
       publish_package: 'false'
       junit_results_path: 'data-claims-event-service/build/test-results'
