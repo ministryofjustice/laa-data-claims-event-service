@@ -621,7 +621,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Mental Health Tribunal Reference must be in format AA/NNNN/NNNNN (English) or AANNNNN (Welsh)"
+          "value": "Mental Health Tribunal Reference must be in format AA/NNNN/NNNNN (English) or AANNNNNN (Welsh)"
         }
       ]
     },

@@ -544,7 +544,7 @@ class JsonSchemaValidatorTest {
       "stageReachedCode, ABCDE, CRIME LOWER, Stage Reached Code must be exactly 4 uppercase letters for Crime Lower claims",
       "standardFeeCategoryCode, XYZ, LEGAL HELP, Standard Fee Category Code must be valid",
       "designatedAccreditedRepresentativeCode, 6, LEGAL HELP, Designated Accredited Representative Code must be valid",
-      "mentalHealthTribunalReference, AB/123456/12345, LEGAL HELP, Mental Health Tribunal Reference must be in format AA/NNNN/NNNNN (English) or AANNNNN (Welsh)",
+      "mentalHealthTribunalReference, AB/123456/12345, LEGAL HELP, Mental Health Tribunal Reference must be in format AA/NNNN/NNNNN (English) or AANNNNNN (Welsh)",
       "followOnWork, AB, LEGAL HELP, Follow On Work must be a single character",
       "exemptionCriteriaSatisfied, ab120, LEGAL HELP, Exemption Criteria Satisfied must be 2 uppercase letters followed by 3 digits",
       "exceptionalCaseFundingReference, 1234567ABX, LEGAL HELP, Exceptional Case Funding Reference must be 7 digits followed by 2 uppercase letters",
