@@ -38,15 +38,16 @@ COPY --from=builder /build/data-claims-event-service/build/libs/data-claims-even
 FROM base AS build-external
 COPY data-claims-event-service/build/libs/data-claims-event-service-1.0.0.jar app.jar
 
-# --- Final Stage ---
-ARG BUILD_SOURCE
-FROM build-${BUILD_SOURCE}
-
 # Create a group and non-root user
 RUN addgroup -S appgroup && adduser -u 1001 -S appuser -G appgroup
 
 # Set the default user
 USER 1001
+
+# --- Final Stage ---
+ARG BUILD_SOURCE
+FROM build-${BUILD_SOURCE}
+
 
 # Expose the port that the application will run on
 EXPOSE 8080
