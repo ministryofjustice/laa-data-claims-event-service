@@ -115,3 +115,5 @@ isLegallyAided, false
 clientTypeCode, P
 clientTypeCode, C
 clientTypeCode, J
+mentalHealthTribunalReference, AB/1234/12345
+mentalHealthTribunalReference, AB123456
