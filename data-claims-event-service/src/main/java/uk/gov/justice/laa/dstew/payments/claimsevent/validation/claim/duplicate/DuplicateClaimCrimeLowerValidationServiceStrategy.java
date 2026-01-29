@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
@@ -35,11 +36,10 @@ public final class DuplicateClaimCrimeLowerValidationServiceStrategy
 
       String feeCode = claim.getFeeCode();
 
-      List<ClaimResponse> submissionDuplicateClaims;
-      List<ClaimResponse> officeDuplicateClaims;
+      List<ClaimResponse> submissionDuplicateClaims = new ArrayList<>();
+      List<ClaimResponse> officeDuplicateClaims = new ArrayList<>();
 
-      if ("PROD".equals(feeCode)) {
-        String caseConcludedDate = claim.getCaseConcludedDate();
+      /*String caseConcludedDate = claim.getCaseConcludedDate();
         submissionDuplicateClaims =
             getDuplicateClaimsInCurrentSubmission(
                 claimsToCompare,
@@ -55,7 +55,8 @@ public final class DuplicateClaimCrimeLowerValidationServiceStrategy
                     claimToCompare ->
                         Objects.equals(caseConcludedDate, claimToCompare.getCaseConcludedDate()))
                 .toList();
-      } else {
+      } else {*/
+      if (!"PROD".equals(feeCode)) {
         String uniqueFileNumber = claim.getUniqueFileNumber();
         submissionDuplicateClaims =
             getDuplicateClaimsInCurrentSubmission(
