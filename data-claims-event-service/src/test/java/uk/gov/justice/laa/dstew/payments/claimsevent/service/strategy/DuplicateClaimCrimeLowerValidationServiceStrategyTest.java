@@ -2,6 +2,8 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.service.strategy;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.ValidationServiceTestUtils.assertContextClaimError;
 
@@ -154,7 +156,8 @@ class DuplicateClaimCrimeLowerValidationServiceStrategyTest {
 
     @Test
     @DisplayName(
-        "Crime Lower claims - duplicate claims in submission results in claim error added to validation "
+        "Crime Lower claims - duplicate claims in submission results in claim error added to "
+            + "validation "
             + "context")
     void crimeLowerClaimDuplicateInSubmissionResultsInClaimErrorAddedToContext() {
       // Given
@@ -244,7 +247,8 @@ class DuplicateClaimCrimeLowerValidationServiceStrategyTest {
 
     @Test
     @DisplayName(
-        "Crime Lower claims - duplicate claims in another submission results in claim error added to "
+        "Crime Lower claims - duplicate claims in another submission results in claim error added"
+            + " to "
             + "validation context")
     void crimeLowerClaimDuplicateInAnotherSubmissionResultsInClaimErrorAddedToContext() {
       // Given
@@ -344,123 +348,114 @@ class DuplicateClaimCrimeLowerValidationServiceStrategyTest {
       assertThat(context.hasErrors(claim2.getId())).isFalse();
     }
 
-    @Test
-    @DisplayName("Crime lower claims - Fee Code PROD success validation")
-    void crimeLowerClaimDuplicateWithProdFeeCodeSuccess() {
-      // Given
-      ClaimResponse claim1 =
-          new ClaimResponse()
-              .id("claimId1")
-              .feeCode("PROD")
-              .caseConcludedDate("caseConcludedDate1")
-              .status(ClaimStatus.READY_TO_PROCESS);
-      ClaimResponse claim2 =
-          new ClaimResponse()
-              .id("claimId2")
-              .feeCode("PROD")
-              .caseConcludedDate("caseConcludedDate2")
-              .status(ClaimStatus.READY_TO_PROCESS);
+    @Nested
+    @DisplayName("Ignore PROD Fee Code")
+    class IgnoreProdFeeCode {
 
-      List<ClaimResponse> submissionClaims = List.of(claim1, claim2);
+      @Test
+      @DisplayName("Crime lower claims - Fee Code PROD success validation")
+      void crimeLowerClaimDuplicateWithProdFeeCodeSuccess() {
+        // Given
+        ClaimResponse claim1 =
+            new ClaimResponse()
+                .id("claimId1")
+                .feeCode("PROD")
+                .caseConcludedDate("caseConcludedDate1")
+                .status(ClaimStatus.READY_TO_PROCESS);
+        ClaimResponse claim2 =
+            new ClaimResponse()
+                .id("claimId2")
+                .feeCode("PROD")
+                .caseConcludedDate("caseConcludedDate2")
+                .status(ClaimStatus.READY_TO_PROCESS);
 
-      when(dataClaimsRestClient.getClaims(
-              any(), any(), any(), any(), any(), any(), any(), any(), any()))
-          .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
+        List<ClaimResponse> submissionClaims = List.of(claim1, claim2);
 
-      SubmissionValidationContext context = new SubmissionValidationContext();
+        SubmissionValidationContext context = new SubmissionValidationContext();
 
-      // When
-      duplicateClaimValidationService.validateDuplicateClaims(
-          claim1, submissionClaims, "officeCode", context, FeeCalculationType.FIXED.toString());
+        // When
+        duplicateClaimValidationService.validateDuplicateClaims(
+            claim1, submissionClaims, "officeCode", context, FeeCalculationType.FIXED.toString());
 
-      // Then
-      assertThat(context.hasErrors()).isFalse();
-    }
+        // Then
+        assertThat(context.hasErrors()).isFalse();
+        verify(dataClaimsRestClient, times(0))
+            .getClaims(any(), any(), any(), any(), any(), any(), any(), any(), any());
+      }
 
-    @Test
-    @DisplayName(
-        "Crime lower claims - Fee Code PROD fails validation, duplicate in same submission")
-    void crimeLowerClaimDuplicateWithProdFeeCodeDuplicateInSameSubmission() {
-      // Given
-      ClaimResponse claim1 =
-          new ClaimResponse()
-              .id("claimId1")
-              .feeCode("PROD")
-              .caseConcludedDate("caseConcludedDate1")
-              .status(ClaimStatus.READY_TO_PROCESS);
-      ClaimResponse claim2 =
-          new ClaimResponse()
-              .id("claimId2")
-              .feeCode("PROD")
-              .caseConcludedDate("caseConcludedDate1")
-              .status(ClaimStatus.READY_TO_PROCESS);
+      @Test
+      @DisplayName(
+          "Crime lower claims - Fee Code PROD passes validation, duplicate in same submission")
+      void crimeLowerClaimDuplicateWithProdFeeCodeDuplicateInSameSubmission() {
+        // Given
+        ClaimResponse claim1 =
+            new ClaimResponse()
+                .id("claimId1")
+                .feeCode("PROD")
+                .caseConcludedDate("caseConcludedDate1")
+                .status(ClaimStatus.READY_TO_PROCESS);
+        ClaimResponse claim2 =
+            new ClaimResponse()
+                .id("claimId2")
+                .feeCode("PROD")
+                .caseConcludedDate("caseConcludedDate1")
+                .status(ClaimStatus.READY_TO_PROCESS);
 
-      List<ClaimResponse> submissionClaims = List.of(claim1, claim2);
+        List<ClaimResponse> submissionClaims = List.of(claim1, claim2);
 
-      when(dataClaimsRestClient.getClaims(
-              any(), any(), any(), any(), any(), any(), any(), any(), any()))
-          .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
+        SubmissionValidationContext context = new SubmissionValidationContext();
 
-      SubmissionValidationContext context = new SubmissionValidationContext();
+        // When
+        duplicateClaimValidationService.validateDuplicateClaims(
+            claim1, submissionClaims, "officeCode", context, FeeCalculationType.FIXED.toString());
 
-      // When
-      duplicateClaimValidationService.validateDuplicateClaims(
-          claim1, submissionClaims, "officeCode", context, FeeCalculationType.FIXED.toString());
+        // Then
+        assertThat(context.hasErrors()).isFalse();
+        verify(dataClaimsRestClient, times(0))
+            .getClaims(any(), any(), any(), any(), any(), any(), any(), any(), any());
+      }
 
-      // Then
-      assertThat(context.hasErrors()).isTrue();
-      assertContextClaimError(
-          context,
-          claim1.getId(),
-          ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_EXISTING_SUBMISSION);
-    }
+      @Test
+      @DisplayName(
+          "Crime lower claims - Fee Code PROD passes validation, duplicate in another submission")
+      void crimeLowerClaimDuplicateWithProdFeeCodeDuplicateInAnotherSubmission() {
+        // Given
+        ClaimResponse claim1 =
+            new ClaimResponse()
+                .id("claimId1")
+                .submissionId("submissionId")
+                .feeCode("PROD")
+                .caseConcludedDate("caseConcludedDate1")
+                .status(ClaimStatus.READY_TO_PROCESS);
 
-    @Test
-    @DisplayName(
-        "Crime lower claims - Fee Code PROD fails validation, duplicate in another submission")
-    void crimeLowerClaimDuplicateWithProdFeeCodeDuplicateInAnotherSubmission() {
-      // Given
-      ClaimResponse claim1 =
-          new ClaimResponse()
-              .id("claimId1")
-              .submissionId("submissionId")
-              .feeCode("PROD")
-              .caseConcludedDate("caseConcludedDate1")
-              .status(ClaimStatus.READY_TO_PROCESS);
+        ClaimResponse otherClaim =
+            new ClaimResponse()
+                .id("claimId2")
+                .submissionId("submissionId2")
+                .feeCode("PROD")
+                .caseConcludedDate("caseConcludedDate1")
+                .status(ClaimStatus.VALID);
 
-      ClaimResponse otherClaim =
-          new ClaimResponse()
-              .id("claimId2")
-              .submissionId("submissionId2")
-              .feeCode("PROD")
-              .caseConcludedDate("caseConcludedDate1")
-              .status(ClaimStatus.VALID);
+        List<ClaimResponse> submissionClaims = List.of(claim1);
 
-      List<ClaimResponse> submissionClaims = List.of(claim1);
+        ClaimResultSet claimResultSet = new ClaimResultSet();
+        claimResultSet.content(List.of(otherClaim));
 
-      ClaimResultSet claimResultSet = new ClaimResultSet();
-      claimResultSet.content(List.of(otherClaim));
+        SubmissionValidationContext context = new SubmissionValidationContext();
+        context.addClaimReports(
+            List.of(
+                new ClaimValidationReport(claim1.getId()),
+                new ClaimValidationReport(claim1.getId())));
 
-      when(dataClaimsRestClient.getClaims(
-              any(), any(), any(), any(), any(), any(), any(), any(), any()))
-          .thenReturn(ResponseEntity.of(Optional.of(claimResultSet)));
+        // When
+        duplicateClaimValidationService.validateDuplicateClaims(
+            claim1, submissionClaims, "officeCode", context, FeeCalculationType.FIXED.toString());
 
-      SubmissionValidationContext context = new SubmissionValidationContext();
-      context.addClaimReports(
-          List.of(
-              new ClaimValidationReport(claim1.getId()),
-              new ClaimValidationReport(claim1.getId())));
-
-      // When
-      duplicateClaimValidationService.validateDuplicateClaims(
-          claim1, submissionClaims, "officeCode", context, FeeCalculationType.FIXED.toString());
-
-      // Then
-      assertThat(context.hasErrors(claim1.getId())).isTrue();
-      assertContextClaimError(
-          context,
-          claim1.getId(),
-          ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_ANOTHER_SUBMISSION);
+        // Then
+        assertThat(context.hasErrors(claim1.getId())).isFalse();
+        verify(dataClaimsRestClient, times(0))
+            .getClaims(any(), any(), any(), any(), any(), any(), any(), any(), any());
+      }
     }
   }
 }

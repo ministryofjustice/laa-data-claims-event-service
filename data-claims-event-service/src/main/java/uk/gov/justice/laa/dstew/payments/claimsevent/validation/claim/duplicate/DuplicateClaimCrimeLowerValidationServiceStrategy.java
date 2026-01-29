@@ -38,24 +38,7 @@ public final class DuplicateClaimCrimeLowerValidationServiceStrategy
       List<ClaimResponse> submissionDuplicateClaims;
       List<ClaimResponse> officeDuplicateClaims;
 
-      if ("PROD".equals(feeCode)) {
-        String caseConcludedDate = claim.getCaseConcludedDate();
-        submissionDuplicateClaims =
-            getDuplicateClaimsInCurrentSubmission(
-                claimsToCompare,
-                claimToCompare ->
-                    Objects.equals(feeCode, claimToCompare.getFeeCode())
-                        && Objects.equals(
-                            caseConcludedDate, claimToCompare.getCaseConcludedDate()));
-        officeDuplicateClaims =
-            getDuplicateClaimsInPreviousSubmission(
-                    officeCode, feeCode, null, null, null, submissionClaims)
-                .stream()
-                .filter(
-                    claimToCompare ->
-                        Objects.equals(caseConcludedDate, claimToCompare.getCaseConcludedDate()))
-                .toList();
-      } else {
+      if (!"PROD".equals(feeCode)) {
         String uniqueFileNumber = claim.getUniqueFileNumber();
         submissionDuplicateClaims =
             getDuplicateClaimsInCurrentSubmission(
@@ -66,6 +49,12 @@ public final class DuplicateClaimCrimeLowerValidationServiceStrategy
         officeDuplicateClaims =
             getDuplicateClaimsInPreviousSubmission(
                 officeCode, feeCode, uniqueFileNumber, null, null, submissionClaims);
+      } else {
+        // Skipping PRD duplicate check. This is because PROD fee code do not have a unique
+        // identifier and client details are not mandatory for this fee code.
+        log.debug("Fee code is PROD, skipping duplicate check for claim {}", claim.getId());
+        // Escape early
+        return;
       }
 
       if (!submissionDuplicateClaims.isEmpty()) {
