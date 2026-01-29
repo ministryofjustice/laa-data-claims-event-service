@@ -1,6 +1,5 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
@@ -36,26 +35,9 @@ public final class DuplicateClaimCrimeLowerValidationServiceStrategy
 
       String feeCode = claim.getFeeCode();
 
-      List<ClaimResponse> submissionDuplicateClaims = new ArrayList<>();
-      List<ClaimResponse> officeDuplicateClaims = new ArrayList<>();
+      List<ClaimResponse> submissionDuplicateClaims;
+      List<ClaimResponse> officeDuplicateClaims;
 
-      /*String caseConcludedDate = claim.getCaseConcludedDate();
-        submissionDuplicateClaims =
-            getDuplicateClaimsInCurrentSubmission(
-                claimsToCompare,
-                claimToCompare ->
-                    Objects.equals(feeCode, claimToCompare.getFeeCode())
-                        && Objects.equals(
-                            caseConcludedDate, claimToCompare.getCaseConcludedDate()));
-        officeDuplicateClaims =
-            getDuplicateClaimsInPreviousSubmission(
-                    officeCode, feeCode, null, null, null, submissionClaims)
-                .stream()
-                .filter(
-                    claimToCompare ->
-                        Objects.equals(caseConcludedDate, claimToCompare.getCaseConcludedDate()))
-                .toList();
-      } else {*/
       if (!"PROD".equals(feeCode)) {
         String uniqueFileNumber = claim.getUniqueFileNumber();
         submissionDuplicateClaims =
@@ -67,6 +49,12 @@ public final class DuplicateClaimCrimeLowerValidationServiceStrategy
         officeDuplicateClaims =
             getDuplicateClaimsInPreviousSubmission(
                 officeCode, feeCode, uniqueFileNumber, null, null, submissionClaims);
+      } else {
+        // Skipping PRD duplicate check. This is because PROD fee code do not have a unique
+        // identifier and client details are not mandatory for this fee code.
+        log.debug("Fee code is PROD, skipping duplicate check for claim {}", claim.getId());
+        // Escape early
+        return;
       }
 
       if (!submissionDuplicateClaims.isEmpty()) {
