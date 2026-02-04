@@ -29,7 +29,7 @@ public final class CaseDatesClaimValidator extends AbstractDateValidator
     checkDateInPast(claim, "Case Start Date", caseStartDate, OLDEST_DATE_ALLOWED_1, context);
     String oldestDateAllowedForCaseConcludedDate =
         AreaOfLaw.CRIME_LOWER.equals(areaOfLaw) ? MIN_REP_ORDER_DATE : OLDEST_DATE_ALLOWED_1;
-    checkDateInPast(
+    checkDateInPastAndDoesNotExceedSubmissionPeriod(
         claim,
         "Case Concluded Date",
         claim.getCaseConcludedDate(),
