@@ -1,7 +1,7 @@
 {
   "request": {
     "method": "GET",
-    "urlPathPattern": "/api/v0/submissions/[a-f0-9\\-]+/matter-starts/[a-f0-9\\-]+"
+    "urlPathPattern": "/api/v1/submissions/[a-f0-9\\-]+/matter-starts/[a-f0-9\\-]+"
   },
   "response": {
     "status": 200,

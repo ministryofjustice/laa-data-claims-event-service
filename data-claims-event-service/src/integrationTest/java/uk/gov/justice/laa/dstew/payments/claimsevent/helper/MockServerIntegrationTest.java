@@ -57,11 +57,9 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.util.DateUtil;
 @Slf4j
 @TestInstance(Lifecycle.PER_CLASS)
 public abstract class MockServerIntegrationTest {
-  private static final String API_VERSION_0 = "/api/v0/";
   private static final String API_VERSION_1 = "/api/v1/";
-  private static final String API_VERSION_2 = "/api/v2/";
-  private static final String DATA_SUBMISSION_API_PATH = API_VERSION_0 + "submissions/";
-  private static final String DATA_CLAIMS_API_PATH = API_VERSION_0 + "claims";
+  private static final String DATA_SUBMISSION_API_PATH = API_VERSION_1 + "submissions/";
+  private static final String DATA_CLAIMS_API_PATH = API_VERSION_1 + "claims";
   private static final String PROVIDER_OFFICES = API_VERSION_1 + "provider-offices/";
   private static final String SCHEDULES_ENDPOINT = "/schedules";
   private static final String FEE_DETAILS = API_VERSION_1 + "fee-details/";
@@ -294,7 +292,7 @@ public abstract class MockServerIntegrationTest {
             HttpRequest.request()
                 .withMethod(HttpMethod.GET.toString())
                 .withPath(
-                    API_VERSION_0 + "submissions/" + submissionId + CLAIMS_ENDPOINT + claimId))
+                    API_VERSION_1 + "submissions/" + submissionId + CLAIMS_ENDPOINT + claimId))
         .respond(
             HttpResponse.response()
                 .withStatusCode(HttpStatusCode.OK)
@@ -308,7 +306,7 @@ public abstract class MockServerIntegrationTest {
         .when(
             HttpRequest.request()
                 .withMethod(HttpMethod.GET.toString())
-                .withPath(API_VERSION_0 + "claims"))
+                .withPath(API_VERSION_1 + "claims"))
         .respond(
             HttpResponse.response()
                 .withStatusCode(HttpStatusCode.OK)
@@ -321,7 +319,7 @@ public abstract class MockServerIntegrationTest {
         .when(
             HttpRequest.request()
                 .withMethod(HttpMethod.PATCH.toString())
-                .withPath(API_VERSION_0 + "submissions/" + submissionId.toString()))
+                .withPath(API_VERSION_1 + "submissions/" + submissionId.toString()))
         .respond(
             HttpResponse.response()
                 .withStatusCode(HttpStatusCode.NO_CONTENT)
@@ -334,7 +332,7 @@ public abstract class MockServerIntegrationTest {
             HttpRequest.request()
                 .withMethod(HttpMethod.PATCH.toString())
                 .withPath(
-                    API_VERSION_0
+                    API_VERSION_1
                         + "submissions/"
                         + submissionId.toString()
                         + "/claims/"
@@ -350,7 +348,7 @@ public abstract class MockServerIntegrationTest {
         .when(
             HttpRequest.request()
                 .withMethod(HttpMethod.PATCH.toString())
-                .withPath(API_VERSION_0 + "bulk-submissions/" + bulkSubmissionId.toString()))
+                .withPath(API_VERSION_1 + "bulk-submissions/" + bulkSubmissionId.toString()))
         .respond(
             HttpResponse.response()
                 .withStatusCode(HttpStatusCode.NO_CONTENT)
@@ -363,7 +361,7 @@ public abstract class MockServerIntegrationTest {
         .when(
             HttpRequest.request()
                 .withMethod("PATCH")
-                .withPath(API_VERSION_0 + "submissions/" + submissionId.toString())
+                .withPath(API_VERSION_1 + "submissions/" + submissionId.toString())
                 .withBody(json(objectMapper.writeValueAsString(patch))))
         .respond(
             HttpResponse.response()
@@ -377,7 +375,7 @@ public abstract class MockServerIntegrationTest {
         .when(
             HttpRequest.request()
                 .withMethod(HttpMethod.GET.toString())
-                .withPath(API_VERSION_0 + "submissions")
+                .withPath(API_VERSION_1 + "submissions")
                 .withQueryStringParameters(parameters))
         .respond(
             HttpResponse.response()

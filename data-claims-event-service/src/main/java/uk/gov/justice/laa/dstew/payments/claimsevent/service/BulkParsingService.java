@@ -22,6 +22,8 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionOutcome;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPost;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.CreateClaim201Response;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.CreateSubmission201Response;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetBulkSubmission200Response;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.MatterStartPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
@@ -124,7 +126,8 @@ public class BulkParsingService {
         submission.getSubmissionPeriod(),
         submission.getOfficeAccountNumber());
 
-    ResponseEntity<Void> response = dataClaimsRestClient.createSubmission(submission);
+    ResponseEntity<CreateSubmission201Response> response =
+        dataClaimsRestClient.createSubmission(submission);
 
     if (response == null || response.getStatusCode().value() != 201) {
       var bulkSubmissionId = submission.getBulkSubmissionId().toString();
@@ -270,7 +273,8 @@ public class BulkParsingService {
         claim.getScheduleReference(),
         claim.getLineNumber());
 
-    ResponseEntity<Void> response = dataClaimsRestClient.createClaim(submissionId, claim);
+    ResponseEntity<CreateClaim201Response> response =
+        dataClaimsRestClient.createClaim(submissionId, claim);
 
     if (response == null || response.getStatusCode() != HttpStatusCode.valueOf(201)) {
       throw new ClaimCreateException(

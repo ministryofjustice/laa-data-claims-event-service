@@ -3,6 +3,7 @@ plugins {
     id("com.diffplug.spotless") version "7.2.1"
     id 'uk.gov.laa.springboot.laa-spring-boot-gradle-plugin' version '2.0.1'
     id "io.sentry.jvm.gradle" version "5.12.2"
+    id 'au.com.dius.pact' version '4.6.19'
 }
 
 def versions = [sentry : '8.28.0']
@@ -56,14 +57,16 @@ dependencies {
     // Upgrade to fix vulnerabilities in spring-webmvc
     //implementation 'org.springframework:spring-webmvc:6.2.11'
     // Upgrade to fix vulnerabilities in spring-core
-    //implementation 'org.springframework:spring-core:6.2.11'
-    // Upgrade to fix CVE-2025-11226 vulnerability in logback-core
-    //implementation 'ch.qos.logback:logback-core:1.5.19'
+    implementation 'org.springframework:spring-core:6.2.11'
+
+    // Upgrade to fix CVE-2026-1225 vulnerability in logback-core
+    implementation 'ch.qos.logback:logback-core:1.5.25'
+    implementation 'ch.qos.logback:logback-classic:1.5.25'
 
     implementation project(':reference-provider-details-api')
     implementation project(':reference-fee-scheme-platform-api')
 
-    implementation 'uk.gov.justice.laa.datastewardship.payments:data-claims-api-models:dd2b551'
+    implementation 'uk.gov.justice.laa.datastewardship.payments:data-claims-api-models:6ec4cb7'
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-registry-prometheus'
@@ -114,6 +117,46 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    testImplementation 'au.com.dius.pact.consumer:junit5:4.6.19'
+}
+
+// To keep pact stuff separate
+sourceSets {
+    pactTest {
+        java.srcDir file('src/pactTest/java')
+        resources.srcDir file('src/pactTest/resources')
+        compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
+        runtimeClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
+    }
+}
+
+configurations {
+    pactTestImplementation.extendsFrom testImplementation
+    pactTestRuntimeOnly.extendsFrom testRuntimeOnly
+}
+
+tasks.register('pactTest', Test) {
+    systemProperty "pact.content_type.override.application/json", "application/json;charset=utf-8"
+
+    description = 'Runs the pact tests.'
+    group = 'verification'
+
+    def pactsDir = layout.buildDirectory.dir("pacts").get().asFile
+    doFirst {
+        if (pactsDir.exists()) {
+            pactsDir.deleteDir()
+        }
+    }
+
+    testClassesDirs = sourceSets.pactTest.output.classesDirs
+    classpath = sourceSets.pactTest.runtimeClasspath
+    useJUnitPlatform()
+    // Resolve the directory path to a String for the system property
+    systemProperty 'pact.rootDir', layout.buildDirectory.dir("pacts").get().asFile.path
+}
+
+tasks.named('processPactTestResources') {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
 
 spotless {
@@ -139,6 +182,37 @@ tasks.register("checkstyleStaged", Checkstyle) {
 
     classpath = sourceSets.main.compileClasspath
 }
+
+pact {
+    publish {
+        pactBrokerUrl = project.findProperty('pactBrokerUrl') ?: System.getenv('PACT_BROKER_URL') ?: 'https://laa-data-pact-broker.apps.live.cloud-platform.service.justice.gov.uk/'
+        pactBrokerUsername = project.findProperty('pactBrokerUsername') ?: System.getenv('PACT_BROKER_USERNAME') ?: 'ABC'
+        pactBrokerPassword = project.findProperty('pactBrokerPassword') ?: System.getenv('PACT_BROKER_PASSWORD') ?: 'ABC'
+
+        pactDirectory = layout.buildDirectory.dir("pacts").get().asFile.path
+
+        def projectVersion = project.version != 'unspecified' ? project.version : '1.0.0';
+        def gitSha = providers.environmentVariable('GIT_SHA').getOrNull()
+
+        // Define the branch from a property, environment variable, or fallback to 'main'
+        def branchName = providers.environmentVariable('GIT_BRANCH').getOrElse('main')
+
+        // If we have a SHA, append it to the version for uniqueness
+        consumerVersion = gitSha ? gitSha : projectVersion
+
+        // For newer Pact Brokers (Recommended)
+        consumerBranch = branchName
+        // For older Brokers/compatibility
+        tags = [branchName, projectVersion]
+
+        // Optional: add a generic 'dev' tag for anything not on main
+        if (branchName != 'main' && branchName != 'master') {
+            tags.add('dev')
+        }
+
+    }
+}
+
 
 testlogger {
     theme 'mocha'

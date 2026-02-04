@@ -1,4 +1,38 @@
 services:
+  event-service:
+    container_name: data-claims-event-service-app
+    profiles:
+      - application
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - BUILD_SOURCE=internal
+      secrets:
+        - github_actor
+        - github_token
+    ports:
+      - "8182:8081"
+    environment:
+      - CLAIMS_API_HOSTNAME=http://host.docker.internal:8080
+      - CLAIMS_API_ACCESS_TOKEN=f67f968e-b479-4e61-b66e-f57984931e56
+      - BULK_CLAIM_QUEUE_NAME=claims-api-queue
+      - PROVIDER_DETAILS_API_HOSTNAME=${PROVIDER_DETAILS_API_HOSTNAME}
+      - PROVIDER_DETAILS_API_ACCESS_TOKEN=${PROVIDER_DETAILS_API_ACCESS_TOKEN}
+      - FEE_SCHEME_PLATFORM_API_URL=${FEE_SCHEME_PLATFORM_API_URL}
+      - FEE_SCHEME_PLATFORM_API_ACCESS_TOKEN=${FEE_SCHEME_PLATFORM_API_ACCESS_TOKEN}
+      - SUBMISSION_VALIDATION_MINIMUM_PERIOD=JAN-1600
+      - SPRING_CLOUD_AWS_REGION_STATIC=us-east-1
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=dummy-access-key
+      - AWS_SECRET_ACCESS_KEY=dummy-access-key
+      - AWS_ENDPOINT_URL=http://localstack:4566
+      - SPRING_CLOUD_AWS_SQS_ENDPOINT=http://localstack:4566
+      - SPRING_CLOUD_AWS_CREDENTIALS_ACCESS-KEY=dummy-access-key
+      - SPRING_CLOUD_AWS_CREDENTIALS_SECRET-KEY=dummy-access-key
+    depends_on:
+      - localstack
+
   localstack:
     container_name: event-service-localstack
     image: localstack/localstack:latest
