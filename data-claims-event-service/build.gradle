@@ -7,7 +7,7 @@ plugins {
 }
 
 def versions = [
-        sentry : '8.28.0',
+        sentry : '8.31.0',
         testcontainers : '1.20.1'
 ]
 
@@ -106,7 +106,7 @@ dependencies {
     // Sentry
     implementation platform("io.sentry:sentry-bom:$versions.sentry")
     implementation "io.sentry:sentry-logback:$versions.sentry"
-    implementation "io.sentry:sentry-spring-boot-starter-jakarta:$versions.sentry"
+    implementation "io.sentry:sentry-spring-boot-4:$versions.sentry"
 
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
