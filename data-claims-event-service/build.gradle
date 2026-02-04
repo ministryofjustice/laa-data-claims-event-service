@@ -6,7 +6,10 @@ plugins {
     id 'au.com.dius.pact' version '4.6.19'
 }
 
-def versions = [sentry : '8.28.0']
+def versions = [
+        sentry : '8.28.0',
+        testcontainers : '1.20.1'
+]
 
 test {
     useJUnitPlatform()
@@ -69,7 +72,7 @@ dependencies {
     implementation 'org.springframework.data:spring-data-commons'
 
     // Import spring-cloud-aws BOM (Bill Of Materials) for dependency management
-    implementation platform('io.awspring.cloud:spring-cloud-aws:3.4.0')
+    implementation platform('io.awspring.cloud:spring-cloud-aws:4.0.0')
     implementation 'io.awspring.cloud:spring-cloud-aws-starter'
     implementation 'io.awspring.cloud:spring-cloud-aws-starter-sqs'
     implementation 'software.amazon.awssdk:sts:2.33.7'
@@ -93,10 +96,10 @@ dependencies {
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
-    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation "org.testcontainers:junit-jupiter:$versions.testcontainers"
     testImplementation 'org.springframework.boot:spring-boot-testcontainers'
-    testImplementation 'org.testcontainers:mockserver'
-    testImplementation 'org.testcontainers:localstack'
+    testImplementation "org.testcontainers:mockserver:$versions.testcontainers"
+    testImplementation "org.testcontainers:localstack:$versions.testcontainers"
     testImplementation 'org.awaitility:awaitility'
     testImplementation 'org.mock-server:mockserver-client-java:5.15.0'
     testImplementation("io.projectreactor:reactor-test:3.1.0.RELEASE")
