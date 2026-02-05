@@ -1,14 +1,9 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.validation;
 
-import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationSource.EVENT_SERVICE;
+import static uk.gov.justice.laa.dstew.payments.claimsevent.util.DateUtil.checkDateAllowed;
+import static uk.gov.justice.laa.dstew.payments.claimsevent.util.DateUtil.getLastDateOfMonth;
 
 import java.time.LocalDate;
-import java.time.YearMonth;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
-import java.time.format.DateTimeParseException;
-import java.util.Locale;
-import org.apache.commons.lang3.StringUtils;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.ClaimValidator;
 
@@ -46,14 +41,15 @@ public abstract class AbstractDateValidator implements ClaimValidator {
   }
 
   /**
-   * Validates whether the provided date value is within the valid range (from oldest allowed date
-   * to the end of submission period month). If the date is invalid or falls outside the range, an
-   * error is added to the submission validation context.
+   * Validates whether the provided date value is within the valid range and does not exceed the
+   * submission period end date. The date must be between the oldest allowed date and the last day
+   * of the submission period month. If the date is invalid or falls outside the range, an error is
+   * added to the submission validation context.
    *
-   * @param claim The claim object containing submission period and associated data
+   * @param claim The claim object associated with the date being checked
    * @param fieldName The name of the field associated with the date being validated
-   * @param dateValueToCheck The date value to validate in the format "yyyy-MM-dd"
-   * @param oldestDateAllowedStr The oldest allowed date in the format "yyyy-MM-dd"
+   * @param dateValueToCheck The date value to validate in the format "dd/MM/yyyy"
+   * @param oldestDateAllowedStr The earliest allowed date in the format "yyyy-MM-dd"
    * @param context The validation context where any validation errors will be added
    */
   protected void checkDateInPastAndDoesNotExceedSubmissionPeriod(
@@ -63,14 +59,7 @@ public abstract class AbstractDateValidator implements ClaimValidator {
       String oldestDateAllowedStr,
       SubmissionValidationContext context) {
     if (claim.getSubmissionPeriod() != null) {
-      DateTimeFormatter submissionPeriodFormatter =
-          new DateTimeFormatterBuilder()
-              .parseCaseInsensitive()
-              .appendPattern("MMM-yyyy")
-              .toFormatter(Locale.ENGLISH);
-      YearMonth yearMonth = YearMonth.parse(claim.getSubmissionPeriod(), submissionPeriodFormatter);
-
-      LocalDate lastDateOfMonth = yearMonth.atEndOfMonth();
+      LocalDate lastDateOfMonth = getLastDateOfMonth(claim.getSubmissionPeriod());
       checkDateAllowed(
           claim,
           fieldName,
@@ -79,36 +68,6 @@ public abstract class AbstractDateValidator implements ClaimValidator {
           lastDateOfMonth,
           context,
           "%s cannot be later than the end date of the submission period or before %s");
-    }
-  }
-
-  private static void checkDateAllowed(
-      ClaimResponse claim,
-      String fieldName,
-      String dateValueToCheck,
-      String oldestDateAllowedStr,
-      LocalDate newestDateAllowed,
-      SubmissionValidationContext context,
-      String errorMessage) {
-    if (!StringUtils.isEmpty(dateValueToCheck)) {
-      DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-      DateTimeFormatter formatterForMessage = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-      try {
-        LocalDate oldestDateAllowed = LocalDate.parse(oldestDateAllowedStr, formatter);
-        LocalDate date = LocalDate.parse(dateValueToCheck, formatter);
-
-        if (date.isBefore(oldestDateAllowed) || date.isAfter(newestDateAllowed)) {
-          context.addClaimError(
-              claim.getId(),
-              String.format(errorMessage, fieldName, oldestDateAllowed.format(formatterForMessage)),
-              EVENT_SERVICE);
-        }
-      } catch (DateTimeParseException e) {
-        context.addClaimError(
-            claim.getId(),
-            String.format("Invalid date value provided for %s", fieldName),
-            EVENT_SERVICE);
-      }
     }
   }
 }
