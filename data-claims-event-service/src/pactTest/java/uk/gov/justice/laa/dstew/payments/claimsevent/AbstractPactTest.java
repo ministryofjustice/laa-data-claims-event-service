@@ -15,8 +15,8 @@ public abstract class AbstractPactTest {
       "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
   protected static final String ANY_FORMAT_REGEX = "([a-zA-Z0-9_]+)";
 
-  // Any number, but not 0 alone.
-  protected static final String ANY_NUMBER_REGEX = "([1-9][0-9]*|[0-9]{2,})";
+  // Any number, but not 0 alone. Maximum 8 digits
+  protected static final String ANY_NUMBER_REGEX = "([1-9][0-9]{0,7})";
 
   protected static <E extends Enum<E>> String enumValuesToRegex(Class<E> enumClass) {
     return "("
