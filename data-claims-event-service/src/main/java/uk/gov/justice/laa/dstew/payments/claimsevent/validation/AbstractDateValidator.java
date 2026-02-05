@@ -91,10 +91,9 @@ public abstract class AbstractDateValidator implements ClaimValidator {
       SubmissionValidationContext context,
       String errorMessage) {
     if (!StringUtils.isEmpty(dateValueToCheck)) {
+      DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+      DateTimeFormatter formatterForMessage = DateTimeFormatter.ofPattern("dd/MM/yyyy");
       try {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        DateTimeFormatter formatterForMessage = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
         LocalDate oldestDateAllowed = LocalDate.parse(oldestDateAllowedStr, formatter);
         LocalDate date = LocalDate.parse(dateValueToCheck, formatter);
 
