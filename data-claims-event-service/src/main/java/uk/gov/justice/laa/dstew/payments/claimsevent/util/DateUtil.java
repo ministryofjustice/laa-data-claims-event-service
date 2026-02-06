@@ -6,8 +6,8 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
 import java.util.Locale;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 /**
  * Utility class for handling date-related operations in the claims event service. Provides
@@ -26,7 +26,7 @@ import org.springframework.stereotype.Component;
 public class DateUtil {
 
   private static final String DATE_FORMAT_YYYY_MM_DD = "yyyy-MM-dd";
-  private static final String DATE_PATTERN_MMM_YYYY = "MMM-yyyy";
+  private static final String DATE_FORMAT_MMM_YYYY = "MMM-yyyy";
   private static final String DATE_FORMAT_DISPLAY_MESSAGE = "dd/MM/yyyy";
 
   public static final DateTimeFormatter DATE_FORMATTER_YYYY_MM_DD =
@@ -38,7 +38,7 @@ public class DateUtil {
   public static final DateTimeFormatter SUBMISSION_PERIOD_FORMATTER =
       new DateTimeFormatterBuilder()
           .parseCaseInsensitive()
-          .appendPattern(DATE_PATTERN_MMM_YYYY)
+          .appendPattern(DATE_FORMAT_MMM_YYYY)
           .toFormatter(Locale.ENGLISH);
 
   /** Gets the current date as a {@link YearMonth} object. */
@@ -55,7 +55,7 @@ public class DateUtil {
    * @throws DateTimeParseException if the submissionPeriod string cannot be parsed
    */
   public static LocalDate getLastDateOfMonth(String submissionPeriod, String errorMessage) {
-    if (StringUtils.isBlank(submissionPeriod)) {
+    if (!StringUtils.hasText(submissionPeriod)) {
       throw new IllegalArgumentException(errorMessage);
     }
     YearMonth yearMonth = YearMonth.parse(submissionPeriod, SUBMISSION_PERIOD_FORMATTER);

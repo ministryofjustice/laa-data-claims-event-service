@@ -7,7 +7,7 @@ import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimVali
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
-import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.StringUtils;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.ClaimValidator;
 
@@ -98,7 +98,7 @@ public abstract class AbstractDateValidator implements ClaimValidator {
       LocalDate newestDateAllowed,
       SubmissionValidationContext context,
       String errorMessage) {
-    if (!StringUtils.isBlank(dateValueToCheck)) {
+    if (StringUtils.hasText(dateValueToCheck)) {
       try {
         LocalDate date = LocalDate.parse(dateValueToCheck, DATE_FORMATTER_YYYY_MM_DD);
 
