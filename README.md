@@ -4,11 +4,7 @@
 
 ## Prerequisites
 
-- **Java 17 or later** - Required by Spring Boot 4.0.1
 - **Docker** - For running LocalStack and Wiremock containers
-- **Gradle 8.x** - Included via Gradle wrapper (`./gradlew`)
-- **[laa-spring-boot-common](https://github.com/ministryofjustice/laa-spring-boot-common)** - Shared infrastructure and standards used across LAA projects
-
 
 ## Project Structure
 
@@ -22,11 +18,12 @@ Includes the following subprojects:
 
 ### Key Components
 
-- **[Spring Boot 4.0.1](https://spring.io/projects/spring-boot)** - Application framework
+- **[laa-spring-boot-common](https://github.com/ministryofjustice/laa-spring-boot-common)** - Shared infrastructure and standards used across LAA projects
+- **[Spring Boot 4.0.2](https://spring.io/projects/spring-boot)** - Application framework
 - **[Spring Framework 7.0.2](https://spring.io/projects/spring-framework)** - Core framework
 - **[Spring Cloud AWS 4.0.0](https://awspring.io/spring-cloud-aws/)** - AWS integration (SQS, LocalStack)
-- **[Java 17+](https://www.oracle.com/java/technologies/downloads/)** - Minimum JDK version
-- **[Gradle 8.x](https://gradle.org/)** - Build tool
+- **[Java 21+](https://www.oracle.com/java/technologies/downloads/)** - Minimum JDK version
+- **[Gradle 9.x](https://gradle.org/)** - Build tool
 - **[TestContainers 1.20.1](https://testcontainers.com/)** - Integration testing with Docker containers
 - **[Sentry 8.31.0](https://docs.sentry.io/platforms/java/guides/spring-boot/)** - Error tracking and performance monitoring
 
