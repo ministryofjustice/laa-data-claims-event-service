@@ -3,8 +3,8 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.ValidationServiceTestUtils.getClaimMessages;
-import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.DisbursementClaimStartDateValidator.CASE_START_DATE_FORMATTER;
-import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.DisbursementClaimStartDateValidator.FORMATTER_FOR_DISPLAY_MESSAGE;
+import static uk.gov.justice.laa.dstew.payments.claimsevent.util.DateUtil.DATE_FORMATTER_FOR_DISPLAY_MESSAGE;
+import static uk.gov.justice.laa.dstew.payments.claimsevent.util.DateUtil.DATE_FORMATTER_YYYY_MM_DD;
 
 import java.time.LocalDate;
 import java.util.UUID;
@@ -75,7 +75,7 @@ class DisbursementClaimStartDateValidatorTest {
       String caseStartDate, String submissionPeriod) {
     claim.setCaseStartDate(caseStartDate);
     claim.setSubmissionPeriod(submissionPeriod);
-    LocalDate startDate = LocalDate.parse(caseStartDate, CASE_START_DATE_FORMATTER);
+    LocalDate startDate = LocalDate.parse(caseStartDate, DATE_FORMATTER_YYYY_MM_DD);
 
     validator.validate(claim, context, FeeCalculationType.DISB_ONLY.getValue());
 
@@ -88,7 +88,7 @@ class DisbursementClaimStartDateValidatorTest {
                             .equals(
                                 String.format(
                                     "Disbursement claims can only be submitted at least 3 calendar months after the Case Start Date %s",
-                                    startDate.format(FORMATTER_FOR_DISPLAY_MESSAGE)))))
+                                    startDate.format(DATE_FORMATTER_FOR_DISPLAY_MESSAGE)))))
         .isTrue();
   }
 }

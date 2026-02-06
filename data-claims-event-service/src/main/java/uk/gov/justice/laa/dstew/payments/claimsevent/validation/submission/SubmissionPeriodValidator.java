@@ -1,9 +1,9 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.validation.submission;
 
+import static uk.gov.justice.laa.dstew.payments.claimsevent.util.DateUtil.SUBMISSION_PERIOD_FORMATTER;
+
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
-import java.util.Locale;
 import java.util.Objects;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,8 +25,6 @@ public class SubmissionPeriodValidator implements SubmissionValidator {
   private final DateUtil dateUtil;
   private final String submissionValidationMinimumPeriod;
 
-  private DateTimeFormatter formatter;
-
   /**
    * Creates a new {@code SubmissionPeriodValidator}. Takes in a {@link DateUtil} instance to get
    * the current month.
@@ -38,9 +36,6 @@ public class SubmissionPeriodValidator implements SubmissionValidator {
       DateUtil dateUtil,
       @Value("${submission.validation.minimum-period}") String submissionValidationMinimumPeriod) {
     this.dateUtil = dateUtil;
-    DateTimeFormatterBuilder builder = new DateTimeFormatterBuilder();
-    formatter =
-        builder.parseCaseInsensitive().appendPattern("MMM-yyyy").toFormatter(Locale.ENGLISH);
     this.submissionValidationMinimumPeriod = submissionValidationMinimumPeriod;
   }
 
@@ -60,7 +55,7 @@ public class SubmissionPeriodValidator implements SubmissionValidator {
     }
 
     YearMonth enteredSubmissionPeriod =
-        YearMonth.parse(submission.getSubmissionPeriod(), formatter);
+        YearMonth.parse(submission.getSubmissionPeriod(), SUBMISSION_PERIOD_FORMATTER);
     YearMonth currentMonth = dateUtil.currentYearMonth();
 
     if (Objects.equals(enteredSubmissionPeriod, currentMonth)) {
@@ -70,7 +65,7 @@ public class SubmissionPeriodValidator implements SubmissionValidator {
       context.addSubmissionValidationError(
           SubmissionValidationError.SUBMISSION_PERIOD_FUTURE_MONTH, getReadableCurrentMonth());
     } else if (enteredSubmissionPeriod.isBefore(
-        YearMonth.parse(submissionValidationMinimumPeriod, formatter))) {
+        YearMonth.parse(submissionValidationMinimumPeriod, SUBMISSION_PERIOD_FORMATTER))) {
       context.addSubmissionValidationError(
           SubmissionValidationError.SUBMISSION_VALIDATION_MINIMUM_PERIOD,
           submissionValidationMinimumPeriod,

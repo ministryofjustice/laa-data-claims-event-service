@@ -1,12 +1,12 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim;
 
+import static uk.gov.justice.laa.dstew.payments.claimsevent.util.DateUtil.DATE_FORMATTER_FOR_DISPLAY_MESSAGE;
+import static uk.gov.justice.laa.dstew.payments.claimsevent.util.DateUtil.DATE_FORMATTER_YYYY_MM_DD;
+import static uk.gov.justice.laa.dstew.payments.claimsevent.util.DateUtil.SUBMISSION_PERIOD_FORMATTER;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationSource.EVENT_SERVICE;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
-import java.util.Locale;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -27,16 +27,6 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 public final class DisbursementClaimStartDateValidator implements ClaimValidator {
 
   private static final int MAXIMUM_MONTHS_DIFFERENCE = 3;
-  public static final DateTimeFormatter CASE_START_DATE_FORMATTER =
-      DateTimeFormatter.ofPattern("yyyy-MM-dd");
-  public static final DateTimeFormatter FORMATTER_FOR_DISPLAY_MESSAGE =
-      DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
-  private final DateTimeFormatter submissionPeriodFormatter =
-      new DateTimeFormatterBuilder()
-          .parseCaseInsensitive()
-          .appendPattern("MMM-yyyy")
-          .toFormatter(Locale.ENGLISH);
 
   /**
    * Validates that disbursement claims are submitted at least 3 calendar months after the case
@@ -61,23 +51,24 @@ public final class DisbursementClaimStartDateValidator implements ClaimValidator
     if (StringUtils.hasText(currentClaim.getSubmissionPeriod())
         && StringUtils.hasText(currentClaim.getCaseStartDate())) {
       YearMonth submissionPeriod =
-          YearMonth.parse(currentClaim.getSubmissionPeriod(), submissionPeriodFormatter);
+          YearMonth.parse(currentClaim.getSubmissionPeriod(), SUBMISSION_PERIOD_FORMATTER);
 
       LocalDate submissionEndDate = submissionPeriod.atEndOfMonth();
       LocalDate caseStartDate =
-          LocalDate.parse(currentClaim.getCaseStartDate(), CASE_START_DATE_FORMATTER);
+          LocalDate.parse(currentClaim.getCaseStartDate(), DATE_FORMATTER_YYYY_MM_DD);
 
       if (caseStartDate.plusMonths(3).isAfter(submissionEndDate)) {
         log.debug(
             "Disbursement claims can only be submitted at least {} calendar months after the Case Start Date {}",
             MAXIMUM_MONTHS_DIFFERENCE,
-            caseStartDate.format(FORMATTER_FOR_DISPLAY_MESSAGE));
+            caseStartDate.format(DATE_FORMATTER_FOR_DISPLAY_MESSAGE));
 
         context.addClaimError(
             currentClaim.getId(),
             String.format(
                 "Disbursement claims can only be submitted at least %d calendar months after the Case Start Date %s",
-                MAXIMUM_MONTHS_DIFFERENCE, caseStartDate.format(FORMATTER_FOR_DISPLAY_MESSAGE)),
+                MAXIMUM_MONTHS_DIFFERENCE,
+                caseStartDate.format(DATE_FORMATTER_FOR_DISPLAY_MESSAGE)),
             EVENT_SERVICE);
       }
     }

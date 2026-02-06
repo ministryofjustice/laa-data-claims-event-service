@@ -1,11 +1,10 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate;
 
+import static uk.gov.justice.laa.dstew.payments.claimsevent.util.DateUtil.SUBMISSION_PERIOD_FORMATTER;
+
 import java.time.YearMonth;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,8 +24,6 @@ public final class DuplicateClaimLegalHelpDisbursementValidationStrategy
   private static final String DISBURSEMENT_FEE_TYPE = FeeCalculationType.DISB_ONLY.getValue();
   private static final int MAXIMUM_MONTHS_DIFFERENCE = 3;
 
-  private final DateTimeFormatter formatter;
-
   /**
    * Creates a new {@code DuplicateClaimLegalHelpDisbursementValidationStrategy}.
    *
@@ -36,11 +33,6 @@ public final class DuplicateClaimLegalHelpDisbursementValidationStrategy
   public DuplicateClaimLegalHelpDisbursementValidationStrategy(
       final DataClaimsRestClient dataClaimsRestClient) {
     super(dataClaimsRestClient);
-    formatter =
-        new DateTimeFormatterBuilder()
-            .parseCaseInsensitive()
-            .appendPattern("MMM-yyyy")
-            .toFormatter(Locale.ENGLISH);
   }
 
   @Override
@@ -67,7 +59,7 @@ public final class DuplicateClaimLegalHelpDisbursementValidationStrategy
             submissionClaims);
 
     YearMonth currentClaimYearMonth =
-        YearMonth.parse(currentClaim.getSubmissionPeriod(), formatter);
+        YearMonth.parse(currentClaim.getSubmissionPeriod(), SUBMISSION_PERIOD_FORMATTER);
 
     duplicateClaimsInPreviousSubmission.stream()
         .filter(
@@ -87,7 +79,7 @@ public final class DuplicateClaimLegalHelpDisbursementValidationStrategy
   private boolean filterByInclusiveMonths(
       ClaimResponse claimResponse, YearMonth currentClaimYearMonth) {
     YearMonth duplicateClaimYearMonth =
-        YearMonth.parse(claimResponse.getSubmissionPeriod(), formatter);
+        YearMonth.parse(claimResponse.getSubmissionPeriod(), SUBMISSION_PERIOD_FORMATTER);
 
     long monthsDifference =
         YearMonth.from(duplicateClaimYearMonth).until(currentClaimYearMonth, ChronoUnit.MONTHS);
