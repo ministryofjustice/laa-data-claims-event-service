@@ -29,10 +29,12 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 @Component
 public class DateUtil {
 
-  private static final String DATE_FORMAT_CLAIM_RESPONSE_FIELDS = "yyyy-MM-dd";
+  private static final String DATE_FORMAT_YYYY_MM_DD = "yyyy-MM-dd";
+  private static final String DATE_PATTERN_MMM_YYYY = "MMM-yyyy";
   private static final String DATE_FORMAT_DISPLAY_MESSAGE = "dd/MM/yyyy";
-  public static final DateTimeFormatter DATE_FORMATTER_CLAIM_RESPONSE_FIELDS =
-      DateTimeFormatter.ofPattern(DATE_FORMAT_CLAIM_RESPONSE_FIELDS);
+
+  public static final DateTimeFormatter DATE_FORMATTER_YYYY_MM_DD =
+      DateTimeFormatter.ofPattern(DATE_FORMAT_YYYY_MM_DD);
   public static final DateTimeFormatter DATE_FORMATTER_FOR_DISPLAY_MESSAGE =
       DateTimeFormatter.ofPattern(DATE_FORMAT_DISPLAY_MESSAGE);
 
@@ -40,7 +42,7 @@ public class DateUtil {
   public static final DateTimeFormatter SUBMISSION_PERIOD_FORMATTER =
       new DateTimeFormatterBuilder()
           .parseCaseInsensitive()
-          .appendPattern("MMM-yyyy")
+          .appendPattern(DATE_PATTERN_MMM_YYYY)
           .toFormatter(Locale.ENGLISH);
 
   /** Gets the current date as a {@link YearMonth} object. */
@@ -52,12 +54,13 @@ public class DateUtil {
    * Converts a submission period string into the last date of that month.
    *
    * @param submissionPeriod The submission period in format "MMM-yyyy" (e.g. "JAN-2026")
+   * @param errorMessage The error message to display if the submissionPeriod string is blank
    * @return The last date of the specified month as a LocalDate
    * @throws DateTimeParseException if the submissionPeriod string cannot be parsed
    */
-  public static LocalDate getLastDateOfMonth(String submissionPeriod) {
+  public static LocalDate getLastDateOfMonth(String submissionPeriod, String errorMessage) {
     if (StringUtils.isBlank(submissionPeriod)) {
-      throw new IllegalArgumentException("Submission period cannot be null or empty");
+      throw new IllegalArgumentException(errorMessage);
     }
     YearMonth yearMonth = YearMonth.parse(submissionPeriod, SUBMISSION_PERIOD_FORMATTER);
     return yearMonth.atEndOfMonth();
@@ -86,7 +89,7 @@ public class DateUtil {
       String errorMessage) {
     if (!StringUtils.isBlank(dateValueToCheck)) {
       try {
-        LocalDate date = LocalDate.parse(dateValueToCheck, DATE_FORMATTER_CLAIM_RESPONSE_FIELDS);
+        LocalDate date = LocalDate.parse(dateValueToCheck, DATE_FORMATTER_YYYY_MM_DD);
 
         if (date.isBefore(oldestDateAllowed) || date.isAfter(newestDateAllowed)) {
           context.addClaimError(

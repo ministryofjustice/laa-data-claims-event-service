@@ -1,6 +1,6 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim;
 
-import static uk.gov.justice.laa.dstew.payments.claimsevent.util.DateUtil.DATE_FORMATTER_CLAIM_RESPONSE_FIELDS;
+import static uk.gov.justice.laa.dstew.payments.claimsevent.util.DateUtil.DATE_FORMATTER_YYYY_MM_DD;
 
 import java.time.LocalDate;
 import org.springframework.stereotype.Component;
@@ -24,9 +24,9 @@ public final class CaseDatesClaimValidator extends AbstractDateValidator
   private static final String OLDEST_DATE_ALLOWED_STRING = "1995-01-01";
   private static final String MIN_REP_ORDER_DATE_STRING = "2016-04-01";
   public static final LocalDate OLDEST_DATE_ALLOWED =
-      LocalDate.parse(OLDEST_DATE_ALLOWED_STRING, DATE_FORMATTER_CLAIM_RESPONSE_FIELDS);
+      LocalDate.parse(OLDEST_DATE_ALLOWED_STRING, DATE_FORMATTER_YYYY_MM_DD);
   public static final LocalDate MIN_REP_ORDER_DATE =
-      LocalDate.parse(MIN_REP_ORDER_DATE_STRING, DATE_FORMATTER_CLAIM_RESPONSE_FIELDS);
+      LocalDate.parse(MIN_REP_ORDER_DATE_STRING, DATE_FORMATTER_YYYY_MM_DD);
 
   @Override
   public void validate(

@@ -1,7 +1,7 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim;
 
-import static uk.gov.justice.laa.dstew.payments.claimsevent.util.DateUtil.DATE_FORMATTER_CLAIM_RESPONSE_FIELDS;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.util.DateUtil.DATE_FORMATTER_FOR_DISPLAY_MESSAGE;
+import static uk.gov.justice.laa.dstew.payments.claimsevent.util.DateUtil.DATE_FORMATTER_YYYY_MM_DD;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.util.DateUtil.SUBMISSION_PERIOD_FORMATTER;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationSource.EVENT_SERVICE;
 
@@ -55,7 +55,7 @@ public final class DisbursementClaimStartDateValidator implements ClaimValidator
 
       LocalDate submissionEndDate = submissionPeriod.atEndOfMonth();
       LocalDate caseStartDate =
-          LocalDate.parse(currentClaim.getCaseStartDate(), DATE_FORMATTER_CLAIM_RESPONSE_FIELDS);
+          LocalDate.parse(currentClaim.getCaseStartDate(), DATE_FORMATTER_YYYY_MM_DD);
 
       if (caseStartDate.plusMonths(3).isAfter(submissionEndDate)) {
         log.debug(

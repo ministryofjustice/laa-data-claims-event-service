@@ -59,7 +59,9 @@ public abstract class AbstractDateValidator implements ClaimValidator {
       LocalDate oldestDateAllowed,
       SubmissionValidationContext context) {
     if (claim.getSubmissionPeriod() != null) {
-      LocalDate lastDateOfMonth = getLastDateOfMonth(claim.getSubmissionPeriod());
+      LocalDate lastDateOfMonth =
+          getLastDateOfMonth(
+              claim.getSubmissionPeriod(), "Submission period cannot be null or empty");
       checkDateAllowed(
           claim,
           fieldName,
