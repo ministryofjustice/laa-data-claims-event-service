@@ -27,14 +27,14 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
  * dates.
  */
 @Component
-public final class DateUtil {
+public class DateUtil {
 
-  private static final String DATE_FORMAT = "yyyy-MM-dd";
-  private static final String DATE_FORMAT_MESSAGE = "dd/MM/yyyy";
-
-  private DateUtil() {
-    // Private constructor to prevent instantiation
-  }
+  private static final String DATE_FORMAT_CLAIM_RESPONSE_FIELDS = "yyyy-MM-dd";
+  private static final String DATE_FORMAT_DISPLAY_MESSAGE = "dd/MM/yyyy";
+  public static final DateTimeFormatter DATE_FORMATTER_CLAIM_RESPONSE_FIELDS =
+      DateTimeFormatter.ofPattern(DATE_FORMAT_CLAIM_RESPONSE_FIELDS);
+  public static final DateTimeFormatter DATE_FORMATTER_FOR_DISPLAY_MESSAGE =
+      DateTimeFormatter.ofPattern(DATE_FORMAT_DISPLAY_MESSAGE);
 
   /** Formatter for parsing submission period dates in the format "MMM-yyyy" (e.g. "JAN-2026"). */
   public static final DateTimeFormatter SUBMISSION_PERIOD_FORMATTER =
@@ -70,7 +70,7 @@ public final class DateUtil {
    * @param claim The claim object associated with the date being validated
    * @param fieldName The name of the field being validated (used in error messages)
    * @param dateValueToCheck The date value to validate in the format "yyyy-MM-dd"
-   * @param oldestDateAllowedStr The earliest allowed date in the format "yyyy-MM-dd"
+   * @param oldestDateAllowed The oldest allowed date
    * @param newestDateAllowed The latest allowed date
    * @param context The validation context where any validation errors will be added
    * @param errorMessage The error message template to use when validation fails. Should contain two
@@ -80,21 +80,21 @@ public final class DateUtil {
       ClaimResponse claim,
       String fieldName,
       String dateValueToCheck,
-      String oldestDateAllowedStr,
+      LocalDate oldestDateAllowed,
       LocalDate newestDateAllowed,
       SubmissionValidationContext context,
       String errorMessage) {
-    if (!StringUtils.isEmpty(dateValueToCheck)) {
-      DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_FORMAT);
-      DateTimeFormatter formatterForMessage = DateTimeFormatter.ofPattern(DATE_FORMAT_MESSAGE);
+    if (!StringUtils.isBlank(dateValueToCheck)) {
       try {
-        LocalDate oldestDateAllowed = LocalDate.parse(oldestDateAllowedStr, formatter);
-        LocalDate date = LocalDate.parse(dateValueToCheck, formatter);
+        LocalDate date = LocalDate.parse(dateValueToCheck, DATE_FORMATTER_CLAIM_RESPONSE_FIELDS);
 
         if (date.isBefore(oldestDateAllowed) || date.isAfter(newestDateAllowed)) {
           context.addClaimError(
               claim.getId(),
-              String.format(errorMessage, fieldName, oldestDateAllowed.format(formatterForMessage)),
+              String.format(
+                  errorMessage,
+                  fieldName,
+                  oldestDateAllowed.format(DATE_FORMATTER_FOR_DISPLAY_MESSAGE)),
               EVENT_SERVICE);
         }
       } catch (DateTimeParseException e) {

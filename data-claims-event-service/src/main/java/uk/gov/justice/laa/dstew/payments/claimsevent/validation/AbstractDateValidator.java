@@ -27,14 +27,14 @@ public abstract class AbstractDateValidator implements ClaimValidator {
       ClaimResponse claim,
       String fieldName,
       String dateValueToCheck,
-      String oldestDateAllowedStr,
+      LocalDate oldestDateAllowed,
       SubmissionValidationContext context) {
 
     checkDateAllowed(
         claim,
         fieldName,
         dateValueToCheck,
-        oldestDateAllowedStr,
+        oldestDateAllowed,
         LocalDate.now(),
         context,
         "%s must be between %s and today");
@@ -49,14 +49,14 @@ public abstract class AbstractDateValidator implements ClaimValidator {
    * @param claim The claim object associated with the date being checked
    * @param fieldName The name of the field associated with the date being validated
    * @param dateValueToCheck The date value to validate in the format "dd/MM/yyyy"
-   * @param oldestDateAllowedStr The earliest allowed date in the format "yyyy-MM-dd"
+   * @param oldestDateAllowed The earliest allowed date
    * @param context The validation context where any validation errors will be added
    */
   protected void checkDateInPastAndDoesNotExceedSubmissionPeriod(
       ClaimResponse claim,
       String fieldName,
       String dateValueToCheck,
-      String oldestDateAllowedStr,
+      LocalDate oldestDateAllowed,
       SubmissionValidationContext context) {
     if (claim.getSubmissionPeriod() != null) {
       LocalDate lastDateOfMonth = getLastDateOfMonth(claim.getSubmissionPeriod());
@@ -64,7 +64,7 @@ public abstract class AbstractDateValidator implements ClaimValidator {
           claim,
           fieldName,
           dateValueToCheck,
-          oldestDateAllowedStr,
+          oldestDateAllowed,
           lastDateOfMonth,
           context,
           "%s cannot be later than the end date of the submission period or before %s");
