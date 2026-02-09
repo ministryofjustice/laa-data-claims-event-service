@@ -617,11 +617,11 @@
     },
     "mental_health_tribunal_reference": {
       "type": "string",
-      "pattern": "^([A-Z]{2}/[0-9]{4}/[0-9]{5}|[A-Z]{2}[0-9]{6})$",
+      "pattern": "^([A-Z]{2}/[0-9]{4}/[0-9]{5}|[A-Z]{2}[0-9]{5})$",
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Mental Health Tribunal Reference must be in format AA/NNNN/NNNNN (English) or AANNNNNN (Welsh)"
+          "value": "Mental Health Tribunal Reference must be in format AA/NNNN/NNNNN (English) or AANNNNN (Welsh)"
         }
       ]
     },
