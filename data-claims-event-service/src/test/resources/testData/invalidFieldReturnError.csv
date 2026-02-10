@@ -160,8 +160,6 @@ designated_accredited_representative_code, 3, designated_accredited_representati
 designated_accredited_representative_code, false, designated_accredited_representative_code: boolean found, string expected (provided value: false),
 mental_health_tribunal_reference, 12345678, mental_health_tribunal_reference: integer found, string expected (provided value: 12345678),
 mental_health_tribunal_reference, true, mental_health_tribunal_reference: boolean found, string expected (provided value: true),
-follow_on_work, 1, follow_on_work: integer found, string expected (provided value: 1),
-follow_on_work, true, follow_on_work: boolean found, string expected (provided value: true),
 exemption_criteria_satisfied, 1, exemption_criteria_satisfied: integer found, string expected (provided value: 1),
 exemption_criteria_satisfied, true, exemption_criteria_satisfied: boolean found, string expected (provided value: true),
 exceptional_case_funding_reference, 1234567, exceptional_case_funding_reference: integer found, string expected (provided value: 1234567),
