@@ -414,8 +414,7 @@ class BulkParsingServiceTest {
   @Test
   void getBulkSubmissionThrowsWhenBodyIsNull() {
     final UUID id = UUID.randomUUID();
-    final ResponseEntity<GetBulkSubmission200Response> response =
-        new ResponseEntity<>(null, HttpStatus.OK);
+    final ResponseEntity<GetBulkSubmission200Response> response = ResponseEntity.ok(null);
 
     when(dataClaimsRestClient.getBulkSubmission(id)).thenReturn(response);
 
