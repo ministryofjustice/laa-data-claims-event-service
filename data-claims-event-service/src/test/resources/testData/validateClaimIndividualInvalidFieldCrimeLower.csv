@@ -159,8 +159,6 @@ caseStageCode, FP01, case_stage_code: must be at least 5 characters long (provid
 caseStageCode, FP0010, case_stage_code: must be at most 5 characters long (provided value: FP0010),
 stageReachedCode, A, stage_reached_code: must be at least 2 characters long (provided value: A),
 stageReachedCode, ABCDE, stage_reached_code: must be at most 4 characters long (provided value: ABCDE),
-followOnWork, ' ', follow_on_work: must be at most 1 characters long (provided value: ' '),
-followOnWork, AB, follow_on_work: must be at most 1 characters long (provided value: AB),
 priorAuthorityReference, ABC12, prior_authority_reference: must be at least 7 characters long (provided value: ABC12),
 priorAuthorityReference, ABCDEFGH, prior_authority_reference: must be at most 7 characters long (provided value: ABCDEFGH),
 adviceTypeCode, ABC, advice_type_code: does not match the regex pattern ^(FTF|REM)$ (provided value: ABC),

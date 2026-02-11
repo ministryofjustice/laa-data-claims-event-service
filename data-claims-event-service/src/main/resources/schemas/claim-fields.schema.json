@@ -635,15 +635,7 @@
       ]
     },
     "follow_on_work": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 1,
-      "validationErrorMessages": [
-        {
-          "key": "ALL",
-          "value": "Follow On Work must be a single character"
-        }
-      ]
+      "type": "string"
     },
     "transfer_date": {
       "type": "string",
