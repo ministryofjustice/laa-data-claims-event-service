@@ -2,10 +2,11 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.validation;
 
 import static uk.gov.justice.laa.dstew.payments.claimsevent.util.DateUtil.DATE_FORMATTER_FOR_DISPLAY_MESSAGE;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.util.DateUtil.DATE_FORMATTER_YYYY_MM_DD;
-import static uk.gov.justice.laa.dstew.payments.claimsevent.util.DateUtil.getLastDateOfMonth;
+import static uk.gov.justice.laa.dstew.payments.claimsevent.util.DateUtil.SUBMISSION_PERIOD_FORMATTER;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationSource.EVENT_SERVICE;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.format.DateTimeParseException;
 import org.springframework.util.StringUtils;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
@@ -19,26 +20,28 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.ClaimValid
 public abstract class AbstractDateValidator implements ClaimValidator {
 
   /**
-   * Validates whether the provided date value is within the valid range (01/01/1995 to today's
-   * date). If the date is invalid or falls outside the range, an error is added to the submission
+   * Validates whether the provided date value is between the earliest date allowed and today's
+   * date. If the date is invalid or falls outside the range, an error is added to the submission
    * validation context.
    *
    * @param claim The claim object associated with the date being checked.
    * @param fieldName The name of the field associated with the date being validated.
    * @param dateValueToCheck The date value to validate in the format "dd/MM/yyyy".
+   * @param earliestDateAllowed the earliest date to check the date value against
+   * @param context the submission validation context
    */
   protected void checkDateInPast(
       ClaimResponse claim,
       String fieldName,
       String dateValueToCheck,
-      LocalDate oldestDateAllowed,
+      LocalDate earliestDateAllowed,
       SubmissionValidationContext context) {
 
     checkDateAllowed(
         claim,
         fieldName,
         dateValueToCheck,
-        oldestDateAllowed,
+        earliestDateAllowed,
         LocalDate.now(),
         context,
         "%s must be between %s and today");
@@ -63,17 +66,18 @@ public abstract class AbstractDateValidator implements ClaimValidator {
       LocalDate oldestDateAllowed,
       SubmissionValidationContext context) {
     if (claim.getSubmissionPeriod() != null) {
-      LocalDate lastDateOfMonth =
-          getLastDateOfMonth(
+      LocalDate twentiethOfNextMonth =
+          getTwentiethOfNextMonth(
               claim.getSubmissionPeriod(), "Submission period cannot be null or empty");
       checkDateAllowed(
+          // validate calls
           claim,
           fieldName,
           dateValueToCheck,
           oldestDateAllowed,
-          lastDateOfMonth,
+          twentiethOfNextMonth,
           context,
-          "%s cannot be later than the end date of the submission period or before %s");
+          "%s cannot be later than the 20th of the month following the submission period or before %s");
     }
   }
 
@@ -84,8 +88,8 @@ public abstract class AbstractDateValidator implements ClaimValidator {
    * @param claim The claim object associated with the date being validated
    * @param fieldName The name of the field being validated (used in error messages)
    * @param dateValueToCheck The date value to validate in the format "yyyy-MM-dd"
-   * @param oldestDateAllowed The oldest allowed date
-   * @param newestDateAllowed The latest allowed date
+   * @param earliestDateAllowed The earliest allowed date
+   * @param latestDateAllowed The latest allowed date
    * @param context The validation context where any validation errors will be added
    * @param errorMessage The error message template to use when validation fails. Should contain two
    *     '%s' placeholders: first for the field name, second for the formatted oldest allowed date
@@ -94,21 +98,21 @@ public abstract class AbstractDateValidator implements ClaimValidator {
       ClaimResponse claim,
       String fieldName,
       String dateValueToCheck,
-      LocalDate oldestDateAllowed,
-      LocalDate newestDateAllowed,
+      LocalDate earliestDateAllowed,
+      LocalDate latestDateAllowed,
       SubmissionValidationContext context,
       String errorMessage) {
     if (StringUtils.hasText(dateValueToCheck)) {
       try {
         LocalDate date = LocalDate.parse(dateValueToCheck, DATE_FORMATTER_YYYY_MM_DD);
 
-        if (date.isBefore(oldestDateAllowed) || date.isAfter(newestDateAllowed)) {
+        if (date.isBefore(earliestDateAllowed) || date.isAfter(latestDateAllowed)) {
           context.addClaimError(
               claim.getId(),
               String.format(
                   errorMessage,
                   fieldName,
-                  oldestDateAllowed.format(DATE_FORMATTER_FOR_DISPLAY_MESSAGE)),
+                  earliestDateAllowed.format(DATE_FORMATTER_FOR_DISPLAY_MESSAGE)),
               EVENT_SERVICE);
         }
       } catch (DateTimeParseException e) {
@@ -118,5 +122,23 @@ public abstract class AbstractDateValidator implements ClaimValidator {
             EVENT_SERVICE);
       }
     }
+  }
+
+  /**
+   * Given a string describing the submission period, it parses and returns the local date of the
+   * twentieth day of the following month. If the submission period is Jan 2O26 then the latest Case
+   * Concluded Date allowed is the 20 Feb 2026
+   *
+   * @param submissionPeriod The submission period in format "MMM-yyyy" (e.g. "JAN-2026")
+   * @param errorMessage The error message to display if the submissionPeriod string is blank
+   * @return The last date of the specified month as a LocalDate
+   * @throws DateTimeParseException if the submissionPeriod string cannot be parsed
+   */
+  protected static LocalDate getTwentiethOfNextMonth(String submissionPeriod, String errorMessage) {
+    if (!StringUtils.hasText(submissionPeriod)) {
+      throw new IllegalArgumentException(errorMessage);
+    }
+    YearMonth yearMonth = YearMonth.parse(submissionPeriod, SUBMISSION_PERIOD_FORMATTER);
+    return yearMonth.plusMonths(1).atDay(20);
   }
 }
