@@ -143,7 +143,7 @@ public abstract class AbstractDateValidator implements ClaimValidator {
   /**
    * Given a string describing the submission period, it parses and returns the local date of the
    * twentieth day of the following month. If the submission period is Jan 2O26 then the latest Case
-   * Concluded Date allowed is the 20 Feb 2026
+   * Concluded Date allowed is the 20 Feb 2026.
    *
    * @param submissionPeriod The submission period in format "MMM-yyyy" (e.g. "JAN-2026")
    * @return The last date of the specified month as a LocalDate
