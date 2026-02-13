@@ -16,7 +16,7 @@ class ClaimValidationReportTest {
 
   @Nested
   @DisplayName("addError")
-  class AddErrorTests {
+  class AddErrorTestsChangeName {
 
     @Test
     @DisplayName("Correctly adds an error")
