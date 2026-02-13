@@ -50,7 +50,7 @@ jobs:
 
   scan-image:
     needs: [ pact-test ]
-    uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/ecr-publish-image.yml@v1
+    uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/ecr-publish-image.yml@ecr-docker-version
     permissions:
       contents: read
       id-token: write
