@@ -66,9 +66,7 @@ public abstract class AbstractDateValidator implements ClaimValidator {
       LocalDate oldestDateAllowed,
       SubmissionValidationContext context) {
     if (claim.getSubmissionPeriod() != null) {
-      LocalDate twentiethOfNextMonth =
-          getTwentiethOfNextMonth(
-              claim.getSubmissionPeriod(), "Submission period cannot be null or empty");
+      LocalDate twentiethOfNextMonth = getTwentiethOfNextMonth(claim.getSubmissionPeriod());
       checkDateAllowed(
           // validate calls
           claim,
@@ -130,13 +128,12 @@ public abstract class AbstractDateValidator implements ClaimValidator {
    * Concluded Date allowed is the 20 Feb 2026
    *
    * @param submissionPeriod The submission period in format "MMM-yyyy" (e.g. "JAN-2026")
-   * @param errorMessage The error message to display if the submissionPeriod string is blank
    * @return The last date of the specified month as a LocalDate
    * @throws DateTimeParseException if the submissionPeriod string cannot be parsed
    */
-  protected static LocalDate getTwentiethOfNextMonth(String submissionPeriod, String errorMessage) {
+  private LocalDate getTwentiethOfNextMonth(String submissionPeriod) {
     if (!StringUtils.hasText(submissionPeriod)) {
-      throw new IllegalArgumentException(errorMessage);
+      throw new IllegalArgumentException("Submission period cannot be null or empty");
     }
     YearMonth yearMonth = YearMonth.parse(submissionPeriod, SUBMISSION_PERIOD_FORMATTER);
     return yearMonth.plusMonths(1).atDay(20);
