@@ -3,6 +3,7 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.ValidationServiceTestUtils.getClaimMessages;
 
+import java.time.LocalDate;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,9 +18,9 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 class CaseDatesClaimValidatorTest {
 
   private static final String CASE_CONCLUDED_DATE_VALIDATION_ERROR_MESSAGE_LEGAL_HELP =
-      "Case Concluded Date cannot be later than the end date of the submission period or before 01/01/1995";
+      "Case Concluded Date cannot be later than the 20th of the month following the submission period or before 01/04/2013";
   private static final String CASE_CONCLUDED_DATE_VALIDATION_ERROR_MESSAGE_CRIME_LOWER =
-      "Case Concluded Date cannot be later than the end date of the submission period or before 01/04/2016";
+      "Case Concluded Date cannot be later than the 20th of the month following the submission period or before 01/04/2016";
   private final CaseDatesClaimValidator validator = new CaseDatesClaimValidator();
 
   @Test
@@ -32,7 +33,7 @@ class CaseDatesClaimValidatorTest {
             .feeCode("feeCode1")
             .caseStartDate("2003-13-34")
             .transferDate("2090-12-02")
-            .caseConcludedDate("2090-01-01")
+            .caseConcludedDate("2026-01-01")
             .representationOrderDate("2090-01-01")
             .matterTypeCode("a:b");
 
@@ -53,7 +54,7 @@ class CaseDatesClaimValidatorTest {
                 .anyMatch(
                     x ->
                         x.getDisplayMessage()
-                            .equals("Transfer Date must be between 01/01/1995 and today")))
+                            .equals("Transfer Date must be between 01/04/2013 and today")))
         .isTrue();
     assertThat(
             getClaimMessages(context, claimId.toString()).stream()
@@ -66,7 +67,7 @@ class CaseDatesClaimValidatorTest {
   }
 
   @Test
-  void validatePastDatesTwoCivil() {
+  void validatePastDatesTwoLegalHelp() {
     UUID claimId = new UUID(2, 2);
 
     ClaimResponse claim =
@@ -91,14 +92,14 @@ class CaseDatesClaimValidatorTest {
                 .anyMatch(
                     x ->
                         x.getDisplayMessage()
-                            .equals("Case Start Date must be between 01/01/1995 and today")))
+                            .equals("Case Start Date must be between 01/04/2013 and today")))
         .isTrue();
     assertThat(
             getClaimMessages(context, claimId.toString()).stream()
                 .anyMatch(
                     x ->
                         x.getDisplayMessage()
-                            .equals("Transfer Date must be between 01/01/1995 and today")))
+                            .equals("Transfer Date must be between 01/04/2013 and today")))
         .isTrue();
     assertThat(
             getClaimMessages(context, claimId.toString()).stream()
@@ -139,6 +140,36 @@ class CaseDatesClaimValidatorTest {
         .isTrue();
   }
 
+  @Test
+  void validateCaseConcludedDateIsNotInFuture() {
+    UUID claimId = new UUID(2, 2);
+
+    String tomorrowsDate = LocalDate.now().plusDays(1).toString();
+    ClaimResponse claim =
+        new ClaimResponse()
+            .id(claimId.toString())
+            .status(ClaimStatus.READY_TO_PROCESS)
+            .feeCode("feeCode2")
+            .caseStartDate("2025-05-25")
+            .transferDate("2025-05-27")
+            .caseConcludedDate(tomorrowsDate)
+            .submissionPeriod("APR-2025")
+            .matterTypeCode("1:2");
+
+    SubmissionValidationContext context = new SubmissionValidationContext();
+
+    validator.validate(claim, context, AreaOfLaw.LEGAL_HELP);
+
+    // Then
+    assertThat(
+            getClaimMessages(context, claimId.toString()).stream()
+                .anyMatch(
+                    x ->
+                        x.getDisplayMessage()
+                            .equals("Case Concluded Date cannot be in the future")))
+        .isTrue();
+  }
+
   /*
   Case Concluded Date should be mandatory for LEGAL_HELP and CRIME_LOWER, but it's optional for MEDIATION.
   Ref: https://dsdmoj.atlassian.net/browse/DSTEW-566
@@ -149,18 +180,21 @@ class CaseDatesClaimValidatorTest {
     "1, LEGAL_HELP, 2025-12-31, DEC-2025, false, null",
     "2, LEGAL_HELP, 1994-08-14, AUG-2025, true, "
         + CASE_CONCLUDED_DATE_VALIDATION_ERROR_MESSAGE_LEGAL_HELP,
-    "3, LEGAL_HELP, 2026-01-01, DEC-2025, true, "
+    "3, LEGAL_HELP, 2026-01-21, DEC-2025, true, "
         + CASE_CONCLUDED_DATE_VALIDATION_ERROR_MESSAGE_LEGAL_HELP,
-    "4, CRIME_LOWER, 2025-07-14, JUL-2025, false, null",
-    "5, CRIME_LOWER, 2015-08-14, SEP-2017, true, "
+    "4, LEGAL_HELP, 2026-01-20, DEC-2025, false, null",
+    "5, CRIME_LOWER, 2025-07-14, JUL-2025, false, null",
+    "6, CRIME_LOWER, 2015-08-14, SEP-2017, true, "
         + CASE_CONCLUDED_DATE_VALIDATION_ERROR_MESSAGE_CRIME_LOWER,
-    "6, CRIME_LOWER, 2025-08-14, JUL-2025, true, "
+    "7, CRIME_LOWER, 2025-08-22, JUL-2025, true, "
         + CASE_CONCLUDED_DATE_VALIDATION_ERROR_MESSAGE_CRIME_LOWER,
-    "7, MEDIATION, 2025-01-03, FEB-2025, false, null",
-    "8, MEDIATION, 1994-08-14, AUG-2025, true, "
+    "8, CRIME_LOWER, 2025-08-20, JUL-2025, false, null",
+    "9, MEDIATION, 2025-01-03, FEB-2025, false, null",
+    "10, MEDIATION, 1994-08-14, AUG-2025, true, "
         + CASE_CONCLUDED_DATE_VALIDATION_ERROR_MESSAGE_LEGAL_HELP,
-    "9, MEDIATION, 2025-03-01, FEB-2025, true, "
-        + CASE_CONCLUDED_DATE_VALIDATION_ERROR_MESSAGE_LEGAL_HELP
+    "11, MEDIATION, 2025-03-23, FEB-2025, true, "
+        + CASE_CONCLUDED_DATE_VALIDATION_ERROR_MESSAGE_LEGAL_HELP,
+    "12, MEDIATION, 2025-03-20, FEB-2025, false, null",
   })
   void checkMandatoryCaseConcludedDate(
       int claimIdBit,
