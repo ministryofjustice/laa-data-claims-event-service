@@ -56,26 +56,44 @@ public abstract class AbstractDateValidator implements ClaimValidator {
    * @param claim The claim object associated with the date being checked
    * @param fieldName The name of the field associated with the date being validated
    * @param dateValueToCheck The date value to validate in the format "dd/MM/yyyy"
-   * @param oldestDateAllowed The earliest allowed date
+   * @param earliestDateAllowed The earliest allowed date
    * @param context The validation context where any validation errors will be added
    */
   protected void checkDateInPastAndDoesNotExceedSubmissionPeriod(
       ClaimResponse claim,
       String fieldName,
       String dateValueToCheck,
-      LocalDate oldestDateAllowed,
+      LocalDate earliestDateAllowed,
       SubmissionValidationContext context) {
     if (claim.getSubmissionPeriod() != null) {
       LocalDate twentiethOfNextMonth = getTwentiethOfNextMonth(claim.getSubmissionPeriod());
-      checkDateAllowed(
-          // validate calls
-          claim,
-          fieldName,
-          dateValueToCheck,
-          oldestDateAllowed,
-          twentiethOfNextMonth,
-          context,
-          "%s cannot be later than the 20th of the month following the submission period or before %s");
+
+      if (StringUtils.hasText(dateValueToCheck)) {
+        try {
+          LocalDate date = LocalDate.parse(dateValueToCheck, DATE_FORMATTER_YYYY_MM_DD);
+
+          if (date.isBefore(earliestDateAllowed)) {
+            context.addClaimError(
+                claim.getId(),
+                String.format(
+                    "%s cannot be before %s",
+                    fieldName, earliestDateAllowed.format(DATE_FORMATTER_FOR_DISPLAY_MESSAGE)),
+                EVENT_SERVICE);
+          } else if (date.isAfter(twentiethOfNextMonth)) {
+            context.addClaimError(
+                claim.getId(),
+                String.format(
+                    "%s cannot be later than the 20th of the month following the submission period",
+                    fieldName),
+                EVENT_SERVICE);
+          }
+        } catch (DateTimeParseException e) {
+          context.addClaimError(
+              claim.getId(),
+              String.format("Invalid date value provided for %s", fieldName),
+              EVENT_SERVICE);
+        }
+      }
     }
   }
 
