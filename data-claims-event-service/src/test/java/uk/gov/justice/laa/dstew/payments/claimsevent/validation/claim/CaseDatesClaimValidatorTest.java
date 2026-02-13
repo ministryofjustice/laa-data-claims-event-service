@@ -166,7 +166,7 @@ class CaseDatesClaimValidatorTest {
                 .anyMatch(
                     x ->
                         x.getDisplayMessage()
-                            .equals("Case Concluded Date cannot be in the future")))
+                            .equals("Case Concluded Date cannot be a future date")))
         .isTrue();
   }
 

@@ -45,15 +45,16 @@ public final class CaseDatesClaimValidator extends AbstractDateValidator
       if (caseConcludedDateAllowed.isAfter(LocalDate.now())) {
         context.addClaimError(
             claim.getId(),
-            String.format("%s cannot be in the future", CASE_CONCLUDED_DATE_FIELD_NAME),
+            String.format("%s cannot be a future date", CASE_CONCLUDED_DATE_FIELD_NAME),
             EVENT_SERVICE);
+      } else {
+        checkDateInPastAndDoesNotExceedSubmissionPeriod(
+            claim,
+            CASE_CONCLUDED_DATE_FIELD_NAME,
+            claim.getCaseConcludedDate(),
+            earliestDateAllowedForCaseConcludedDate,
+            context);
       }
-      checkDateInPastAndDoesNotExceedSubmissionPeriod(
-          claim,
-          CASE_CONCLUDED_DATE_FIELD_NAME,
-          claim.getCaseConcludedDate(),
-          earliestDateAllowedForCaseConcludedDate,
-          context);
     }
     checkDateInPast(
         claim, "Transfer Date", claim.getTransferDate(), EARLIEST_DATE_ALLOWED, context);
