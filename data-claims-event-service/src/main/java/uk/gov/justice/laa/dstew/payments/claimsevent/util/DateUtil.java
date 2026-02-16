@@ -1,26 +1,16 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.util;
 
-import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
-import java.time.format.DateTimeParseException;
 import java.util.Locale;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 /**
- * Utility class for handling date-related operations in the claims event service. Provides
- * functionality for:
+ * Utility class to support date-related operations in the claims event service. Provides
+ * functionality for dates formatting and parsing.
  *
- * <ul>
- *   <li>Date formatting and parsing
- *   <li>Date validation within specified ranges
- *   <li>Submission period calculations
- * </ul>
- *
- * <p>The class supports standard date formats and implements validation logic for claim submission
- * dates.
+ * <p>The class supports standard date formats dates.
  */
 @Component
 public class DateUtil {
@@ -44,21 +34,5 @@ public class DateUtil {
   /** Gets the current date as a {@link YearMonth} object. */
   public YearMonth currentYearMonth() {
     return YearMonth.now();
-  }
-
-  /**
-   * Converts a submission period string into the last date of that month.
-   *
-   * @param submissionPeriod The submission period in format "MMM-yyyy" (e.g. "JAN-2026")
-   * @param errorMessage The error message to display if the submissionPeriod string is blank
-   * @return The last date of the specified month as a LocalDate
-   * @throws DateTimeParseException if the submissionPeriod string cannot be parsed
-   */
-  public static LocalDate getLastDateOfMonth(String submissionPeriod, String errorMessage) {
-    if (!StringUtils.hasText(submissionPeriod)) {
-      throw new IllegalArgumentException(errorMessage);
-    }
-    YearMonth yearMonth = YearMonth.parse(submissionPeriod, SUBMISSION_PERIOD_FORMATTER);
-    return yearMonth.atEndOfMonth();
   }
 }

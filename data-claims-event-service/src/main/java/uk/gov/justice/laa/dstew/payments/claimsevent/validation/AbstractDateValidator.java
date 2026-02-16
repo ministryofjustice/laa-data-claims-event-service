@@ -2,10 +2,11 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.validation;
 
 import static uk.gov.justice.laa.dstew.payments.claimsevent.util.DateUtil.DATE_FORMATTER_FOR_DISPLAY_MESSAGE;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.util.DateUtil.DATE_FORMATTER_YYYY_MM_DD;
-import static uk.gov.justice.laa.dstew.payments.claimsevent.util.DateUtil.getLastDateOfMonth;
+import static uk.gov.justice.laa.dstew.payments.claimsevent.util.DateUtil.SUBMISSION_PERIOD_FORMATTER;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationSource.EVENT_SERVICE;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.format.DateTimeParseException;
 import org.springframework.util.StringUtils;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
@@ -19,61 +20,95 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.ClaimValid
 public abstract class AbstractDateValidator implements ClaimValidator {
 
   /**
-   * Validates whether the provided date value is within the valid range (01/01/1995 to today's
-   * date). If the date is invalid or falls outside the range, an error is added to the submission
+   * Validates whether the provided date value is between the earliest date allowed and today's
+   * date. If the date is invalid or falls outside the range, an error is added to the submission
    * validation context.
    *
    * @param claim The claim object associated with the date being checked.
    * @param fieldName The name of the field associated with the date being validated.
    * @param dateValueToCheck The date value to validate in the format "dd/MM/yyyy".
+   * @param earliestDateAllowed the earliest date to check the date value against
+   * @param context the submission validation context
    */
   protected void checkDateInPast(
       ClaimResponse claim,
       String fieldName,
       String dateValueToCheck,
-      LocalDate oldestDateAllowed,
+      LocalDate earliestDateAllowed,
       SubmissionValidationContext context) {
 
     checkDateAllowed(
         claim,
         fieldName,
         dateValueToCheck,
-        oldestDateAllowed,
+        earliestDateAllowed,
         LocalDate.now(),
         context,
         "%s must be between %s and today");
   }
 
   /**
-   * Validates whether the provided date value is within the valid range and does not exceed the
-   * submission period end date. The date must be between the oldest allowed date and the last day
-   * of the submission period month. If the date is invalid or falls outside the range, an error is
-   * added to the submission validation context.
+   * Validates a date string against the following rules tied to a claim's submission period. When
+   * the claim has a submission period and the date string is not blank, this method:
    *
-   * @param claim The claim object associated with the date being checked
-   * @param fieldName The name of the field associated with the date being validated
-   * @param dateValueToCheck The date value to validate in the format "dd/MM/yyyy"
-   * @param oldestDateAllowed The earliest allowed date
-   * @param context The validation context where any validation errors will be added
+   * <ul>
+   *   <li>Parses the value as a {@code yyyy-MM-dd} date.
+   *   <li>Reports an error if the date is in the future.
+   *   <li>Reports an error if the date is before {@code earliestDateAllowed}.
+   *   <li>Reports an error if the date is after the 20th of the month following the submission
+   *       period.
+   *   <li>Reports an error if the date cannot be parsed.
+   * </ul>
+   *
+   * <p>Errors are added to the provided {@code context} using the claim ID and the given {@code
+   * fieldName}.
+   *
+   * @param claim the claim whose submission period determines the valid date range
+   * @param fieldName the name of the field being validated
+   * @param dateValueToCheck the date value to validate, in {@code yyyy-MM-dd} format
+   * @param earliestDateAllowed the earliest date permitted
+   * @param context the validation context used to record errors
    */
-  protected void checkDateInPastAndDoesNotExceedSubmissionPeriod(
+  protected void checkDateNotInFutureAndWithinAllowedPeriod(
       ClaimResponse claim,
       String fieldName,
       String dateValueToCheck,
-      LocalDate oldestDateAllowed,
+      LocalDate earliestDateAllowed,
       SubmissionValidationContext context) {
     if (claim.getSubmissionPeriod() != null) {
-      LocalDate lastDateOfMonth =
-          getLastDateOfMonth(
-              claim.getSubmissionPeriod(), "Submission period cannot be null or empty");
-      checkDateAllowed(
-          claim,
-          fieldName,
-          dateValueToCheck,
-          oldestDateAllowed,
-          lastDateOfMonth,
-          context,
-          "%s cannot be later than the end date of the submission period or before %s");
+      LocalDate twentiethOfNextMonth = getTwentiethOfNextMonth(claim.getSubmissionPeriod());
+
+      if (StringUtils.hasText(dateValueToCheck)) {
+        try {
+          LocalDate date = LocalDate.parse(dateValueToCheck, DATE_FORMATTER_YYYY_MM_DD);
+
+          if (date.isAfter(LocalDate.now())) {
+            context.addClaimError(
+                claim.getId(),
+                String.format("%s cannot be a future date", fieldName),
+                EVENT_SERVICE);
+          } else if (date.isBefore(earliestDateAllowed)) {
+            context.addClaimError(
+                claim.getId(),
+                String.format(
+                    "%s cannot be before %s",
+                    fieldName, earliestDateAllowed.format(DATE_FORMATTER_FOR_DISPLAY_MESSAGE)),
+                EVENT_SERVICE);
+          } else if (date.isAfter(twentiethOfNextMonth)) {
+            context.addClaimError(
+                claim.getId(),
+                String.format(
+                    "%s cannot be later than the 20th of the month following the submission period",
+                    fieldName),
+                EVENT_SERVICE);
+          }
+        } catch (DateTimeParseException e) {
+          context.addClaimError(
+              claim.getId(),
+              String.format("Invalid date value provided for %s", fieldName),
+              EVENT_SERVICE);
+        }
+      }
     }
   }
 
@@ -84,8 +119,8 @@ public abstract class AbstractDateValidator implements ClaimValidator {
    * @param claim The claim object associated with the date being validated
    * @param fieldName The name of the field being validated (used in error messages)
    * @param dateValueToCheck The date value to validate in the format "yyyy-MM-dd"
-   * @param oldestDateAllowed The oldest allowed date
-   * @param newestDateAllowed The latest allowed date
+   * @param earliestDateAllowed The earliest allowed date
+   * @param latestDateAllowed The latest allowed date
    * @param context The validation context where any validation errors will be added
    * @param errorMessage The error message template to use when validation fails. Should contain two
    *     '%s' placeholders: first for the field name, second for the formatted oldest allowed date
@@ -94,21 +129,21 @@ public abstract class AbstractDateValidator implements ClaimValidator {
       ClaimResponse claim,
       String fieldName,
       String dateValueToCheck,
-      LocalDate oldestDateAllowed,
-      LocalDate newestDateAllowed,
+      LocalDate earliestDateAllowed,
+      LocalDate latestDateAllowed,
       SubmissionValidationContext context,
       String errorMessage) {
     if (StringUtils.hasText(dateValueToCheck)) {
       try {
         LocalDate date = LocalDate.parse(dateValueToCheck, DATE_FORMATTER_YYYY_MM_DD);
 
-        if (date.isBefore(oldestDateAllowed) || date.isAfter(newestDateAllowed)) {
+        if (date.isBefore(earliestDateAllowed) || date.isAfter(latestDateAllowed)) {
           context.addClaimError(
               claim.getId(),
               String.format(
                   errorMessage,
                   fieldName,
-                  oldestDateAllowed.format(DATE_FORMATTER_FOR_DISPLAY_MESSAGE)),
+                  earliestDateAllowed.format(DATE_FORMATTER_FOR_DISPLAY_MESSAGE)),
               EVENT_SERVICE);
         }
       } catch (DateTimeParseException e) {
@@ -118,5 +153,22 @@ public abstract class AbstractDateValidator implements ClaimValidator {
             EVENT_SERVICE);
       }
     }
+  }
+
+  /**
+   * Given a string describing the submission period, it parses and returns the local date of the
+   * twentieth day of the following month. If the submission period is Jan 2O26 then the latest Case
+   * Concluded Date allowed is the 20 Feb 2026.
+   *
+   * @param submissionPeriod The submission period in format "MMM-yyyy" (e.g. "JAN-2026")
+   * @return The last date of the specified month as a LocalDate
+   * @throws DateTimeParseException if the submissionPeriod string cannot be parsed
+   */
+  private LocalDate getTwentiethOfNextMonth(String submissionPeriod) {
+    if (!StringUtils.hasText(submissionPeriod)) {
+      throw new IllegalArgumentException("Submission period cannot be null or empty");
+    }
+    YearMonth yearMonth = YearMonth.parse(submissionPeriod, SUBMISSION_PERIOD_FORMATTER);
+    return yearMonth.plusMonths(1).atDay(20);
   }
 }

@@ -22,11 +22,15 @@ public final class CaseDatesClaimValidator extends AbstractDateValidator
     implements ClaimWithAreaOfLawValidator {
 
   private static final String OLDEST_DATE_ALLOWED_STRING = "1995-01-01";
+  private static final String EARLIEST_CASE_CONCLUDED_DATE_ALLOWED_STRING = "2013-04-01";
   private static final String MIN_REP_ORDER_DATE_STRING = "2016-04-01";
-  public static final LocalDate OLDEST_DATE_ALLOWED =
+  private static final LocalDate OLDEST_DATE_ALLOWED =
       LocalDate.parse(OLDEST_DATE_ALLOWED_STRING, DATE_FORMATTER_YYYY_MM_DD);
-  public static final LocalDate MIN_REP_ORDER_DATE =
+  private static final LocalDate EARLIEST_CASE_CONCLUDED_DATE_ALLOWED =
+      LocalDate.parse(EARLIEST_CASE_CONCLUDED_DATE_ALLOWED_STRING, DATE_FORMATTER_YYYY_MM_DD);
+  private static final LocalDate MIN_REP_ORDER_DATE =
       LocalDate.parse(MIN_REP_ORDER_DATE_STRING, DATE_FORMATTER_YYYY_MM_DD);
+  private static final String CASE_CONCLUDED_DATE_FIELD_NAME = "Case Concluded Date";
 
   @Override
   public void validate(
@@ -34,13 +38,16 @@ public final class CaseDatesClaimValidator extends AbstractDateValidator
 
     String caseStartDate = claim.getCaseStartDate();
     checkDateInPast(claim, "Case Start Date", caseStartDate, OLDEST_DATE_ALLOWED, context);
-    LocalDate oldestDateAllowedForCaseConcludedDate =
-        AreaOfLaw.CRIME_LOWER.equals(areaOfLaw) ? MIN_REP_ORDER_DATE : OLDEST_DATE_ALLOWED;
-    checkDateInPastAndDoesNotExceedSubmissionPeriod(
+    LocalDate earliestDateAllowedForCaseConcludedDate =
+        AreaOfLaw.CRIME_LOWER.equals(areaOfLaw)
+            ? MIN_REP_ORDER_DATE
+            : EARLIEST_CASE_CONCLUDED_DATE_ALLOWED;
+
+    checkDateNotInFutureAndWithinAllowedPeriod(
         claim,
-        "Case Concluded Date",
+        CASE_CONCLUDED_DATE_FIELD_NAME,
         claim.getCaseConcludedDate(),
-        oldestDateAllowedForCaseConcludedDate,
+        earliestDateAllowedForCaseConcludedDate,
         context);
     checkDateInPast(claim, "Transfer Date", claim.getTransferDate(), OLDEST_DATE_ALLOWED, context);
     checkDateInPast(
