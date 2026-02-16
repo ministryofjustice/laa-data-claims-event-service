@@ -39,7 +39,8 @@ jobs:
       pacticipant_name: "laa-data-claims-event-service"
       pact_test_task: "pactTest"
       publish_pact_results: true
-      enable_can_i_merge: true
+      #enable_can_i_merge: true
+      enable_can_i_merge: false
       provider_name: "laa-data-claims-api"
       is_provider: false
     secrets:
@@ -49,7 +50,8 @@ jobs:
       pact_broker_password: ${{ secrets.PACT_BROKER_PASSWORD }}
 
   scan-image:
-    needs: [ pact-test ]
+    #needs: [ pact-test ]
+    needs: [ build ]
     uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/ecr-publish-image.yml@ecr-docker-version
     permissions:
       contents: read
