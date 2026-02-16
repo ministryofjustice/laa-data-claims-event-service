@@ -40,7 +40,9 @@ public final class CaseDatesClaimValidator extends AbstractDateValidator
     String caseStartDate = claim.getCaseStartDate();
     checkDateInPast(claim, "Case Start Date", caseStartDate, OLDEST_DATE_ALLOWED, context);
     LocalDate earliestDateAllowedForCaseConcludedDate =
-        AreaOfLaw.CRIME_LOWER.equals(areaOfLaw) ? MIN_REP_ORDER_DATE : EARLIEST_CASE_CONCLUDED_DATE_ALLOWED;
+        AreaOfLaw.CRIME_LOWER.equals(areaOfLaw)
+            ? MIN_REP_ORDER_DATE
+            : EARLIEST_CASE_CONCLUDED_DATE_ALLOWED;
 
     if (claim.getCaseConcludedDate() != null) {
       LocalDate caseConcludedDateAllowed =
@@ -59,8 +61,7 @@ public final class CaseDatesClaimValidator extends AbstractDateValidator
             context);
       }
     }
-    checkDateInPast(
-        claim, "Transfer Date", claim.getTransferDate(), OLDEST_DATE_ALLOWED, context);
+    checkDateInPast(claim, "Transfer Date", claim.getTransferDate(), OLDEST_DATE_ALLOWED, context);
     checkDateInPast(
         claim,
         "Representation Order Date",
