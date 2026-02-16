@@ -1,7 +1,6 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim;
 
 import static uk.gov.justice.laa.dstew.payments.claimsevent.util.DateUtil.DATE_FORMATTER_YYYY_MM_DD;
-import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationSource.EVENT_SERVICE;
 
 import java.time.LocalDate;
 import org.springframework.stereotype.Component;
@@ -44,23 +43,12 @@ public final class CaseDatesClaimValidator extends AbstractDateValidator
             ? MIN_REP_ORDER_DATE
             : EARLIEST_CASE_CONCLUDED_DATE_ALLOWED;
 
-    if (claim.getCaseConcludedDate() != null) {
-      LocalDate caseConcludedDateAllowed =
-          LocalDate.parse(claim.getCaseConcludedDate(), DATE_FORMATTER_YYYY_MM_DD);
-      if (caseConcludedDateAllowed.isAfter(LocalDate.now())) {
-        context.addClaimError(
-            claim.getId(),
-            String.format("%s cannot be a future date", CASE_CONCLUDED_DATE_FIELD_NAME),
-            EVENT_SERVICE);
-      } else {
-        checkDateInPastAndDoesNotExceedSubmissionPeriod(
-            claim,
-            CASE_CONCLUDED_DATE_FIELD_NAME,
-            claim.getCaseConcludedDate(),
-            earliestDateAllowedForCaseConcludedDate,
-            context);
-      }
-    }
+    checkDateNotInFutureAndWithinAllowedPeriod(
+        claim,
+        CASE_CONCLUDED_DATE_FIELD_NAME,
+        claim.getCaseConcludedDate(),
+        earliestDateAllowedForCaseConcludedDate,
+        context);
     checkDateInPast(claim, "Transfer Date", claim.getTransferDate(), OLDEST_DATE_ALLOWED, context);
     checkDateInPast(
         claim,

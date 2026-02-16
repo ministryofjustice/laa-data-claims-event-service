@@ -7,17 +7,10 @@ import java.util.Locale;
 import org.springframework.stereotype.Component;
 
 /**
- * Utility class for handling date-related operations in the claims event service. Provides
- * functionality for:
+ * Utility class to support date-related operations in the claims event service. Provides
+ * functionality for dates formatting and parsing.
  *
- * <ul>
- *   <li>Date formatting and parsing
- *   <li>Date validation within specified ranges
- *   <li>Submission period calculations
- * </ul>
- *
- * <p>The class supports standard date formats and implements validation logic for claim submission
- * dates.
+ * <p>The class supports standard date formats dates.
  */
 @Component
 public class DateUtil {

@@ -48,18 +48,28 @@ public abstract class AbstractDateValidator implements ClaimValidator {
   }
 
   /**
-   * Validates whether the provided date value is within the valid range and does not exceed the
-   * submission period end date. The date must be between the oldest allowed date and the last day
-   * of the submission period month. If the date is invalid or falls outside the range, an error is
-   * added to the submission validation context.
+   * Validates a date string against the following rules tied to a claim's submission period. When
+   * the claim has a submission period and the date string is not blank, this method:
    *
-   * @param claim The claim object associated with the date being checked
-   * @param fieldName The name of the field associated with the date being validated
-   * @param dateValueToCheck The date value to validate in the format "dd/MM/yyyy"
-   * @param earliestDateAllowed The earliest allowed date
-   * @param context The validation context where any validation errors will be added
+   * <ul>
+   *   <li>Parses the value as a {@code yyyy-MM-dd} date.
+   *   <li>Reports an error if the date is in the future.
+   *   <li>Reports an error if the date is before {@code earliestDateAllowed}.
+   *   <li>Reports an error if the date is after the 20th of the month following the submission
+   *       period.
+   *   <li>Reports an error if the date cannot be parsed.
+   * </ul>
+   *
+   * <p>Errors are added to the provided {@code context} using the claim ID and the given {@code
+   * fieldName}.
+   *
+   * @param claim the claim whose submission period determines the valid date range
+   * @param fieldName the name of the field being validated
+   * @param dateValueToCheck the date value to validate, in {@code yyyy-MM-dd} format
+   * @param earliestDateAllowed the earliest date permitted
+   * @param context the validation context used to record errors
    */
-  protected void checkDateInPastAndDoesNotExceedSubmissionPeriod(
+  protected void checkDateNotInFutureAndWithinAllowedPeriod(
       ClaimResponse claim,
       String fieldName,
       String dateValueToCheck,
@@ -72,7 +82,12 @@ public abstract class AbstractDateValidator implements ClaimValidator {
         try {
           LocalDate date = LocalDate.parse(dateValueToCheck, DATE_FORMATTER_YYYY_MM_DD);
 
-          if (date.isBefore(earliestDateAllowed)) {
+          if (date.isAfter(LocalDate.now())) {
+            context.addClaimError(
+                claim.getId(),
+                String.format("%s cannot be a future date", fieldName),
+                EVENT_SERVICE);
+          } else if (date.isBefore(earliestDateAllowed)) {
             context.addClaimError(
                 claim.getId(),
                 String.format(
