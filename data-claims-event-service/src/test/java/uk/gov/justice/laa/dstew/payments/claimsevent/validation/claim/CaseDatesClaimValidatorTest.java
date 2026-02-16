@@ -60,7 +60,7 @@ class CaseDatesClaimValidatorTest {
                 .anyMatch(
                     x ->
                         x.getDisplayMessage()
-                            .equals("Transfer Date must be between 01/04/2013 and today")))
+                            .equals("Transfer Date must be between 01/01/1995 and today")))
         .isTrue();
     assertThat(
             getClaimMessages(context, claimId.toString()).stream()
@@ -98,14 +98,14 @@ class CaseDatesClaimValidatorTest {
                 .anyMatch(
                     x ->
                         x.getDisplayMessage()
-                            .equals("Case Start Date must be between 01/04/2013 and today")))
+                            .equals("Case Start Date must be between 01/01/1995 and today")))
         .isTrue();
     assertThat(
             getClaimMessages(context, claimId.toString()).stream()
                 .anyMatch(
                     x ->
                         x.getDisplayMessage()
-                            .equals("Transfer Date must be between 01/04/2013 and today")))
+                            .equals("Transfer Date must be between 01/01/1995 and today")))
         .isTrue();
     assertThat(
             getClaimMessages(context, claimId.toString()).stream()
