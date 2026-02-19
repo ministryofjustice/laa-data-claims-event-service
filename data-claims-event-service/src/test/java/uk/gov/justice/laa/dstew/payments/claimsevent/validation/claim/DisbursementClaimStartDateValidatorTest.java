@@ -34,14 +34,17 @@ class DisbursementClaimStartDateValidatorTest {
 
   @ParameterizedTest
   @CsvSource({
-    "2025-01-01, APR-2025",
+    "2025-11-07, JAN-2026", // caseStartDate + 3 months = 2026-02-07 < 2026-02-20
+    "2025-01-20, MAR-2025", // caseStartDate + 3 months = 2025-04-20 = 2025-04-20
+    "2025-01-01, APR-2025", // caseStartDate + 3 months = 2025-04-01 < 2025-05-20
     "2025-01-31, APR-2025",
     "2025-01-01, MAY-2025",
     "2025-01-10, MAY-2025",
     "2025-01-31, MAY-2025",
     "2025-02-28, MAY-2025",
     "2024-11-30, FEB-2025",
-    "2024-02-29, MAY-2024",
+    "2024-01-20, MAR-2024", // caseStartDate + 3 months = 2024-04-20 = 2024-04-20 (leap year)
+    "2024-01-19, MAR-2024", // caseStartDate + 3 months = 2024-04-19 < 2024-04-20 (leap year)
     "2024-01-31, APR-2024",
     "2024-01-30, APR-2024"
   })
@@ -59,18 +62,18 @@ class DisbursementClaimStartDateValidatorTest {
 
   @ParameterizedTest
   @CsvSource({
-    "2025-01-10, FEB-2025",
-    "2025-01-01, MAR-2025",
-    "2025-01-31, MAR-2025",
-    "2025-02-01, APR-2025",
-    "2024-12-01, FEB-2025",
+    "2025-01-10, FEB-2025", // caseStartDate + 3 months = 2025-04-10 > 2025-03-20
+    "2025-01-21, MAR-2025", // caseStartDate + 3 months = 2025-04-21 > 2025-04-20
+    "2025-01-31, MAR-2025", // caseStartDate + 3 months = 2025-04-31 > 2025-04-20
+    "2025-02-21, APR-2025",
+    "2024-12-21, FEB-2025",
     "2024-01-31, MAR-2024",
-    "2024-01-01, MAR-2024",
+    "2024-01-21, MAR-2024", // caseStartDate + 3 months = 2024-04-21 > 2024-04-20 (leap year)
     "2024-02-29, APR-2024",
-    "2024-02-01, APR-2024"
+    "2024-02-21, APR-2024"
   })
   @DisplayName(
-      "Should fail validation when claimStartDate is less than 3 months of submission period")
+      "Should fail validation when claimStartDate is less than 3 months of submission period end date (which is 20th of following month)")
   void shouldFailValidationWhenClaimStartDateIsLessThan3MonthsOfSubmissionPeriod(
       String caseStartDate, String submissionPeriod) {
     claim.setCaseStartDate(caseStartDate);

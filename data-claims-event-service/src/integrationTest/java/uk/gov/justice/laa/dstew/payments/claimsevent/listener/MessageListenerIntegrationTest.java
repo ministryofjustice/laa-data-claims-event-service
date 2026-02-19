@@ -161,7 +161,7 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
         "provider-details/get-firm-schedules-openapi-200.json");
 
     // this returns the caseStartDate as 2025-01-01 which is more than 3 months old for the given
-    // submission period: APR-2025 (end date: 30-APR-2025)
+    // submission period: APR-2025 (end date: 20-MAY-2025)
     stubForGetClaims(
         Collections.emptyList(), "data-claims/get-claims/claim-disbursement-claims.json");
     // fee-calculation
@@ -212,7 +212,7 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
         "provider-details/get-firm-schedules-openapi-200.json");
 
     // this returns the caseStartDate as 2025-03-01 which is less than 3 months old for the given
-    // submission period: APR-2025 (end date: 30-APR-2025)
+    // submission period: APR-2025 (end date: 20-MAY-2025)
     stubForGetClaims(
         Collections.emptyList(),
         "data-claims/get-claims/claim-disbursement-within-3-month-claims.json");
