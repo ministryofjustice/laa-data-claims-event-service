@@ -53,7 +53,7 @@ public final class DisbursementClaimStartDateValidator implements ClaimValidator
       YearMonth submissionPeriod =
           YearMonth.parse(currentClaim.getSubmissionPeriod(), SUBMISSION_PERIOD_FORMATTER);
 
-      LocalDate submissionEndDate = submissionPeriod.atEndOfMonth();
+      LocalDate submissionEndDate = submissionPeriod.plusMonths(1).atDay(20);
       LocalDate caseStartDate =
           LocalDate.parse(currentClaim.getCaseStartDate(), DATE_FORMATTER_YYYY_MM_DD);
 
