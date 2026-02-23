@@ -106,6 +106,9 @@ client2Postcode, NFA
 genderCode, M
 genderCode, F
 genderCode, U
+genderCode, m
+genderCode, f
+genderCode, u
 ethnicityCode, 00
 ethnicityCode, 16
 ethnicityCode, 99
