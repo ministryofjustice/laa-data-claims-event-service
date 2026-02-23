@@ -81,7 +81,7 @@ public final class EffectiveCategoryOfLawClaimValidator implements ClaimValidato
       categoryOfLawValidationService.validateCategoryOfLaw(
           claim, feeDetailsResponseMap, effectiveCategoriesOfLaw, context);
     } catch (EventServiceIllegalArgumentException e) {
-      log.error(
+      log.info(
           "Error getting effective date for category of law validation: {}. Continuing with claim"
               + " validation",
           e.getMessage());
