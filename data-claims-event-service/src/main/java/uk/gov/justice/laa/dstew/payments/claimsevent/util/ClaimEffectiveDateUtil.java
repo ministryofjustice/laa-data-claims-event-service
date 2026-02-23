@@ -46,7 +46,7 @@ public final class ClaimEffectiveDateUtil {
     }
 
     throw new EventServiceIllegalArgumentException(
-        "No fields available to determine effective date");
+        "No fields available to determine effective date of claim ID: " + claimResponse.getId());
   }
 
   private LocalDate parseDate(final String dateStr, final String fieldName) {
