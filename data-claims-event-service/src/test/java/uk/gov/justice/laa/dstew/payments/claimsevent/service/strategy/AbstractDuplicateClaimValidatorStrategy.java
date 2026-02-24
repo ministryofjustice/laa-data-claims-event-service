@@ -25,6 +25,28 @@ public abstract class AbstractDuplicateClaimValidatorStrategy {
       ClaimStatus status,
       String submissionPeriod,
       String uniqueCaseId) {
+    return createClaim(
+        id,
+        submissionId,
+        feeCode,
+        uniqueFileNumber,
+        uniqueClientNumber,
+        status,
+        submissionPeriod,
+        uniqueCaseId,
+        null);
+  }
+
+  protected ClaimResponse createClaim(
+      String id,
+      String submissionId,
+      String feeCode,
+      String uniqueFileNumber,
+      String uniqueClientNumber,
+      ClaimStatus status,
+      String submissionPeriod,
+      String uniqueCaseId,
+      String caseConcludedDate) {
     return new ClaimResponse()
         .id(id)
         .submissionId(submissionId)
@@ -33,6 +55,7 @@ public abstract class AbstractDuplicateClaimValidatorStrategy {
         .uniqueClientNumber(uniqueClientNumber)
         .status(status)
         .submissionPeriod(submissionPeriod)
-        .uniqueCaseId(uniqueCaseId);
+        .uniqueCaseId(uniqueCaseId)
+        .caseConcludedDate(caseConcludedDate);
   }
 }
