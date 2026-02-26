@@ -20,8 +20,8 @@ import uk.gov.justice.laa.provider.model.ProviderFirmOfficeContractAndScheduleDt
 public interface ProviderDetailsRestClient {
 
   /**
-   * Get all provider office schedule details based on the provider office code. Can return the
-   * following HTTP statuses:
+   * Get all provider office schedule details based on the provider office code. Passes null for
+   * effectiveDate and false for requireOpenStatus. Can return the following HTTP statuses:
    *
    * <ul>
    *   <li>200 - Success
@@ -40,8 +40,8 @@ public interface ProviderDetailsRestClient {
   }
 
   /**
-   * Get all provider office schedule details based on the provider office code. Can return the
-   * following HTTP statuses:
+   * Get all provider office schedule details based on the provider office code. Passes false for
+   * requireOpenStatus. Can return the following HTTP statuses:
    *
    * <ul>
    *   <li>200 - Success
