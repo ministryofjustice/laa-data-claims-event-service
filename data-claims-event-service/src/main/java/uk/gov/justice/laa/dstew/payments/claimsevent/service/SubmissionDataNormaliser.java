@@ -66,8 +66,7 @@ public class SubmissionDataNormaliser {
    * String fields and cleaning nested DTO structures such as schedules, offices, outcomes,
    * matter-starts, and immigration CLR entries.
    *
-   * @param response the {@code GetBulkSubmission200Response} DTO retrieved from the Bulk Submission
-   *     API
+   * @param response the {@code GetBulkSubmission200Response} DTO retrieved from the claims api
    * @return the same DTO instance with String values normalised
    */
   public GetBulkSubmission200Response normalise(GetBulkSubmission200Response response) {
