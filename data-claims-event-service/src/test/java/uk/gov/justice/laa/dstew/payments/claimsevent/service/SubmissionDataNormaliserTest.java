@@ -186,7 +186,7 @@ class SubmissionDataNormaliserTest {
 
     normaliser.normalise(resp);
 
-    BulkSubmissionOutcome n = resp.getDetails().getOutcomes().get(0);
+    BulkSubmissionOutcome n = resp.getDetails().getOutcomes().getFirst();
 
     // Assertions for all String fields with trimmed whitespaces
     assertEquals("F01", n.getFeeCode());
@@ -317,7 +317,7 @@ class SubmissionDataNormaliserTest {
 
     normaliser.normalise(resp);
 
-    BulkSubmissionMatterStart n = resp.getDetails().getMatterStarts().get(0);
+    BulkSubmissionMatterStart n = resp.getDetails().getMatterStarts().getFirst();
 
     assertEquals("SCH-99", n.getScheduleRef());
     assertEquals("PA", n.getProcurementArea());
@@ -360,7 +360,7 @@ class SubmissionDataNormaliserTest {
     List<Map<String, String>> normalised = resp.getDetails().getImmigrationClr();
     assertEquals(2, normalised.size());
 
-    Map<String, String> n1 = normalised.get(0);
+    Map<String, String> n1 = normalised.getFirst();
     assertEquals(3, n1.size());
     assertTrue(n1.containsKey("Key1"));
     assertEquals("Val1", n1.get("Key1"));
