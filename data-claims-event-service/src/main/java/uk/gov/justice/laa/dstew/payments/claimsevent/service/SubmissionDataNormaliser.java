@@ -37,18 +37,18 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.mapper.BulkSubmissionMapper
  *   <li>{@link MatterStartPost}
  * </ul>
  *
- * <p><strong>Normalisation rules applied:</strong>
+ * <p><strong>Normalisation rules:</strong>
  *
  * <ul>
  *   <li>All {@link String} fields are trimmed
  *   <li>Blank strings become {@code null}
- *   <li>No parsing of numerics/dates/booleans occurs here — that responsibility is intentionally
+ *   <li>No parsing of numerics/dates/booleans occurs here. That responsibility is intentionally
  *       left to the Claims API mapper
  *   <li>Nested DTOs, lists, and string maps are normalised recursively
  * </ul>
  *
- * <p>This ensures that the {@link BulkSubmissionMapper} does not encounter whitespace or
- * blank-string values that would otherwise cause parsing failures.
+ * <p>This ensures that the {@link BulkSubmissionMapper} does not encounter whitespace or blank
+ * string values that would otherwise cause parsing failures.
  */
 @Service
 public class SubmissionDataNormaliser {
@@ -62,9 +62,9 @@ public class SubmissionDataNormaliser {
   }
 
   /**
-   * Normalises the entire upstream {@link GetBulkSubmission200Response} object, recursively
-   * trimming all String fields and cleaning nested DTO structures such as schedules, offices,
-   * outcomes, matter-starts, and immigration CLR entries.
+   * Normalises the entire {@link GetBulkSubmission200Response} DTO object, recursively trimming all
+   * String fields and cleaning nested DTO structures such as schedules, offices, outcomes,
+   * matter-starts, and immigration CLR entries.
    *
    * @param response the {@code GetBulkSubmission200Response} DTO retrieved from the Bulk Submission
    *     API
@@ -192,17 +192,17 @@ public class SubmissionDataNormaliser {
   }
 
   // Matter start normalisation
-  private BulkSubmissionMatterStart normalise(BulkSubmissionMatterStart ms) {
-    if (ms == null) {
+  private BulkSubmissionMatterStart normalise(BulkSubmissionMatterStart matterStart) {
+    if (matterStart == null) {
       return null;
     }
 
-    ms.setScheduleRef(normaliseString(ms.getScheduleRef()));
-    ms.setProcurementArea(normaliseString(ms.getProcurementArea()));
-    ms.setAccessPoint(normaliseString(ms.getAccessPoint()));
-    ms.setDeliveryLocation(normaliseString(ms.getDeliveryLocation()));
+    matterStart.setScheduleRef(normaliseString(matterStart.getScheduleRef()));
+    matterStart.setProcurementArea(normaliseString(matterStart.getProcurementArea()));
+    matterStart.setAccessPoint(normaliseString(matterStart.getAccessPoint()));
+    matterStart.setDeliveryLocation(normaliseString(matterStart.getDeliveryLocation()));
 
-    return ms;
+    return matterStart;
   }
 
   // Map normalisation - used for Immigration CLR data

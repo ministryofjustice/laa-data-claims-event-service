@@ -29,7 +29,7 @@ class SubmissionDataNormaliserTest {
   }
 
   @Test
-  @DisplayName("normalise(null) -> null")
+  @DisplayName("normalise(null) returns null")
   void normalise_nullResponse_returnsNull() {
     assertNull(normaliser.normalise(null));
   }
@@ -51,15 +51,15 @@ class SubmissionDataNormaliserTest {
     schedule.setScheduleNum(" ABC/20000L/10 ");
     details.setSchedule(schedule);
 
-    GetBulkSubmission200Response resp = new GetBulkSubmission200Response();
-    resp.setDetails(details);
+    GetBulkSubmission200Response response = new GetBulkSubmission200Response();
+    response.setDetails(details);
 
-    normaliser.normalise(resp);
+    normaliser.normalise(response);
 
-    assertEquals("2P554H", resp.getDetails().getOffice().getAccount());
-    assertEquals("JAN-2020", resp.getDetails().getSchedule().getSubmissionPeriod());
-    assertEquals("CRIME LOWER", resp.getDetails().getSchedule().getAreaOfLaw());
-    assertEquals("ABC/20000L/10", resp.getDetails().getSchedule().getScheduleNum());
+    assertEquals("2P554H", response.getDetails().getOffice().getAccount());
+    assertEquals("JAN-2020", response.getDetails().getSchedule().getSubmissionPeriod());
+    assertEquals("CRIME LOWER", response.getDetails().getSchedule().getAreaOfLaw());
+    assertEquals("ABC/20000L/10", response.getDetails().getSchedule().getScheduleNum());
   }
 
   @Test
@@ -181,118 +181,118 @@ class SubmissionDataNormaliserTest {
 
     GetBulkSubmission200ResponseDetails details = new GetBulkSubmission200ResponseDetails();
     details.setOutcomes(new ArrayList<>(List.of(outcome)));
-    GetBulkSubmission200Response resp = new GetBulkSubmission200Response();
-    resp.setDetails(details);
+    GetBulkSubmission200Response response = new GetBulkSubmission200Response();
+    response.setDetails(details);
 
-    normaliser.normalise(resp);
+    normaliser.normalise(response);
 
-    BulkSubmissionOutcome n = resp.getDetails().getOutcomes().getFirst();
+    BulkSubmissionOutcome actualOutcome = response.getDetails().getOutcomes().getFirst();
 
     // Assertions for all String fields with trimmed whitespaces
-    assertEquals("F01", n.getFeeCode());
-    assertEquals("REF-123", n.getCaseRefNumber());
-    assertEquals("2024-01-01", n.getCaseStartDate());
-    assertEquals("CID", n.getCaseId());
-    assertEquals("L2", n.getCaseStageLevel());
-    assertEquals("UFN-1", n.getUfn());
-    assertEquals("PA", n.getProcurementArea());
-    assertEquals("AP", n.getAccessPoint());
-    assertEquals("John", n.getClientForename());
-    assertEquals("Doe", n.getClientSurname());
-    assertEquals("2000-01-01", n.getClientDateOfBirth());
-    assertEquals("UCN", n.getUcn());
-    assertEquals("CLA-1", n.getClaRefNumber());
-    assertEquals("EX", n.getClaExemption());
-    assertEquals("M", n.getGender());
-    assertEquals("E", n.getEthnicity());
-    assertEquals("D", n.getDisability());
-    assertEquals("PC1 1PC", n.getClientPostCode());
-    assertEquals("2024-02-01", n.getWorkConcludedDate());
-    assertEquals("CT", n.getClaimType());
-    assertEquals("TA", n.getTypeOfAdvice());
-    assertEquals("SCH-1", n.getScheduleRef());
-    assertEquals("Y", n.getCmrhOral());
-    assertEquals("N", n.getCmrhTelephone());
-    assertEquals("AIT-1", n.getAitHearingCentre());
-    assertEquals("HOU-1", n.getHoUcn());
-    assertEquals("2024-03-01", n.getTransferDate());
-    assertEquals("LOC", n.getDeliveryLocation());
-    assertEquals("PAR-123", n.getPriorAuthorityRef());
-    assertEquals("M1,M2", n.getMeetingsAttended());
-    assertEquals("MHT-1", n.getMhtRefNumber());
-    assertEquals("S1", n.getStageReached());
-    assertEquals("FOW", n.getFollowOnWork());
-    assertEquals("ECS", n.getExemptionCriteriaSatisfied());
-    assertEquals("ECF-1", n.getExclCaseFundingRef());
-    assertEquals("2024-03-02", n.getSurgeryDate());
-    assertEquals("42", n.getLineNumber());
-    assertEquals("FS", n.getFeeScheme());
-    assertEquals("2024-01-15", n.getRepOrderDate());
-    assertEquals("PS", n.getPoliceStation());
-    assertEquals("OUTR", n.getOutreach());
-    assertEquals("REF", n.getReferral());
-    assertEquals("Jane", n.getClient2Forename());
-    assertEquals("Roe", n.getClient2Surname());
-    assertEquals("1999-12-31", n.getClient2DateOfBirth());
-    assertEquals("UCN2", n.getClient2Ucn());
-    assertEquals("PC2 2PC", n.getClient2PostCode());
-    assertEquals("F", n.getClient2Gender());
-    assertEquals("E2", n.getClient2Ethnicity());
-    assertEquals("D2", n.getClient2Disability());
-    assertEquals("UCID", n.getUniqueCaseId());
-    assertEquals("SFC", n.getStandardFeeCat());
-    assertEquals("HPCDS-1", n.getCourtLocationHpcds());
-    assertEquals("LA-1", n.getLocalAuthorityNumber());
-    assertEquals("PA-1", n.getPaNumber());
-    assertEquals("2024-04-04", n.getMedConcludedDate());
+    assertEquals("F01", actualOutcome.getFeeCode());
+    assertEquals("REF-123", actualOutcome.getCaseRefNumber());
+    assertEquals("2024-01-01", actualOutcome.getCaseStartDate());
+    assertEquals("CID", actualOutcome.getCaseId());
+    assertEquals("L2", actualOutcome.getCaseStageLevel());
+    assertEquals("UFN-1", actualOutcome.getUfn());
+    assertEquals("PA", actualOutcome.getProcurementArea());
+    assertEquals("AP", actualOutcome.getAccessPoint());
+    assertEquals("John", actualOutcome.getClientForename());
+    assertEquals("Doe", actualOutcome.getClientSurname());
+    assertEquals("2000-01-01", actualOutcome.getClientDateOfBirth());
+    assertEquals("UCN", actualOutcome.getUcn());
+    assertEquals("CLA-1", actualOutcome.getClaRefNumber());
+    assertEquals("EX", actualOutcome.getClaExemption());
+    assertEquals("M", actualOutcome.getGender());
+    assertEquals("E", actualOutcome.getEthnicity());
+    assertEquals("D", actualOutcome.getDisability());
+    assertEquals("PC1 1PC", actualOutcome.getClientPostCode());
+    assertEquals("2024-02-01", actualOutcome.getWorkConcludedDate());
+    assertEquals("CT", actualOutcome.getClaimType());
+    assertEquals("TA", actualOutcome.getTypeOfAdvice());
+    assertEquals("SCH-1", actualOutcome.getScheduleRef());
+    assertEquals("Y", actualOutcome.getCmrhOral());
+    assertEquals("N", actualOutcome.getCmrhTelephone());
+    assertEquals("AIT-1", actualOutcome.getAitHearingCentre());
+    assertEquals("HOU-1", actualOutcome.getHoUcn());
+    assertEquals("2024-03-01", actualOutcome.getTransferDate());
+    assertEquals("LOC", actualOutcome.getDeliveryLocation());
+    assertEquals("PAR-123", actualOutcome.getPriorAuthorityRef());
+    assertEquals("M1,M2", actualOutcome.getMeetingsAttended());
+    assertEquals("MHT-1", actualOutcome.getMhtRefNumber());
+    assertEquals("S1", actualOutcome.getStageReached());
+    assertEquals("FOW", actualOutcome.getFollowOnWork());
+    assertEquals("ECS", actualOutcome.getExemptionCriteriaSatisfied());
+    assertEquals("ECF-1", actualOutcome.getExclCaseFundingRef());
+    assertEquals("2024-03-02", actualOutcome.getSurgeryDate());
+    assertEquals("42", actualOutcome.getLineNumber());
+    assertEquals("FS", actualOutcome.getFeeScheme());
+    assertEquals("2024-01-15", actualOutcome.getRepOrderDate());
+    assertEquals("PS", actualOutcome.getPoliceStation());
+    assertEquals("OUTR", actualOutcome.getOutreach());
+    assertEquals("REF", actualOutcome.getReferral());
+    assertEquals("Jane", actualOutcome.getClient2Forename());
+    assertEquals("Roe", actualOutcome.getClient2Surname());
+    assertEquals("1999-12-31", actualOutcome.getClient2DateOfBirth());
+    assertEquals("UCN2", actualOutcome.getClient2Ucn());
+    assertEquals("PC2 2PC", actualOutcome.getClient2PostCode());
+    assertEquals("F", actualOutcome.getClient2Gender());
+    assertEquals("E2", actualOutcome.getClient2Ethnicity());
+    assertEquals("D2", actualOutcome.getClient2Disability());
+    assertEquals("UCID", actualOutcome.getUniqueCaseId());
+    assertEquals("SFC", actualOutcome.getStandardFeeCat());
+    assertEquals("HPCDS-1", actualOutcome.getCourtLocationHpcds());
+    assertEquals("LA-1", actualOutcome.getLocalAuthorityNumber());
+    assertEquals("PA-1", actualOutcome.getPaNumber());
+    assertEquals("2024-04-04", actualOutcome.getMedConcludedDate());
 
     // Assertions for all String fields with blanks -> null
-    assertNull(n.getMatterType());
-    assertNull(n.getOutcomeCode());
-    assertNull(n.getCrimeMatterType());
-    assertNull(n.getMaatId());
-    assertNull(n.getSchemeId());
+    assertNull(actualOutcome.getMatterType());
+    assertNull(actualOutcome.getOutcomeCode());
+    assertNull(actualOutcome.getCrimeMatterType());
+    assertNull(actualOutcome.getMaatId());
+    assertNull(actualOutcome.getSchemeId());
 
     // Assertions for numeric and boolean fields - remained unchanged
-    assertEquals(10, n.getAdviceTime());
-    assertEquals(20, n.getTravelTime());
-    assertEquals(30, n.getWaitingTime());
-    assertEquals(new BigDecimal("123.45"), n.getProfitCost());
-    assertEquals(new BigDecimal("234.56"), n.getValueOfCosts());
-    assertEquals(new BigDecimal("12.34"), n.getDisbursementsAmount());
-    assertEquals(new BigDecimal("56.78"), n.getCounselCost());
-    assertEquals(new BigDecimal("9.99"), n.getDisbursementsVat());
-    assertEquals(new BigDecimal("15.00"), n.getTravelWaitingCosts());
-    assertEquals(Boolean.TRUE, n.getVatIndicator());
-    assertEquals(Boolean.FALSE, n.getLondonNonlondonRate());
-    assertEquals(Boolean.TRUE, n.getToleranceIndicator());
-    assertEquals(new BigDecimal("7.77"), n.getTravelCosts());
-    assertEquals(Boolean.FALSE, n.getLegacyCase());
-    assertEquals(99, n.getAdjournedHearingFee());
-    assertEquals(Boolean.TRUE, n.getPostalApplAccp());
-    assertEquals(Boolean.FALSE, n.getSubstantiveHearing());
-    assertEquals(3, n.getHoInterview());
-    assertEquals(new BigDecimal("1.11"), n.getDetentionTravelWaitingCosts());
-    assertEquals(new BigDecimal("2.22"), n.getJrFormFilling());
-    assertEquals(Boolean.TRUE, n.getAdditionalTravelPayment());
-    assertEquals(2, n.getMedicalReportsClaimed());
-    assertEquals(1, n.getDesiAccRep());
-    assertEquals(Boolean.FALSE, n.getNationalRefMechanismAdvice());
-    assertEquals(5, n.getNoOfClients());
-    assertEquals(6, n.getNoOfSurgeryClients());
-    assertEquals(Boolean.TRUE, n.getIrcSurgery());
-    assertEquals(new BigDecimal("1000.00"), n.getCostsDamagesRecovered());
-    assertEquals(Boolean.TRUE, n.getEligibleClient());
-    assertEquals(new BigDecimal("3.33"), n.getExcessTravelCosts());
-    assertEquals(Boolean.FALSE, n.getDutySolicitor());
-    assertEquals(Boolean.TRUE, n.getYouthCourt());
-    assertEquals(7, n.getNoOfSuspects());
-    assertEquals(8, n.getNoOfPoliceStation());
-    assertEquals(9, n.getNumberOfMediationSessions());
-    assertEquals(60, n.getMediationTime());
-    assertEquals(Boolean.TRUE, n.getClientLegallyAided());
-    assertEquals(Boolean.FALSE, n.getClient2LegallyAided());
-    assertEquals(Boolean.TRUE, n.getClient2PostalApplAccp());
+    assertEquals(10, actualOutcome.getAdviceTime());
+    assertEquals(20, actualOutcome.getTravelTime());
+    assertEquals(30, actualOutcome.getWaitingTime());
+    assertEquals(new BigDecimal("123.45"), actualOutcome.getProfitCost());
+    assertEquals(new BigDecimal("234.56"), actualOutcome.getValueOfCosts());
+    assertEquals(new BigDecimal("12.34"), actualOutcome.getDisbursementsAmount());
+    assertEquals(new BigDecimal("56.78"), actualOutcome.getCounselCost());
+    assertEquals(new BigDecimal("9.99"), actualOutcome.getDisbursementsVat());
+    assertEquals(new BigDecimal("15.00"), actualOutcome.getTravelWaitingCosts());
+    assertEquals(Boolean.TRUE, actualOutcome.getVatIndicator());
+    assertEquals(Boolean.FALSE, actualOutcome.getLondonNonlondonRate());
+    assertEquals(Boolean.TRUE, actualOutcome.getToleranceIndicator());
+    assertEquals(new BigDecimal("7.77"), actualOutcome.getTravelCosts());
+    assertEquals(Boolean.FALSE, actualOutcome.getLegacyCase());
+    assertEquals(99, actualOutcome.getAdjournedHearingFee());
+    assertEquals(Boolean.TRUE, actualOutcome.getPostalApplAccp());
+    assertEquals(Boolean.FALSE, actualOutcome.getSubstantiveHearing());
+    assertEquals(3, actualOutcome.getHoInterview());
+    assertEquals(new BigDecimal("1.11"), actualOutcome.getDetentionTravelWaitingCosts());
+    assertEquals(new BigDecimal("2.22"), actualOutcome.getJrFormFilling());
+    assertEquals(Boolean.TRUE, actualOutcome.getAdditionalTravelPayment());
+    assertEquals(2, actualOutcome.getMedicalReportsClaimed());
+    assertEquals(1, actualOutcome.getDesiAccRep());
+    assertEquals(Boolean.FALSE, actualOutcome.getNationalRefMechanismAdvice());
+    assertEquals(5, actualOutcome.getNoOfClients());
+    assertEquals(6, actualOutcome.getNoOfSurgeryClients());
+    assertEquals(Boolean.TRUE, actualOutcome.getIrcSurgery());
+    assertEquals(new BigDecimal("1000.00"), actualOutcome.getCostsDamagesRecovered());
+    assertEquals(Boolean.TRUE, actualOutcome.getEligibleClient());
+    assertEquals(new BigDecimal("3.33"), actualOutcome.getExcessTravelCosts());
+    assertEquals(Boolean.FALSE, actualOutcome.getDutySolicitor());
+    assertEquals(Boolean.TRUE, actualOutcome.getYouthCourt());
+    assertEquals(7, actualOutcome.getNoOfSuspects());
+    assertEquals(8, actualOutcome.getNoOfPoliceStation());
+    assertEquals(9, actualOutcome.getNumberOfMediationSessions());
+    assertEquals(60, actualOutcome.getMediationTime());
+    assertEquals(Boolean.TRUE, actualOutcome.getClientLegallyAided());
+    assertEquals(Boolean.FALSE, actualOutcome.getClient2LegallyAided());
+    assertEquals(Boolean.TRUE, actualOutcome.getClient2PostalApplAccp());
   }
 
   @Test
@@ -312,12 +312,12 @@ class SubmissionDataNormaliserTest {
 
     GetBulkSubmission200ResponseDetails details = new GetBulkSubmission200ResponseDetails();
     details.setMatterStarts(new ArrayList<>(List.of(matterStart)));
-    GetBulkSubmission200Response resp = new GetBulkSubmission200Response();
-    resp.setDetails(details);
+    GetBulkSubmission200Response response = new GetBulkSubmission200Response();
+    response.setDetails(details);
 
-    normaliser.normalise(resp);
+    normaliser.normalise(response);
 
-    BulkSubmissionMatterStart n = resp.getDetails().getMatterStarts().getFirst();
+    BulkSubmissionMatterStart n = response.getDetails().getMatterStarts().getFirst();
 
     assertEquals("SCH-99", n.getScheduleRef());
     assertEquals("PA", n.getProcurementArea());
@@ -330,7 +330,7 @@ class SubmissionDataNormaliserTest {
 
     // blank -> null behavior
     n.setAccessPoint("   ");
-    normaliser.normalise(resp);
+    normaliser.normalise(response);
     assertNull(n.getAccessPoint());
   }
 
@@ -352,12 +352,12 @@ class SubmissionDataNormaliserTest {
 
     GetBulkSubmission200ResponseDetails details = new GetBulkSubmission200ResponseDetails();
     details.setImmigrationClr(list);
-    GetBulkSubmission200Response resp = new GetBulkSubmission200Response();
-    resp.setDetails(details);
+    GetBulkSubmission200Response response = new GetBulkSubmission200Response();
+    response.setDetails(details);
 
-    normaliser.normalise(resp);
+    normaliser.normalise(response);
 
-    List<Map<String, String>> normalised = resp.getDetails().getImmigrationClr();
+    List<Map<String, String>> normalised = response.getDetails().getImmigrationClr();
     assertEquals(2, normalised.size());
 
     Map<String, String> n1 = normalised.getFirst();
