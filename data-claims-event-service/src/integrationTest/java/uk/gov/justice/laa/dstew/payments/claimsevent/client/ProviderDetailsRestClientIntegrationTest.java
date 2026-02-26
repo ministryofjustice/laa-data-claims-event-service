@@ -246,6 +246,81 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
     }
 
     @Test
+    @DisplayName("Should return 200 response with requireOpenStatus parameter")
+    void shouldReturn200ResponseWithRequireOpenStatusParameter() throws Exception {
+      // Given
+      String officeCode = "1234";
+      String areaOfLaw = "CRIMINAL";
+      LocalDate effectiveDate = LocalDate.of(2021, 1, 1);
+
+      String expectedBody =
+          readJsonFromFile("provider-details/get-firm-schedules-openapi-200.json");
+
+      mockServerClient
+          .when(
+              HttpRequest.request()
+                  .withMethod("GET")
+                  .withPath(PROVIDER_OFFICES + officeCode + SCHEDULES_ENDPOINT)
+                  .withQueryStringParameter("areaOfLaw", areaOfLaw)
+                  .withQueryStringParameter("requireOpenStatus", "false"))
+          .respond(
+              HttpResponse.response()
+                  .withStatusCode(200)
+                  .withHeader("Content-Type", "application/json")
+                  .withBody(expectedBody));
+
+      // When
+      Mono<ProviderFirmOfficeContractAndScheduleDto> result =
+          providerDetailsRestClient.getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate);
+
+      // Then
+      Optional<ProviderFirmOfficeContractAndScheduleDto> providerFirmSummary =
+          result.blockOptional();
+      assertThat(providerFirmSummary).isPresent();
+      // Check all fields mapped correctly by serializing the result and comparing to expected JSON
+      String resultJson = objectMapper.writeValueAsString(providerFirmSummary.get());
+      assertThatJsonMatches(expectedBody, resultJson);
+    }
+
+    @Test
+    @DisplayName("Should return 200 response with requireOpenStatus parameter set to true")
+    void shouldReturn200ResponseWithRequireOpenStatusParameterSetToTrue() throws Exception {
+      // Given
+      String officeCode = "1234";
+      String areaOfLaw = "CRIMINAL";
+      LocalDate effectiveDate = LocalDate.of(2021, 1, 1);
+
+      String expectedBody =
+          readJsonFromFile("provider-details/get-firm-schedules-openapi-200.json");
+
+      mockServerClient
+          .when(
+              HttpRequest.request()
+                  .withMethod("GET")
+                  .withPath(PROVIDER_OFFICES + officeCode + SCHEDULES_ENDPOINT)
+                  .withQueryStringParameter("areaOfLaw", areaOfLaw)
+                  .withQueryStringParameter("requireOpenStatus", "true"))
+          .respond(
+              HttpResponse.response()
+                  .withStatusCode(200)
+                  .withHeader("Content-Type", "application/json")
+                  .withBody(expectedBody));
+
+      // When
+      Mono<ProviderFirmOfficeContractAndScheduleDto> result =
+          providerDetailsRestClient.getProviderFirmSchedules(
+              officeCode, areaOfLaw, effectiveDate, true);
+
+      // Then
+      Optional<ProviderFirmOfficeContractAndScheduleDto> providerFirmSummary =
+          result.blockOptional();
+      assertThat(providerFirmSummary).isPresent();
+      // Check all fields mapped correctly by serializing the result and comparing to expected JSON
+      String resultJson = objectMapper.writeValueAsString(providerFirmSummary.get());
+      assertThatJsonMatches(expectedBody, resultJson);
+    }
+
+    @Test
     @DisplayName("Should return 200 response without areaOfLaw query parameter")
     void shouldReturn200ResponseWithoutAreaOfLaw() throws Exception {
       // Given
