@@ -45,16 +45,20 @@ public class SubmissionDataNormaliser {
 
   /**
    * Recursively normalises any object, trimming all String fields. Supports: POJOs / DTOs, Lists,
-   * Maps<String, String>
+   * Maps
    *
    * @param object the object to normalise
    * @param visited tracks visited objects to avoid infinite recursion
    */
   private void normaliseObject(Object object, Set<Object> visited) {
-    if (object == null) return;
+    if (object == null) {
+      return;
+    }
 
     // Avoid cycles for infinite recursion
-    if (visited.contains(object)) return;
+    if (visited.contains(object)) {
+      return;
+    }
     visited.add(object);
 
     Class<?> clazz = object.getClass();
@@ -120,7 +124,9 @@ public class SubmissionDataNormaliser {
 
   // Determines whether an object should be recursively traversed
   private boolean isNormalisableObject(Object value) {
-    if (value == null) return false;
+    if (value == null) {
+      return false;
+    }
 
     return value instanceof List
         || value instanceof Map
