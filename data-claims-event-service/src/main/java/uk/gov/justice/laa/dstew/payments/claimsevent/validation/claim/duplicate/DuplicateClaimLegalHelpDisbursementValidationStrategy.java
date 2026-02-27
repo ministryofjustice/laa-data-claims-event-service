@@ -203,13 +203,13 @@ public class DuplicateClaimLegalHelpDisbursementValidationStrategy extends Dupli
    */
   protected boolean isDuplicateClaim(ClaimResponse incomingClaim, ClaimResponse duplicateClaim) {
     YearMonth incomingSubmissionPeriod = parseSubmissionPeriod(incomingClaim.getSubmissionPeriod());
-    LocalDate incomingDate = parseConcludedDate(incomingClaim);
+    LocalDate incomingConcludedDate = parseConcludedDate(incomingClaim);
     YearMonth anchorSubmissionPeriod = parseSubmissionPeriod(duplicateClaim.getSubmissionPeriod());
     LocalDate anchorConcludedDate = parseConcludedDate(duplicateClaim);
 
     if (incomingSubmissionPeriod == null
         || anchorSubmissionPeriod == null
-        || incomingDate == null
+        || incomingConcludedDate == null
         || anchorConcludedDate == null) {
       // Insufficient date data to complete Rule B; no duplicate error is raised.
       return false;
@@ -224,7 +224,9 @@ public class DuplicateClaimLegalHelpDisbursementValidationStrategy extends Dupli
     // The claim is a duplicate only when the earlier of the two Case Concluded Dates falls
     // strictly after the cutoff.
     LocalDate earlierConcludedDate =
-        incomingDate.isBefore(anchorConcludedDate) ? incomingDate : anchorConcludedDate;
+        incomingConcludedDate.isBefore(anchorConcludedDate)
+            ? incomingConcludedDate
+            : anchorConcludedDate;
 
     return earlierConcludedDate.isAfter(cutoff);
   }
