@@ -32,22 +32,18 @@ import uk.gov.justice.laa.provider.model.ProviderFirmOfficeContractAndScheduleDt
 public final class EffectiveCategoryOfLawClaimValidator implements ClaimValidator {
 
   private final CategoryOfLawValidationService categoryOfLawValidationService;
-  private final ClaimEffectiveDateUtil claimEffectiveDateUtil;
   private final ProviderDetailsService providerDetailsService;
 
   /**
    * Constructs an instance of {@link EffectiveCategoryOfLawClaimValidator}.
    *
    * @param categoryOfLawValidationService the category of law validation service
-   * @param claimEffectiveDateUtil the claim effective date util
    * @param providerDetailsService the provider details rest client
    */
   public EffectiveCategoryOfLawClaimValidator(
       CategoryOfLawValidationService categoryOfLawValidationService,
-      ClaimEffectiveDateUtil claimEffectiveDateUtil,
       ProviderDetailsService providerDetailsService) {
     this.categoryOfLawValidationService = categoryOfLawValidationService;
-    this.claimEffectiveDateUtil = claimEffectiveDateUtil;
     this.providerDetailsService = providerDetailsService;
   }
 
@@ -74,7 +70,7 @@ public final class EffectiveCategoryOfLawClaimValidator implements ClaimValidato
       Map<String, FeeDetailsResponseWrapper> feeDetailsResponseMap) {
     LocalDate effectiveDate = null;
     try {
-      effectiveDate = claimEffectiveDateUtil.getEffectiveDate(claim);
+      effectiveDate = ClaimEffectiveDateUtil.getEffectiveDate(claim);
       List<String> effectiveCategoriesOfLaw =
           getEffectiveCategoriesOfLaw(officeCode, areaOfLaw.getValue(), effectiveDate);
       // Get effective category of law lookup
