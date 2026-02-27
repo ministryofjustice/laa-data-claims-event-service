@@ -341,6 +341,7 @@ class SubmissionDataNormaliserTest {
     immClrData1.put("  Key1 ", "  Val1  ");
     immClrData1.put(" Key2 ", "   "); // value should become null
     immClrData1.put("K3", null); // stays null
+    immClrData1.put(" ", "value 4"); // skip blank/null keys
 
     Map<String, String> immClrData2 = new LinkedHashMap<>();
     immClrData2.put("\tCode ", "\n  Value  ");
