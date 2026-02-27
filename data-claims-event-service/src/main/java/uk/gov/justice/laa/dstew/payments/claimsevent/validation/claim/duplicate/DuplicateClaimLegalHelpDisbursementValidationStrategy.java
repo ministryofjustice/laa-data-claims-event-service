@@ -120,9 +120,9 @@ public class DuplicateClaimLegalHelpDisbursementValidationStrategy extends Dupli
       return;
     }
 
-    List<ClaimResponse> duplicateClaims =
+    List<ClaimResponse> candidateDuplicateClaim =
         findEligibleDuplicateClaims(incomingClaim, submissionClaims, officeCode);
-    if (duplicateClaims.isEmpty()) {
+    if (candidateDuplicateClaim.isEmpty()) {
       return;
     }
 
@@ -135,7 +135,8 @@ public class DuplicateClaimLegalHelpDisbursementValidationStrategy extends Dupli
 
     // candidates is guaranteed non-empty at this point, so selectComparativeClaim will always
     // return a value.
-    ClaimResponse duplicateClaim = selectComparativeClaim(duplicateClaims, incomingConcludedDate);
+    ClaimResponse duplicateClaim =
+        selectComparativeClaim(candidateDuplicateClaim, incomingConcludedDate);
 
     if (isDuplicateClaim(incomingClaim, duplicateClaim)) {
       logDuplicates(incomingClaim, List.of(duplicateClaim));
