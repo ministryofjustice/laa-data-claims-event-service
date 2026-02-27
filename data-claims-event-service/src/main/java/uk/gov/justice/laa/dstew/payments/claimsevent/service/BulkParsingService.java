@@ -44,6 +44,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricS
 @Slf4j
 public class BulkParsingService {
 
+  public static final String NULL_RESPONSE = "null response";
   private final DataClaimsRestClient dataClaimsRestClient;
   private final BulkSubmissionMapper bulkSubmissionMapper;
   private final EventServiceMetricService eventServiceMetricService;
@@ -85,7 +86,7 @@ public class BulkParsingService {
         bulkSubmissionMapper.mapToMatterStartRequests(matterStarts);
     createMatterStarts(bulkSubmissionId.toString(), createdSubmissionId, matterStartRequests);
 
-    updateSubmissionStatus(createdSubmissionId, claimIds.size());
+    updateSubmissionStatusAndNumberOfClaims(createdSubmissionId, claimIds.size(), SubmissionStatus.READY_FOR_VALIDATION);
     updateBulkSubmissionStatus(bulkSubmissionId.toString(), BulkSubmissionStatus.PARSING_COMPLETED);
   }
 
@@ -110,7 +111,7 @@ public class BulkParsingService {
       log.warn(
           "Bulk submission [{}] could not be retrieved. Status: {}",
           bulkSubmissionId,
-          response != null ? response.getStatusCode() : "null response");
+          response != null ? response.getStatusCode() : NULL_RESPONSE);
       throw new BulkSubmissionRetrievalException(bulkSubmissionId);
     }
 
@@ -137,11 +138,11 @@ public class BulkParsingService {
       log.error(
           "Failed to create submission for bulkSubmissionId [{}]. HTTP status: {}",
           bulkSubmissionId,
-          response == null ? "null response" : response.getStatusCode());
+          response == null ? NULL_RESPONSE : response.getStatusCode());
       updateBulkSubmissionStatus(bulkSubmissionId, BulkSubmissionStatus.PARSING_FAILED);
       throw new SubmissionCreateException(
           "Failed to create submission. HTTP status: "
-              + (response == null ? "null response" : response.getStatusCode()));
+              + (response == null ? NULL_RESPONSE : response.getStatusCode()));
     }
 
     eventServiceMetricService.incrementTotalSubmissionsCreated();
@@ -200,8 +201,6 @@ public class BulkParsingService {
                     return new Result(index, id);
                   } catch (RuntimeException ex) {
                     String ln = (claim != null ? String.valueOf(claim.getLineNumber()) : "null");
-                    updateBulkSubmissionStatus(
-                        bulkSubmissionId, BulkSubmissionStatus.PARSING_FAILED);
                     throw new ClaimCreateException(
                         "Failed to create claim at index "
                             + index
@@ -235,10 +234,11 @@ public class BulkParsingService {
 
     } catch (CompletionException ce) {
       Throwable cause = ce.getCause();
+      updateBulkSubmissionStatus(bulkSubmissionId, BulkSubmissionStatus.PARSING_FAILED);
+      updateSubmissionStatusAndNumberOfClaims(submissionId, null, SubmissionStatus.VALIDATION_FAILED);
       if (cause instanceof ClaimCreateException cce) {
         throw cce;
       }
-      updateBulkSubmissionStatus(bulkSubmissionId, BulkSubmissionStatus.PARSING_FAILED);
       throw new ClaimCreateException("Failed to create claims: " + cause.getMessage(), cause);
     } finally {
       pool.shutdown();
@@ -284,7 +284,7 @@ public class BulkParsingService {
           "Failed to create claim for submission "
               + submissionId
               + ". HTTP status: "
-              + (response == null ? "null response" : response.getStatusCode()));
+              + (response == null ? NULL_RESPONSE : response.getStatusCode()));
     }
 
     eventServiceMetricService.incrementTotalClaimsCreated();
@@ -310,6 +310,7 @@ public class BulkParsingService {
         createdIds.add(createMatterStart(submissionId, ms));
       } catch (RuntimeException ex) {
         updateBulkSubmissionStatus(bulkSubmissionId, BulkSubmissionStatus.PARSING_FAILED);
+        updateSubmissionStatusAndNumberOfClaims(submissionId, null, SubmissionStatus.VALIDATION_FAILED);
         throw new MatterStartCreateException(
             "Failed to create matter start at index " + index + ": " + ex.getMessage(), ex);
       } finally {
@@ -340,7 +341,7 @@ public class BulkParsingService {
           "Failed to create matter start for submission "
               + submissionId
               + ". HTTP status: "
-              + (response == null ? "null response" : response.getStatusCode()));
+              + (response == null ? NULL_RESPONSE : response.getStatusCode()));
     }
 
     String createdId = extractIdFromLocation(response);
@@ -353,23 +354,27 @@ public class BulkParsingService {
     return createdId;
   }
 
-  protected void updateSubmissionStatus(String submissionId, int numberOfClaims) {
+  protected void updateSubmissionStatusAndNumberOfClaims(
+      String submissionId,
+      Integer numberOfClaims,
+      SubmissionStatus submissionStatus
+  ) {
     SubmissionPatch patch = new SubmissionPatch();
-    patch.setStatus(SubmissionStatus.READY_FOR_VALIDATION);
-    patch.setNumberOfClaims(numberOfClaims);
-
+    patch.setStatus(submissionStatus);
+    if (numberOfClaims != null) {
+      patch.setNumberOfClaims(numberOfClaims);
+    }
     ResponseEntity<Void> response = dataClaimsRestClient.updateSubmission(submissionId, patch);
     if (response == null || !response.getStatusCode().is2xxSuccessful()) {
       throw new SubmissionCreateException(
           "Failed to update submission status for submission "
               + submissionId
               + ". HTTP status: "
-              + (response == null ? "null response" : response.getStatusCode()));
+              + (response == null ? NULL_RESPONSE : response.getStatusCode()));
     }
     log.info(
-        "Submission [{}] marked as READY_FOR_VALIDATION with {} claims",
-        submissionId,
-        numberOfClaims);
+        "Submission [{}] marked as {}} with {} claims",
+        submissionId, submissionStatus, numberOfClaims);
   }
 
   protected void updateBulkSubmissionStatus(
@@ -385,7 +390,7 @@ public class BulkParsingService {
           "Failed to update bulk submission status for bulk submission "
               + bulkSubmissionId
               + ". HTTP status: "
-              + (response == null ? "null response" : response.getStatusCode()));
+              + (response == null ? NULL_RESPONSE : response.getStatusCode()));
     }
     log.info("Bulk submission [{}] marked as [{}]", bulkSubmissionId, bulkSubmissionStatus.name());
   }
