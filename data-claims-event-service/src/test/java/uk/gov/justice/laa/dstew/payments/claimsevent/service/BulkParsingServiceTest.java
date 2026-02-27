@@ -53,6 +53,7 @@ class BulkParsingServiceTest {
   @Mock private DataClaimsRestClient dataClaimsRestClient;
   @Mock private BulkSubmissionMapper mapper;
   @Mock private EventServiceMetricService eventServiceMetricService;
+  @Mock private SubmissionDataNormaliser normaliser;
 
   @InjectMocks private BulkParsingService service;
 
@@ -94,6 +95,7 @@ class BulkParsingServiceTest {
 
     when(dataClaimsRestClient.getBulkSubmission(bulkSubmissionId))
         .thenReturn(ResponseEntity.ok(bulkSubmission));
+    when(normaliser.normalise(bulkSubmission)).thenReturn(bulkSubmission);
     when(mapper.mapToSubmissionPost(bulkSubmission, submissionId)).thenReturn(submissionPost);
     when(dataClaimsRestClient.createSubmission(submissionPost))
         .thenReturn(
@@ -145,6 +147,7 @@ class BulkParsingServiceTest {
 
     when(dataClaimsRestClient.getBulkSubmission(bulkSubmissionId))
         .thenReturn(ResponseEntity.ok(bulkSubmission));
+    when(normaliser.normalise(bulkSubmission)).thenReturn(bulkSubmission);
     when(mapper.mapToSubmissionPost(bulkSubmission, submissionId)).thenReturn(submissionPost);
     when(dataClaimsRestClient.createSubmission(submissionPost))
         .thenReturn(
