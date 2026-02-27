@@ -20,26 +20,6 @@ import uk.gov.justice.laa.provider.model.ProviderFirmOfficeContractAndScheduleDt
 public interface ProviderDetailsRestClient {
 
   /**
-   * Get all provider office schedule details based on the provider office code. Passes null for
-   * effectiveDate and false for requireOpenStatus. Can return the following HTTP statuses:
-   *
-   * <ul>
-   *   <li>200 - Success
-   *   <li>204 - No content (Happens when a firm has no schedules).
-   *   <li>409 - Conflict - Ex Cache being Loaded.
-   *   <li>500 - Internal Server Error.
-   * </ul>
-   *
-   * @param officeCode The firm office code
-   * @param areaOfLaw The area of law code
-   * @return The provider firm summary
-   */
-  default Mono<ProviderFirmOfficeContractAndScheduleDto> getProviderFirmSchedules(
-      final String officeCode, final String areaOfLaw) {
-    return getProviderFirmSchedules(officeCode, areaOfLaw, null, false);
-  }
-
-  /**
    * Get all provider office schedule details based on the provider office code. Passes false for
    * requireOpenStatus. Can return the following HTTP statuses:
    *
