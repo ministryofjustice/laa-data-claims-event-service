@@ -29,7 +29,6 @@ public final class ClaimEffectiveDateUtil {
    *
    * <ol>
    *   <li>Case Concluded Date, if present.
-   *   <li>Case Start Date, if present.
    * </ol>
    *
    * <p>For all other claims, the effective date is resolved in the following order:
