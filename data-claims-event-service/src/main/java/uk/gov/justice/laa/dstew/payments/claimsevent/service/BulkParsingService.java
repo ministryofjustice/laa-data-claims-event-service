@@ -47,6 +47,7 @@ public class BulkParsingService {
   private final DataClaimsRestClient dataClaimsRestClient;
   private final BulkSubmissionMapper bulkSubmissionMapper;
   private final EventServiceMetricService eventServiceMetricService;
+  private final SubmissionDataNormaliser submissionDataNormaliser;
 
   private static final int MAX_CONCURRENCY =
       Math.max(2, Runtime.getRuntime().availableProcessors());
@@ -59,6 +60,8 @@ public class BulkParsingService {
    */
   public void parseData(UUID bulkSubmissionId, UUID submissionId) {
     GetBulkSubmission200Response bulkSubmission = getBulkSubmission(bulkSubmissionId);
+
+    bulkSubmission = submissionDataNormaliser.normalise(bulkSubmission);
 
     SubmissionPost submissionPost =
         bulkSubmissionMapper.mapToSubmissionPost(bulkSubmission, submissionId);
