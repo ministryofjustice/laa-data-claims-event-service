@@ -90,15 +90,14 @@ public class SubmissionDataNormaliser {
       return;
     }
 
-    normaliseFields(object, visited);
-  }
-
-  private void normaliseFields(Object object, Set<Object> visited) {
     Arrays.stream(object.getClass().getDeclaredFields())
-        .forEach(field -> normaliseFieldValue(object, field, visited));
+            .forEach(field -> normaliseFieldValue(object, field, visited));
   }
 
   private void normaliseFieldValue(Object object, Field field, Set<Object> visited) {
+    if (object == null || field == null) {
+      return;
+    }
     try {
       field.setAccessible(true);
       Object value = field.get(object);
@@ -113,7 +112,11 @@ public class SubmissionDataNormaliser {
       }
     } catch (IllegalAccessException e) {
       throw new SubmissionDataNormalisationException(
-          "Unable to normalise field: " + field.getName(), e);
+              "Unable to normalise field '%s' on class '%s': %s".formatted(
+                      field.getName(),
+                      object.getClass().getSimpleName(),
+                      e.getMessage()),
+              e);
     }
   }
 
