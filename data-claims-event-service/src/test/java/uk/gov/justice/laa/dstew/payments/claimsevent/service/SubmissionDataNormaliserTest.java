@@ -4,10 +4,15 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionMatterStart;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionOutcome;
@@ -373,5 +378,192 @@ class SubmissionDataNormaliserTest {
     Map<String, String> n2 = normalised.get(1);
     assertEquals("Value", n2.get("Code"));
     assertEquals("123", n2.get("Another"));
+  }
+
+  // ---------------------------------------------------------------------------
+  // Uppercase fields
+  // ---------------------------------------------------------------------------
+
+  @Nested
+  @DisplayName("UPPERCASE_FIELDS — gender and client2Gender are uppercased after trimming")
+  class UppercaseFields {
+
+    static Stream<Arguments> genderCases() {
+      return Stream.of(
+          Arguments.of("m", "M", "lowercase"),
+          Arguments.of("f", "F", "lowercase"),
+          Arguments.of("u", "U", "lowercase unknown"),
+          Arguments.of("M", "M", "already uppercase"),
+          Arguments.of("F", "F", "already uppercase"),
+          Arguments.of(" m ", "M", "lowercase with surrounding spaces"),
+          Arguments.of(" F ", "F", "uppercase with surrounding spaces"),
+          Arguments.of("  u  ", "U", "unknown with surrounding spaces"));
+    }
+
+    @ParameterizedTest(name = "gender \"{0}\" → \"{1}\" ({2})")
+    @MethodSource("genderCases")
+    @DisplayName("gender field is trimmed and uppercased")
+    @SuppressWarnings("unused")
+    void genderIsTrimmedAndUppercased(String input, String expected, String description) {
+      BulkSubmissionOutcome outcome = new BulkSubmissionOutcome();
+      outcome.setGender(input);
+      normaliser.normalise(buildResponseWithOutcome(outcome));
+      assertEquals(expected, outcome.getGender());
+    }
+
+    @ParameterizedTest(name = "client2Gender \"{0}\" → \"{1}\" ({2})")
+    @MethodSource("genderCases")
+    @DisplayName("client2Gender field is trimmed and uppercased")
+    @SuppressWarnings("unused")
+    void client2GenderIsTrimmedAndUppercased(String input, String expected, String description) {
+      BulkSubmissionOutcome outcome = new BulkSubmissionOutcome();
+      outcome.setClient2Gender(input);
+      normaliser.normalise(buildResponseWithOutcome(outcome));
+      assertEquals(expected, outcome.getClient2Gender());
+    }
+
+    @Test
+    @DisplayName("gender null remains null")
+    void genderNullRemainsNull() {
+      BulkSubmissionOutcome outcome = new BulkSubmissionOutcome();
+      outcome.setGender(null);
+      normaliser.normalise(buildResponseWithOutcome(outcome));
+      assertNull(outcome.getGender());
+    }
+
+    @Test
+    @DisplayName("gender blank becomes null — not uppercased")
+    void genderBlankBecomesNull() {
+      BulkSubmissionOutcome outcome = new BulkSubmissionOutcome();
+      outcome.setGender("   ");
+      normaliser.normalise(buildResponseWithOutcome(outcome));
+      assertNull(outcome.getGender());
+    }
+
+    @Test
+    @DisplayName("client2Gender null remains null")
+    void client2GenderNullRemainsNull() {
+      BulkSubmissionOutcome outcome = new BulkSubmissionOutcome();
+      outcome.setClient2Gender(null);
+      normaliser.normalise(buildResponseWithOutcome(outcome));
+      assertNull(outcome.getClient2Gender());
+    }
+
+    @Test
+    @DisplayName("client2Gender blank becomes null — not uppercased")
+    void client2GenderBlankBecomesNull() {
+      BulkSubmissionOutcome outcome = new BulkSubmissionOutcome();
+      outcome.setClient2Gender("   ");
+      normaliser.normalise(buildResponseWithOutcome(outcome));
+      assertNull(outcome.getClient2Gender());
+    }
+
+    static Stream<Arguments> disabilityCases() {
+      return Stream.of(
+          Arguments.of("ncd", "NCD"),
+          Arguments.of("mob", "MOB"),
+          Arguments.of("dea", "DEA"),
+          Arguments.of("hea", "HEA"),
+          Arguments.of("vis", "VIS"),
+          Arguments.of("bli", "BLI"),
+          Arguments.of("mhc", "MHC"),
+          Arguments.of("ldd", "LDD"),
+          Arguments.of("cog", "COG"),
+          Arguments.of("ill", "ILL"),
+          Arguments.of("oth", "OTH"),
+          Arguments.of("ukn", "UKN"),
+          Arguments.of("phy", "PHY"),
+          Arguments.of("sen", "SEN"),
+          Arguments.of(" ncd ", "NCD"),
+          Arguments.of("NCD", "NCD"));
+    }
+
+    @ParameterizedTest(name = "disability \"{0}\" → \"{1}\"")
+    @MethodSource("disabilityCases")
+    @DisplayName("disability field is trimmed and uppercased")
+    void disabilityIsTrimmedAndUppercased(String input, String expected) {
+      BulkSubmissionOutcome outcome = new BulkSubmissionOutcome();
+      outcome.setDisability(input);
+      normaliser.normalise(buildResponseWithOutcome(outcome));
+      assertEquals(expected, outcome.getDisability());
+    }
+
+    @ParameterizedTest(name = "client2Disability \"{0}\" → \"{1}\"")
+    @MethodSource("disabilityCases")
+    @DisplayName("client2Disability field is trimmed and uppercased")
+    void client2DisabilityIsTrimmedAndUppercased(String input, String expected) {
+      BulkSubmissionOutcome outcome = new BulkSubmissionOutcome();
+      outcome.setClient2Disability(input);
+      normaliser.normalise(buildResponseWithOutcome(outcome));
+      assertEquals(expected, outcome.getClient2Disability());
+    }
+
+    static Stream<Arguments> clientTypeCases() {
+      return Stream.of(
+          Arguments.of("p", "P"),
+          Arguments.of("c", "C"),
+          Arguments.of("j", "J"),
+          Arguments.of(" p ", "P"),
+          Arguments.of("P", "P"));
+    }
+
+    @ParameterizedTest(name = "clientType \"{0}\" → \"{1}\"")
+    @MethodSource("clientTypeCases")
+    @DisplayName("clientType field is trimmed and uppercased")
+    void clientTypeIsTrimmedAndUppercased(String input, String expected) {
+      BulkSubmissionOutcome outcome = new BulkSubmissionOutcome();
+      outcome.setClientType(input);
+      normaliser.normalise(buildResponseWithOutcome(outcome));
+      assertEquals(expected, outcome.getClientType());
+    }
+
+    static Stream<Arguments> adviceTypeCases() {
+      return Stream.of(
+          Arguments.of("ftf", "FTF"),
+          Arguments.of("rem", "REM"),
+          Arguments.of(" ftf ", "FTF"),
+          Arguments.of("FTF", "FTF"));
+    }
+
+    @ParameterizedTest(name = "typeOfAdvice \"{0}\" → \"{1}\"")
+    @MethodSource("adviceTypeCases")
+    @DisplayName("typeOfAdvice field is trimmed and uppercased")
+    void typeOfAdviceIsTrimmedAndUppercased(String input, String expected) {
+      BulkSubmissionOutcome outcome = new BulkSubmissionOutcome();
+      outcome.setTypeOfAdvice(input);
+      normaliser.normalise(buildResponseWithOutcome(outcome));
+      assertEquals(expected, outcome.getTypeOfAdvice());
+    }
+
+    @Test
+    @DisplayName("UPPERCASE_FIELDS constant contains exactly the expected fields")
+    void uppercaseFieldsConstantIsCorrect() {
+      assertEquals(
+          Set.of(
+              "gender",
+              "client2Gender",
+              "disability",
+              "client2Disability",
+              "clientType",
+              "typeOfAdvice"),
+          SubmissionDataNormaliser.UPPERCASE_FIELDS);
+    }
+
+    @Test
+    @DisplayName("ethnicity is trimmed but NOT uppercased — not in UPPERCASE_FIELDS")
+    void ethnicityIsNotUppercased() {
+      BulkSubmissionOutcome outcome = new BulkSubmissionOutcome();
+      outcome.setEthnicity(" e1 ");
+      normaliser.normalise(buildResponseWithOutcome(outcome));
+      assertEquals("e1", outcome.getEthnicity());
+    }
+
+    private GetBulkSubmission200Response buildResponseWithOutcome(BulkSubmissionOutcome outcome) {
+      GetBulkSubmission200ResponseDetails details = new GetBulkSubmission200ResponseDetails();
+      details.setOutcomes(new ArrayList<>(List.of(outcome)));
+      GetBulkSubmission200Response response = new GetBulkSubmission200Response();
+      response.setDetails(details);
+      return response;
+    }
   }
 }

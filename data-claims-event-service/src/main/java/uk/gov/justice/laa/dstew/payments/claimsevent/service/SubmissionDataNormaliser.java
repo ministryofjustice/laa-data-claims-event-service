@@ -1,14 +1,17 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetBulkSubmission200Response;
+import uk.gov.justice.laa.dstew.payments.claimsevent.exception.SubmissionDataNormalisationException;
 
 /**
  * Normalises the bulk submission data by recursively trimming all String fields in the DTO objects.
@@ -18,6 +21,20 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetBulkSubmission200Re
  */
 @Service
 public class SubmissionDataNormaliser {
+
+  /**
+   * The set of DTO field names whose trimmed values are additionally uppercased during
+   * normalisation. Field names must match the Java bean property name exactly (camelCase). Add new
+   * fields here when upper-case enforcement is required for additional properties.
+   */
+  static final Set<String> UPPERCASE_FIELDS =
+      Set.of(
+          "gender",
+          "client2Gender",
+          "disability",
+          "client2Disability",
+          "clientType",
+          "typeOfAdvice");
 
   private String normaliseString(String value) {
     if (!StringUtils.hasText(value)) {
@@ -51,23 +68,14 @@ public class SubmissionDataNormaliser {
    * @param visited tracks visited objects to avoid infinite recursion
    */
   private void normaliseObject(Object object, Set<Object> visited) {
-    if (object == null) {
-      return;
-    }
-
-    // Avoid cycles for infinite recursion
-    if (visited.contains(object)) {
+    if (object == null || visited.contains(object)) {
       return;
     }
     visited.add(object);
 
-    Class<?> clazz = object.getClass();
-
     // 1. Handle List
     if (object instanceof List<?> list) {
-      for (Object element : list) {
-        normaliseObject(element, visited);
-      }
+      list.forEach(element -> normaliseObject(element, visited));
       return;
     }
 
@@ -78,26 +86,34 @@ public class SubmissionDataNormaliser {
     }
 
     // 3. Only normalise DTOs (ignore Java core classes)
-    if (clazz.getPackageName().startsWith("java.")) {
+    if (object.getClass().getPackageName().startsWith("java.")) {
       return;
     }
 
-    // 4. Process fields
-    for (Field field : clazz.getDeclaredFields()) {
+    normaliseFields(object, visited);
+  }
+
+  private void normaliseFields(Object object, Set<Object> visited) {
+    Arrays.stream(object.getClass().getDeclaredFields())
+        .forEach(field -> normaliseFieldValue(object, field, visited));
+  }
+
+  private void normaliseFieldValue(Object object, Field field, Set<Object> visited) {
+    try {
       field.setAccessible(true);
-      try {
-        Object value = field.get(object);
-
-        if (value instanceof String s) {
-          field.set(object, normaliseString(s));
-        } else if (isNormalisableObject(value)) {
-          normaliseObject(value, visited);
+      Object value = field.get(object);
+      if (value instanceof String s) {
+        String normalised = normaliseString(s);
+        if (normalised != null && UPPERCASE_FIELDS.contains(field.getName())) {
+          normalised = normalised.toUpperCase(Locale.ENGLISH);
         }
-        // otherwise ignore numeric, boolean, enum etc
-
-      } catch (IllegalAccessException e) {
-        throw new RuntimeException("Unable to normalise field: " + field.getName(), e);
+        field.set(object, normalised);
+      } else if (isNormalisableObject(value)) {
+        normaliseObject(value, visited);
       }
+    } catch (IllegalAccessException e) {
+      throw new SubmissionDataNormalisationException(
+          "Unable to normalise field: " + field.getName(), e);
     }
   }
 
