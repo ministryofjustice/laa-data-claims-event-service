@@ -536,17 +536,12 @@ class SubmissionDataNormaliserTest {
     }
 
     @Test
-    @DisplayName("UPPERCASE_FIELDS constant contains exactly the expected fields")
+    @DisplayName("UPPERCASE_FIELDS constant contains exactly the expected fields scoped to BulkSubmissionOutcome")
     void uppercaseFieldsConstantIsCorrect() {
+      assertEquals(1, SubmissionDataNormaliser.UPPERCASE_FIELDS.size());
       assertEquals(
-          Set.of(
-              "gender",
-              "client2Gender",
-              "disability",
-              "client2Disability",
-              "clientType",
-              "typeOfAdvice"),
-          SubmissionDataNormaliser.UPPERCASE_FIELDS);
+          Set.of("gender", "client2Gender", "disability", "client2Disability", "clientType", "typeOfAdvice"),
+          SubmissionDataNormaliser.UPPERCASE_FIELDS.get(BulkSubmissionOutcome.class));
     }
 
     @Test

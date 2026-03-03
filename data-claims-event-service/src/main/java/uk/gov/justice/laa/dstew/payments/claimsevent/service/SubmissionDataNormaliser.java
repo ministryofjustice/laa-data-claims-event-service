@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionOutcome;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetBulkSubmission200Response;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.SubmissionDataNormalisationException;
 
@@ -17,24 +18,31 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.exception.SubmissionDataNor
  * Normalises the bulk submission data by recursively trimming all String fields in the DTO objects.
  * This ensures whitespaces do not cause parsing or validation failures during subsequent mapping.
  *
- * <p>This method does not alter numbers, booleans, enums, dates or other typed values.
+ * <p>Fields listed in {@link #UPPERCASE_FIELDS} are additionally converted to upper case after
+ * trimming. The map is keyed by the exact DTO class, ensuring that field name matches are scoped
+ * precisely — a field named {@code gender} on an unrelated class will not be uppercased
+ * unintentionally.
+ *
+ * <p>This normaliser does not alter numeric, boolean, enum, or other typed values.
  */
 @Service
 public class SubmissionDataNormaliser {
 
   /**
-   * The set of DTO field names whose trimmed values are additionally uppercased during
-   * normalisation. Field names must match the Java bean property name exactly (camelCase). Add new
-   * fields here when upper-case enforcement is required for additional properties.
+   * Defines the fields to be uppercased after trimming, scoped explicitly by DTO class. Field names
+   * must match the Java bean property name exactly (camelCase). To add further fields, add an entry
+   * for the relevant class or extend an existing one.
    */
-  static final Set<String> UPPERCASE_FIELDS =
-      Set.of(
-          "gender",
-          "client2Gender",
-          "disability",
-          "client2Disability",
-          "clientType",
-          "typeOfAdvice");
+  static final Map<Class<?>, Set<String>> UPPERCASE_FIELDS =
+      Map.of(
+          BulkSubmissionOutcome.class,
+          Set.of(
+              "gender",
+              "client2Gender",
+              "disability",
+              "client2Disability",
+              "clientType",
+              "typeOfAdvice"));
 
   private String normaliseString(String value) {
     if (!StringUtils.hasText(value)) {
@@ -103,7 +111,8 @@ public class SubmissionDataNormaliser {
       Object value = field.get(object);
       if (value instanceof String s) {
         String normalised = normaliseString(s);
-        if (normalised != null && UPPERCASE_FIELDS.contains(field.getName())) {
+        Set<String> upperFields = UPPERCASE_FIELDS.getOrDefault(object.getClass(), Set.of());
+        if (normalised != null && upperFields.contains(field.getName())) {
           normalised = normalised.toUpperCase(Locale.ENGLISH);
         }
         field.set(object, normalised);
