@@ -1,7 +1,11 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Stream;
@@ -13,6 +17,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionMatterStart;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionOutcome;
@@ -22,6 +28,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetBulkSubmission200Re
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetBulkSubmission200ResponseDetailsOffice;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetBulkSubmission200ResponseDetailsSchedule;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.MediationType;
+import uk.gov.justice.laa.dstew.payments.claimsevent.exception.SubmissionDataNormalisationException;
 
 @ExtendWith(MockitoExtension.class)
 class SubmissionDataNormaliserTest {
@@ -536,11 +543,18 @@ class SubmissionDataNormaliserTest {
     }
 
     @Test
-    @DisplayName("UPPERCASE_FIELDS constant contains exactly the expected fields scoped to BulkSubmissionOutcome")
+    @DisplayName(
+        "UPPERCASE_FIELDS constant contains exactly the expected fields scoped to BulkSubmissionOutcome")
     void uppercaseFieldsConstantIsCorrect() {
       assertEquals(1, SubmissionDataNormaliser.UPPERCASE_FIELDS.size());
       assertEquals(
-          Set.of("gender", "client2Gender", "disability", "client2Disability", "clientType", "typeOfAdvice"),
+          Set.of(
+              "gender",
+              "client2Gender",
+              "disability",
+              "client2Disability",
+              "clientType",
+              "typeOfAdvice"),
           SubmissionDataNormaliser.UPPERCASE_FIELDS.get(BulkSubmissionOutcome.class));
     }
 
@@ -559,6 +573,160 @@ class SubmissionDataNormaliserTest {
       GetBulkSubmission200Response response = new GetBulkSubmission200Response();
       response.setDetails(details);
       return response;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Edge cases — null guards and exception paths
+  // ---------------------------------------------------------------------------
+
+  @Nested
+  @DisplayName("Edge cases")
+  class EdgeCases {
+
+    // -------------------------------------------------------------------------
+    // normaliseString
+    // -------------------------------------------------------------------------
+
+    @ParameterizedTest(name = "normaliseString({0}) returns null")
+    @NullAndEmptySource
+    @ValueSource(strings = {"   "})
+    @DisplayName("normaliseString — null, empty, and blank all return null")
+    void normaliseString_absentValues_returnNull(String input) {
+      assertNull(normaliser.normaliseString(input));
+    }
+
+    @ParameterizedTest(name = "normaliseString(\"{0}\") returns \"{1}\"")
+    @MethodSource("trimCases")
+    @DisplayName("normaliseString — value is trimmed")
+    void normaliseString_presentValues_areTrimmed(String input, String expected) {
+      assertEquals(expected, normaliser.normaliseString(input));
+    }
+
+    static Stream<Arguments> trimCases() {
+      return Stream.of(
+          Arguments.of("hello", "hello"),
+          Arguments.of("  hello  ", "hello"),
+          Arguments.of("  a b  ", "a b"));
+    }
+
+    // -------------------------------------------------------------------------
+    // normaliseObject
+    // -------------------------------------------------------------------------
+
+    @ParameterizedTest(name = "normaliseObject({0}) does not throw")
+    @MethodSource("safeObjectCases")
+    @DisplayName(
+        "normaliseObject — null, null-in-list, and java-package objects are silently skipped")
+    void normaliseObject_safeInputs_doNotThrow(Object input) {
+      assertDoesNotThrow(() -> normaliser.normaliseObject(input, new HashSet<>()));
+    }
+
+    static Stream<Arguments> safeObjectCases() {
+      List<BulkSubmissionOutcome> listWithNull = new ArrayList<>();
+      listWithNull.add(null);
+      return Stream.of(
+          Arguments.of((Object) null), // null object
+          Arguments.of("hello"), // java.lang.String — java. package
+          Arguments.of(listWithNull) // list containing a null element
+          );
+    }
+
+    @Test
+    @DisplayName("normaliseObject — already visited object is silently skipped (cycle detection)")
+    void normaliseObject_alreadyVisited_isSkipped() {
+      BulkSubmissionOutcome outcome = new BulkSubmissionOutcome();
+      outcome.setGender(" m ");
+      Set<Object> visited = new HashSet<>();
+      visited.add(outcome);
+      normaliser.normaliseObject(outcome, visited);
+      assertEquals(" m ", outcome.getGender());
+    }
+
+    // -------------------------------------------------------------------------
+    // normaliseFieldValue
+    // -------------------------------------------------------------------------
+
+    @ParameterizedTest(name = "normaliseFieldValue with null {0} does not throw")
+    @MethodSource("nullFieldValueCases")
+    @DisplayName("normaliseFieldValue — null object or null field is silently ignored")
+    void normaliseFieldValue_nullArgs_doNotThrow(Object object, Field field) {
+      assertDoesNotThrow(() -> normaliser.normaliseFieldValue(object, field, new HashSet<>()));
+    }
+
+    static Stream<Arguments> nullFieldValueCases() throws Exception {
+      Field realField = BulkSubmissionOutcome.class.getDeclaredField("gender");
+      return Stream.of(
+          Arguments.of(null, realField), Arguments.of(new BulkSubmissionOutcome(), null));
+    }
+
+    @Test
+    @DisplayName(
+        "normaliseFieldValue — IllegalAccessException is wrapped in SubmissionDataNormalisationException")
+    void normaliseFieldValue_illegalAccess_throwsNormalisationException() throws Exception {
+      Field mockField = mock(Field.class);
+      doThrow(new IllegalAccessException("access denied")).when(mockField).get(any());
+      org.mockito.Mockito.when(mockField.getName()).thenReturn("testField");
+
+      BulkSubmissionOutcome outcome = new BulkSubmissionOutcome();
+      var ex =
+          assertThrows(
+              SubmissionDataNormalisationException.class,
+              () -> normaliser.normaliseFieldValue(outcome, mockField, new HashSet<>()));
+
+      assertTrue(ex.getMessage().contains("testField"));
+    }
+
+    // -------------------------------------------------------------------------
+    // normaliseMap
+    // -------------------------------------------------------------------------
+
+    @Test
+    @DisplayName("normaliseMap — non-String key is skipped")
+    void normaliseMap_nonStringKey_isSkipped() {
+      Map<Object, Object> map = new LinkedHashMap<>();
+      map.put(42, "should be skipped");
+      map.put("validKey", "  trimmed  ");
+
+      normaliser.normaliseMap(map);
+
+      assertFalse(map.containsKey(42));
+      assertEquals("trimmed", map.get("validKey"));
+    }
+
+    @Test
+    @DisplayName("normaliseMap — non-String value is stored as null")
+    void normaliseMap_nonStringValue_storedAsNull() {
+      Map<Object, Object> map = new LinkedHashMap<>();
+      map.put("key", 99);
+
+      normaliser.normaliseMap(map);
+
+      assertTrue(map.containsKey("key"));
+      assertNull(map.get("key"));
+    }
+
+    // -------------------------------------------------------------------------
+    // isNormalisableObject
+    // -------------------------------------------------------------------------
+
+    static Stream<Arguments> isNormalisableCases() {
+      return Stream.of(
+          Arguments.of(null, false, "null"),
+          Arguments.of(new ArrayList<>(), true, "List"),
+          Arguments.of(new LinkedHashMap<>(), true, "Map"),
+          Arguments.of(new String[] {"a"}, true, "array"),
+          Arguments.of(new BulkSubmissionOutcome(), true, "non-java DTO"),
+          Arguments.of("java.lang.String value", false, "java-package String"),
+          Arguments.of(42, false, "java-package Integer"));
+    }
+
+    @ParameterizedTest(name = "isNormalisableObject({2}) returns {1}")
+    @MethodSource("isNormalisableCases")
+    @DisplayName("isNormalisableObject — all branches")
+    @SuppressWarnings("unused")
+    void isNormalisableObject_allBranches(Object input, boolean expected, String description) {
+      assertEquals(expected, normaliser.isNormalisableObject(input));
     }
   }
 }

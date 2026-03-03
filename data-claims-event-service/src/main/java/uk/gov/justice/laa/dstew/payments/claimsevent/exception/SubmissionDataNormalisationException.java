@@ -8,16 +8,6 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.exception;
  * the {@code SubmissionDataNormaliser} is trimming or uppercasing string fields on a DTO object.
  */
 public class SubmissionDataNormalisationException extends RuntimeException {
-
-  /**
-   * Constructs the exception with a description of the field that could not be normalised.
-   *
-   * @param message description of the failure, typically including the field name
-   */
-  public SubmissionDataNormalisationException(String message) {
-    super(message);
-  }
-
   /**
    * Constructs the exception with a description of the field that could not be normalised and the
    * underlying cause.

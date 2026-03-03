@@ -44,12 +44,11 @@ public class SubmissionDataNormaliser {
               "clientType",
               "typeOfAdvice"));
 
-  private String normaliseString(String value) {
+  protected String normaliseString(String value) {
     if (!StringUtils.hasText(value)) {
       return null;
     }
-    String trimmed = value.trim();
-    return trimmed.isEmpty() ? null : trimmed;
+    return value.trim();
   }
 
   /**
@@ -75,7 +74,7 @@ public class SubmissionDataNormaliser {
    * @param object the object to normalise
    * @param visited tracks visited objects to avoid infinite recursion
    */
-  private void normaliseObject(Object object, Set<Object> visited) {
+  protected void normaliseObject(Object object, Set<Object> visited) {
     if (object == null || visited.contains(object)) {
       return;
     }
@@ -102,7 +101,7 @@ public class SubmissionDataNormaliser {
         .forEach(field -> normaliseFieldValue(object, field, visited));
   }
 
-  private void normaliseFieldValue(Object object, Field field, Set<Object> visited) {
+  protected void normaliseFieldValue(Object object, Field field, Set<Object> visited) {
     if (object == null || field == null) {
       return;
     }
@@ -127,7 +126,7 @@ public class SubmissionDataNormaliser {
     }
   }
 
-  private void normaliseMap(Map<Object, Object> map) {
+  protected void normaliseMap(Map<Object, Object> map) {
     Map<Object, Object> copy = new LinkedHashMap<>();
 
     for (Map.Entry<Object, Object> entry : map.entrySet()) {
@@ -149,7 +148,7 @@ public class SubmissionDataNormaliser {
   }
 
   // Determines whether an object should be recursively traversed
-  private boolean isNormalisableObject(Object value) {
+  protected boolean isNormalisableObject(Object value) {
     if (value == null) {
       return false;
     }
