@@ -86,7 +86,8 @@ public class BulkParsingService {
         bulkSubmissionMapper.mapToMatterStartRequests(matterStarts);
     createMatterStarts(bulkSubmissionId.toString(), createdSubmissionId, matterStartRequests);
 
-    updateSubmissionStatusAndNumberOfClaims(createdSubmissionId, claimIds.size(), SubmissionStatus.READY_FOR_VALIDATION);
+    updateSubmissionStatusAndNumberOfClaims(
+        createdSubmissionId, claimIds.size(), SubmissionStatus.READY_FOR_VALIDATION);
     updateBulkSubmissionStatus(bulkSubmissionId.toString(), BulkSubmissionStatus.PARSING_COMPLETED);
   }
 
@@ -235,7 +236,8 @@ public class BulkParsingService {
     } catch (CompletionException ce) {
       Throwable cause = ce.getCause();
       updateBulkSubmissionStatus(bulkSubmissionId, BulkSubmissionStatus.PARSING_FAILED);
-      updateSubmissionStatusAndNumberOfClaims(submissionId, null, SubmissionStatus.VALIDATION_FAILED);
+      updateSubmissionStatusAndNumberOfClaims(
+          submissionId, null, SubmissionStatus.VALIDATION_FAILED);
       if (cause instanceof ClaimCreateException cce) {
         throw cce;
       }
@@ -310,7 +312,8 @@ public class BulkParsingService {
         createdIds.add(createMatterStart(submissionId, ms));
       } catch (RuntimeException ex) {
         updateBulkSubmissionStatus(bulkSubmissionId, BulkSubmissionStatus.PARSING_FAILED);
-        updateSubmissionStatusAndNumberOfClaims(submissionId, null, SubmissionStatus.VALIDATION_FAILED);
+        updateSubmissionStatusAndNumberOfClaims(
+            submissionId, null, SubmissionStatus.VALIDATION_FAILED);
         throw new MatterStartCreateException(
             "Failed to create matter start at index " + index + ": " + ex.getMessage(), ex);
       } finally {
@@ -355,10 +358,7 @@ public class BulkParsingService {
   }
 
   protected void updateSubmissionStatusAndNumberOfClaims(
-      String submissionId,
-      Integer numberOfClaims,
-      SubmissionStatus submissionStatus
-  ) {
+      String submissionId, Integer numberOfClaims, SubmissionStatus submissionStatus) {
     SubmissionPatch patch = new SubmissionPatch();
     patch.setStatus(submissionStatus);
     if (numberOfClaims != null) {
@@ -374,7 +374,9 @@ public class BulkParsingService {
     }
     log.info(
         "Submission [{}] marked as {}} with {} claims",
-        submissionId, submissionStatus, numberOfClaims);
+        submissionId,
+        submissionStatus,
+        numberOfClaims);
   }
 
   protected void updateBulkSubmissionStatus(
