@@ -335,7 +335,7 @@
     },
     "gender_code": {
       "type": "string",
-      "pattern": "^([MFU])$",
+      "pattern": "^([MmFfUu])$",
       "validationErrorMessages": [
         {
           "key": "ALL",
@@ -471,7 +471,7 @@
     },
     "client_2_gender_code": {
       "type": "string",
-      "pattern": "^([MFU])$",
+      "pattern": "^([MmFfUu])$",
       "validationErrorMessages": [
         {
           "key": "ALL",
