@@ -11,6 +11,8 @@ import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.ExchangeFunction;
 import reactor.core.publisher.Mono;
 
+import static uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService.METRIC_NAMESPACE;
+
 /**
  * {@link ExchangeFilterFunction} that records Micrometer {@link Timer} metrics for every outbound
  * HTTP request made by a WebClient.
@@ -30,7 +32,7 @@ import reactor.core.publisher.Mono;
  */
 public class WebClientMetricsFilter implements ExchangeFilterFunction {
 
-  private static final String METRIC_NAME = "http.client.requests";
+  private static final String METRIC_NAME = "http_client_requests";
   private static final String STATUS_CLIENT_ERROR = "CLIENT_ERROR";
 
   private final MeterRegistry meterRegistry;
@@ -73,7 +75,7 @@ public class WebClientMetricsFilter implements ExchangeFilterFunction {
    * @param start the {@link Instant} at which the request was initiated
    */
   private void recordTimer(String method, String uri, String status, Instant start) {
-    Timer.builder(METRIC_NAME)
+    Timer.builder(METRIC_NAMESPACE + METRIC_NAME)
         .tag("api", apiName)
         .tag("method", method)
         .tag("uri", uri)

@@ -44,7 +44,7 @@ public class EventServiceMetricService {
   private final Summary fspValidationTimeSummary;
   private final HashMap<UUID, TimerLifecycle> fspValidationTimers;
 
-  private static final String METRIC_NAMESPACE = "claims_event_service_";
+  public static final String METRIC_NAMESPACE = "claims_event_service_";
 
   /**
    * Constructor.
