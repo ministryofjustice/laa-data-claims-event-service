@@ -44,7 +44,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricS
 @Slf4j
 public class BulkParsingService {
 
-  public static final String NULL_RESPONSE = "null response";
+  private static final String NULL_RESPONSE = "null response";
   private final DataClaimsRestClient dataClaimsRestClient;
   private final BulkSubmissionMapper bulkSubmissionMapper;
   private final EventServiceMetricService eventServiceMetricService;
@@ -373,7 +373,7 @@ public class BulkParsingService {
               + (response == null ? NULL_RESPONSE : response.getStatusCode()));
     }
     log.info(
-        "Submission [{}] marked as {}} with {} claims",
+        "Submission [{}] marked as [{}] with [{}] claims",
         submissionId,
         submissionStatus,
         numberOfClaims);
