@@ -20,7 +20,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import software.amazon.awssdk.services.sqs.model.Message;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.SubmissionEventProcessingException;
-import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
+import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.MetricPublisher;
 import uk.gov.justice.laa.dstew.payments.claimsevent.model.BulkSubmissionMessage;
 import uk.gov.justice.laa.dstew.payments.claimsevent.model.SubmissionEventType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.model.SubmissionValidationMessage;
@@ -35,7 +35,7 @@ public class SubmissionListenerTest {
 
   @Mock SubmissionValidationService submissionValidationService;
 
-  @Mock EventServiceMetricService eventServiceMetricService;
+  @Mock MetricPublisher eventServiceMetricService;
 
   @Mock ObjectMapper objectMapper;
 

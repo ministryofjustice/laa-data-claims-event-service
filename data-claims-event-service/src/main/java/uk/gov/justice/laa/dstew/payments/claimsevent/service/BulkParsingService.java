@@ -36,7 +36,8 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.exception.ClaimCreateExcept
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.MatterStartCreateException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.SubmissionCreateException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.mapper.BulkSubmissionMapper;
-import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
+import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.MetricNames;
+import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.MetricPublisher;
 
 /** Service responsible for retrieving bulk submissions and sending them to the Claims Data API. */
 @Service
@@ -46,7 +47,7 @@ public class BulkParsingService {
 
   private final DataClaimsRestClient dataClaimsRestClient;
   private final BulkSubmissionMapper bulkSubmissionMapper;
-  private final EventServiceMetricService eventServiceMetricService;
+  private final MetricPublisher metricPublisher;
   private final SubmissionDataNormaliser submissionDataNormaliser;
 
   private static final int MAX_CONCURRENCY =
@@ -144,7 +145,7 @@ public class BulkParsingService {
               + (response == null ? "null response" : response.getStatusCode()));
     }
 
-    eventServiceMetricService.incrementTotalSubmissionsCreated();
+    metricPublisher.increment(MetricNames.SUBMISSIONS_ADDED);
 
     String createdId = extractIdFromLocation(response);
     if (!StringUtils.hasText(createdId)) {
@@ -287,7 +288,7 @@ public class BulkParsingService {
               + (response == null ? "null response" : response.getStatusCode()));
     }
 
-    eventServiceMetricService.incrementTotalClaimsCreated();
+    metricPublisher.increment(MetricNames.CLAIMS_ADDED);
 
     String createdId = extractIdFromLocation(response);
     if (!StringUtils.hasText(createdId)) {
