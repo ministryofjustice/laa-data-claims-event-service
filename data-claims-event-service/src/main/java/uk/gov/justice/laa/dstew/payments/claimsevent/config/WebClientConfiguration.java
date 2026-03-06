@@ -1,6 +1,5 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.config;
 
-import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -14,6 +13,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRes
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.WebClientLoggingFilter;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.WebClientMetricsFilter;
+import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.MetricPublisher;
 
 /**
  * Configuration class for creating and configuring {@link WebClient} instances for each downstream
@@ -42,10 +42,10 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.client.WebClientMetricsFilt
 })
 public class WebClientConfiguration {
 
-  private final MeterRegistry meterRegistry;
+  private final MetricPublisher metricPublisher;
 
-  public WebClientConfiguration(MeterRegistry meterRegistry) {
-    this.meterRegistry = meterRegistry;
+  public WebClientConfiguration(MetricPublisher metricPublisher) {
+    this.metricPublisher = metricPublisher;
   }
 
   /**
@@ -150,7 +150,7 @@ public class WebClientConfiguration {
         .defaultHeader(properties.getAuthHeader(), properties.getAccessToken())
         .exchangeStrategies(strategies)
         .filter(new WebClientLoggingFilter(apiName))
-        .filter(new WebClientMetricsFilter(meterRegistry, apiName))
+        .filter(new WebClientMetricsFilter(metricPublisher, apiName))
         .build();
   }
 }

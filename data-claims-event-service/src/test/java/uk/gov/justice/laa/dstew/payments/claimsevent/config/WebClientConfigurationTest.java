@@ -2,7 +2,6 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -11,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
+import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.MetricPublisher;
 
 /**
  * Unit tests for {@link WebClientConfiguration}.
@@ -22,13 +22,14 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestC
 @DisplayName("WebClientConfiguration")
 class WebClientConfigurationTest {
 
-  private MeterRegistry meterRegistry;
   private WebClientConfiguration configuration;
 
   @BeforeEach
   void setUp() {
-    meterRegistry = new SimpleMeterRegistry();
-    configuration = new WebClientConfiguration(meterRegistry);
+    SimpleMeterRegistry registry = new SimpleMeterRegistry();
+    MetricsProperties metricsProperties = new MetricsProperties();
+    MetricPublisher metricPublisher = new MetricPublisher(registry, metricsProperties);
+    configuration = new WebClientConfiguration(metricPublisher);
   }
 
   // ---------------------------------------------------------------------------

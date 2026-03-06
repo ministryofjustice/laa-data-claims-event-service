@@ -52,6 +52,10 @@ sentry:
     minimum-breadcrumb-level: info
 
 laa:
+  metrics:
+    namespace: claims_event_service_
+    warn-threshold-seconds: 2.0
+    
   provider-details-api:
     host: ${PROVIDER_DETAILS_API_HOSTNAME}
     url: ${laa.provider-details-api.host}

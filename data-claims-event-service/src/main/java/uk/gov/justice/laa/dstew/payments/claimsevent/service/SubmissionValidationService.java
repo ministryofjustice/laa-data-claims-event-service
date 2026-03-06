@@ -16,7 +16,9 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
-import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
+import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.MetricNames;
+import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.MetricPublisher;
+import uk.gov.justice.laa.dstew.payments.claimsevent.util.ValidationMessageMetricUtil;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.submission.SubmissionValidator;
@@ -35,7 +37,7 @@ public class SubmissionValidationService {
   private final BulkClaimUpdater bulkClaimUpdater;
   private final DataClaimsRestClient dataClaimsRestClient;
   private final List<SubmissionValidator> submissionValidatorList;
-  private final EventServiceMetricService eventServiceMetricService;
+  private final MetricPublisher metricPublisher;
 
   /**
    * Validates a claim submission inside the provided submissionResponse.
@@ -44,69 +46,68 @@ public class SubmissionValidationService {
    */
   public SubmissionValidationContext validateSubmission(UUID submissionId) {
     log.debug("Validating submission {}", submissionId);
-    eventServiceMetricService.startSubmissionValidationTimer(submissionId);
 
-    SubmissionResponse submission = dataClaimsRestClient.getSubmission(submissionId).getBody();
-    Assert.notNull(submission, "Submission not retrievable: " + submissionId.toString());
-    SubmissionValidationContext context = initialiseValidationContext(submission);
+    try (var ignored =
+        metricPublisher.timer(MetricNames.SUBMISSION_VALIDATION_TIME, submissionId)) {
+      SubmissionResponse submission = dataClaimsRestClient.getSubmission(submissionId).getBody();
+      Assert.notNull(submission, "Submission not retrievable: " + submissionId.toString());
+      SubmissionValidationContext context = initialiseValidationContext(submission);
 
-    // Currently validating:
-    // - Submission Status (Has highest priority to update the submission status if required)
-    // - Submission Schema
-    // - Nil submissions
-    submissionValidatorList.stream()
-        .sorted(Comparator.comparingInt(SubmissionValidator::priority))
-        .forEach(validator -> validator.validate(submission, context));
+      // Currently validating:
+      // - Submission Status (Has highest priority to update the submission status if required)
+      // - Submission Schema
+      // - Nil submissions
+      submissionValidatorList.stream()
+          .sorted(Comparator.comparingInt(SubmissionValidator::priority))
+          .forEach(validator -> validator.validate(submission, context));
 
-    // Only validate claims if no submission level validation errors have been recorded.
-    if (!context.hasSubmissionLevelErrors()) {
-      claimValidationService.validateAndUpdateClaims(submission, context);
-    } else {
-      eventServiceMetricService.incrementTotalSubmissionsValidatedWithSubmissionErrors();
+      // Only validate claims if no submission level validation errors have been recorded.
+      if (!context.hasSubmissionLevelErrors()) {
+        claimValidationService.validateAndUpdateClaims(submission, context);
+      } else {
+        metricPublisher.increment(MetricNames.SUBMISSIONS_WITH_ERRORS);
+      }
+
+      // Update submission and bulk submission status after completion
+      var bulkSubmissionId = submission.getBulkSubmissionId();
+      SubmissionPatch submissionPatch = new SubmissionPatch().submissionId(submissionId);
+      BulkSubmissionPatch bulkSubmissionPatch =
+          new BulkSubmissionPatch().bulkSubmissionId(bulkSubmissionId);
+      if (context.hasErrors()) {
+        log.debug(
+            "Validation completed for submission {} with errors: {}",
+            submissionId,
+            context.getSubmissionValidationErrors());
+        log.debug(
+            "Validation completed for submission {} with no of claims errors: {}",
+            submissionId,
+            context.getClaimReports().size());
+        submissionPatch
+            .status(SubmissionStatus.VALIDATION_FAILED)
+            .validationMessages(context.getSubmissionValidationErrors());
+        metricPublisher.increment(MetricNames.INVALID_SUBMISSIONS);
+        bulkSubmissionPatch
+            .status(BulkSubmissionStatus.VALIDATION_FAILED)
+            .errorCode(BulkSubmissionErrorCode.V100)
+            .errorDescription(
+                "Validation completed for bulk submission %s with errors"
+                    .formatted(bulkSubmissionId));
+      } else {
+        log.debug("Validation completed for submission {} with no errors", submissionId);
+        submissionPatch.status(SubmissionStatus.VALIDATION_SUCCEEDED);
+        metricPublisher.increment(MetricNames.VALID_SUBMISSIONS);
+        bulkSubmissionPatch.status(BulkSubmissionStatus.VALIDATION_SUCCEEDED);
+      }
+
+      // Record each validation message as a labelled counter so the most common errors are visible
+      ValidationMessageMetricUtil.incrementValidationMessageMetrics(
+          metricPublisher, context.getSubmissionValidationErrors(), "Submission");
+
+      dataClaimsRestClient.updateSubmission(submissionId.toString(), submissionPatch);
+      dataClaimsRestClient.updateBulkSubmission(
+          String.valueOf(bulkSubmissionId), bulkSubmissionPatch);
+      return context;
     }
-
-    // Update submission and bulk submission status after completion
-    var bulkSubmissionId = submission.getBulkSubmissionId();
-    SubmissionPatch submissionPatch = new SubmissionPatch().submissionId(submissionId);
-    BulkSubmissionPatch bulkSubmissionPatch =
-        new BulkSubmissionPatch().bulkSubmissionId(bulkSubmissionId);
-    if (context.hasErrors()) {
-      log.debug(
-          "Validation completed for submission {} with errors: {}",
-          submissionId,
-          context.getSubmissionValidationErrors());
-      log.debug(
-          "Validation completed for submission {} with no of claims errors: {}",
-          submissionId,
-          context.getClaimReports().size());
-      submissionPatch
-          .status(SubmissionStatus.VALIDATION_FAILED)
-          .validationMessages(context.getSubmissionValidationErrors());
-      eventServiceMetricService.incrementTotalInvalidSubmissions();
-      bulkSubmissionPatch
-          .status(BulkSubmissionStatus.VALIDATION_FAILED)
-          .errorCode(BulkSubmissionErrorCode.V100)
-          .errorDescription(
-              "Validation completed for bulk submission %s with errors"
-                  .formatted(bulkSubmissionId));
-    } else {
-      log.debug("Validation completed for submission {} with no errors", submissionId);
-      submissionPatch.status(SubmissionStatus.VALIDATION_SUCCEEDED);
-      eventServiceMetricService.incrementTotalValidSubmissions();
-      bulkSubmissionPatch.status(BulkSubmissionStatus.VALIDATION_SUCCEEDED);
-    }
-
-    // Record what submission errors were found
-    context
-        .getSubmissionValidationErrors()
-        .forEach(x -> eventServiceMetricService.recordValidationMessage(x, false));
-    // Stop submission validation timer
-    eventServiceMetricService.stopSubmissionValidationTimer(submissionId);
-
-    dataClaimsRestClient.updateSubmission(submissionId.toString(), submissionPatch);
-    dataClaimsRestClient.updateBulkSubmission(
-        String.valueOf(bulkSubmissionId), bulkSubmissionPatch);
-    return context;
   }
 
   private SubmissionValidationContext initialiseValidationContext(SubmissionResponse submission) {
