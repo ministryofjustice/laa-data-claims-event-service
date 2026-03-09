@@ -319,7 +319,7 @@ class BulkParsingServiceTest {
   }
 
   @Test
-  void patchSubmissionThrowsWhenNot2Xx() {
+  void patchSubmissionThrowsWhenNot2xx() {
     when(dataClaimsRestClient.updateSubmission(eq("sub1"), any(SubmissionPatch.class)))
         .thenReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
 
@@ -378,8 +378,7 @@ class BulkParsingServiceTest {
         .when(spyService)
         .createMatterStart("sub1", request);
 
-    List<MatterStartPost> requestList = List.of(request);
-    assertThatThrownBy(() -> spyService.createMatterStarts("bulk-sub1", "sub1", requestList))
+    assertThatThrownBy(() -> spyService.createMatterStarts("bulk-sub1", "sub1", List.of(request)))
         .isInstanceOf(MatterStartCreateException.class)
         .hasMessageContaining("index 0");
     verify(dataClaimsRestClient)
