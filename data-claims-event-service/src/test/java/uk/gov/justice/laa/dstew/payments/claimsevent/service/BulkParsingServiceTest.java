@@ -303,12 +303,11 @@ class BulkParsingServiceTest {
   }
 
   @Test
-  void updateSubmissionStatusAndNumberOfClaimsCallsClient() {
+  void patchSubmissionCallsClient() {
     when(dataClaimsRestClient.updateSubmission(eq("sub1"), any(SubmissionPatch.class)))
         .thenReturn(ResponseEntity.noContent().build());
 
-    service.updateSubmissionStatusAndNumberOfClaims(
-        "sub1", 2, SubmissionStatus.READY_FOR_VALIDATION);
+    service.patchSubmission("sub1", 2, SubmissionStatus.READY_FOR_VALIDATION);
 
     verify(dataClaimsRestClient)
         .updateSubmission(
@@ -320,14 +319,12 @@ class BulkParsingServiceTest {
   }
 
   @Test
-  void updateSubmissionStatusAndNumberOfClaimsThrowsWhenNot2Xx() {
+  void patchSubmissionThrowsWhenNot2Xx() {
     when(dataClaimsRestClient.updateSubmission(eq("sub1"), any(SubmissionPatch.class)))
         .thenReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
 
     assertThatThrownBy(
-            () ->
-                service.updateSubmissionStatusAndNumberOfClaims(
-                    "sub1", 2, SubmissionStatus.READY_FOR_VALIDATION))
+            () -> service.patchSubmission("sub1", 2, SubmissionStatus.READY_FOR_VALIDATION))
         .isInstanceOf(SubmissionCreateException.class);
   }
 
@@ -594,7 +591,6 @@ class BulkParsingServiceTest {
                 patch ->
                     patch.getStatus() == SubmissionStatus.VALIDATION_FAILED
                         && patch.getNumberOfClaims() == null));
-    // Ensure createMatterStart is not called for ms2 after failure
     verify(dataClaimsRestClient).createMatterStart(eq(submissionId), eq(ms1));
   }
 }

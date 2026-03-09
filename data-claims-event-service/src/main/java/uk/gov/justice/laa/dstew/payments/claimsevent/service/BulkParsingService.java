@@ -86,8 +86,7 @@ public class BulkParsingService {
         bulkSubmissionMapper.mapToMatterStartRequests(matterStarts);
     createMatterStarts(bulkSubmissionId.toString(), createdSubmissionId, matterStartRequests);
 
-    updateSubmissionStatusAndNumberOfClaims(
-        createdSubmissionId, claimIds.size(), SubmissionStatus.READY_FOR_VALIDATION);
+    patchSubmission(createdSubmissionId, claimIds.size(), SubmissionStatus.READY_FOR_VALIDATION);
     updateBulkSubmissionStatus(bulkSubmissionId.toString(), BulkSubmissionStatus.PARSING_COMPLETED);
   }
 
@@ -236,8 +235,7 @@ public class BulkParsingService {
     } catch (CompletionException ce) {
       Throwable cause = ce.getCause();
       updateBulkSubmissionStatus(bulkSubmissionId, BulkSubmissionStatus.PARSING_FAILED);
-      updateSubmissionStatusAndNumberOfClaims(
-          submissionId, null, SubmissionStatus.VALIDATION_FAILED);
+      patchSubmission(submissionId, null, SubmissionStatus.VALIDATION_FAILED);
       if (cause instanceof ClaimCreateException cce) {
         throw cce;
       }
@@ -312,8 +310,7 @@ public class BulkParsingService {
         createdIds.add(createMatterStart(submissionId, ms));
       } catch (RuntimeException ex) {
         updateBulkSubmissionStatus(bulkSubmissionId, BulkSubmissionStatus.PARSING_FAILED);
-        updateSubmissionStatusAndNumberOfClaims(
-            submissionId, null, SubmissionStatus.VALIDATION_FAILED);
+        patchSubmission(submissionId, null, SubmissionStatus.VALIDATION_FAILED);
         throw new MatterStartCreateException(
             "Failed to create matter start at index " + index + ": " + ex.getMessage(), ex);
       } finally {
@@ -357,7 +354,7 @@ public class BulkParsingService {
     return createdId;
   }
 
-  protected void updateSubmissionStatusAndNumberOfClaims(
+  protected void patchSubmission(
       String submissionId, Integer numberOfClaims, SubmissionStatus submissionStatus) {
     SubmissionPatch patch = new SubmissionPatch();
     patch.setStatus(submissionStatus);
