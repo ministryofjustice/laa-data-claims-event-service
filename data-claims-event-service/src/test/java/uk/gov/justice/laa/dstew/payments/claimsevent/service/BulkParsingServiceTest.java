@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -352,10 +351,7 @@ class BulkParsingServiceTest {
     doThrow(new ClaimCreateException("boom")).when(spyService).createClaim("sub1", claim);
 
     List<ClaimPost> claimsList = List.of(claim);
-    assertThatThrownBy(
-            () -> {
-              spyService.createClaims("bulk-sub1", "sub1", claimsList);
-            })
+    assertThatThrownBy(() -> spyService.createClaims("bulk-sub1", "sub1", claimsList))
         .isInstanceOf(ClaimCreateException.class)
         .hasMessageContaining("index 0");
     verify(dataClaimsRestClient)
@@ -386,10 +382,7 @@ class BulkParsingServiceTest {
         .createMatterStart("sub1", request);
 
     List<MatterStartPost> requestList = List.of(request);
-    assertThatThrownBy(
-            () -> {
-              spyService.createMatterStarts("bulk-sub1", "sub1", requestList);
-            })
+    assertThatThrownBy(() -> spyService.createMatterStarts("bulk-sub1", "sub1", requestList))
         .isInstanceOf(MatterStartCreateException.class)
         .hasMessageContaining("index 0");
     verify(dataClaimsRestClient)
@@ -497,18 +490,15 @@ class BulkParsingServiceTest {
   }
 
   @Test
-  void createClaimsUpdatesSubmissionStatusToValidationFailedOnExceptionOutsideLambdaTryCatch() {
+  void createClaimsUpdatesSubmissionStatusToValidationFailedOnExceptionAfterClaimProcessing() {
     String bulkSubmissionId = "bulk-1";
     String submissionId = "sub-1";
     ClaimPost claim = new ClaimPost();
     List<ClaimPost> claims = List.of(claim);
 
-    // Spy on the service to throw an exception before the try-catch in the lambda
+    // Spy on the service to simulate an exception when creating a claim
     BulkParsingService spyService = spy(service);
-    doAnswer(
-            invocation -> {
-              throw new RuntimeException("outer exception");
-            })
+    doThrow(new RuntimeException("outer exception"))
         .when(spyService)
         .createClaim(eq(submissionId), eq(claim));
 
@@ -541,10 +531,13 @@ class BulkParsingServiceTest {
     ClaimPost c2 = new ClaimPost();
     List<ClaimPost> claims = List.of(c1, c2);
 
-    // Mock createClaim to throw for the first item, succeed for the second (should not be called)
     doThrow(new ClaimCreateException("fail"))
         .when(dataClaimsRestClient)
         .createClaim(eq(submissionId), eq(c1));
+
+    doThrow(new ClaimCreateException("fail"))
+        .when(dataClaimsRestClient)
+        .createClaim(eq(submissionId), eq(c2));
 
     // Mock updateBulkSubmissionStatus to avoid exception
     when(dataClaimsRestClient.updateBulkSubmission(
@@ -565,7 +558,6 @@ class BulkParsingServiceTest {
                 patch ->
                     patch.getStatus() == SubmissionStatus.VALIDATION_FAILED
                         && patch.getNumberOfClaims() == null));
-    // Ensure createClaim is not called for c2 after failure
     verify(dataClaimsRestClient).createClaim(eq(submissionId), eq(c1));
   }
 
