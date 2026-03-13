@@ -246,7 +246,7 @@ public class ClaimValidationService {
           ClaimValidationError.TECHNICAL_ERROR_FEE_CALCULATION_SERVICE,
           claim.getFeeCode());
     } else if (wrapper.getFeeDetailsResponse() == null) {
-      log.error("Fee details response returned null for fee code: {}", claim.getFeeCode());
+      log.info("Fee details response returned null for fee code: {}", claim.getFeeCode());
       context.addClaimError(
           claim.getId(),
           ClaimValidationError.INVALID_CATEGORY_OF_LAW_AND_FEE_CODE,
