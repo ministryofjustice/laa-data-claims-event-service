@@ -359,14 +359,17 @@ public class BulkParsingService {
   protected void updateSubmission(
       String submissionId, Integer numberOfClaims, SubmissionStatus submissionStatus) {
     boolean updateRequired = false;
+    String logMessage = "";
     SubmissionPatch patch = new SubmissionPatch();
     if (submissionStatus != null) {
       patch.setStatus(submissionStatus);
       updateRequired = true;
+      logMessage = String.format(": status = [%s] ", submissionStatus);
     }
     if (numberOfClaims != null) {
       patch.setNumberOfClaims(numberOfClaims);
       updateRequired = true;
+      logMessage = logMessage + String.format(": number of claims = [%s] ", numberOfClaims);
     }
     if (updateRequired) {
       ResponseEntity<Void> response = dataClaimsRestClient.updateSubmission(submissionId, patch);
@@ -378,10 +381,9 @@ public class BulkParsingService {
                 + getResponseStatus(response));
       }
       log.info(
-          "Submission [{}] marked as [{}] with [{}] claims",
+          "Submission [{}] marked with {}",
           submissionId,
-          submissionStatus,
-          numberOfClaims);
+          logMessage);
     }
   }
 
