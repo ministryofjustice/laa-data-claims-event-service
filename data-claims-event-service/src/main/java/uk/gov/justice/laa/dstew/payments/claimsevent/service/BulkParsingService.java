@@ -85,7 +85,7 @@ public class BulkParsingService {
         bulkSubmissionMapper.mapToMatterStartRequests(matterStarts);
     createMatterStarts(bulkSubmissionId.toString(), createdSubmissionId, matterStartRequests);
 
-    patchSubmission(createdSubmissionId, claimIds.size(), SubmissionStatus.READY_FOR_VALIDATION);
+    updateSubmission(createdSubmissionId, claimIds.size(), SubmissionStatus.READY_FOR_VALIDATION);
     updateBulkSubmissionStatus(bulkSubmissionId.toString(), BulkSubmissionStatus.PARSING_COMPLETED);
   }
 
@@ -245,7 +245,7 @@ public class BulkParsingService {
   }
 
   private void markSubmissionAsFailed(String submissionId) {
-    patchSubmission(submissionId, null, SubmissionStatus.VALIDATION_FAILED);
+    updateSubmission(submissionId, null, SubmissionStatus.VALIDATION_FAILED);
   }
 
   private static final class Result {
@@ -357,26 +357,33 @@ public class BulkParsingService {
     return createdId;
   }
 
-  protected void patchSubmission(
+  protected void updateSubmission(
       String submissionId, Integer numberOfClaims, SubmissionStatus submissionStatus) {
+    boolean updateRequired = false;
     SubmissionPatch patch = new SubmissionPatch();
-    patch.setStatus(submissionStatus);
+    if (submissionStatus != null) {
+      patch.setStatus(submissionStatus);
+      updateRequired = true;
+    }
     if (numberOfClaims != null) {
       patch.setNumberOfClaims(numberOfClaims);
+      updateRequired = true;
     }
-    ResponseEntity<Void> response = dataClaimsRestClient.updateSubmission(submissionId, patch);
-    if (response == null || !response.getStatusCode().is2xxSuccessful()) {
-      throw new SubmissionCreateException(
-          "Failed to update submission status for submission "
-              + submissionId
-              + ". HTTP status: "
-              + getResponseStatus(response));
+    if (updateRequired) {
+      ResponseEntity<Void> response = dataClaimsRestClient.updateSubmission(submissionId, patch);
+      if (response == null || !response.getStatusCode().is2xxSuccessful()) {
+        throw new SubmissionCreateException(
+            "Failed to update submission "
+                + submissionId
+                + ". HTTP status: "
+                + getResponseStatus(response));
+      }
+      log.info(
+          "Submission [{}] marked as [{}] with [{}] claims",
+          submissionId,
+          submissionStatus,
+          numberOfClaims);
     }
-    log.info(
-        "Submission [{}] marked as [{}] with [{}] claims",
-        submissionId,
-        submissionStatus,
-        numberOfClaims);
   }
 
   private static String getResponseStatus(ResponseEntity<?> response) {

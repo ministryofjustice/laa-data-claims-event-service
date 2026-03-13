@@ -303,11 +303,11 @@ class BulkParsingServiceTest {
   }
 
   @Test
-  void patchSubmissionCallsClient() {
+  void updateSubmissionCallsClient() {
     when(dataClaimsRestClient.updateSubmission(eq("sub1"), any(SubmissionPatch.class)))
         .thenReturn(ResponseEntity.noContent().build());
 
-    service.patchSubmission("sub1", 2, SubmissionStatus.READY_FOR_VALIDATION);
+    service.updateSubmission("sub1", 2, SubmissionStatus.READY_FOR_VALIDATION);
 
     verify(dataClaimsRestClient)
         .updateSubmission(
@@ -319,12 +319,12 @@ class BulkParsingServiceTest {
   }
 
   @Test
-  void patchSubmissionThrowsWhenNot2xx() {
+  void updateSubmissionThrowsWhenNot2xx() {
     when(dataClaimsRestClient.updateSubmission(eq("sub1"), any(SubmissionPatch.class)))
         .thenReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
 
     assertThatThrownBy(
-            () -> service.patchSubmission("sub1", 2, SubmissionStatus.READY_FOR_VALIDATION))
+            () -> service.updateSubmission("sub1", 2, SubmissionStatus.READY_FOR_VALIDATION))
         .isInstanceOf(SubmissionCreateException.class);
   }
 
