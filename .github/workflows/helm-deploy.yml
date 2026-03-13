@@ -54,8 +54,8 @@ jobs:
       - name: Configure aws credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: ${{ secrets.ecr_role_to_assume }}
-          aws-region: ${{ vars.ECR_REGION }}
+          role-to-assume: ${{ secrets.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_ROLE_TO_ASSUME }}
+          aws-region: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_REGION }}
 
       - name: Login ecr
         uses: aws-actions/amazon-ecr-login@v1
@@ -73,8 +73,8 @@ jobs:
           helm upgrade --install --wait --timeout 5m \
             -f helm-chart/values/env-${{ inputs.environment }}.yaml \
             ${{ inputs.deployment_name }} helm-chart \
-            --set image.repository=${{ steps.login-ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY }}
-          IMAGES=$(helm get manifest ${{ inputs.deployment_name }} | yq -o=json '.' | jq -sc '[.[] | select(.kind == "Deployment") | select(.spec.template.spec.containers[0].image | contains("${{ steps.login-ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY }}")) | {image_version_tag: .metadata.labels.appVersion, release_tag: .metadata.name}]')
+            --set image.repository=${{ steps.login-ecr.outputs.registry }}/${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_REPOSITORY }}
+          IMAGES=$(helm get manifest ${{ inputs.deployment_name }} | yq -o=json '.' | jq -sc '[.[] | select(.kind == "Deployment") | select(.spec.template.spec.containers[0].image | contains("${{ steps.login-ecr.outputs.registry }}/${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_REPOSITORY }}")) | {image_version_tag: .metadata.labels.appVersion, release_tag: .metadata.name}]')
           echo "images=$IMAGES" >> $GITHUB_OUTPUT
           echo "Deployed Images: $(echo $IMAGES | jq)"
 
