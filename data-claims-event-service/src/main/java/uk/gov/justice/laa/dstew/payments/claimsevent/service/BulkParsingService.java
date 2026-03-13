@@ -140,8 +140,7 @@ public class BulkParsingService {
           getResponseStatus(response));
       updateBulkSubmissionStatus(bulkSubmissionId, BulkSubmissionStatus.PARSING_FAILED);
       throw new SubmissionCreateException(
-          "Failed to create submission. HTTP status: "
-              + getResponseStatus(response));
+          "Failed to create submission. HTTP status: " + getResponseStatus(response));
     }
 
     eventServiceMetricService.incrementTotalSubmissionsCreated();
