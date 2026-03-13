@@ -21,7 +21,6 @@ import org.springframework.test.context.ActiveProfiles;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import software.amazon.awssdk.http.HttpStatusCode;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MessageListenerBase;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MockServerIntegrationTest;
 import uk.gov.justice.laa.provider.model.FirmOfficeContractAndScheduleDetails;
@@ -40,7 +39,6 @@ import uk.gov.justice.laa.provider.model.ProviderFirmOfficeSummary;
     })
 class ProviderDetailsServiceCacheIntegrationTest extends MockServerIntegrationTest {
 
-  private static final String AREA_OF_LAW = AreaOfLaw.LEGAL_HELP.getValue();
   private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
   @Autowired ProviderDetailsService providerDetailsService;
@@ -124,7 +122,7 @@ class ProviderDetailsServiceCacheIntegrationTest extends MockServerIntegrationTe
 
   private Mono<ProviderFirmOfficeContractAndScheduleDto> call(
       String officeCode, LocalDate effectiveDate) {
-    return providerDetailsService.getProviderFirmSchedules(officeCode, AREA_OF_LAW, effectiveDate);
+    return providerDetailsService.getProviderFirmSchedules(officeCode, effectiveDate);
   }
 
   private void stubCoverage(
@@ -144,7 +142,6 @@ class ProviderDetailsServiceCacheIntegrationTest extends MockServerIntegrationTe
                 .withMethod("GET")
                 .withPath("/api/v1/provider-offices/" + officeCode + "/schedules")
                 .withQueryStringParameters(
-                    new Parameter("areaOfLaw", AREA_OF_LAW),
                     new Parameter("effectiveDate", FORMATTER.format(effectiveDate))),
             Times.exactly(1))
         .respond(
@@ -166,7 +163,6 @@ class ProviderDetailsServiceCacheIntegrationTest extends MockServerIntegrationTe
                 .withMethod("GET")
                 .withPath("/api/v1/provider-offices/" + officeCode + "/schedules")
                 .withQueryStringParameters(
-                    new Parameter("areaOfLaw", AREA_OF_LAW),
                     new Parameter("effectiveDate", FORMATTER.format(effectiveDate))),
             Times.exactly(1))
         .respond(negativeResponse);
@@ -178,7 +174,6 @@ class ProviderDetailsServiceCacheIntegrationTest extends MockServerIntegrationTe
             .withMethod("GET")
             .withPath("/api/v1/provider-offices/" + officeCode + "/schedules")
             .withQueryStringParameters(
-                new Parameter("areaOfLaw", AREA_OF_LAW),
                 new Parameter("effectiveDate", FORMATTER.format(effectiveDate))),
         VerificationTimes.exactly(times));
   }

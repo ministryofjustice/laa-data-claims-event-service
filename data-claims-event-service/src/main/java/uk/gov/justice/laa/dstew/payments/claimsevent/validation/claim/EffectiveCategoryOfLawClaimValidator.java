@@ -7,7 +7,6 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.EventServiceIllegalArgumentException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.CategoryOfLawValidationService;
@@ -57,7 +56,6 @@ public final class EffectiveCategoryOfLawClaimValidator implements ClaimValidato
    *
    * @param claim the claim to validate
    * @param context the validation context to add errors to
-   * @param areaOfLaw the area of law
    * @param officeCode the office code
    * @param feeDetailsResponseMap a map containing FeeDetailsResponse and their corresponding
    *     feeCodes
@@ -65,14 +63,13 @@ public final class EffectiveCategoryOfLawClaimValidator implements ClaimValidato
   public void validate(
       ClaimResponse claim,
       SubmissionValidationContext context,
-      AreaOfLaw areaOfLaw,
       String officeCode,
       Map<String, FeeDetailsResponseWrapper> feeDetailsResponseMap) {
     LocalDate effectiveDate = null;
     try {
       effectiveDate = ClaimEffectiveDateUtil.getEffectiveDate(claim);
       List<String> effectiveCategoriesOfLaw =
-          getEffectiveCategoriesOfLaw(officeCode, areaOfLaw.getValue(), effectiveDate);
+          getEffectiveCategoriesOfLaw(officeCode, effectiveDate);
       // Get effective category of law lookup
       categoryOfLawValidationService.validateCategoryOfLaw(
           claim, feeDetailsResponseMap, effectiveCategoriesOfLaw, context);
@@ -83,30 +80,27 @@ public final class EffectiveCategoryOfLawClaimValidator implements ClaimValidato
           e.getMessage());
     } catch (WebClientResponseException ex) {
       log.error(
-          "Error calling provider details API: Status={}, Message={}, officeCode={}, areaOfLaw={}, effectiveDate={},"
+          "Error calling provider details API: Status={}, Message={}, officeCode={}, effectiveDate={},"
               + "Please check if the API endpoint is configured correctly.",
           ex.getStatusCode(),
           ex.getMessage(),
           officeCode,
-          areaOfLaw.getValue(),
           effectiveDate,
           ex);
       handleProviderDetailsApiError(context, claim.getId());
     } catch (Exception ex) {
       log.error(
-          "Unexpected error during category of law validation for officeCode={}, areaOfLaw={}, effectiveDate={}",
+          "Unexpected error during category of law validation for officeCode={}, effectiveDate={}",
           officeCode,
-          areaOfLaw.getValue(),
           effectiveDate,
           ex);
       handleProviderDetailsApiError(context, claim.getId());
     }
   }
 
-  private List<String> getEffectiveCategoriesOfLaw(
-      String officeCode, String areaOfLaw, LocalDate effectiveDate) {
+  private List<String> getEffectiveCategoriesOfLaw(String officeCode, LocalDate effectiveDate) {
     return providerDetailsService
-        .getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate)
+        .getProviderFirmSchedules(officeCode, effectiveDate)
         .blockOptional()
         .map(this::extractCategoriesFromSchedules)
         .orElse(Collections.emptyList());
