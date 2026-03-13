@@ -59,7 +59,7 @@ public class DuplicateClaimsTest extends MockServerIntegrationTest {
       // provider-details
       stubForGetProviderOffice(
           OFFICE_CODE,
-          List.of(new Parameter("areaOfLaw", AreaOfLaw.LEGAL_HELP.getValue())),
+          Collections.emptyList(),
           "provider-details/get-firm-schedules-openapi-200.json");
       // fee-details
       stubForGetFeeDetails(FEE_CODE, "fee-scheme/get-fee-details-200.json");

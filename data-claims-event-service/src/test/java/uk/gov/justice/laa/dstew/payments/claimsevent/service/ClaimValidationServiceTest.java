@@ -149,11 +149,9 @@ class ClaimValidationServiceTest {
     verify(mandatoryFieldClaimValidator, times(1))
         .validate(claimTwo, context, AreaOfLaw.LEGAL_HELP, "feeType");
     verify(effectiveCategoryOfLawClaimValidator, times(1))
-        .validate(
-            claimOne, context, AreaOfLaw.LEGAL_HELP, "officeAccountNumber", feeDetailsResponseMap);
+        .validate(claimOne, context, "officeAccountNumber", feeDetailsResponseMap);
     verify(effectiveCategoryOfLawClaimValidator, times(1))
-        .validate(
-            claimTwo, context, AreaOfLaw.LEGAL_HELP, "officeAccountNumber", feeDetailsResponseMap);
+        .validate(claimTwo, context, "officeAccountNumber", feeDetailsResponseMap);
     verify(duplicateClaimValidator, times(1))
         .validate(
             claimOne, context, AreaOfLaw.LEGAL_HELP, "officeAccountNumber", claimsList, "feeType");

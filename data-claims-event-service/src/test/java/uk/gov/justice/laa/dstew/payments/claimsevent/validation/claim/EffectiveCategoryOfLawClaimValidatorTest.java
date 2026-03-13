@@ -24,7 +24,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.CategoryOfLawValidationService;
@@ -75,13 +74,12 @@ class EffectiveCategoryOfLawClaimValidatorTest {
                         new FirmOfficeContractAndScheduleLine().categoryOfLaw("categoryOfLaw1")));
 
     when(providerDetailsService.getProviderFirmSchedules(
-            eq("officeAccountNumber"), eq(AreaOfLaw.LEGAL_HELP.getValue()), any(LocalDate.class)))
+            eq("officeAccountNumber"), any(LocalDate.class)))
         .thenReturn(Mono.just(data));
 
     SubmissionValidationContext context = new SubmissionValidationContext();
 
-    validator.validate(
-        claim, context, AreaOfLaw.LEGAL_HELP, "officeAccountNumber", feeDetailsResponseMap);
+    validator.validate(claim, context, "officeAccountNumber", feeDetailsResponseMap);
 
     verify(categoryOfLawValidationService, times(1))
         .validateCategoryOfLaw(claim, feeDetailsResponseMap, providerCategoriesOfLaw, context);
@@ -109,14 +107,13 @@ class EffectiveCategoryOfLawClaimValidatorTest {
             .matterTypeCode("ab:cd");
 
     when(providerDetailsService.getProviderFirmSchedules(
-            eq("officeAccountNumber"), eq(AreaOfLaw.LEGAL_HELP.getValue()), any(LocalDate.class)))
+            eq("officeAccountNumber"), any(LocalDate.class)))
         .thenReturn(Mono.error(exception));
 
     SubmissionValidationContext context = new SubmissionValidationContext();
     Map<String, FeeDetailsResponseWrapper> feeDetailsResponseMap = Collections.emptyMap();
 
-    validator.validate(
-        claim, context, AreaOfLaw.LEGAL_HELP, "officeAccountNumber", feeDetailsResponseMap);
+    validator.validate(claim, context, "officeAccountNumber", feeDetailsResponseMap);
 
     assertThat(context.hasErrors(claimId.toString())).isTrue();
     assertThat(context.getClaimReport(claimId.toString()).get().getMessages())
