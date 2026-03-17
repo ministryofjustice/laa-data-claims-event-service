@@ -303,11 +303,11 @@ class BulkParsingServiceTest {
   }
 
   @Test
-  void updateSubmissionStatusCallsClient() {
+  void updateSubmissionCallsClient() {
     when(dataClaimsRestClient.updateSubmission(eq("sub1"), any(SubmissionPatch.class)))
         .thenReturn(ResponseEntity.noContent().build());
 
-    service.updateSubmissionStatus("sub1", 2);
+    service.updateSubmission("sub1", 2, SubmissionStatus.READY_FOR_VALIDATION);
 
     verify(dataClaimsRestClient)
         .updateSubmission(
@@ -319,11 +319,12 @@ class BulkParsingServiceTest {
   }
 
   @Test
-  void updateSubmissionStatusThrowsWhenNot2xx() {
+  void updateSubmissionThrowsWhenNot2xx() {
     when(dataClaimsRestClient.updateSubmission(eq("sub1"), any(SubmissionPatch.class)))
         .thenReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
 
-    assertThatThrownBy(() -> service.updateSubmissionStatus("sub1", 2))
+    assertThatThrownBy(
+            () -> service.updateSubmission("sub1", 2, SubmissionStatus.READY_FOR_VALIDATION))
         .isInstanceOf(SubmissionCreateException.class);
   }
 
@@ -341,10 +342,13 @@ class BulkParsingServiceTest {
     when(dataClaimsRestClient.updateBulkSubmission(
             any(String.class), any(BulkSubmissionPatch.class)))
         .thenReturn(ResponseEntity.noContent().build());
+    when(dataClaimsRestClient.updateSubmission(any(String.class), any(SubmissionPatch.class)))
+        .thenReturn(ResponseEntity.noContent().build());
 
     doThrow(new ClaimCreateException("boom")).when(spyService).createClaim("sub1", claim);
 
-    assertThatThrownBy(() -> spyService.createClaims("bulk-sub1", "sub1", List.of(claim)))
+    List<ClaimPost> claimsList = List.of(claim);
+    assertThatThrownBy(() -> spyService.createClaims("bulk-sub1", "sub1", claimsList))
         .isInstanceOf(ClaimCreateException.class)
         .hasMessageContaining("index 0");
     verify(dataClaimsRestClient)
@@ -366,6 +370,8 @@ class BulkParsingServiceTest {
 
     when(dataClaimsRestClient.updateBulkSubmission(
             any(String.class), any(BulkSubmissionPatch.class)))
+        .thenReturn(ResponseEntity.noContent().build());
+    when(dataClaimsRestClient.updateSubmission(any(String.class), any(SubmissionPatch.class)))
         .thenReturn(ResponseEntity.noContent().build());
 
     doThrow(new MatterStartCreateException("fail"))
@@ -477,5 +483,113 @@ class BulkParsingServiceTest {
         .isInstanceOf(BulkSubmissionUpdateException.class)
         .hasMessageContaining(
             "Failed to update bulk submission status for bulk submission bulk-sub1. HTTP status: null response");
+  }
+
+  @Test
+  void createClaimsUpdatesSubmissionStatusToValidationFailedOnExceptionAfterClaimProcessing() {
+    String bulkSubmissionId = "bulk-1";
+    String submissionId = "sub-1";
+    ClaimPost claim = new ClaimPost();
+    List<ClaimPost> claims = List.of(claim);
+
+    // Spy on the service to simulate an exception when creating a claim
+    BulkParsingService spyService = spy(service);
+    doThrow(new RuntimeException("outer exception"))
+        .when(spyService)
+        .createClaim(eq(submissionId), eq(claim));
+
+    // Mock updateBulkSubmissionStatus to avoid exception
+    when(dataClaimsRestClient.updateBulkSubmission(
+            eq(bulkSubmissionId), any(BulkSubmissionPatch.class)))
+        .thenReturn(ResponseEntity.noContent().build());
+    // Mock updateSubmission to succeed
+    when(dataClaimsRestClient.updateSubmission(eq(submissionId), any(SubmissionPatch.class)))
+        .thenReturn(ResponseEntity.noContent().build());
+
+    assertThatThrownBy(() -> spyService.createClaims(bulkSubmissionId, submissionId, claims))
+        .isInstanceOf(ClaimCreateException.class)
+        .hasMessageContaining("outer exception");
+
+    verify(dataClaimsRestClient)
+        .updateSubmission(
+            eq(submissionId),
+            argThat(
+                patch ->
+                    patch.getStatus() == SubmissionStatus.VALIDATION_FAILED
+                        && patch.getNumberOfClaims() == null));
+  }
+
+  @Test
+  void createClaimsUpdatesSubmissionStatusToValidationFailedOnFirstClaimErrorInLoop() {
+    String bulkSubmissionId = "bulk-1";
+    String submissionId = "sub-1";
+    ClaimPost c1 = new ClaimPost();
+    ClaimPost c2 = new ClaimPost();
+    List<ClaimPost> claims = List.of(c1, c2);
+
+    doThrow(new ClaimCreateException("fail"))
+        .when(dataClaimsRestClient)
+        .createClaim(eq(submissionId), eq(c1));
+
+    doThrow(new ClaimCreateException("fail"))
+        .when(dataClaimsRestClient)
+        .createClaim(eq(submissionId), eq(c2));
+
+    // Mock updateBulkSubmissionStatus to avoid exception
+    when(dataClaimsRestClient.updateBulkSubmission(
+            eq(bulkSubmissionId), any(BulkSubmissionPatch.class)))
+        .thenReturn(ResponseEntity.noContent().build());
+    // Mock updateSubmission to succeed
+    when(dataClaimsRestClient.updateSubmission(eq(submissionId), any(SubmissionPatch.class)))
+        .thenReturn(ResponseEntity.noContent().build());
+
+    assertThatThrownBy(() -> service.createClaims(bulkSubmissionId, submissionId, claims))
+        .isInstanceOf(ClaimCreateException.class)
+        .hasMessageContaining("index 0");
+
+    verify(dataClaimsRestClient)
+        .updateSubmission(
+            eq(submissionId),
+            argThat(
+                patch ->
+                    patch.getStatus() == SubmissionStatus.VALIDATION_FAILED
+                        && patch.getNumberOfClaims() == null));
+    verify(dataClaimsRestClient).createClaim(eq(submissionId), eq(c1));
+  }
+
+  @Test
+  void createMatterStartsUpdatesSubmissionStatusToValidationFailedOnError() {
+    String bulkSubmissionId = "bulk-1";
+    String submissionId = "sub-1";
+    MatterStartPost ms1 = new MatterStartPost();
+    MatterStartPost ms2 = new MatterStartPost();
+    List<MatterStartPost> matterStarts = List.of(ms1, ms2);
+
+    // Mock createMatterStart to throw for the first item
+    doThrow(new MatterStartCreateException("fail"))
+        .when(dataClaimsRestClient)
+        .createMatterStart(eq(submissionId), eq(ms1));
+
+    // Mock updateBulkSubmissionStatus to avoid exception
+    when(dataClaimsRestClient.updateBulkSubmission(
+            eq(bulkSubmissionId), any(BulkSubmissionPatch.class)))
+        .thenReturn(ResponseEntity.noContent().build());
+    // Mock updateSubmission to succeed
+    when(dataClaimsRestClient.updateSubmission(eq(submissionId), any(SubmissionPatch.class)))
+        .thenReturn(ResponseEntity.noContent().build());
+
+    assertThatThrownBy(
+            () -> service.createMatterStarts(bulkSubmissionId, submissionId, matterStarts))
+        .isInstanceOf(MatterStartCreateException.class)
+        .hasMessageContaining("index 0");
+
+    verify(dataClaimsRestClient)
+        .updateSubmission(
+            eq(submissionId),
+            argThat(
+                patch ->
+                    patch.getStatus() == SubmissionStatus.VALIDATION_FAILED
+                        && patch.getNumberOfClaims() == null));
+    verify(dataClaimsRestClient).createMatterStart(eq(submissionId), eq(ms1));
   }
 }

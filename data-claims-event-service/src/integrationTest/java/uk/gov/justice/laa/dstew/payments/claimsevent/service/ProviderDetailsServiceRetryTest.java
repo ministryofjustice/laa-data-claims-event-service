@@ -47,9 +47,7 @@ public class ProviderDetailsServiceRetryTest extends MockServerIntegrationTest {
             new Parameter("effectiveDate", formatter.format(effectiveDate))));
 
     // when
-    StepVerifier.create(
-            providerDetailsService.getProviderFirmSchedules(
-                OFFICE_CODE, AreaOfLaw.LEGAL_HELP.getValue(), effectiveDate))
+    StepVerifier.create(providerDetailsService.getProviderFirmSchedules(OFFICE_CODE, effectiveDate))
         .expectError()
         .verify();
 
@@ -67,23 +65,15 @@ public class ProviderDetailsServiceRetryTest extends MockServerIntegrationTest {
     LocalDate effectiveDate = LocalDate.of(2010, 1, 1);
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
     stubForGetProviderOfficeReturnsErrorWithTimes(
-        OFFICE_CODE,
-        List.of(
-            new Parameter("areaOfLaw", AreaOfLaw.LEGAL_HELP.getValue()),
-            new Parameter("effectiveDate", formatter.format(effectiveDate))),
-        2);
+        OFFICE_CODE, List.of(new Parameter("effectiveDate", formatter.format(effectiveDate))), 2);
     stubForGetProviderOfficeWithTimes(
         OFFICE_CODE,
-        List.of(
-            new Parameter("areaOfLaw", AreaOfLaw.LEGAL_HELP.getValue()),
-            new Parameter("effectiveDate", formatter.format(effectiveDate))),
+        List.of(new Parameter("effectiveDate", formatter.format(effectiveDate))),
         "provider-details/get-firm-schedules-openapi-200.json",
         1);
 
     // when
-    StepVerifier.create(
-            providerDetailsService.getProviderFirmSchedules(
-                OFFICE_CODE, AreaOfLaw.LEGAL_HELP.getValue(), effectiveDate))
+    StepVerifier.create(providerDetailsService.getProviderFirmSchedules(OFFICE_CODE, effectiveDate))
         .expectNextMatches(dto -> dto.getOffice().getFirmOfficeCode().equals(OFFICE_CODE))
         .expectComplete()
         .verify();
@@ -94,7 +84,6 @@ public class ProviderDetailsServiceRetryTest extends MockServerIntegrationTest {
             .withMethod("GET")
             .withPath("/api/v1/provider-offices/" + OFFICE_CODE + "/schedules")
             .withQueryStringParameters(
-                new Parameter("areaOfLaw", AreaOfLaw.LEGAL_HELP.getValue()),
                 new Parameter("effectiveDate", formatter.format(effectiveDate))),
         VerificationTimes.exactly(3));
   }

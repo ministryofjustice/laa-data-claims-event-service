@@ -109,7 +109,7 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
     stubForGetFeeDetails("CAPA", "fee-scheme/get-fee-details-200.json");
     stubForGetProviderOffice(
         OFFICE_CODE,
-        List.of(new Parameter("areaOfLaw", AREA_OF_LAW.getValue())),
+        Collections.emptyList(),
         "provider-details/get-firm-schedules-openapi-200.json");
 
     stubForGetClaims(Collections.emptyList(), "data-claims/get-claims/claim-two-claims.json");
@@ -157,7 +157,7 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
     stubForGetFeeDetails("CAPA", "fee-scheme/get-fee-details-disbursement.json");
     stubForGetProviderOffice(
         OFFICE_CODE,
-        List.of(new Parameter("areaOfLaw", AREA_OF_LAW.getValue())),
+        Collections.emptyList(),
         "provider-details/get-firm-schedules-openapi-200.json");
 
     // this returns the caseStartDate as 2025-01-01 which is more than 3 months old for the given
@@ -208,7 +208,7 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
     stubForGetFeeDetails("CAPA", "fee-scheme/get-fee-details-disbursement.json");
     stubForGetProviderOffice(
         OFFICE_CODE,
-        List.of(new Parameter("areaOfLaw", AREA_OF_LAW.getValue())),
+        Collections.emptyList(),
         "provider-details/get-firm-schedules-openapi-200.json");
 
     // this returns the caseStartDate as 2025-03-01 which is less than 3 months old for the given
