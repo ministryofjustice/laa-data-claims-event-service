@@ -207,8 +207,7 @@ public class ClaimValidationService {
                 case ClaimWithAreaOfLawValidator validator ->
                     validator.validate(claim, context, areaOfLaw);
                 case EffectiveCategoryOfLawClaimValidator validator ->
-                    validator.validate(
-                        claim, context, areaOfLaw, officeCode, feeDetailsResponseMap);
+                    validator.validate(claim, context, officeCode, feeDetailsResponseMap);
                 case DisbursementClaimStartDateValidator validator ->
                     validator.validate(claim, context, feeCalculationType);
                 case MandatoryFieldClaimValidator validator ->

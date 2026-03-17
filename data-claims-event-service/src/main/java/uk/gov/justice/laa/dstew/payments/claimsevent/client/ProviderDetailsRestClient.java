@@ -31,14 +31,13 @@ public interface ProviderDetailsRestClient {
    * </ul>
    *
    * @param officeCode The firm office code
-   * @param areaOfLaw The area of law code
    * @param effectiveDate The contract effective date for testing on lower environments. Should not
    *     be used for production environments.
    * @return The provider firm summary
    */
   default Mono<ProviderFirmOfficeContractAndScheduleDto> getProviderFirmSchedules(
-      final String officeCode, final String areaOfLaw, final LocalDate effectiveDate) {
-    return getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate, false);
+      final String officeCode, final LocalDate effectiveDate) {
+    return getProviderFirmSchedules(officeCode, effectiveDate, false);
   }
 
   /**
@@ -53,7 +52,6 @@ public interface ProviderDetailsRestClient {
    * </ul>
    *
    * @param officeCode The firm office code
-   * @param areaOfLaw The area of law code
    * @param effectiveDate The contract effective date for testing on lower environments. Should not
    *     be used for production environments.
    * @param requireOpenStatus If true, only returns schedules with open status, defaults to false.
@@ -62,7 +60,6 @@ public interface ProviderDetailsRestClient {
   @GetExchange("/{officeCode}/schedules")
   Mono<ProviderFirmOfficeContractAndScheduleDto> getProviderFirmSchedules(
       final @PathVariable String officeCode,
-      final @RequestParam(required = false) String areaOfLaw,
       final @RequestParam(required = false) @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate
               effectiveDate,
       final @RequestParam(defaultValue = "false") Boolean requireOpenStatus);

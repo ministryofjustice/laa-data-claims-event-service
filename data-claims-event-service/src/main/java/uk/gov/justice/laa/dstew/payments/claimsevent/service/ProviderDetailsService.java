@@ -39,7 +39,7 @@ public class ProviderDetailsService {
       new ConcurrentHashMap<>();
   private final Map<String, ProviderDetailsCachedSchedules> negativeCache =
       new ConcurrentHashMap<>();
-  // Prevent concurrent cache-miss calls for the same office/area.
+  // Prevent concurrent cache-miss calls for the same office.
   private final Map<String, Mono<ProviderFirmOfficeContractAndScheduleDto>> inFlightCalls =
       new ConcurrentHashMap<>();
 
@@ -49,14 +49,13 @@ public class ProviderDetailsService {
   private static final Duration POSITIVE_CACHE_TIME_TO_LIVE = Duration.ofMinutes(10);
 
   /**
-   * Retrieves the provider firm office contract and schedule information for a given office, area
-   * of law, and effective date.
+   * Retrieves the provider firm office contract and schedule information for a given office and
+   * effective date.
    *
    * <p>This method delegates the call to the underlying client and applies a retry mechanism
    * defined by the {@code pdaRetry} configuration.
    *
    * @param officeCode the unique code identifying the office (must not be {@code null})
-   * @param areaOfLaw the area of law for which schedules are requested (must not be {@code null})
    * @param effectiveDate the date from which the schedule should be effective (must not be {@code
    *     null})
    * @return a {@link Mono} emitting {@link ProviderFirmOfficeContractAndScheduleDto} containing the
@@ -64,9 +63,9 @@ public class ProviderDetailsService {
    * @throws IllegalArgumentException if any of the parameters are invalid
    */
   public Mono<ProviderFirmOfficeContractAndScheduleDto> getProviderFirmSchedules(
-      String officeCode, String areaOfLaw, LocalDate effectiveDate) {
-    String cacheKey = cacheKey(officeCode, areaOfLaw);
-    String negativeKey = negativeCacheKey(officeCode, areaOfLaw, effectiveDate);
+      String officeCode, LocalDate effectiveDate) {
+    String cacheKey = cacheKey(officeCode);
+    String negativeKey = negativeCacheKey(officeCode, effectiveDate);
     Optional<Mono<ProviderFirmOfficeContractAndScheduleDto>> negativeCacheHit =
         handleNegativeCache(negativeKey);
     if (negativeCacheHit.isPresent()) {
@@ -79,7 +78,7 @@ public class ProviderDetailsService {
       return positiveCacheHit.get();
     }
 
-    return fetchAndCache(officeCode, areaOfLaw, effectiveDate, cacheKey, negativeKey);
+    return fetchAndCache(officeCode, effectiveDate, cacheKey, negativeKey);
   }
 
   private Mono<ProviderFirmOfficeContractAndScheduleDto> cacheNegative(String negativeKey) {
@@ -144,24 +143,19 @@ public class ProviderDetailsService {
 
   /** Invokes PDA, then caches positive or negative results, sharing in-flight calls. */
   private Mono<ProviderFirmOfficeContractAndScheduleDto> fetchAndCache(
-      String officeCode,
-      String areaOfLaw,
-      LocalDate effectiveDate,
-      String cacheKey,
-      String negativeKey) {
+      String officeCode, LocalDate effectiveDate, String cacheKey, String negativeKey) {
     Retry retry = retryRegistry.retry("pdaRetry");
     return inFlightCalls
         .computeIfAbsent(
             cacheKey,
             key ->
                 providerDetailsRestClient
-                    .getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate)
+                    .getProviderFirmSchedules(officeCode, effectiveDate)
                     .doOnSubscribe(
                         subscription ->
                             log.debug(
-                                "Calling PDA getProviderFirmSchedules for officeCode {}, areaOfLaw {}, effectiveDate {}",
+                                "Calling PDA getProviderFirmSchedules for officeCode {}, effectiveDate {}",
                                 officeCode,
-                                areaOfLaw,
                                 effectiveDate))
                     .map(
                         dto -> {
@@ -248,13 +242,13 @@ public class ProviderDetailsService {
   }
 
   /** Creates a cache key for positive cache lookups. */
-  private String cacheKey(String officeCode, String areaOfLaw) {
-    return officeCode + "|" + areaOfLaw;
+  private String cacheKey(String officeCode) {
+    return officeCode;
   }
 
   /** Creates a cache key for negative cache scoped to the effective date. */
-  private String negativeCacheKey(String officeCode, String areaOfLaw, LocalDate effectiveDate) {
-    return officeCode + "|" + areaOfLaw + "|" + effectiveDate;
+  private String negativeCacheKey(String officeCode, LocalDate effectiveDate) {
+    return officeCode + "|" + effectiveDate;
   }
 
   /** Cache the response along with its merged coverage windows. */

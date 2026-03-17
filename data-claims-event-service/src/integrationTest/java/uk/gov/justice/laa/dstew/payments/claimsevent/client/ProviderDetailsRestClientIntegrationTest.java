@@ -49,7 +49,6 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
     void shouldReturn200Response() throws Exception {
       // Given
       String officeCode = "1234";
-      String areaOfLaw = "CRIMINAL";
       LocalDate effectiveDate = LocalDate.of(2021, 1, 1);
 
       String expectedBody =
@@ -59,8 +58,7 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
           .when(
               HttpRequest.request()
                   .withMethod("GET")
-                  .withPath(PROVIDER_OFFICES + officeCode + SCHEDULES_ENDPOINT)
-                  .withQueryStringParameter("areaOfLaw", areaOfLaw))
+                  .withPath(PROVIDER_OFFICES + officeCode + SCHEDULES_ENDPOINT))
           .respond(
               HttpResponse.response()
                   .withStatusCode(200)
@@ -69,7 +67,7 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
 
       // When
       Mono<ProviderFirmOfficeContractAndScheduleDto> result =
-          providerDetailsRestClient.getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate);
+          providerDetailsRestClient.getProviderFirmSchedules(officeCode, effectiveDate);
 
       // Then
       Optional<ProviderFirmOfficeContractAndScheduleDto> providerFirmSummary =
@@ -85,7 +83,6 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
     void shouldReturn200ResponseWithRequireOpenStatusParameter() throws Exception {
       // Given
       String officeCode = "1234";
-      String areaOfLaw = "CRIMINAL";
       LocalDate effectiveDate = LocalDate.of(2021, 1, 1);
 
       String expectedBody =
@@ -96,7 +93,6 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
               HttpRequest.request()
                   .withMethod("GET")
                   .withPath(PROVIDER_OFFICES + officeCode + SCHEDULES_ENDPOINT)
-                  .withQueryStringParameter("areaOfLaw", areaOfLaw)
                   .withQueryStringParameter("requireOpenStatus", "false"))
           .respond(
               HttpResponse.response()
@@ -106,7 +102,7 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
 
       // When
       Mono<ProviderFirmOfficeContractAndScheduleDto> result =
-          providerDetailsRestClient.getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate);
+          providerDetailsRestClient.getProviderFirmSchedules(officeCode, effectiveDate);
 
       // Then
       Optional<ProviderFirmOfficeContractAndScheduleDto> providerFirmSummary =
@@ -122,7 +118,6 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
     void shouldReturn200ResponseWithRequireOpenStatusParameterSetToTrue() throws Exception {
       // Given
       String officeCode = "1234";
-      String areaOfLaw = "CRIMINAL";
       LocalDate effectiveDate = LocalDate.of(2021, 1, 1);
 
       String expectedBody =
@@ -133,7 +128,6 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
               HttpRequest.request()
                   .withMethod("GET")
                   .withPath(PROVIDER_OFFICES + officeCode + SCHEDULES_ENDPOINT)
-                  .withQueryStringParameter("areaOfLaw", areaOfLaw)
                   .withQueryStringParameter("requireOpenStatus", "true"))
           .respond(
               HttpResponse.response()
@@ -143,8 +137,7 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
 
       // When
       Mono<ProviderFirmOfficeContractAndScheduleDto> result =
-          providerDetailsRestClient.getProviderFirmSchedules(
-              officeCode, areaOfLaw, effectiveDate, true);
+          providerDetailsRestClient.getProviderFirmSchedules(officeCode, effectiveDate, true);
 
       // Then
       Optional<ProviderFirmOfficeContractAndScheduleDto> providerFirmSummary =
@@ -160,7 +153,6 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
     void shouldReturn200ResponseWithoutAreaOfLaw() throws Exception {
       // Given
       String officeCode = "1234";
-      String areaOfLaw = "";
       LocalDate effectiveDate = LocalDate.of(2021, 1, 1);
 
       String expectedBody =
@@ -170,8 +162,7 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
           .when(
               HttpRequest.request()
                   .withMethod("GET")
-                  .withPath(PROVIDER_OFFICES + officeCode + SCHEDULES_ENDPOINT)
-                  .withQueryStringParameter("areaOfLaw", areaOfLaw))
+                  .withPath(PROVIDER_OFFICES + officeCode + SCHEDULES_ENDPOINT))
           .respond(
               HttpResponse.response()
                   .withStatusCode(200)
@@ -180,7 +171,7 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
 
       // When
       Mono<ProviderFirmOfficeContractAndScheduleDto> result =
-          providerDetailsRestClient.getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate);
+          providerDetailsRestClient.getProviderFirmSchedules(officeCode, effectiveDate);
 
       // Then
       Optional<ProviderFirmOfficeContractAndScheduleDto> providerFirmSummary =
@@ -196,15 +187,13 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
     void shouldHandle204Response() {
       // Given
       String officeCode = "1234";
-      String areaOfLaw = "CRIMINAL";
       LocalDate effectiveDate = LocalDate.of(2021, 1, 1);
 
       mockServerClient
           .when(
               HttpRequest.request()
                   .withMethod("GET")
-                  .withPath(PROVIDER_OFFICES + officeCode + SCHEDULES_ENDPOINT)
-                  .withQueryStringParameter("areaOfLaw", areaOfLaw))
+                  .withPath(PROVIDER_OFFICES + officeCode + SCHEDULES_ENDPOINT))
           .respond(
               HttpResponse.response()
                   .withStatusCode(204)
@@ -214,7 +203,7 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
       // When
       Mono<ProviderFirmOfficeContractAndScheduleDto> result =
           providerDetailsRestClient
-              .getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate)
+              .getProviderFirmSchedules(officeCode, effectiveDate)
               .onErrorResume(throwable -> Mono.empty());
 
       // Then
@@ -229,15 +218,13 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
     void shouldHandle500Response() {
       // Given
       String officeCode = "1234";
-      String areaOfLaw = "CRIMINAL";
       LocalDate effectiveDate = LocalDate.of(2021, 1, 1);
 
       mockServerClient
           .when(
               HttpRequest.request()
                   .withMethod("GET")
-                  .withPath(PROVIDER_OFFICES + officeCode + SCHEDULES_ENDPOINT)
-                  .withQueryStringParameter("areaOfLaw", areaOfLaw))
+                  .withPath(PROVIDER_OFFICES + officeCode + SCHEDULES_ENDPOINT))
           .respond(
               HttpResponse.response()
                   .withStatusCode(500)
@@ -245,7 +232,7 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
 
       // When
       Mono<ProviderFirmOfficeContractAndScheduleDto> result =
-          providerDetailsRestClient.getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate);
+          providerDetailsRestClient.getProviderFirmSchedules(officeCode, effectiveDate);
 
       // Then
       assertThatThrownBy(result::block)
@@ -258,15 +245,13 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
     void shouldHandle409Response() {
       // Given
       String officeCode = "1234";
-      String areaOfLaw = "CRIMINAL";
       LocalDate effectiveDate = LocalDate.of(2021, 1, 1);
 
       mockServerClient
           .when(
               HttpRequest.request()
                   .withMethod("GET")
-                  .withPath(PROVIDER_OFFICES + officeCode + SCHEDULES_ENDPOINT)
-                  .withQueryStringParameter("areaOfLaw", areaOfLaw))
+                  .withPath(PROVIDER_OFFICES + officeCode + SCHEDULES_ENDPOINT))
           .respond(
               HttpResponse.response()
                   .withStatusCode(409)
@@ -274,7 +259,7 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
 
       // When
       Mono<ProviderFirmOfficeContractAndScheduleDto> result =
-          providerDetailsRestClient.getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate);
+          providerDetailsRestClient.getProviderFirmSchedules(officeCode, effectiveDate);
 
       // Then
       assertThatThrownBy(result::block)
