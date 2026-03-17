@@ -369,7 +369,7 @@ public class BulkParsingService {
     if (numberOfClaims != null) {
       patch.setNumberOfClaims(numberOfClaims);
       updateRequired = true;
-      logMessage = logMessage + String.format(": number of claims = [%s] ", numberOfClaims);
+      logMessage += String.format(": number of claims = [%s] ", numberOfClaims);
     }
     if (updateRequired) {
       ResponseEntity<Void> response = dataClaimsRestClient.updateSubmission(submissionId, patch);
@@ -380,10 +380,7 @@ public class BulkParsingService {
                 + ". HTTP status: "
                 + getResponseStatus(response));
       }
-      log.info(
-          "Submission [{}] marked with {}",
-          submissionId,
-          logMessage);
+      log.info("Submission [{}] marked with {}", submissionId, logMessage);
     }
   }
 
