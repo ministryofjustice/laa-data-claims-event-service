@@ -77,13 +77,16 @@ public class SubmissionListener {
     try (SqsVisibilityExtender extender = sqsVisibilityExtenderProvider.getObject()) {
       extender.start(receiptHandle);
       SubmissionEventType submissionEventType = getSubmissionEventType(message);
-
       processMessageByType(message, submissionEventType);
-
     } catch (SubmissionEventProcessingException | IllegalArgumentException ex) {
-      log.error("Failed to process submission event. messageId={}", message.messageId(), ex);
       throw ex;
-
+    } catch (Exception ex) {
+      log.error(
+          "Failed to process submission event. messageId={}. Exception: {}",
+          message.messageId(),
+          ex.getMessage());
+      throw new SubmissionEventProcessingException(
+          "Unhandled exception in submission event processing", ex);
     } finally {
       eventServiceMetricService.stopFileParsingTimer(timerRef);
     }
@@ -132,7 +135,11 @@ public class SubmissionListener {
           bulkSubmissionMessage.bulkSubmissionId(),
           bulkSubmissionMessage.submissionIds().size());
 
-      // Loop through submission IDs and parse data for each one
+      // Loop through submission IDs and parse data for each one. NOTE: we do not catch individual
+      // failures any error is caught when parsing the individual submission and it marks the whole
+      // bulk submission as failed, so we want to allow any exception to propagate up and be handled
+      // by the global exception handler which will mark the message as failed and stop it being
+      // retried.
       for (UUID submissionId : bulkSubmissionMessage.submissionIds()) {
         bulkParsingService.parseData(bulkSubmissionMessage.bulkSubmissionId(), submissionId);
       }
