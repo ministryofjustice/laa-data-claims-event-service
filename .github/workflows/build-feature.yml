@@ -27,7 +27,7 @@ jobs:
       jacoco_coverage_report_path: 'data-claims-event-service/build/reports/jacoco'
     secrets:
       gh_token: ${{ secrets.GITHUB_TOKEN }}
-      aws_region: ${{ vars.AWS_REGION }}
+      aws_region: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_AWS_REGION }}
 
   pact-test:
     needs: [ build ]
@@ -38,7 +38,7 @@ jobs:
     with:
       pacticipant_name: "laa-data-claims-event-service"
       pact_test_task: "pactTest"
-      publish_pact_results: true
+      publish_pact_results: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_PACT_PUBLISH }}
       enable_can_i_merge: true
       provider_name: "laa-data-claims-api"
       is_provider: false
@@ -56,7 +56,7 @@ jobs:
       id-token: write
     with:
       jar_subproject: 'data-claims-event-service'
-      image_version: ${{ format('{0}-{1}', vars.IMAGE_PREFIX, needs.build.outputs.published_artifact_version) }}
+      image_version: ${{ format('{0}-{1}', vars.LAA_DATA_CLAIMS_EVENT_SERVICE_IMAGE_PREFIX, needs.build.outputs.published_artifact_version) }}
       publish: false
     secrets:
       gh_token: ${{ secrets.GITHUB_TOKEN }}

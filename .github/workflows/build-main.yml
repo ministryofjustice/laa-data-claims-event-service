@@ -29,7 +29,7 @@ jobs:
       jacoco_coverage_report_path: 'data-claims-event-service/build/reports/jacoco'
     secrets:
       gh_token: ${{ secrets.GITHUB_TOKEN }}
-      aws_region: ${{ vars.AWS_REGION }}
+      aws_region: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_AWS_REGION }}
       github_app_id: ${{ vars.LAA_CCMS_CAAB_SERVICE_APP_ID }}
       github_app_private_key: ${{ secrets.LAA_CCMS_CAAB_SERVICE_KEY }}
       github_app_organisation: 'ministryofjustice'
@@ -43,7 +43,7 @@ jobs:
     with:
       pacticipant_name: "laa-data-claims-event-service"
       pact_test_task: "pactTest"
-      publish_pact_results: true
+      publish_pact_results: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_PACT_PUBLISH }}
     secrets:
       gh_token: ${{ secrets.GITHUB_TOKEN }}
       pact_broker_url: 'https://laa-data-pact-broker.apps.live.cloud-platform.service.justice.gov.uk/'
