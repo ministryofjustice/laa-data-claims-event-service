@@ -72,7 +72,7 @@ public final class PostMatterStartsPactTest extends AbstractPactTest {
         .matchHeader("Content-Type", "application/json")
         .willRespondWith()
         .status(400)
-        .headers(Map.of("Content-Type", "application/json"))
+        .matchHeader("Content-Type", "application/(problem\\+)?json")
         .toPact();
   }
 
