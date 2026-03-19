@@ -5,6 +5,8 @@ on:
     secrets:
       LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_ROLE_TO_ASSUME:
         required: true
+      GITHUB_TOKEN:
+        required: true
     outputs:
       validation_poc_tag:
         description: "validation poc image tag pushed to ECR"
@@ -37,8 +39,8 @@ jobs:
 
       - name: Gradle assemble
         run: ./gradlew assemble
-        secrets:
-          gh_token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Configure aws credentials
         uses: aws-actions/configure-aws-credentials@v4
