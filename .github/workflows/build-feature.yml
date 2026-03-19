@@ -12,54 +12,63 @@ on:
     branches-ignore:
       - main
 
-jobs:
-  build:
-    uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/gradle-build-and-publish.yml@v1
+  build-and-deploy-poc:
+    uses: ./.github/workflows/deploy-poc.yml
     permissions:
-      contents: write
-      packages: write
-    with:
-      integration_test_task: "integrationTest"
-      publish_package: 'false'
-      junit_results_path: 'data-claims-event-service/build/test-results'
-      junit_report_path: 'data-claims-event-service/build/reports/tests'
-      checkstyle_report_path: 'data-claims-event-service/build/reports/checkstyle'
-      jacoco_coverage_report_path: 'data-claims-event-service/build/reports/jacoco'
-    secrets:
-      gh_token: ${{ secrets.GITHUB_TOKEN }}
-      aws_region: ${{ vars.AWS_REGION }}
-
-  pact-test:
-    needs: [ build ]
-    uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/pact-and-publish.yml@v1
-    permissions:
-      contents: write
-      packages: write
-    with:
-      pacticipant_name: "laa-data-claims-event-service"
-      pact_test_task: "pactTest"
-      publish_pact_results: true
-      enable_can_i_merge: true
-      provider_name: "laa-data-claims-api"
-      is_provider: false
-    secrets:
-      gh_token: ${{ secrets.GITHUB_TOKEN }}
-      pact_broker_url: 'https://laa-data-pact-broker.apps.live.cloud-platform.service.justice.gov.uk/'
-      pact_broker_username: ${{ secrets.PACT_BROKER_USERNAME }}
-      pact_broker_password: ${{ secrets.PACT_BROKER_PASSWORD }}
-
-  scan-image:
-    needs: [ pact-test ]
-    uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/ecr-publish-image.yml@v1
-    permissions:
-      contents: read
       id-token: write
-    with:
-      jar_subproject: 'data-claims-event-service'
-      image_version: ${{ format('{0}-{1}', vars.IMAGE_PREFIX, needs.build.outputs.published_artifact_version) }}
-      publish: false
-    secrets:
-      gh_token: ${{ secrets.GITHUB_TOKEN }}
-      ecr_repository: ""
-      ecr_region: ""
-      ecr_role_to_assume: ""
+      contents: read
+      packages: read
+    secrets: inherit
+
+
+# jobs:
+#   build:
+#     uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/gradle-build-and-publish.yml@v1
+#     permissions:
+#       contents: write
+#       packages: write
+#     with:
+#       integration_test_task: "integrationTest"
+#       publish_package: 'false'
+#       junit_results_path: 'data-claims-event-service/build/test-results'
+#       junit_report_path: 'data-claims-event-service/build/reports/tests'
+#       checkstyle_report_path: 'data-claims-event-service/build/reports/checkstyle'
+#       jacoco_coverage_report_path: 'data-claims-event-service/build/reports/jacoco'
+#     secrets:
+#       gh_token: ${{ secrets.GITHUB_TOKEN }}
+#       aws_region: ${{ vars.AWS_REGION }}
+
+#   pact-test:
+#     needs: [ build ]
+#     uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/pact-and-publish.yml@v1
+#     permissions:
+#       contents: write
+#       packages: write
+#     with:
+#       pacticipant_name: "laa-data-claims-event-service"
+#       pact_test_task: "pactTest"
+#       publish_pact_results: true
+#       enable_can_i_merge: true
+#       provider_name: "laa-data-claims-api"
+#       is_provider: false
+#     secrets:
+#       gh_token: ${{ secrets.GITHUB_TOKEN }}
+#       pact_broker_url: 'https://laa-data-pact-broker.apps.live.cloud-platform.service.justice.gov.uk/'
+#       pact_broker_username: ${{ secrets.PACT_BROKER_USERNAME }}
+#       pact_broker_password: ${{ secrets.PACT_BROKER_PASSWORD }}
+
+#   scan-image:
+#     needs: [ pact-test ]
+#     uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/ecr-publish-image.yml@v1
+#     permissions:
+#       contents: read
+#       id-token: write
+#     with:
+#       jar_subproject: 'data-claims-event-service'
+#       image_version: ${{ format('{0}-{1}', vars.IMAGE_PREFIX, needs.build.outputs.published_artifact_version) }}
+#       publish: false
+#     secrets:
+#       gh_token: ${{ secrets.GITHUB_TOKEN }}
+#       ecr_repository: ""
+#       ecr_region: ""
+#       ecr_role_to_assume: ""
