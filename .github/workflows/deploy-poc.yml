@@ -3,9 +3,9 @@ name: Build validation poc image
 on:
   workflow_call:
     secrets:
-      LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_ROLE_TO_ASSUME:
+      gh_token:
         required: true
-      GITHUB_TOKEN:
+      LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_ROLE_TO_ASSUME:
         required: true
     outputs:
       validation_poc_tag:
@@ -28,7 +28,6 @@ jobs:
           repository: ministryofjustice/laa-data-claims-validation-api-poc
           ref: DSTEW-POC
 
-
       - name: Log in to GHCR
         run: |
           echo "${{ github.token }}" | docker login ghcr.io \
@@ -40,7 +39,7 @@ jobs:
       - name: Gradle assemble
         run: ./gradlew assemble
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.gh_token }}
 
       - name: Configure aws credentials
         uses: aws-actions/configure-aws-credentials@v4

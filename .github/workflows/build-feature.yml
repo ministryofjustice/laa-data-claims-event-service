@@ -11,7 +11,7 @@ on:
   push:
     branches-ignore:
       - main
-      
+
 jobs:
   build-and-deploy-poc:
     uses: ./.github/workflows/deploy-poc.yml
@@ -19,7 +19,8 @@ jobs:
       id-token: write
       contents: read
       packages: read
-    secrets: inherit
+    gh_token: ${{ secrets.GH_PAT_TOKEN }} 
+    LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_ROLE_TO_ASSUME: ${{ secrets.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_ROLE_TO_ASSUME }
 
 
 # jobs:
