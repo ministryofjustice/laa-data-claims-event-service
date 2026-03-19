@@ -67,6 +67,7 @@ public final class PatchBulkSubmissionPactTest extends AbstractPactTest {
         .matchHeader("Content-Type", "application/json")
         .willRespondWith()
         .status(400)
+        .matchHeader("Content-Type", "application/(problem\\+)?json")
         .toPact();
   }
 
