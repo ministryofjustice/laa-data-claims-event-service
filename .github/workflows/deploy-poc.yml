@@ -37,6 +37,8 @@ jobs:
 
       - name: Gradle assemble
         run: ./gradlew assemble
+        secrets:
+          gh_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Configure aws credentials
         uses: aws-actions/configure-aws-credentials@v4
