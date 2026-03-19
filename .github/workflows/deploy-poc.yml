@@ -23,7 +23,7 @@ jobs:
       - name: Checkout validation poc repo
         uses: actions/checkout@v6
         with:
-          repository: ministryofjustice/laa-data-claims-validation-poc
+          repository: ministryofjustice/laa-data-claims-validation-api-poc
           ref: DSTEW-POC
 
 
