@@ -19,7 +19,7 @@ jobs:
       id-token: write
       contents: read
       packages: read
-    gh_token: ${{ secrets.GH_PAT_TOKEN }} 
+    gh_token: ${{ secrets.GITHUB_TOKEN }}
     LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_ROLE_TO_ASSUME: ${{ secrets.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_ROLE_TO_ASSUME }
 
 
