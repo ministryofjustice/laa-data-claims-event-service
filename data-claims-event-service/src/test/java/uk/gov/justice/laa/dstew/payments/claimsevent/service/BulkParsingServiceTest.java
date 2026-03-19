@@ -546,7 +546,9 @@ class BulkParsingServiceTest {
     verify(dataClaimsRestClient)
         .updateBulkSubmission(eq(BULK_SUBMISSION_ID.toString()), any(BulkSubmissionPatch.class));
     verify(dataClaimsRestClient, never())
-        .updateSubmission(eq(SUBMISSION_ID), any(SubmissionPatch.class));
+        .updateSubmission(
+            eq(SUBMISSION_ID),
+            argThat(patch -> patch.getStatus() == SubmissionStatus.VALIDATION_FAILED));
   }
 
   /** Test: Failure in createClaims triggers both bulk and submission status updates. */
@@ -621,7 +623,9 @@ class BulkParsingServiceTest {
     assertThatThrownBy(() -> service.parseData(BULK_SUBMISSION_ID, submissionId))
         .isInstanceOf(RuntimeException.class);
     verify(dataClaimsRestClient)
-        .updateBulkSubmission(eq(BULK_SUBMISSION_ID.toString()), any(BulkSubmissionPatch.class));
+        .updateBulkSubmission(
+            eq(BULK_SUBMISSION_ID.toString()),
+            argThat(patch -> patch.getStatus() == BulkSubmissionStatus.PARSING_FAILED));
     verify(dataClaimsRestClient, never())
         .updateSubmission(eq(submissionId.toString()), any(SubmissionPatch.class));
   }
@@ -721,7 +725,9 @@ class BulkParsingServiceTest {
     assertThatThrownBy(() -> service.parseData(BULK_SUBMISSION_ID, UUID.fromString(SUBMISSION_ID)))
         .isInstanceOf(RuntimeException.class);
     verify(dataClaimsRestClient)
-        .updateBulkSubmission(eq(BULK_SUBMISSION_ID.toString()), any(BulkSubmissionPatch.class));
+        .updateBulkSubmission(
+            eq(BULK_SUBMISSION_ID.toString()),
+            argThat(patch -> patch.getStatus() == BulkSubmissionStatus.PARSING_FAILED));
   }
 
   // Helper method: returns a minimal BulkSubmission for test scenarios
