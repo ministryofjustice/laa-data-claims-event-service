@@ -23,7 +23,7 @@ jobs:
       jacoco_coverage_report: 'false'
     secrets:
       gh_token: ${{ secrets.GITHUB_TOKEN }}
-      aws_region: ${{ vars.AWS_REGION }}
+      aws_region: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_AWS_REGION }}
 
   pact-test:
     needs: [ assemble ]
@@ -49,7 +49,7 @@ jobs:
       id-token: write
     with:
       jar_subproject: 'data-claims-event-service'
-      image_version: ${{ format('{0}-{1}', vars.IMAGE_PREFIX, needs.assemble.outputs.published_artifact_version) }}
+      image_version: ${{ format('{0}-{1}', vars.LAA_DATA_CLAIMS_EVENT_SERVICE_IMAGE_PREFIX, needs.assemble.outputs.published_artifact_version) }}
     secrets:
       gh_token: ${{ secrets.GITHUB_TOKEN }}
       ecr_repository: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_REPOSITORY }}
