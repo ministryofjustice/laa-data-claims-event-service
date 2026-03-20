@@ -42,6 +42,7 @@ jobs:
       enable_can_i_merge: true
       provider_name: "laa-data-claims-api"
       is_provider: false
+      pact_tags: "feature"
     secrets:
       gh_token: ${{ secrets.GITHUB_TOKEN }}
       pact_broker_url: 'https://laa-data-pact-broker.apps.live.cloud-platform.service.justice.gov.uk/'
