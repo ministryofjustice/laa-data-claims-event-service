@@ -542,11 +542,38 @@ class SubmissionDataNormaliserTest {
       assertEquals(expected, outcome.getTypeOfAdvice());
     }
 
+    static Stream<Arguments> areaOfLawCases() {
+      return Stream.of(
+          Arguments.of("lower crime", "LOWER CRIME"),
+          Arguments.of("Lower Crime", "LOWER CRIME"),
+          Arguments.of(" lower crime ", "LOWER CRIME"),
+          Arguments.of("LOWER CRIME", "LOWER CRIME"),
+          Arguments.of("legal help", "LEGAL HELP"),
+          Arguments.of("Legal Help", "LEGAL HELP"),
+          Arguments.of(" legal help ", "LEGAL HELP"),
+          Arguments.of("LEGAL HELP", "LEGAL HELP"),
+          Arguments.of("mediation", "MEDIATION"),
+          Arguments.of("Mediation", "MEDIATION"),
+          Arguments.of(" mediation ", "MEDIATION"),
+          Arguments.of("MEDIATION", "MEDIATION"));
+    }
+
+    @ParameterizedTest(name = "areaOfLaw \"{0}\" → \"{1}\"")
+    @MethodSource("areaOfLawCases")
+    @DisplayName("areaOfLaw field is trimmed and uppercased")
+    void areaOfLawIsTrimmedAndUppercased(String input, String expected) {
+      GetBulkSubmission200ResponseDetailsSchedule schedule =
+          new GetBulkSubmission200ResponseDetailsSchedule();
+      schedule.setAreaOfLaw(input);
+      normaliser.normalise(buildResponseWithSchedule(schedule));
+      assertEquals(expected, schedule.getAreaOfLaw());
+    }
+
     @Test
     @DisplayName(
         "UPPERCASE_FIELDS constant contains exactly the expected fields scoped to BulkSubmissionOutcome")
     void uppercaseFieldsConstantIsCorrect() {
-      assertEquals(1, SubmissionDataNormaliser.UPPERCASE_FIELDS.size());
+      assertEquals(2, SubmissionDataNormaliser.UPPERCASE_FIELDS.size());
       assertEquals(
           Set.of(
               "gender",
@@ -556,6 +583,10 @@ class SubmissionDataNormaliserTest {
               "clientType",
               "typeOfAdvice"),
           SubmissionDataNormaliser.UPPERCASE_FIELDS.get(BulkSubmissionOutcome.class));
+      assertEquals(
+          Set.of("areaOfLaw"),
+          SubmissionDataNormaliser.UPPERCASE_FIELDS.get(
+              GetBulkSubmission200ResponseDetailsSchedule.class));
     }
 
     @Test
@@ -568,11 +599,16 @@ class SubmissionDataNormaliserTest {
     }
 
     private GetBulkSubmission200Response buildResponseWithOutcome(BulkSubmissionOutcome outcome) {
-      GetBulkSubmission200ResponseDetails details = new GetBulkSubmission200ResponseDetails();
-      details.setOutcomes(new ArrayList<>(List.of(outcome)));
-      GetBulkSubmission200Response response = new GetBulkSubmission200Response();
-      response.setDetails(details);
-      return response;
+      GetBulkSubmission200ResponseDetails details =
+          GetBulkSubmission200ResponseDetails.builder().outcomes(List.of(outcome)).build();
+      return GetBulkSubmission200Response.builder().details(details).build();
+    }
+
+    private GetBulkSubmission200Response buildResponseWithSchedule(
+        GetBulkSubmission200ResponseDetailsSchedule schedule) {
+      GetBulkSubmission200ResponseDetails details =
+          GetBulkSubmission200ResponseDetails.builder().schedule(schedule).build();
+      return GetBulkSubmission200Response.builder().details(details).build();
     }
   }
 

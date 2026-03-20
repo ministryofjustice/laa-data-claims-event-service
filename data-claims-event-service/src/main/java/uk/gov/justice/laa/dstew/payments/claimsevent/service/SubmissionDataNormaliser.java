@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionOutcome;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetBulkSubmission200Response;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetBulkSubmission200ResponseDetailsSchedule;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.SubmissionDataNormalisationException;
 
 /**
@@ -42,7 +43,9 @@ public class SubmissionDataNormaliser {
               "disability",
               "client2Disability",
               "clientType",
-              "typeOfAdvice"));
+              "typeOfAdvice"),
+          GetBulkSubmission200ResponseDetailsSchedule.class,
+          Set.of("areaOfLaw"));
 
   protected String normaliseString(String value) {
     if (!StringUtils.hasText(value)) {
