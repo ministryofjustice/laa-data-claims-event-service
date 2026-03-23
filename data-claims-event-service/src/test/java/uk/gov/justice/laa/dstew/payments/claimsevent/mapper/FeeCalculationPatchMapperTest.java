@@ -1,6 +1,7 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.mapper;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.DisplayName;
@@ -11,6 +12,7 @@ import uk.gov.justice.laa.fee.scheme.model.BoltOnFeeDetails;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculation;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationResponse;
 import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponse;
+import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponseV2;
 
 @DisplayName("Fee calculation patch mapper test")
 class FeeCalculationPatchMapperTest {
@@ -63,14 +65,14 @@ class FeeCalculationPatchMapperTest {
             .escapeCaseFlag(true)
             .feeCalculation(feeCalculationRequest);
 
-    FeeDetailsResponse feeDetailsResponse =
-        new FeeDetailsResponse()
-            .categoryOfLawCode("categoryOfLawCode")
+    FeeDetailsResponseV2 feeDetailsResponse =
+        new FeeDetailsResponseV2()
+            .categoryOfLawCodes(List.of("categoryOfLawCode"))
             .feeCodeDescription("feeCodeDescription")
             .feeType(FeeCalculationType.DISB_ONLY.getValue());
     // When
     FeeCalculationPatch result =
-        mapper.mapToFeeCalculationPatch(feeCalculationResponse, feeDetailsResponse);
+        mapper.mapToFeeCalculationPatch(feeCalculationResponse, feeDetailsResponse, "categoryOfLaw");
     // Then
     SoftAssertions.assertSoftly(
         softAssertions -> {

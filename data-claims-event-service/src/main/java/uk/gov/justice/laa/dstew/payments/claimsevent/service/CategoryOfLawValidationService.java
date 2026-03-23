@@ -7,13 +7,14 @@ import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
-import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponse;
+import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponseV2;
 
 /** A service responsible for validating data items related to category of law. */
 @Slf4j
@@ -44,18 +45,23 @@ public class CategoryOfLawValidationService {
     if (feeDetailsResponseWrapper.isError()) {
       context.flagForRetry(claim.getId());
     } else if (feeDetailsResponseWrapper.getFeeDetailsResponse() != null) {
-      String categoryOfLaw =
-          feeDetailsResponseWrapper.getFeeDetailsResponse().getCategoryOfLawCode();
+      List<String> categoryOfLawCodes = feeDetailsResponseWrapper.getFeeDetailsResponse().getCategoryOfLawCodes();
 
-      if (categoryOfLaw == null) {
+      if (CollectionUtils.isEmpty(categoryOfLawCodes)) {
         context.addClaimError(
-            claim.getId(),
-            ClaimValidationError.INVALID_CATEGORY_OF_LAW_AND_FEE_CODE,
-            claim.getFeeCode());
-      } else if (!providerCategoriesOfLaw.contains(categoryOfLaw)) {
+                claim.getId(),
+                ClaimValidationError.INVALID_CATEGORY_OF_LAW_AND_FEE_CODE,
+                claim.getFeeCode());
+      } else if (categoryOfLawCodes.stream().noneMatch(providerCategoriesOfLaw::contains)) {
         context.addClaimError(
-            claim.getId(),
-            ClaimValidationError.INVALID_CATEGORY_OF_LAW_NOT_AUTHORISED_FOR_PROVIDER);
+                claim.getId(), ClaimValidationError.INVALID_CATEGORY_OF_LAW_NOT_AUTHORISED_FOR_PROVIDER);
+      } else {
+        String firstMatchingValidCategory =
+                categoryOfLawCodes.stream()
+                        .filter(providerCategoriesOfLaw::contains)
+                        .findFirst()
+                        .orElse(categoryOfLawCodes.getFirst());
+        context.putValidCategoryOfLawCode(claim.getFeeCode(), firstMatchingValidCategory);
       }
     }
     log.debug("Category of law validation completed for claim {}", claim.getId());
@@ -86,7 +92,7 @@ public class CategoryOfLawValidationService {
       return FeeDetailsResponseWrapper.withFeeDetailsResponse(null);
     }
     try {
-      FeeDetailsResponse response = feeSchemePlatformRestClient.getFeeDetails(feeCode).getBody();
+      FeeDetailsResponseV2 response = feeSchemePlatformRestClient.getFeeDetails(feeCode).getBody();
 
       if (response == null) {
         log.error("Get fee details returned empty response for fee code: {}", feeCode);

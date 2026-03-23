@@ -24,6 +24,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationS
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationResponse;
 import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponse;
+import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponseV2;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Bulk claim updater test")
@@ -65,7 +66,7 @@ class BulkClaimUpdaterTest {
     verify(mockFeeCalculationService, never()).calculateFee(any(), any(), any());
     verify(mockEventServiceMetricService, never()).startFspValidationTimer(any());
     verify(mockEventServiceMetricService, never()).stopFspValidationTimer(any());
-    verify(mockFeeCalculationPatchMapper, never()).mapToFeeCalculationPatch(any(), any());
+    verify(mockFeeCalculationPatchMapper, never()).mapToFeeCalculationPatch(any(), any(), any());
   }
 
   @Test
@@ -86,7 +87,7 @@ class BulkClaimUpdaterTest {
             feeCalculationResponse,
             feeDetailsResponseWrapperHashMap
                 .get(claimResponse.getFeeCode())
-                .getFeeDetailsResponse()))
+                .getFeeDetailsResponse(), "categoryOfLaw"))
         .thenReturn(feeCalculationPatch);
 
     // When
@@ -167,7 +168,7 @@ class BulkClaimUpdaterTest {
         new FeeCalculationPatch().claimId(UUID.fromString(claimResponseTwo.getId()));
 
     when(mockFeeCalculationPatchMapper.mapToFeeCalculationPatch(
-            any(FeeCalculationResponse.class), any(FeeDetailsResponse.class)))
+            any(FeeCalculationResponse.class), any(FeeDetailsResponseV2.class), anyString()))
         .thenReturn(feeCalculationPatchTwo);
 
     // When
@@ -181,7 +182,7 @@ class BulkClaimUpdaterTest {
 
     verify(dataClaimsRestClient, times(2)).updateClaim(any(), any(), any());
     verify(mockFeeCalculationService, times(2)).calculateFee(any(), any(), any());
-    verify(mockFeeCalculationPatchMapper, times(2)).mapToFeeCalculationPatch(any(), any());
+    verify(mockFeeCalculationPatchMapper, times(2)).mapToFeeCalculationPatch(any(), any(), any());
     verify(mockEventServiceMetricService, times(2)).startFspValidationTimer(any());
     verify(mockEventServiceMetricService, times(2)).stopFspValidationTimer(any());
   }
@@ -205,7 +206,8 @@ class BulkClaimUpdaterTest {
             feeCalculationResponseOne,
             feeDetailsResponseWrapperHashMap
                 .get(validClaimResponse.getFeeCode())
-                .getFeeDetailsResponse()))
+                .getFeeDetailsResponse(),
+            "categoryOfLawCode"))
         .thenReturn(feeCalculationPatch);
 
     context.addClaimError(
@@ -256,7 +258,7 @@ class BulkClaimUpdaterTest {
             feeCalculationResponse,
             feeDetailsResponseWrapperHashMap
                 .get(claimResponse.getFeeCode())
-                .getFeeDetailsResponse()))
+                .getFeeDetailsResponse(), "categopryOfLaw"))
         .thenReturn(feeCalculationPatch);
 
     context.addClaimReports(List.of(new ClaimValidationReport(claimResponse.getId())));
@@ -307,7 +309,7 @@ class BulkClaimUpdaterTest {
     verify(mockFeeCalculationService, never()).calculateFee(any(), any(), any());
     verify(mockEventServiceMetricService, never()).startFspValidationTimer(any());
     verify(mockEventServiceMetricService, never()).stopFspValidationTimer(any());
-    verify(mockFeeCalculationPatchMapper, never()).mapToFeeCalculationPatch(any(), any());
+    verify(mockFeeCalculationPatchMapper, never()).mapToFeeCalculationPatch(any(), any(), any());
   }
 
   private static @NotNull Map<String, FeeDetailsResponseWrapper>
@@ -315,7 +317,7 @@ class BulkClaimUpdaterTest {
     return Map.of(
         FEE_CODE,
         FeeDetailsResponseWrapper.withFeeDetailsResponse(
-            new FeeDetailsResponse().feeCodeDescription("feeCodeDescription")));
+            new FeeDetailsResponseV2().feeCodeDescription("feeCodeDescription")));
   }
 
   private ClaimResponse buildClaimResponse(final UUID uuid) {

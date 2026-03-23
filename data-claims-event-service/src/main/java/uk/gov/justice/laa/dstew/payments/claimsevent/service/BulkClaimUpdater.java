@@ -81,7 +81,8 @@ public class BulkClaimUpdater {
           if (feeCalculationResponse.isPresent()) {
             feeCalculationPatch =
                 buildFeeCalculationPatch(
-                    feeCalculationResponse.get(), feeDetailsResponseMap.get(claim.getFeeCode()));
+                    feeCalculationResponse.get(), feeDetailsResponseMap.get(claim.getFeeCode()),
+                        context.getValidCategoryOfLawCode(claim.getFeeCode()));
           }
 
           // If a claim was found to be invalid, make the rest of the claims invalid
@@ -149,8 +150,9 @@ public class BulkClaimUpdater {
 
   private FeeCalculationPatch buildFeeCalculationPatch(
       final FeeCalculationResponse feeCalculationResponse,
-      final FeeDetailsResponseWrapper feeDetailsResponseWrapper) {
+      final FeeDetailsResponseWrapper feeDetailsResponseWrapper,
+      final String categoryOfLawCode) {
     return feeCalculationPatchMapper.mapToFeeCalculationPatch(
-        feeCalculationResponse, feeDetailsResponseWrapper.getFeeDetailsResponse());
+        feeCalculationResponse, feeDetailsResponseWrapper.getFeeDetailsResponse(), categoryOfLawCode);
   }
 }

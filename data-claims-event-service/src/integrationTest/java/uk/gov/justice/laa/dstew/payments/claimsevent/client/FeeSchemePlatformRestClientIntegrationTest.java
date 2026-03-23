@@ -21,6 +21,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MockServerIntegratio
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationRequest;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationResponse;
 import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponse;
+import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponseV2;
 
 @ActiveProfiles("test")
 @ImportTestcontainers(MessageListenerBase.class)
@@ -57,11 +58,11 @@ class FeeSchemePlatformRestClientIntegrationTest extends MockServerIntegrationTe
       stubForGetFeeDetails(feeCode, "fee-scheme/get-fee-details-200.json");
 
       // When
-      ResponseEntity<FeeDetailsResponse> result =
+      ResponseEntity<FeeDetailsResponseV2> result =
           feeSchemePlatformRestClient.getFeeDetails(feeCode);
 
       // Then
-      FeeDetailsResponse feeDetailsResponse = result.getBody();
+      FeeDetailsResponseV2 feeDetailsResponse = result.getBody();
       assertThat(feeDetailsResponse).isNotNull();
       // Check all fields mapped correctly by serializing the result and comparing to expected JSON
       String resultJson = objectMapper.writeValueAsString(feeDetailsResponse);
