@@ -35,7 +35,9 @@ public interface FeeCalculationPatchMapper {
   @Mapping(target = "calculatedFeeDetailId", ignore = true)
   @Mapping(target = "claimSummaryFeeId", ignore = true)
   FeeCalculationPatch mapToFeeCalculationPatch(
-          FeeCalculationResponse feeCalculationResponse, FeeDetailsResponseV2 feeDetailsResponse, String categoryOfLawCode);
+      FeeCalculationResponse feeCalculationResponse,
+      FeeDetailsResponseV2 feeDetailsResponse,
+      String categoryOfLawCode);
 
   /**
    * Adds scheme ID and escape case flag to the bolt on details afterwards. Mapstruct doesn't like

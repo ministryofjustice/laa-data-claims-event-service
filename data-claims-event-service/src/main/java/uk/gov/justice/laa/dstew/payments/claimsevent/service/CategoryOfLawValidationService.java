@@ -45,22 +45,24 @@ public class CategoryOfLawValidationService {
     if (feeDetailsResponseWrapper.isError()) {
       context.flagForRetry(claim.getId());
     } else if (feeDetailsResponseWrapper.getFeeDetailsResponse() != null) {
-      List<String> categoryOfLawCodes = feeDetailsResponseWrapper.getFeeDetailsResponse().getCategoryOfLawCodes();
+      List<String> categoryOfLawCodes =
+          feeDetailsResponseWrapper.getFeeDetailsResponse().getCategoryOfLawCodes();
 
       if (CollectionUtils.isEmpty(categoryOfLawCodes)) {
         context.addClaimError(
-                claim.getId(),
-                ClaimValidationError.INVALID_CATEGORY_OF_LAW_AND_FEE_CODE,
-                claim.getFeeCode());
+            claim.getId(),
+            ClaimValidationError.INVALID_CATEGORY_OF_LAW_AND_FEE_CODE,
+            claim.getFeeCode());
       } else if (categoryOfLawCodes.stream().noneMatch(providerCategoriesOfLaw::contains)) {
         context.addClaimError(
-                claim.getId(), ClaimValidationError.INVALID_CATEGORY_OF_LAW_NOT_AUTHORISED_FOR_PROVIDER);
+            claim.getId(),
+            ClaimValidationError.INVALID_CATEGORY_OF_LAW_NOT_AUTHORISED_FOR_PROVIDER);
       } else {
         String firstMatchingValidCategory =
-                categoryOfLawCodes.stream()
-                        .filter(providerCategoriesOfLaw::contains)
-                        .findFirst()
-                        .orElse(categoryOfLawCodes.getFirst());
+            categoryOfLawCodes.stream()
+                .filter(providerCategoriesOfLaw::contains)
+                .findFirst()
+                .orElse(categoryOfLawCodes.getFirst());
         context.putValidCategoryOfLawCode(claim.getFeeCode(), firstMatchingValidCategory);
       }
     }

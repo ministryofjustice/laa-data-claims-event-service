@@ -2,7 +2,6 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponse;
 import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponseV2;
 
 /**

@@ -42,11 +42,11 @@ public class SubmissionValidationContext {
    */
   public void addSubmissionValidationError(String message) {
     submissionValidationErrors.add(
-            new ValidationMessagePatch()
-                    .displayMessage(message)
-                    .technicalMessage(message)
-                    .source(EVENT_SERVICE)
-                    .type(ValidationMessageType.ERROR));
+        new ValidationMessagePatch()
+            .displayMessage(message)
+            .technicalMessage(message)
+            .source(EVENT_SERVICE)
+            .type(ValidationMessageType.ERROR));
   }
 
   /**
@@ -95,15 +95,15 @@ public class SubmissionValidationContext {
    * @param displayMessage the display message to add
    */
   public void addClaimError(
-          String claimId, String technicalMessage, String displayMessage, String source) {
+      String claimId, String technicalMessage, String displayMessage, String source) {
     addClaimMessages(
-            claimId,
-            List.of(
-                    new ValidationMessagePatch()
-                            .displayMessage(displayMessage)
-                            .technicalMessage(technicalMessage)
-                            .source(source)
-                            .type(ValidationMessageType.ERROR)));
+        claimId,
+        List.of(
+            new ValidationMessagePatch()
+                .displayMessage(displayMessage)
+                .technicalMessage(technicalMessage)
+                .source(source)
+                .type(ValidationMessageType.ERROR)));
   }
 
   /**
@@ -114,13 +114,13 @@ public class SubmissionValidationContext {
    */
   public void addClaimWarning(String claimId, String message, String source) {
     addClaimMessages(
-            claimId,
-            List.of(
-                    new ValidationMessagePatch()
-                            .displayMessage(message)
-                            .technicalMessage(message)
-                            .source(source)
-                            .type(ValidationMessageType.WARNING)));
+        claimId,
+        List.of(
+            new ValidationMessagePatch()
+                .displayMessage(message)
+                .technicalMessage(message)
+                .source(source)
+                .type(ValidationMessageType.WARNING)));
   }
 
   /**
@@ -131,9 +131,9 @@ public class SubmissionValidationContext {
    */
   public void addClaimMessages(String claimId, List<ValidationMessagePatch> messages) {
     getClaimReport(claimId)
-            .ifPresentOrElse(
-                    report -> report.addMessages(messages),
-                    () -> claimReports.add(new ClaimValidationReport(claimId, messages)));
+        .ifPresentOrElse(
+            report -> report.addMessages(messages),
+            () -> claimReports.add(new ClaimValidationReport(claimId, messages)));
   }
 
   /**
@@ -191,7 +191,7 @@ public class SubmissionValidationContext {
    */
   public boolean hasErrors() {
     return !submissionValidationErrors.isEmpty()
-            || claimReports.stream().anyMatch(ClaimValidationReport::hasErrors);
+        || claimReports.stream().anyMatch(ClaimValidationReport::hasErrors);
   }
 
   /**

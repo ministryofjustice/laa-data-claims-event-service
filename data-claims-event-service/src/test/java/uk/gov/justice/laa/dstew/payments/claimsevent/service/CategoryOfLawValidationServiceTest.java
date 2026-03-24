@@ -40,7 +40,9 @@ class CategoryOfLawValidationServiceTest {
     void validatesCategoryOfLawWithoutErrors() {
       ClaimResponse claim = new ClaimResponse().id("claimId").feeCode("feeCode");
       FeeDetailsResponseV2 feeDetailsResponse =
-          new FeeDetailsResponseV2().categoryOfLawCodes(List.of("categoryOfLaw")).feeType("feeType");
+          new FeeDetailsResponseV2()
+              .categoryOfLawCodes(List.of("categoryOfLaw"))
+              .feeType("feeType");
       Map<String, FeeDetailsResponseWrapper> feeDetailsResponseWrapperMap =
           Map.of("feeCode", FeeDetailsResponseWrapper.withFeeDetailsResponse(feeDetailsResponse));
       List<String> providerCategoriesOfLaw = List.of("categoryOfLaw");
@@ -85,7 +87,9 @@ class CategoryOfLawValidationServiceTest {
     void marksClaimAsInvalidWhenCategoryOfLawNotFoundForProvider() {
       ClaimResponse claim = new ClaimResponse().id("claimId").feeCode("feeCode");
       FeeDetailsResponseV2 feeDetailsResponse =
-          new FeeDetailsResponseV2().categoryOfLawCodes(List.of("categoryOfLaw")).feeType("feeType");
+          new FeeDetailsResponseV2()
+              .categoryOfLawCodes(List.of("categoryOfLaw"))
+              .feeType("feeType");
       Map<String, FeeDetailsResponseWrapper> feeDetailsResponseWrapperMap = new HashMap<>();
       feeDetailsResponseWrapperMap.put(
           "feeCode", FeeDetailsResponseWrapper.withFeeDetailsResponse(feeDetailsResponse));
@@ -137,10 +141,12 @@ class CategoryOfLawValidationServiceTest {
       ClaimResponse claim4 = new ClaimResponse().id("claimId4").feeCode("feeCode4");
 
       FeeDetailsResponseV2 feeDetailsResponseA =
-          new FeeDetailsResponseV2().categoryOfLawCodes(List.of("categoryOfLaw1"));
+          new FeeDetailsResponseV2()
+              .categoryOfLawCodes(List.of("categoryOfLaw1", "categoryOfLaw3", "categoryOfLaw4"));
 
       FeeDetailsResponseV2 feeDetailsResponseB =
-              new FeeDetailsResponseV2().categoryOfLawCodes(List.of("categoryOfLaw2"));
+          new FeeDetailsResponseV2()
+              .categoryOfLawCodes(List.of("categoryOfLaw2", "categoryOfLaw3", "categoryOfLaw4"));
 
       when(feeSchemePlatformRestClient.getFeeDetails("feeCode1"))
           .thenReturn(ResponseEntity.ok(feeDetailsResponseA));

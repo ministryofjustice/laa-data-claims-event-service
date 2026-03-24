@@ -20,7 +20,6 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MessageListenerBase;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MockServerIntegrationTest;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationRequest;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationResponse;
-import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponse;
 import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponseV2;
 
 @ActiveProfiles("test")
@@ -79,7 +78,7 @@ class FeeSchemePlatformRestClientIntegrationTest extends MockServerIntegrationTe
       String expectedBody = readJsonFromFile("fee-scheme/get-fee-details-200.json");
 
       mockServerClient
-          .when(HttpRequest.request().withMethod("GET").withPath("/api/v1/fee-details/" + feeCode))
+          .when(HttpRequest.request().withMethod("GET").withPath("/api/v2/fee-details/" + feeCode))
           .respond(
               HttpResponse.response()
                   .withStatusCode(statusCode)
@@ -94,7 +93,7 @@ class FeeSchemePlatformRestClientIntegrationTest extends MockServerIntegrationTe
       assertThatThrownBy(result)
           .isInstanceOf(WebClientResponseException.class)
           .hasMessageContaining(
-              "%s %s from GET %s/api/v1/fee-details/%s"
+              "%s %s from GET %s/api/v2/fee-details/%s"
                   .formatted(
                       httpStatusCode.code(),
                       httpStatusCode.reasonPhrase(),

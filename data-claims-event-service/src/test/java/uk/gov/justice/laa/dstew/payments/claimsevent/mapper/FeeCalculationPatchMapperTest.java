@@ -11,7 +11,6 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationType;
 import uk.gov.justice.laa.fee.scheme.model.BoltOnFeeDetails;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculation;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationResponse;
-import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponse;
 import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponseV2;
 
 @DisplayName("Fee calculation patch mapper test")
@@ -72,7 +71,8 @@ class FeeCalculationPatchMapperTest {
             .feeType(FeeCalculationType.DISB_ONLY.getValue());
     // When
     FeeCalculationPatch result =
-        mapper.mapToFeeCalculationPatch(feeCalculationResponse, feeDetailsResponse, "categoryOfLaw");
+        mapper.mapToFeeCalculationPatch(
+            feeCalculationResponse, feeDetailsResponse, "categoryOfLawCode");
     // Then
     SoftAssertions.assertSoftly(
         softAssertions -> {
