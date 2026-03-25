@@ -51,16 +51,13 @@ public class WebClientMetricsFilter implements ExchangeFilterFunction {
   public Mono<ClientResponse> filter(
       @NonNull ClientRequest request, @NonNull ExchangeFunction next) {
     String method = request.method().name();
-    String uri = request.url().getPath();
     MetricSample sample =
         metricPublisher.startTimer(
             MetricNames.HTTP_CLIENT_REQUESTS,
             MetricNames.TAG_API,
             apiName,
             MetricNames.TAG_METHOD,
-            method,
-            MetricNames.TAG_URI,
-            uri);
+            method);
 
     return next.exchange(request)
         .doOnNext(

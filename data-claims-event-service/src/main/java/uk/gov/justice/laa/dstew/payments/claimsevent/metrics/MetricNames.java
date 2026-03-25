@@ -67,9 +67,6 @@ public final class MetricNames {
   /** Tag carrying the HTTP method of an outbound request (e.g. {@code "GET"}, {@code "POST"}). */
   public static final String TAG_METHOD = "method";
 
-  /** Tag carrying the URI path of an outbound request (e.g. {@code "/api/v1/submissions/abc"}). */
-  public static final String TAG_URI = "uri";
-
   /**
    * Tag carrying the HTTP status code of a response, or {@code "CLIENT_ERROR"} if no response was
    * received.
