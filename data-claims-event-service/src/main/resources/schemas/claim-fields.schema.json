@@ -244,7 +244,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Mediation Sessions count must be less than 100"
+          "value": "Mediation Sessions Count must be less than 100"
         }
       ]
     },

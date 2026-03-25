@@ -514,7 +514,7 @@ class JsonSchemaValidatorTest {
       "maatId, 'fdsdfs&121', LEGAL HELP, MAAT ID must be up to 10 alphanumeric characters",
       "prisonLawPriorApprovalNumber, 'fd121', LEGAL HELP, Prison Law Prior Approval Number must be exactly 10 alphanumeric characters",
       "schemeId, 'AB', LEGAL HELP, Scheme ID must be exactly 4 alphanumeric characters",
-      "mediationSessionsCount, 122, LEGAL HELP, Mediation Sessions count must be less than 100",
+      "mediationSessionsCount, 122, LEGAL HELP, Mediation Sessions Count must be less than 100",
       "mediationTimeMinutes, 9999999, LEGAL HELP, Mediation Time Minutes must be 99999 or less",
       "outreachLocation, ABCD5, LEGAL HELP, Outreach Location must be exactly 3 alphanumeric characters",
       "referralSource, 100, LEGAL HELP, Referral Source must be a valid 2-digit code (02-11)",
