@@ -52,7 +52,7 @@ jobs:
           kubectl config use-context ${{ secrets.KUBE_CLUSTER }}
 
       - name: Configure aws credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ secrets.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_ROLE_TO_ASSUME }}
           aws-region: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_REGION }}
