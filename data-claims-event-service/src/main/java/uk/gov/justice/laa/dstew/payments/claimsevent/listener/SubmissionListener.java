@@ -12,7 +12,8 @@ import org.springframework.stereotype.Component;
 import software.amazon.awssdk.services.sqs.model.Message;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.SubmissionEventProcessingException;
-import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
+import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.MetricNames;
+import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.MetricPublisher;
 import uk.gov.justice.laa.dstew.payments.claimsevent.model.BulkSubmissionMessage;
 import uk.gov.justice.laa.dstew.payments.claimsevent.model.SubmissionEventType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.model.SubmissionValidationMessage;
@@ -37,7 +38,7 @@ public class SubmissionListener {
   private final BulkParsingService bulkParsingService;
   private final SubmissionValidationService submissionValidationService;
   private final ObjectMapper objectMapper;
-  private final EventServiceMetricService eventServiceMetricService;
+  private final MetricPublisher eventServiceMetricService;
   private final ObjectProvider<SqsVisibilityExtender> sqsVisibilityExtenderProvider;
 
   /**
@@ -50,7 +51,7 @@ public class SubmissionListener {
   public SubmissionListener(
       BulkParsingService bulkParsingService,
       SubmissionValidationService submissionValidationService,
-      EventServiceMetricService eventServiceMetricService,
+      MetricPublisher eventServiceMetricService,
       @Qualifier("submissionEventMapper") ObjectMapper objectMapper,
       ObjectProvider<SqsVisibilityExtender> sqsVisibilityExtenderProvider) {
     this.bulkParsingService = bulkParsingService;
@@ -68,27 +69,26 @@ public class SubmissionListener {
    */
   @SqsListener("${laa.bulk-claim-queue.name}")
   public void receiveSubmissionEvent(Message message) {
+    try (var ignored =
+        eventServiceMetricService.timer(MetricNames.FILE_PARSING_TIME, UUID.randomUUID())) {
+      String receiptHandle = message.receiptHandle();
 
-    UUID timerRef = UUID.randomUUID();
-    eventServiceMetricService.startFileParsingTimer(timerRef);
+      try (SqsVisibilityExtender extender = sqsVisibilityExtenderProvider.getObject()) {
+        extender.start(receiptHandle);
+        SubmissionEventType submissionEventType = getSubmissionEventType(message);
 
-    String receiptHandle = message.receiptHandle();
+        processMessageByType(message, submissionEventType);
 
-    try (SqsVisibilityExtender extender = sqsVisibilityExtenderProvider.getObject()) {
-      extender.start(receiptHandle);
-      SubmissionEventType submissionEventType = getSubmissionEventType(message);
-      processMessageByType(message, submissionEventType);
-    } catch (SubmissionEventProcessingException | IllegalArgumentException ex) {
-      throw ex;
-    } catch (Exception ex) {
-      log.error(
-          "Failed to process submission event. messageId={}. Exception: {}",
-          message.messageId(),
-          ex.getMessage());
-      throw new SubmissionEventProcessingException(
-          "Unhandled exception in submission event processing", ex);
-    } finally {
-      eventServiceMetricService.stopFileParsingTimer(timerRef);
+      } catch (SubmissionEventProcessingException | IllegalArgumentException ex) {
+        throw ex;
+      } catch (Exception ex) {
+        log.error(
+            "Failed to process submission event. messageId={}. Exception: {}",
+            message.messageId(),
+            ex.getMessage());
+        throw new SubmissionEventProcessingException(
+            "Unhandled exception in submission event processing", ex);
+      }
     }
   }
 

@@ -11,13 +11,27 @@ import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
+import uk.gov.justice.laa.dstew.payments.claimsevent.client.WebClientLoggingFilter;
+import uk.gov.justice.laa.dstew.payments.claimsevent.client.WebClientMetricsFilter;
+import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.MetricPublisher;
 
 /**
- * Configuration class for creating and configuring WebClient instances.
+ * Configuration class for creating and configuring {@link WebClient} instances for each downstream
+ * REST API.
  *
- * <p>Uses {@link HttpServiceProxyFactory} to build strongly-typed HTTP clients.
+ * <p>Each client is independently configured with:
  *
- * @author Jamie Briggs
+ * <ul>
+ *   <li>A dedicated Reactor Netty connection pool (named for observability in Prometheus).
+ *   <li>Per-API TCP connect, response, and pending-acquire timeouts sourced from {@link
+ *       ApiProperties}.
+ *   <li>Structured request/response logging via {@link WebClientLoggingFilter}.
+ *   <li>Micrometer latency metrics via {@link WebClientMetricsFilter}.
+ *   <li>An in-memory response-body buffer sized appropriately for each API's payload profile.
+ * </ul>
+ *
+ * <p>All timeout, pool, and buffer values are externalised to {@code application.yml} and can be
+ * overridden per environment.
  */
 @Slf4j
 @Configuration
@@ -28,83 +42,115 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestC
 })
 public class WebClientConfiguration {
 
+  private final MetricPublisher metricPublisher;
+
+  public WebClientConfiguration(MetricPublisher metricPublisher) {
+    this.metricPublisher = metricPublisher;
+  }
+
   /**
-   * Creates a {@link
-   * uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient} bean to
-   * communicate with the Provider Details API using a WebClient instance.
+   * Creates a {@link ProviderDetailsRestClient} bean backed by a WebClient configured for the
+   * Provider Details API.
    *
-   * @param properties The configuration properties required to initialise the WebClient, including
-   *     the base URL and access token for the Provider Details API.
-   * @return An instance of {@link
-   *     uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient} for
-   *     interacting with the Provider Details API.
+   * @param properties API-specific configuration (URL, credentials, timeouts, pool size)
+   * @return a strongly-typed HTTP client for the Provider Details API
    */
   @Bean
   public ProviderDetailsRestClient providerDetailsClient(
       final ProviderDetailsApiProperties properties) {
-    final WebClient webClient = createWebClient(properties);
-    final WebClientAdapter webClientAdapter = WebClientAdapter.create(webClient);
-    HttpServiceProxyFactory factory = HttpServiceProxyFactory.builderFor(webClientAdapter).build();
-    return factory.createClient(ProviderDetailsRestClient.class);
+    return createClient(properties, ProviderDetailsRestClient.class);
   }
 
   /**
-   * Creates a {@link DataClaimsRestClient} bean to communicate with the Claims API using a
-   * WebClient instance.
+   * Creates a {@link DataClaimsRestClient} bean backed by a WebClient configured for the Data
+   * Claims API.
    *
-   * @param properties The configuration properties required to initialise the WebClient, including
-   *     the base URL and access token for the Data Claims API.
-   * @return An instance of {@link DataClaimsRestClient} for interacting with the Claims API.
+   * @param properties API-specific configuration (URL, credentials, timeouts, pool size, buffer)
+   * @return a strongly-typed HTTP client for the Data Claims API
    */
   @Bean
   public DataClaimsRestClient claimsApiClient(final DataClaimsApiProperties properties) {
-    final WebClient webClient = createWebClient(properties);
-    final WebClientAdapter webClientAdapter = WebClientAdapter.create(webClient);
-    HttpServiceProxyFactory factory = HttpServiceProxyFactory.builderFor(webClientAdapter).build();
-    return factory.createClient(DataClaimsRestClient.class);
+    return createClient(properties, DataClaimsRestClient.class);
   }
 
   /**
-   * Creates a {@link FeeSchemePlatformRestClient} bean to communicate with the Fee Scheme Platform
-   * API using a WebClient instance.
+   * Creates a {@link FeeSchemePlatformRestClient} bean backed by a WebClient configured for the Fee
+   * Scheme Platform API.
    *
-   * @param properties The configuration properties required to initialize the WebClient, including
-   *     the base URL and access token for the Fee Scheme Platform API.
-   * @return An instance of {@link FeeSchemePlatformRestClient} for interacting with the Fee Scheme
-   *     Platform API.
+   * @param properties API-specific configuration (URL, credentials, timeouts, pool size)
+   * @return a strongly-typed HTTP client for the Fee Scheme Platform API
    */
   @Bean
   public FeeSchemePlatformRestClient feeSchemePlatformRestClient(
       final FeeSchemePlatformApiProperties properties) {
-    final WebClient webClient = createWebClient(properties);
-    final WebClientAdapter webClientAdapter = WebClientAdapter.create(webClient);
-    HttpServiceProxyFactory factory = HttpServiceProxyFactory.builderFor(webClientAdapter).build();
-
-    return factory.createClient(FeeSchemePlatformRestClient.class);
+    return createClient(properties, FeeSchemePlatformRestClient.class);
   }
 
   /**
-   * Creates a WebClient instance using the provided configuration properties.
+   * Creates a strongly-typed HTTP service client for the given API.
    *
-   * @param apiProperties The configuration properties for the API.
-   * @return A WebClient instance.
+   * <p>The API name is sourced from {@link ApiProperties#getName()} so that log labels and metric
+   * tags are always consistent with the properties definition and never rely on hardcoded strings
+   * at the call site.
+   *
+   * @param properties the API-specific configuration properties
+   * @param clientType the {@link org.springframework.web.service.annotation.HttpExchange} interface
+   *     to proxy
+   * @param <T> the client interface type
+   * @return a configured HTTP service client instance
    */
-  public static WebClient createWebClient(final ApiProperties apiProperties) {
-    final ExchangeStrategies strategies =
+  private <T> T createClient(ApiProperties properties, Class<T> clientType) {
+    return HttpServiceProxyFactory.builderFor(WebClientAdapter.create(buildWebClient(properties)))
+        .build()
+        .createClient(clientType);
+  }
+
+  /**
+   * Builds a {@link WebClient} fully configured for a single downstream API.
+   *
+   * <p>The following concerns are wired here:
+   *
+   * <ul>
+   *   <li>Reactor Netty connection pool and TCP/response timeouts via {@link
+   *       ReactorNettyHttpClientFactory}.
+   *   <li>Structured request/response logging with credential-header redaction.
+   *   <li>Micrometer timer metrics per API, method, URI, and status code.
+   *   <li>Per-API in-memory codec buffer sized from {@link
+   *       ApiProperties#getMaxInMemoryBufferBytes()}.
+   * </ul>
+   *
+   * @param properties the API-specific configuration properties
+   * @return a configured {@link WebClient} instance
+   */
+  private WebClient buildWebClient(ApiProperties properties) {
+    String apiName = properties.getName();
+    log.info(
+        "Configuring WebClient [{}] - url: {}, connectionTimeoutMs: {}, responseTimeoutMs: {},"
+            + " maxConnections: {}, pendingAcquireTimeoutMs: {}, maxInMemoryBufferBytes: {}",
+        apiName,
+        properties.getUrl(),
+        properties.getConnectionTimeoutMs(),
+        properties.getResponseTimeoutMs(),
+        properties.getMaxConnections(),
+        properties.getPendingAcquireTimeoutMs(),
+        properties.getMaxInMemoryBufferBytes());
+
+    ExchangeStrategies strategies =
         ExchangeStrategies.builder()
             .codecs(
                 configurer ->
                     configurer
                         .defaultCodecs()
-                        .maxInMemorySize(
-                            50 * 1024 * 1024) // 50 MB to cope with large bulk upload responses
-                )
+                        .maxInMemorySize(properties.getMaxInMemoryBufferBytes()))
             .build();
 
     return WebClient.builder()
-        .baseUrl(apiProperties.getUrl())
-        .defaultHeader(apiProperties.getAuthHeader(), apiProperties.getAccessToken())
+        .clientConnector(ReactorNettyHttpClientFactory.create(apiName, properties))
+        .baseUrl(properties.getUrl())
+        .defaultHeader(properties.getAuthHeader(), properties.getAccessToken())
         .exchangeStrategies(strategies)
+        .filter(new WebClientLoggingFilter(apiName))
+        .filter(new WebClientMetricsFilter(metricPublisher, apiName))
         .build();
   }
 }

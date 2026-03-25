@@ -7,7 +7,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import io.prometheus.metrics.model.registry.PrometheusRegistry;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -37,7 +36,6 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.support.WebClientAdapter;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
@@ -51,7 +49,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.config.ApiProperties;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.DataClaimsApiProperties;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.FeeSchemePlatformApiProperties;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.ProviderDetailsApiProperties;
-import uk.gov.justice.laa.dstew.payments.claimsevent.config.WebClientConfiguration;
+import uk.gov.justice.laa.dstew.payments.claimsevent.config.ReactorNettyHttpClientFactory;
 import uk.gov.justice.laa.dstew.payments.claimsevent.util.DateUtil;
 
 @Slf4j
@@ -88,8 +86,6 @@ public abstract class MockServerIntegrationTest {
     log.info("Started MockServer container on port: {}", container.getFirstMappedPort());
     return container;
   }
-
-  @MockitoBean PrometheusRegistry prometheusRegistry;
 
   @AfterEach
   void tearDown() {
@@ -131,9 +127,18 @@ public abstract class MockServerIntegrationTest {
   }
 
   protected static @NotNull WebClient createWebClient() {
-    ApiProperties apiProperties =
-        new ApiProperties(mockServerContainer.getEndpoint(), "", "Authorization");
-    return WebClientConfiguration.createWebClient(apiProperties);
+    ApiProperties apiProperties = new ApiProperties();
+    apiProperties.setUrl(mockServerContainer.getEndpoint());
+    apiProperties.setAccessToken("");
+    apiProperties.setAuthHeader("Authorization");
+    return WebClient.builder()
+        .clientConnector(
+            ReactorNettyHttpClientFactory.create(
+                apiProperties.getName() != null ? apiProperties.getName() : "integration-test",
+                apiProperties))
+        .baseUrl(apiProperties.getUrl())
+        .defaultHeader(apiProperties.getAuthHeader(), apiProperties.getAccessToken())
+        .build();
   }
 
   protected static String readJsonFromFile(final String fileName) throws Exception {
@@ -391,21 +396,30 @@ public abstract class MockServerIntegrationTest {
     @Primary
     DataClaimsApiProperties dataClaimsApiProperties() {
       // Set using host and port running the mock server
-      return new DataClaimsApiProperties("http://localhost:30000", "");
+      DataClaimsApiProperties properties = new DataClaimsApiProperties();
+      properties.setUrl("http://localhost:30000");
+      properties.setAccessToken("");
+      return properties;
     }
 
     @Bean
     @Primary
     FeeSchemePlatformApiProperties feeSchemePlatformApiProperties() {
       // Set using host and port running the mock server
-      return new FeeSchemePlatformApiProperties("http://localhost:30000", "");
+      FeeSchemePlatformApiProperties properties = new FeeSchemePlatformApiProperties();
+      properties.setUrl("http://localhost:30000");
+      properties.setAccessToken("");
+      return properties;
     }
 
     @Bean
     @Primary
     ProviderDetailsApiProperties providerDetailsApiProperties() {
       // Set using host and port running the mock server
-      return new ProviderDetailsApiProperties("http://localhost:30000", "");
+      ProviderDetailsApiProperties properties = new ProviderDetailsApiProperties();
+      properties.setUrl("http://localhost:30000");
+      properties.setAccessToken("");
+      return properties;
     }
 
     @Bean
