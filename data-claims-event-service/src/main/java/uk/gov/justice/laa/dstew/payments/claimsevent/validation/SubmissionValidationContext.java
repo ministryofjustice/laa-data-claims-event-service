@@ -3,7 +3,9 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.validation;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationSource.EVENT_SERVICE;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -22,6 +24,7 @@ public class SubmissionValidationContext {
 
   private final List<ClaimValidationReport> claimReports = new ArrayList<>();
   private final List<ValidationMessagePatch> submissionValidationErrors = new ArrayList<>();
+  private final Map<String, String> validCategoryOfLawCodes = new HashMap<>();
 
   /**
    * Adds a list of submission-level validation errors.
@@ -207,5 +210,34 @@ public class SubmissionValidationContext {
    */
   public boolean hasClaimLevelErrors() {
     return claimReports.stream().anyMatch(ClaimValidationReport::hasErrors);
+  }
+
+  /**
+   * Stores the valid category of law code associated-law validation has been * Stores the valid
+   * category of law code associated with the specified fee code. performed. It records the resolved
+   * category of law so that it can be retrieved later during fee calculation patch generation or
+   * other downstream processes. If a value already exists for the given fee code, it will be
+   * overwritten.
+   *
+   * @param feeCode the fee code for which the category of law has been validated
+   * @param categoryOfLawCode the resolved (valid) category of law code to associate with the fee
+   *     code; may be {@code null} if no valid category exists
+   */
+  public void putValidCategoryOfLawCode(final String feeCode, final String categoryOfLawCode) {
+    validCategoryOfLawCodes.put(feeCode, categoryOfLawCode);
+  }
+
+  /**
+   * Retrieves the previously validated category of law code associated with the given fee code.
+   * This method returns whatever category was stored during validation. If no category has been
+   * recorded for the provided fee code, this method returns {@code null}. Callers should treat a
+   * {@code null} result as indicating that no valid category of law was determined for that fee
+   * code.
+   *
+   * @param feeCode the fee code for which a category of law lookup is required
+   * @return the resolved valid category of law code, or {@code null} if none exists
+   */
+  public String getValidCategoryOfLawCode(final String feeCode) {
+    return validCategoryOfLawCodes.get(feeCode);
   }
 }
