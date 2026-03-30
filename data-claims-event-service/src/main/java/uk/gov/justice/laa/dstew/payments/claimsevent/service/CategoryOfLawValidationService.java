@@ -62,6 +62,7 @@ public class CategoryOfLawValidationService {
                 .filter(providerCategoriesOfLaw::contains)
                 .findFirst();
         if (match.isEmpty()) {
+          context.putValidCategoryOfLawCode(claim.getFeeCode(), null);
           context.addClaimError(
               claim.getId(),
               ClaimValidationError.INVALID_CATEGORY_OF_LAW_NOT_AUTHORISED_FOR_PROVIDER);
