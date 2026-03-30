@@ -17,9 +17,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationE
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponseV2;
 
-/**
- * A service responsible for validating data items related to category of law.
- */
+/** A service responsible for validating data items related to category of law. */
 @Slf4j
 @Service
 @AllArgsConstructor
@@ -30,9 +28,9 @@ public class CategoryOfLawValidationService {
   /**
    * Validates that a valid category of law exists for the fee code provided in the claim.
    *
-   * @param claim                 the submitted claim
+   * @param claim the submitted claim
    * @param feeDetailsResponseMap a map containing FeeDetailsResponse and their corresponding
-   *                              feeCodes
+   *     feeCodes
    */
   public void validateCategoryOfLaw(
       ClaimResponse claim,
@@ -58,9 +56,7 @@ public class CategoryOfLawValidationService {
             claim.getFeeCode());
       } else {
         Optional<String> match =
-            categoryOfLawCodes.stream()
-                .filter(providerCategoriesOfLaw::contains)
-                .findFirst();
+            categoryOfLawCodes.stream().filter(providerCategoriesOfLaw::contains).findFirst();
         if (match.isEmpty()) {
           context.putValidCategoryOfLawCode(claim.getFeeCode(), null);
           context.addClaimError(
