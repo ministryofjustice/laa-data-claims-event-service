@@ -26,19 +26,30 @@ public class CategoryOfLawValidationService {
   private final FeeSchemePlatformRestClient feeSchemePlatformRestClient;
 
   /**
-   * Validates that a valid category of law exists for the fee code provided in the claim.
+   * Validates whether the claim's fee code is associated with a category of law that the provider
+   * is authorised to use.
    *
-   * @param claim the submitted claim
-   * @param feeDetailsResponseMap a map containing FeeDetailsResponse and their corresponding
-   *     feeCodes
+   * <p>The validation process checks the fee details response associated with the claim's fee code.
+   * If the external fee details service returns an error, the claim is flagged for retry. If the
+   * fee details are returned successfully, the method verifies that the category of law codes in
+   * the response intersect with the provider's authorised categories.
+   *
+   * <p>If no category of law codes are provided, or if there is no intersection with the provider's
+   * authorised categories, the claim is marked with the appropriate validation error. When a match
+   * exists, the resolved valid category of law code is recorded in the validation context.
+   *
+   * @param claim the claim being validated
+   * @param feeDetailsResponseMap a mapping of fee codes to their corresponding fee details
+   * @param providerCategoriesOfLaw the list of category of law codes the provider is authorised for
+   * @param context the validation context used to track errors, retries, and resolved values
    */
-  public void validateCategoryOfLaw(
+  public void validateCategoriesOfLaw(
       ClaimResponse claim,
       Map<String, FeeDetailsResponseWrapper> feeDetailsResponseMap,
       List<String> providerCategoriesOfLaw,
       SubmissionValidationContext context) {
 
-    log.debug("Validating category of law for claim {}", claim.getId());
+    log.debug("Validating categories of law for claim {}", claim.getId());
 
     FeeDetailsResponseWrapper feeDetailsResponseWrapper =
         feeDetailsResponseMap.get(claim.getFeeCode());
@@ -46,28 +57,52 @@ public class CategoryOfLawValidationService {
     if (feeDetailsResponseWrapper.isError()) {
       context.flagForRetry(claim.getId());
     } else if (feeDetailsResponseWrapper.getFeeDetailsResponse() != null) {
-      List<String> categoryOfLawCodes =
-          feeDetailsResponseWrapper.getFeeDetailsResponse().getCategoryOfLawCodes();
-
-      if (CollectionUtils.isEmpty(categoryOfLawCodes)) {
-        context.addClaimError(
-            claim.getId(),
-            ClaimValidationError.INVALID_CATEGORY_OF_LAW_AND_FEE_CODE,
-            claim.getFeeCode());
-      } else {
-        Optional<String> match =
-            categoryOfLawCodes.stream().filter(providerCategoriesOfLaw::contains).findFirst();
-        if (match.isEmpty()) {
-          context.putValidCategoryOfLawCode(claim.getFeeCode(), null);
-          context.addClaimError(
-              claim.getId(),
-              ClaimValidationError.INVALID_CATEGORY_OF_LAW_NOT_AUTHORISED_FOR_PROVIDER);
-        } else {
-          context.putValidCategoryOfLawCode(claim.getFeeCode(), match.get());
-        }
-      }
+      validateProviderCategoriesOfLaw(
+          claim,
+          providerCategoriesOfLaw,
+          feeDetailsResponseWrapper.getFeeDetailsResponse().getCategoryOfLawCodes(),
+          context);
     }
-    log.debug("Category of law validation completed for claim {}", claim.getId());
+    log.debug("Categories of law validation completed for claim {}", claim.getId());
+  }
+
+  /**
+   * Validates that the claim's fee code is associated with at least one category of law for which
+   * the provider is authorised. If the claim does not specify any applicable categories of law, or
+   * none of them match the provider's authorised categories, an appropriate validation error is
+   * recorded in the {@link SubmissionValidationContext}.
+   *
+   * <p>When a valid authorised category is found, it is stored in the validation context against
+   * the claim’s fee code.
+   *
+   * @param claim the claim being validated, containing identifiers and the fee code
+   * @param providerCategoriesOfLaw the list of category-of-law codes the provider is authorised for
+   * @param categoryOfLawCodes the list of category-of-law codes applicable to the claim's fee code
+   * @param context the validation context used to track valid category codes and errors
+   */
+  private void validateProviderCategoriesOfLaw(
+      ClaimResponse claim,
+      List<String> providerCategoriesOfLaw,
+      List<String> categoryOfLawCodes,
+      SubmissionValidationContext context) {
+
+    if (CollectionUtils.isEmpty(categoryOfLawCodes)) {
+      context.addClaimError(
+          claim.getId(),
+          ClaimValidationError.INVALID_CATEGORY_OF_LAW_AND_FEE_CODE,
+          claim.getFeeCode());
+      return;
+    }
+
+    Optional<String> authorisedCategoryOfLaw =
+        categoryOfLawCodes.stream().filter(providerCategoriesOfLaw::contains).findFirst();
+    if (authorisedCategoryOfLaw.isEmpty()) {
+      context.putValidCategoryOfLawCode(claim.getFeeCode(), null);
+      context.addClaimError(
+          claim.getId(), ClaimValidationError.INVALID_CATEGORY_OF_LAW_NOT_AUTHORISED_FOR_PROVIDER);
+    } else {
+      context.putValidCategoryOfLawCode(claim.getFeeCode(), authorisedCategoryOfLaw.get());
+    }
   }
 
   /**

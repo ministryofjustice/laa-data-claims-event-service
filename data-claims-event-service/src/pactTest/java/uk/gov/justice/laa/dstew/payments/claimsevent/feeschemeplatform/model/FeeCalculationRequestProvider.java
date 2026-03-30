@@ -7,7 +7,7 @@ import uk.gov.justice.laa.fee.scheme.model.FeeCalculationRequest;
 
 public class FeeCalculationRequestProvider {
 
-  public static FeeCalculationRequest getCalculationRequest(
+  public static FeeCalculationRequest getFeeCalculationRequest(
       final String feeCode, final UUID claimId) {
     return FeeCalculationRequest.builder()
         .feeCode(feeCode)

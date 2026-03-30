@@ -50,7 +50,7 @@ class CategoryOfLawValidationServiceTest {
       SubmissionValidationContext context = new SubmissionValidationContext();
       context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
 
-      categoryOfLawValidationService.validateCategoryOfLaw(
+      categoryOfLawValidationService.validateCategoriesOfLaw(
           claim, feeDetailsResponseWrapperMap, providerCategoriesOfLaw, context);
 
       assertThat(context.hasErrors()).isFalse();
@@ -72,7 +72,7 @@ class CategoryOfLawValidationServiceTest {
       SubmissionValidationContext context = new SubmissionValidationContext();
       context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
 
-      categoryOfLawValidationService.validateCategoryOfLaw(
+      categoryOfLawValidationService.validateCategoriesOfLaw(
           claim, feeDetailsResponseWrapperMap, providerCategoriesOfLaw, context);
 
       assertContextClaimError(
@@ -98,7 +98,7 @@ class CategoryOfLawValidationServiceTest {
       SubmissionValidationContext context = new SubmissionValidationContext();
       context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
 
-      categoryOfLawValidationService.validateCategoryOfLaw(
+      categoryOfLawValidationService.validateCategoriesOfLaw(
           claim, feeDetailsResponseWrapperMap, providerCategoriesOfLaw, context);
 
       assertContextClaimError(
@@ -118,7 +118,7 @@ class CategoryOfLawValidationServiceTest {
       SubmissionValidationContext context = new SubmissionValidationContext();
       context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
 
-      categoryOfLawValidationService.validateCategoryOfLaw(
+      categoryOfLawValidationService.validateCategoriesOfLaw(
           claim, feeDetailsResponseWrapperMap, providerCategoriesOfLaw, context);
 
       assertThat(context.isFlaggedForRetry(claim.getId())).isTrue();

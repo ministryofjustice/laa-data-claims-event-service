@@ -53,14 +53,14 @@ public class PostFeeCalculationV1PactTest extends AbstractPactTest {
         .method("POST")
         .body(
             objectMapper.writeValueAsString(
-                FeeCalculationRequestProvider.getCalculationRequest(FEE_CODE, CLAIM_ID)))
+                FeeCalculationRequestProvider.getFeeCalculationRequest(FEE_CODE, CLAIM_ID)))
         .matchHeader("Content-Type", "application/json")
         .willRespondWith()
         .status(200)
         .headers(Map.of("Content-Type", "application/json"))
         .body(
             objectMapper.writeValueAsString(
-                FeeCalculationResponseProvider.getCalculationResponse(FEE_CODE, CLAIM_ID)))
+                FeeCalculationResponseProvider.getFeeCalculationResponse(FEE_CODE, CLAIM_ID)))
         .toPact();
   }
 
@@ -76,7 +76,7 @@ public class PostFeeCalculationV1PactTest extends AbstractPactTest {
         .method("POST")
         .body(
             objectMapper.writeValueAsString(
-                FeeCalculationRequestProvider.getCalculationRequest(FEE_CODE, CLAIM_ID)))
+                FeeCalculationRequestProvider.getFeeCalculationRequest(FEE_CODE, CLAIM_ID)))
         .matchHeader("Content-Type", "application/json")
         .willRespondWith()
         .status(400)
@@ -96,7 +96,7 @@ public class PostFeeCalculationV1PactTest extends AbstractPactTest {
         .method("POST")
         .body(
             objectMapper.writeValueAsString(
-                FeeCalculationRequestProvider.getCalculationRequest(FEE_CODE, CLAIM_ID)))
+                FeeCalculationRequestProvider.getFeeCalculationRequest(FEE_CODE, CLAIM_ID)))
         .matchHeader("Content-Type", "application/json")
         .willRespondWith()
         .status(401)
@@ -116,7 +116,7 @@ public class PostFeeCalculationV1PactTest extends AbstractPactTest {
         .method("POST")
         .body(
             objectMapper.writeValueAsString(
-                FeeCalculationRequestProvider.getCalculationRequest(FEE_CODE, CLAIM_ID)))
+                FeeCalculationRequestProvider.getFeeCalculationRequest(FEE_CODE, CLAIM_ID)))
         .matchHeader("Content-Type", "application/json")
         .willRespondWith()
         .status(403)
@@ -136,7 +136,7 @@ public class PostFeeCalculationV1PactTest extends AbstractPactTest {
         .method("POST")
         .body(
             objectMapper.writeValueAsString(
-                FeeCalculationRequestProvider.getCalculationRequest(FEE_CODE, CLAIM_ID)))
+                FeeCalculationRequestProvider.getFeeCalculationRequest(FEE_CODE, CLAIM_ID)))
         .matchHeader("Content-Type", "application/json")
         .willRespondWith()
         .status(404)
@@ -156,7 +156,7 @@ public class PostFeeCalculationV1PactTest extends AbstractPactTest {
         .method("POST")
         .body(
             objectMapper.writeValueAsString(
-                FeeCalculationRequestProvider.getCalculationRequest(FEE_CODE, CLAIM_ID)))
+                FeeCalculationRequestProvider.getFeeCalculationRequest(FEE_CODE, CLAIM_ID)))
         .matchHeader("Content-Type", "application/json")
         .willRespondWith()
         .status(500)
@@ -172,7 +172,7 @@ public class PostFeeCalculationV1PactTest extends AbstractPactTest {
   void verify200Response() {
     var response =
         feeSchemePlatformRestClient.calculateFee(
-            FeeCalculationRequestProvider.getCalculationRequest(FEE_CODE, CLAIM_ID));
+            FeeCalculationRequestProvider.getFeeCalculationRequest(FEE_CODE, CLAIM_ID));
 
     assertThat(response).isNotNull();
     assertThat(response.getBody().getFeeCode()).isNotBlank();
@@ -187,7 +187,7 @@ public class PostFeeCalculationV1PactTest extends AbstractPactTest {
         WebClientResponseException.BadRequest.class,
         () ->
             feeSchemePlatformRestClient.calculateFee(
-                FeeCalculationRequestProvider.getCalculationRequest(FEE_CODE, CLAIM_ID)));
+                FeeCalculationRequestProvider.getFeeCalculationRequest(FEE_CODE, CLAIM_ID)));
   }
 
   @Test
@@ -198,7 +198,7 @@ public class PostFeeCalculationV1PactTest extends AbstractPactTest {
         WebClientResponseException.Unauthorized.class,
         () ->
             feeSchemePlatformRestClient.calculateFee(
-                FeeCalculationRequestProvider.getCalculationRequest(FEE_CODE, CLAIM_ID)));
+                FeeCalculationRequestProvider.getFeeCalculationRequest(FEE_CODE, CLAIM_ID)));
   }
 
   @Test
@@ -209,7 +209,7 @@ public class PostFeeCalculationV1PactTest extends AbstractPactTest {
         WebClientResponseException.Forbidden.class,
         () ->
             feeSchemePlatformRestClient.calculateFee(
-                FeeCalculationRequestProvider.getCalculationRequest(FEE_CODE, CLAIM_ID)));
+                FeeCalculationRequestProvider.getFeeCalculationRequest(FEE_CODE, CLAIM_ID)));
   }
 
   @Test
@@ -220,7 +220,7 @@ public class PostFeeCalculationV1PactTest extends AbstractPactTest {
         WebClientResponseException.NotFound.class,
         () ->
             feeSchemePlatformRestClient.calculateFee(
-                FeeCalculationRequestProvider.getCalculationRequest(FEE_CODE, CLAIM_ID)));
+                FeeCalculationRequestProvider.getFeeCalculationRequest(FEE_CODE, CLAIM_ID)));
   }
 
   @Test
@@ -231,6 +231,6 @@ public class PostFeeCalculationV1PactTest extends AbstractPactTest {
         WebClientResponseException.InternalServerError.class,
         () ->
             feeSchemePlatformRestClient.calculateFee(
-                FeeCalculationRequestProvider.getCalculationRequest(FEE_CODE, CLAIM_ID)));
+                FeeCalculationRequestProvider.getFeeCalculationRequest(FEE_CODE, CLAIM_ID)));
   }
 }
