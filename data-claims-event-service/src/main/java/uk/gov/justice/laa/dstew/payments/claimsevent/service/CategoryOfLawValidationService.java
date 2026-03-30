@@ -2,6 +2,7 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
@@ -16,7 +17,9 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationE
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponseV2;
 
-/** A service responsible for validating data items related to category of law. */
+/**
+ * A service responsible for validating data items related to category of law.
+ */
 @Slf4j
 @Service
 @AllArgsConstructor
@@ -27,9 +30,9 @@ public class CategoryOfLawValidationService {
   /**
    * Validates that a valid category of law exists for the fee code provided in the claim.
    *
-   * @param claim the submitted claim
+   * @param claim                 the submitted claim
    * @param feeDetailsResponseMap a map containing FeeDetailsResponse and their corresponding
-   *     feeCodes
+   *                              feeCodes
    */
   public void validateCategoryOfLaw(
       ClaimResponse claim,
@@ -53,17 +56,18 @@ public class CategoryOfLawValidationService {
             claim.getId(),
             ClaimValidationError.INVALID_CATEGORY_OF_LAW_AND_FEE_CODE,
             claim.getFeeCode());
-      } else if (categoryOfLawCodes.stream().noneMatch(providerCategoriesOfLaw::contains)) {
-        context.addClaimError(
-            claim.getId(),
-            ClaimValidationError.INVALID_CATEGORY_OF_LAW_NOT_AUTHORISED_FOR_PROVIDER);
       } else {
-        String firstMatchingValidCategory =
+        Optional<String> match =
             categoryOfLawCodes.stream()
                 .filter(providerCategoriesOfLaw::contains)
-                .findFirst()
-                .orElse(categoryOfLawCodes.getFirst());
-        context.putValidCategoryOfLawCode(claim.getFeeCode(), firstMatchingValidCategory);
+                .findFirst();
+        if (match.isEmpty()) {
+          context.addClaimError(
+              claim.getId(),
+              ClaimValidationError.INVALID_CATEGORY_OF_LAW_NOT_AUTHORISED_FOR_PROVIDER);
+        } else {
+          context.putValidCategoryOfLawCode(claim.getFeeCode(), match.get());
+        }
       }
     }
     log.debug("Category of law validation completed for claim {}", claim.getId());
