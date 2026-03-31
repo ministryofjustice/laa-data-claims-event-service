@@ -20,8 +20,8 @@ import uk.gov.justice.laa.provider.model.ProviderFirmOfficeContractAndScheduleDt
 public interface ProviderDetailsRestClient {
 
   /**
-   * Get all provider office schedule details based on the provider office code. Can return the
-   * following HTTP statuses:
+   * Get all provider office schedule details based on the provider office code. Passes false for
+   * requireOpenStatus. Can return the following HTTP statuses:
    *
    * <ul>
    *   <li>200 - Success
@@ -31,13 +31,14 @@ public interface ProviderDetailsRestClient {
    * </ul>
    *
    * @param officeCode The firm office code
-   * @param areaOfLaw The area of law code
+   * @param effectiveDate The contract effective date for testing on lower environments. Should not
+   *     be used for production environments.
    * @return The provider firm summary
    */
-  @GetExchange("/{officeCode}/schedules")
-  Mono<ProviderFirmOfficeContractAndScheduleDto> getProviderFirmSchedules(
-      final @PathVariable String officeCode,
-      final @RequestParam(required = false) String areaOfLaw);
+  default Mono<ProviderFirmOfficeContractAndScheduleDto> getProviderFirmSchedules(
+      final String officeCode, final LocalDate effectiveDate) {
+    return getProviderFirmSchedules(officeCode, effectiveDate, false);
+  }
 
   /**
    * Get all provider office schedule details based on the provider office code. Can return the
@@ -51,15 +52,15 @@ public interface ProviderDetailsRestClient {
    * </ul>
    *
    * @param officeCode The firm office code
-   * @param areaOfLaw The area of law code
    * @param effectiveDate The contract effective date for testing on lower environments. Should not
    *     be used for production environments.
+   * @param requireOpenStatus If true, only returns schedules with open status, defaults to false.
    * @return The provider firm summary
    */
   @GetExchange("/{officeCode}/schedules")
   Mono<ProviderFirmOfficeContractAndScheduleDto> getProviderFirmSchedules(
       final @PathVariable String officeCode,
-      final @RequestParam(required = false) String areaOfLaw,
       final @RequestParam(required = false) @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate
-              effectiveDate);
+              effectiveDate,
+      final @RequestParam(defaultValue = "false") Boolean requireOpenStatus);
 }

@@ -293,15 +293,15 @@ public class EventServiceMetricService {
   /**
    * Stops a timer for a submission validation and records the timer value.
    *
-   * @param claimId the ID of the claim the timer was started for.
+   * @param submissionId the ID of the claim the timer was started for.
    */
-  public void stopSubmissionValidationTimer(UUID claimId) {
-    TimerLifecycle timer = submissionValidationTimers.remove(claimId);
+  public void stopSubmissionValidationTimer(UUID submissionId) {
+    TimerLifecycle timer = submissionValidationTimers.remove(submissionId);
     if (!Objects.isNull(timer) && !Objects.isNull(timer.timer())) {
       try (var timerResource = timer.timer()) {
         double v = timerResource.observeDuration();
         if (v > 2) {
-          log.info("Submission validation took {} seconds for claim {}", v, claimId);
+          log.info("Submission validation took {} seconds for submissionId {}", v, submissionId);
         }
       }
     }

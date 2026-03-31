@@ -220,9 +220,7 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
 
       stubForGetProviderOffice(
           OFFICE_CODE,
-          List.of(
-              new Parameter("areaOfLaw", AREA_OF_LAW.getValue()),
-              new Parameter("effectiveDate", "14-08-2025")),
+          List.of(new Parameter("effectiveDate", "14-08-2025")),
           "provider-details/get-firm-schedules-openapi-200.json");
 
       stubForPostFeeCalculationReturnError("fee-scheme/post-fee-calculation-404.json");
@@ -265,7 +263,7 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
 
       stubForGetProviderOffice(
           OFFICE_CODE,
-          List.of(new Parameter("areaOfLaw", AreaOfLaw.CRIME_LOWER.getValue())),
+          Collections.emptyList(),
           "provider-details/get-firm-schedules-openapi-200.json");
 
       stubForGetClaims(Collections.emptyList(), claimsJson);

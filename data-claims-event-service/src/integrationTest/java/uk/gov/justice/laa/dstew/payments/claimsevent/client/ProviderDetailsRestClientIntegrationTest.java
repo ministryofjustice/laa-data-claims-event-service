@@ -41,171 +41,6 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
   }
 
   @Nested
-  @DisplayName("GET: /provider-offices/{officeCode}/schedules tests")
-  class GetOfficeSchedulesWithoutEffectiveDate {
-
-    @Test
-    @DisplayName("Should return 200 response")
-    void shouldReturn200Response() throws Exception {
-      // Given
-      String officeCode = "1234";
-      String areaOfLaw = "CRIMINAL";
-
-      String expectedBody =
-          readJsonFromFile("provider-details/get-firm-schedules-openapi-200.json");
-
-      mockServerClient
-          .when(
-              HttpRequest.request()
-                  .withMethod("GET")
-                  .withPath(PROVIDER_OFFICES + officeCode + SCHEDULES_ENDPOINT)
-                  .withQueryStringParameter("areaOfLaw", areaOfLaw))
-          .respond(
-              HttpResponse.response()
-                  .withStatusCode(200)
-                  .withHeader("Content-Type", "application/json")
-                  .withBody(expectedBody));
-
-      // When
-      Mono<ProviderFirmOfficeContractAndScheduleDto> result =
-          providerDetailsRestClient.getProviderFirmSchedules(officeCode, areaOfLaw);
-
-      // Then
-      Optional<ProviderFirmOfficeContractAndScheduleDto> providerFirmSummary =
-          result.blockOptional();
-      assertThat(providerFirmSummary).isPresent();
-      // Check all fields mapped correctly by serializing the result and comparing to expected JSON
-      String resultJson = objectMapper.writeValueAsString(providerFirmSummary.get());
-      assertThatJsonMatches(expectedBody, resultJson);
-    }
-
-    @Test
-    @DisplayName("Should return 200 response without areaOfLaw query parameter")
-    void shouldReturn200ResponseWithoutAreaOfLaw() throws Exception {
-      // Given
-      String officeCode = "1234";
-      String areaOfLaw = "";
-
-      String expectedBody =
-          readJsonFromFile("provider-details/get-firm-schedules-openapi-200.json");
-
-      mockServerClient
-          .when(
-              HttpRequest.request()
-                  .withMethod("GET")
-                  .withPath(PROVIDER_OFFICES + officeCode + SCHEDULES_ENDPOINT)
-                  .withQueryStringParameter("areaOfLaw", areaOfLaw))
-          .respond(
-              HttpResponse.response()
-                  .withStatusCode(200)
-                  .withHeader("Content-Type", "application/json")
-                  .withBody(expectedBody));
-
-      // When
-      Mono<ProviderFirmOfficeContractAndScheduleDto> result =
-          providerDetailsRestClient.getProviderFirmSchedules(officeCode, areaOfLaw);
-
-      // Then
-      Optional<ProviderFirmOfficeContractAndScheduleDto> providerFirmSummary =
-          result.blockOptional();
-      assertThat(providerFirmSummary).isPresent();
-      // Check all fields mapped correctly by serializing the result and comparing to expected JSON
-      String resultJson = objectMapper.writeValueAsString(providerFirmSummary.get());
-      assertThatJsonMatches(expectedBody, resultJson);
-    }
-
-    @Test
-    @DisplayName("Should handle 204 response")
-    void shouldHandle204Response() {
-      // Given
-      String officeCode = "1234";
-      String areaOfLaw = "CRIMINAL";
-
-      mockServerClient
-          .when(
-              HttpRequest.request()
-                  .withMethod("GET")
-                  .withPath(PROVIDER_OFFICES + officeCode + SCHEDULES_ENDPOINT)
-                  .withQueryStringParameter("areaOfLaw", areaOfLaw))
-          .respond(
-              HttpResponse.response()
-                  .withStatusCode(204)
-                  // Returns no body, so content type is set to text/html
-                  .withHeader("Content-Type", "text/html"));
-
-      // When
-      Mono<ProviderFirmOfficeContractAndScheduleDto> result =
-          providerDetailsRestClient
-              .getProviderFirmSchedules(officeCode, areaOfLaw)
-              .onErrorResume(throwable -> Mono.empty());
-
-      // Then
-      Optional<ProviderFirmOfficeContractAndScheduleDto> providerFirmSummary =
-          result.blockOptional();
-      // Expect empty Optional as no body returned, but due to no active contracts therefor an
-      assertThat(providerFirmSummary).isEmpty();
-    }
-
-    @Test
-    @DisplayName("Should handle 500 response")
-    void shouldHandle500Response() {
-      // Given
-      String officeCode = "1234";
-      String areaOfLaw = "CRIMINAL";
-
-      mockServerClient
-          .when(
-              HttpRequest.request()
-                  .withMethod("GET")
-                  .withPath(PROVIDER_OFFICES + officeCode + SCHEDULES_ENDPOINT)
-                  .withQueryStringParameter("areaOfLaw", areaOfLaw))
-          .respond(
-              HttpResponse.response()
-                  .withStatusCode(500)
-                  .withHeader("Content-Type", "application/json"));
-
-      // When
-      Mono<ProviderFirmOfficeContractAndScheduleDto> result =
-          providerDetailsRestClient.getProviderFirmSchedules(officeCode, areaOfLaw);
-
-      // Then
-      assertThatThrownBy(result::block)
-          .isInstanceOf(WebClientResponseException.class)
-          .hasMessageContaining("500 Internal Server Error");
-    }
-
-    @Test
-    @DisplayName("Should return 409 response")
-    void shouldHandle409Response() {
-      // Given
-      String officeCode = "1234";
-      String areaOfLaw = "CRIMINAL";
-
-      mockServerClient
-          .when(
-              HttpRequest.request()
-                  .withMethod("GET")
-                  .withPath(PROVIDER_OFFICES + officeCode + SCHEDULES_ENDPOINT)
-                  .withQueryStringParameter("areaOfLaw", areaOfLaw))
-          .respond(
-              HttpResponse.response()
-                  .withStatusCode(409)
-                  .withHeader("Content-Type", "application/json"));
-
-      // When
-      Mono<ProviderFirmOfficeContractAndScheduleDto> result =
-          providerDetailsRestClient.getProviderFirmSchedules(officeCode, areaOfLaw);
-
-      // Then
-      assertThatThrownBy(result::block)
-          .isInstanceOf(WebClientResponseException.class)
-          .hasMessageContaining(
-              "409 Conflict from GET http://%s:%d/api/v1/provider-offices/1234/schedules"
-                  .formatted(mockServerContainer.getHost(), mockServerContainer.getServerPort()));
-    }
-  }
-
-  @Nested
   @DisplayName("Get office schedules with effective date")
   class GetOfficeSchedulesWithEffectiveDate {
 
@@ -214,7 +49,40 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
     void shouldReturn200Response() throws Exception {
       // Given
       String officeCode = "1234";
-      String areaOfLaw = "CRIMINAL";
+      LocalDate effectiveDate = LocalDate.of(2021, 1, 1);
+
+      String expectedBody =
+          readJsonFromFile("provider-details/get-firm-schedules-openapi-200.json");
+
+      mockServerClient
+          .when(
+              HttpRequest.request()
+                  .withMethod("GET")
+                  .withPath(PROVIDER_OFFICES + officeCode + SCHEDULES_ENDPOINT))
+          .respond(
+              HttpResponse.response()
+                  .withStatusCode(200)
+                  .withHeader("Content-Type", "application/json")
+                  .withBody(expectedBody));
+
+      // When
+      Mono<ProviderFirmOfficeContractAndScheduleDto> result =
+          providerDetailsRestClient.getProviderFirmSchedules(officeCode, effectiveDate);
+
+      // Then
+      Optional<ProviderFirmOfficeContractAndScheduleDto> providerFirmSummary =
+          result.blockOptional();
+      assertThat(providerFirmSummary).isPresent();
+      // Check all fields mapped correctly by serializing the result and comparing to expected JSON
+      String resultJson = objectMapper.writeValueAsString(providerFirmSummary.get());
+      assertThatJsonMatches(expectedBody, resultJson);
+    }
+
+    @Test
+    @DisplayName("Should return 200 response with requireOpenStatus parameter")
+    void shouldReturn200ResponseWithRequireOpenStatusParameter() throws Exception {
+      // Given
+      String officeCode = "1234";
       LocalDate effectiveDate = LocalDate.of(2021, 1, 1);
 
       String expectedBody =
@@ -225,7 +93,7 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
               HttpRequest.request()
                   .withMethod("GET")
                   .withPath(PROVIDER_OFFICES + officeCode + SCHEDULES_ENDPOINT)
-                  .withQueryStringParameter("areaOfLaw", areaOfLaw))
+                  .withQueryStringParameter("requireOpenStatus", "false"))
           .respond(
               HttpResponse.response()
                   .withStatusCode(200)
@@ -234,7 +102,42 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
 
       // When
       Mono<ProviderFirmOfficeContractAndScheduleDto> result =
-          providerDetailsRestClient.getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate);
+          providerDetailsRestClient.getProviderFirmSchedules(officeCode, effectiveDate);
+
+      // Then
+      Optional<ProviderFirmOfficeContractAndScheduleDto> providerFirmSummary =
+          result.blockOptional();
+      assertThat(providerFirmSummary).isPresent();
+      // Check all fields mapped correctly by serializing the result and comparing to expected JSON
+      String resultJson = objectMapper.writeValueAsString(providerFirmSummary.get());
+      assertThatJsonMatches(expectedBody, resultJson);
+    }
+
+    @Test
+    @DisplayName("Should return 200 response with requireOpenStatus parameter set to true")
+    void shouldReturn200ResponseWithRequireOpenStatusParameterSetToTrue() throws Exception {
+      // Given
+      String officeCode = "1234";
+      LocalDate effectiveDate = LocalDate.of(2021, 1, 1);
+
+      String expectedBody =
+          readJsonFromFile("provider-details/get-firm-schedules-openapi-200.json");
+
+      mockServerClient
+          .when(
+              HttpRequest.request()
+                  .withMethod("GET")
+                  .withPath(PROVIDER_OFFICES + officeCode + SCHEDULES_ENDPOINT)
+                  .withQueryStringParameter("requireOpenStatus", "true"))
+          .respond(
+              HttpResponse.response()
+                  .withStatusCode(200)
+                  .withHeader("Content-Type", "application/json")
+                  .withBody(expectedBody));
+
+      // When
+      Mono<ProviderFirmOfficeContractAndScheduleDto> result =
+          providerDetailsRestClient.getProviderFirmSchedules(officeCode, effectiveDate, true);
 
       // Then
       Optional<ProviderFirmOfficeContractAndScheduleDto> providerFirmSummary =
@@ -250,7 +153,6 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
     void shouldReturn200ResponseWithoutAreaOfLaw() throws Exception {
       // Given
       String officeCode = "1234";
-      String areaOfLaw = "";
       LocalDate effectiveDate = LocalDate.of(2021, 1, 1);
 
       String expectedBody =
@@ -260,8 +162,7 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
           .when(
               HttpRequest.request()
                   .withMethod("GET")
-                  .withPath(PROVIDER_OFFICES + officeCode + SCHEDULES_ENDPOINT)
-                  .withQueryStringParameter("areaOfLaw", areaOfLaw))
+                  .withPath(PROVIDER_OFFICES + officeCode + SCHEDULES_ENDPOINT))
           .respond(
               HttpResponse.response()
                   .withStatusCode(200)
@@ -270,7 +171,7 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
 
       // When
       Mono<ProviderFirmOfficeContractAndScheduleDto> result =
-          providerDetailsRestClient.getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate);
+          providerDetailsRestClient.getProviderFirmSchedules(officeCode, effectiveDate);
 
       // Then
       Optional<ProviderFirmOfficeContractAndScheduleDto> providerFirmSummary =
@@ -286,15 +187,13 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
     void shouldHandle204Response() {
       // Given
       String officeCode = "1234";
-      String areaOfLaw = "CRIMINAL";
       LocalDate effectiveDate = LocalDate.of(2021, 1, 1);
 
       mockServerClient
           .when(
               HttpRequest.request()
                   .withMethod("GET")
-                  .withPath(PROVIDER_OFFICES + officeCode + SCHEDULES_ENDPOINT)
-                  .withQueryStringParameter("areaOfLaw", areaOfLaw))
+                  .withPath(PROVIDER_OFFICES + officeCode + SCHEDULES_ENDPOINT))
           .respond(
               HttpResponse.response()
                   .withStatusCode(204)
@@ -304,7 +203,7 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
       // When
       Mono<ProviderFirmOfficeContractAndScheduleDto> result =
           providerDetailsRestClient
-              .getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate)
+              .getProviderFirmSchedules(officeCode, effectiveDate)
               .onErrorResume(throwable -> Mono.empty());
 
       // Then
@@ -319,15 +218,13 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
     void shouldHandle500Response() {
       // Given
       String officeCode = "1234";
-      String areaOfLaw = "CRIMINAL";
       LocalDate effectiveDate = LocalDate.of(2021, 1, 1);
 
       mockServerClient
           .when(
               HttpRequest.request()
                   .withMethod("GET")
-                  .withPath(PROVIDER_OFFICES + officeCode + SCHEDULES_ENDPOINT)
-                  .withQueryStringParameter("areaOfLaw", areaOfLaw))
+                  .withPath(PROVIDER_OFFICES + officeCode + SCHEDULES_ENDPOINT))
           .respond(
               HttpResponse.response()
                   .withStatusCode(500)
@@ -335,7 +232,7 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
 
       // When
       Mono<ProviderFirmOfficeContractAndScheduleDto> result =
-          providerDetailsRestClient.getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate);
+          providerDetailsRestClient.getProviderFirmSchedules(officeCode, effectiveDate);
 
       // Then
       assertThatThrownBy(result::block)
@@ -348,15 +245,13 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
     void shouldHandle409Response() {
       // Given
       String officeCode = "1234";
-      String areaOfLaw = "CRIMINAL";
       LocalDate effectiveDate = LocalDate.of(2021, 1, 1);
 
       mockServerClient
           .when(
               HttpRequest.request()
                   .withMethod("GET")
-                  .withPath(PROVIDER_OFFICES + officeCode + SCHEDULES_ENDPOINT)
-                  .withQueryStringParameter("areaOfLaw", areaOfLaw))
+                  .withPath(PROVIDER_OFFICES + officeCode + SCHEDULES_ENDPOINT))
           .respond(
               HttpResponse.response()
                   .withStatusCode(409)
@@ -364,7 +259,7 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
 
       // When
       Mono<ProviderFirmOfficeContractAndScheduleDto> result =
-          providerDetailsRestClient.getProviderFirmSchedules(officeCode, areaOfLaw, effectiveDate);
+          providerDetailsRestClient.getProviderFirmSchedules(officeCode, effectiveDate);
 
       // Then
       assertThatThrownBy(result::block)

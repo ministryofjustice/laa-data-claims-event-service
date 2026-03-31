@@ -42,14 +42,8 @@ public class SubmissionOfficeAreaOfLawAndPeriodValidator implements SubmissionVa
         dataClaimsRestClient
             .getSubmissions(
                 List.of(submission.getOfficeAccountNumber()),
-                null,
-                null,
-                null,
                 submission.getAreaOfLaw(),
-                submission.getSubmissionPeriod(),
-                null,
-                null,
-                null)
+                submission.getSubmissionPeriod())
             .getBody()
             .getContent()
             .stream()

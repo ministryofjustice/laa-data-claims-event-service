@@ -25,7 +25,25 @@ jobs:
       jacoco_coverage_report: 'false'
     secrets:
       gh_token: ${{ secrets.GITHUB_TOKEN }}
-      aws_region: ${{ vars.AWS_REGION }}
+      aws_region: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_AWS_REGION }}
+
+  pact-test:
+    needs: [ assemble ]
+    uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/pact-and-publish.yml@v1
+    permissions:
+      contents: write
+      packages: write
+    with:
+      pacticipant_name: "laa-data-claims-event-service"
+      pact_test_task: "pactTest"
+      publish_pact_results: true
+      git_branch: 'main'
+      pact_tags: '${{ needs.assemble.outputs.published_artifact_version }},candidate'
+    secrets:
+      gh_token: ${{ secrets.GITHUB_TOKEN }}
+      pact_broker_url: ${{ secrets.PACT_BROKER_URL }}
+      pact_broker_username: ${{ secrets.PACT_BROKER_USERNAME }}
+      pact_broker_password: ${{ secrets.PACT_BROKER_PASSWORD }}
 
   ecr-publish-image:
     needs: [ assemble ]
@@ -35,15 +53,17 @@ jobs:
       id-token: write
     with:
       jar_subproject: 'data-claims-event-service'
-      image_version: ${{ format('{0}-{1}', vars.IMAGE_PREFIX, needs.assemble.outputs.published_artifact_version) }}
+      image_version: ${{ format('{0}-{1}', vars.LAA_DATA_CLAIMS_EVENT_SERVICE_IMAGE_PREFIX, needs.assemble.outputs.published_artifact_version) }}
     secrets:
       gh_token: ${{ secrets.GITHUB_TOKEN }}
-      ecr_repository: ${{ vars.ECR_REPOSITORY }}
-      ecr_region: ${{ vars.ECR_REGION }}
-      ecr_role_to_assume: ${{ secrets.ECR_ROLE_TO_ASSUME }}
+      ecr_repository: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_REPOSITORY }}
+      ecr_region: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_REGION }}
+      ecr_role_to_assume: ${{ secrets.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_ROLE_TO_ASSUME }}
 
   deploy-uat:
-    needs: [ ecr-publish-image ]
+    needs:
+      - ecr-publish-image
+      - pact-test
     permissions:
       id-token: write
       contents: read
@@ -51,11 +71,15 @@ jobs:
     with:
       environment: uat
       deployment_name: uat
+      claim_api_environment_name: main
       image_tag: ${{ needs.ecr-publish-image.outputs.published_image_version }}
     secrets: inherit
 
   deploy-staging:
-    needs: [ ecr-publish-image, deploy-uat ]
+    needs:
+      - ecr-publish-image
+      - pact-test
+      - deploy-uat
     permissions:
       id-token: write
       contents: read
@@ -63,11 +87,15 @@ jobs:
     with:
       environment: staging
       deployment_name: stg
+      claim_api_environment_name: stg
       image_tag: ${{ needs.ecr-publish-image.outputs.published_image_version }}
     secrets: inherit
 
   deploy-production:
-    needs: [ ecr-publish-image, deploy-staging ]
+    needs:
+      - ecr-publish-image
+      - pact-test
+      - deploy-staging
     permissions:
       id-token: write
       contents: read
@@ -75,5 +103,6 @@ jobs:
     with:
       environment: production
       deployment_name: prod
+      claim_api_environment_name: prod
       image_tag: ${{ needs.ecr-publish-image.outputs.published_image_version }}
     secrets: inherit

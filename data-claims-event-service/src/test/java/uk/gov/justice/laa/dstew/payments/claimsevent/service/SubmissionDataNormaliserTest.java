@@ -1,0 +1,768 @@
+package uk.gov.justice.laa.dstew.payments.claimsevent.service;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+
+import java.lang.reflect.Field;
+import java.math.BigDecimal;
+import java.util.*;
+import java.util.stream.Stream;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionMatterStart;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionOutcome;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.CategoryCode;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetBulkSubmission200Response;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetBulkSubmission200ResponseDetails;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetBulkSubmission200ResponseDetailsOffice;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetBulkSubmission200ResponseDetailsSchedule;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.MediationType;
+import uk.gov.justice.laa.dstew.payments.claimsevent.exception.SubmissionDataNormalisationException;
+
+@ExtendWith(MockitoExtension.class)
+class SubmissionDataNormaliserTest {
+
+  private SubmissionDataNormaliser normaliser;
+
+  @BeforeEach
+  void setUp() {
+    normaliser = new SubmissionDataNormaliser();
+  }
+
+  @Test
+  @DisplayName("normalise(null) returns null")
+  void normalise_nullResponse_returnsNull() {
+    assertNull(normaliser.normalise(null));
+  }
+
+  @Test
+  @DisplayName("GetBulkSubmission200ResponseDetails: office and schedule String fields trimmed")
+  void normalise_details_office_schedule() {
+    GetBulkSubmission200ResponseDetails details = new GetBulkSubmission200ResponseDetails();
+
+    GetBulkSubmission200ResponseDetailsOffice office =
+        new GetBulkSubmission200ResponseDetailsOffice();
+    office.setAccount(" 2P554H ");
+    details.setOffice(office);
+
+    GetBulkSubmission200ResponseDetailsSchedule schedule =
+        new GetBulkSubmission200ResponseDetailsSchedule();
+    schedule.setSubmissionPeriod(" JAN-2020 ");
+    schedule.setAreaOfLaw(" CRIME LOWER ");
+    schedule.setScheduleNum(" ABC/20000L/10 ");
+    details.setSchedule(schedule);
+
+    GetBulkSubmission200Response response = new GetBulkSubmission200Response();
+    response.setDetails(details);
+
+    normaliser.normalise(response);
+
+    assertEquals("2P554H", response.getDetails().getOffice().getAccount());
+    assertEquals("JAN-2020", response.getDetails().getSchedule().getSubmissionPeriod());
+    assertEquals("CRIME LOWER", response.getDetails().getSchedule().getAreaOfLaw());
+    assertEquals("ABC/20000L/10", response.getDetails().getSchedule().getScheduleNum());
+  }
+
+  @Test
+  @DisplayName(
+      "BulkSubmissionOutcome: all String fields trimmed, blanks become null, numeric/boolean preserved")
+  void normalise_BulkSubmissionOutcome() {
+
+    BulkSubmissionOutcome outcome = new BulkSubmissionOutcome();
+
+    outcome.setMatterType(" MT ");
+    outcome.setFeeCode(" F01 ");
+    outcome.setCaseRefNumber(" REF-123 ");
+    outcome.setCaseStartDate(" 2024-01-01 ");
+    outcome.setCaseId(" CID ");
+    outcome.setCaseStageLevel(" L2 ");
+    outcome.setUfn(" UFN-1 ");
+    outcome.setProcurementArea(" PA ");
+    outcome.setAccessPoint(" AP ");
+    outcome.setClientForename(" John ");
+    outcome.setClientSurname(" Doe ");
+    outcome.setClientDateOfBirth(" 2000-01-01 ");
+    outcome.setUcn(" UCN ");
+    outcome.setClaRefNumber(" CLA-1 ");
+    outcome.setClaExemption(" EX ");
+    outcome.setGender(" M ");
+    outcome.setEthnicity(" E ");
+    outcome.setDisability(" D ");
+    outcome.setClientPostCode(" PC1 1PC ");
+    outcome.setWorkConcludedDate(" 2024-02-01 ");
+    outcome.setOutcomeCode(" OUTC ");
+    outcome.setClaimType(" CT ");
+    outcome.setTypeOfAdvice(" TA ");
+    outcome.setScheduleRef(" SCH-1 ");
+    outcome.setCmrhOral(" Y ");
+    outcome.setCmrhTelephone(" N ");
+    outcome.setAitHearingCentre(" AIT-1 ");
+    outcome.setHoUcn(" HOU-1 ");
+    outcome.setTransferDate(" 2024-03-01 ");
+    outcome.setDeliveryLocation(" LOC ");
+    outcome.setPriorAuthorityRef(" PAR-123 ");
+    outcome.setMeetingsAttended(" M1,M2 ");
+    outcome.setMhtRefNumber(" MHT-1 ");
+    outcome.setStageReached(" S1 ");
+    outcome.setFollowOnWork(" FOW ");
+    outcome.setExemptionCriteriaSatisfied(" ECS ");
+    outcome.setExclCaseFundingRef(" ECF-1 ");
+    outcome.setSurgeryDate(" 2024-03-02 ");
+    outcome.setLineNumber(" 42 ");
+    outcome.setCrimeMatterType(" CMT ");
+    outcome.setFeeScheme(" FS ");
+    outcome.setRepOrderDate(" 2024-01-15 ");
+    outcome.setPoliceStation(" PS ");
+    outcome.setDsccNumber(" DSCC ");
+    outcome.setMaatId(" MAAT ");
+    outcome.setOutreach(" OUTR ");
+    outcome.setReferral(" REF ");
+    outcome.setClient2Forename(" Jane ");
+    outcome.setClient2Surname(" Roe ");
+    outcome.setClient2DateOfBirth(" 1999-12-31 ");
+    outcome.setClient2Ucn(" UCN2 ");
+    outcome.setClient2PostCode(" PC2 2PC ");
+    outcome.setClient2Gender(" F ");
+    outcome.setClient2Ethnicity(" E2 ");
+    outcome.setClient2Disability(" D2 ");
+    outcome.setUniqueCaseId(" UCID ");
+    outcome.setStandardFeeCat(" SFC ");
+    outcome.setCourtLocationHpcds(" HPCDS-1 ");
+    outcome.setLocalAuthorityNumber(" LA-1 ");
+    outcome.setPaNumber(" PA-1 ");
+    outcome.setMedConcludedDate(" 2024-04-04 ");
+
+    // Blank-only -> null
+    outcome.setMatterType("   ");
+    outcome.setSchemeId("   ");
+    outcome.setCrimeMatterType("   ");
+    outcome.setOutcomeCode("   ");
+    outcome.setMaatId("   ");
+
+    // All numeric and boolean fields should remain unchanged
+    outcome.setAdviceTime(10);
+    outcome.setTravelTime(20);
+    outcome.setWaitingTime(30);
+    outcome.setProfitCost(new BigDecimal("123.45"));
+    outcome.setValueOfCosts(new BigDecimal("234.56"));
+    outcome.setDisbursementsAmount(new BigDecimal("12.34"));
+    outcome.setCounselCost(new BigDecimal("56.78"));
+    outcome.setDisbursementsVat(new BigDecimal("9.99"));
+    outcome.setTravelWaitingCosts(new BigDecimal("15.00"));
+    outcome.setVatIndicator(Boolean.TRUE);
+    outcome.setLondonNonlondonRate(Boolean.FALSE);
+    outcome.setToleranceIndicator(Boolean.TRUE);
+    outcome.setTravelCosts(new BigDecimal("7.77"));
+    outcome.setLegacyCase(Boolean.FALSE);
+    outcome.setAdjournedHearingFee(99);
+    outcome.setPostalApplAccp(Boolean.TRUE);
+    outcome.setSubstantiveHearing(Boolean.FALSE);
+    outcome.setHoInterview(3);
+    outcome.setDetentionTravelWaitingCosts(new BigDecimal("1.11"));
+    outcome.setJrFormFilling(new BigDecimal("2.22"));
+    outcome.setAdditionalTravelPayment(Boolean.TRUE);
+    outcome.setMedicalReportsClaimed(2);
+    outcome.setDesiAccRep(1);
+    outcome.setNationalRefMechanismAdvice(Boolean.FALSE);
+    outcome.setNoOfClients(5);
+    outcome.setNoOfSurgeryClients(6);
+    outcome.setIrcSurgery(Boolean.TRUE);
+    outcome.setCostsDamagesRecovered(new BigDecimal("1000.00"));
+    outcome.setEligibleClient(Boolean.TRUE);
+    outcome.setExcessTravelCosts(new BigDecimal("3.33"));
+    outcome.setDutySolicitor(Boolean.FALSE);
+    outcome.setYouthCourt(Boolean.TRUE);
+    outcome.setNoOfSuspects(7);
+    outcome.setNoOfPoliceStation(8);
+    outcome.setNumberOfMediationSessions(9);
+    outcome.setMediationTime(60);
+    outcome.setClientLegallyAided(Boolean.TRUE);
+    outcome.setClient2LegallyAided(Boolean.FALSE);
+    outcome.setClient2PostalApplAccp(Boolean.TRUE);
+
+    GetBulkSubmission200ResponseDetails details = new GetBulkSubmission200ResponseDetails();
+    details.setOutcomes(new ArrayList<>(List.of(outcome)));
+    GetBulkSubmission200Response response = new GetBulkSubmission200Response();
+    response.setDetails(details);
+
+    normaliser.normalise(response);
+
+    BulkSubmissionOutcome actualOutcome = response.getDetails().getOutcomes().getFirst();
+
+    // Assertions for all String fields with trimmed whitespaces
+    assertEquals("F01", actualOutcome.getFeeCode());
+    assertEquals("REF-123", actualOutcome.getCaseRefNumber());
+    assertEquals("2024-01-01", actualOutcome.getCaseStartDate());
+    assertEquals("CID", actualOutcome.getCaseId());
+    assertEquals("L2", actualOutcome.getCaseStageLevel());
+    assertEquals("UFN-1", actualOutcome.getUfn());
+    assertEquals("PA", actualOutcome.getProcurementArea());
+    assertEquals("AP", actualOutcome.getAccessPoint());
+    assertEquals("John", actualOutcome.getClientForename());
+    assertEquals("Doe", actualOutcome.getClientSurname());
+    assertEquals("2000-01-01", actualOutcome.getClientDateOfBirth());
+    assertEquals("UCN", actualOutcome.getUcn());
+    assertEquals("CLA-1", actualOutcome.getClaRefNumber());
+    assertEquals("EX", actualOutcome.getClaExemption());
+    assertEquals("M", actualOutcome.getGender());
+    assertEquals("E", actualOutcome.getEthnicity());
+    assertEquals("D", actualOutcome.getDisability());
+    assertEquals("PC1 1PC", actualOutcome.getClientPostCode());
+    assertEquals("2024-02-01", actualOutcome.getWorkConcludedDate());
+    assertEquals("CT", actualOutcome.getClaimType());
+    assertEquals("TA", actualOutcome.getTypeOfAdvice());
+    assertEquals("SCH-1", actualOutcome.getScheduleRef());
+    assertEquals("Y", actualOutcome.getCmrhOral());
+    assertEquals("N", actualOutcome.getCmrhTelephone());
+    assertEquals("AIT-1", actualOutcome.getAitHearingCentre());
+    assertEquals("HOU-1", actualOutcome.getHoUcn());
+    assertEquals("2024-03-01", actualOutcome.getTransferDate());
+    assertEquals("LOC", actualOutcome.getDeliveryLocation());
+    assertEquals("PAR-123", actualOutcome.getPriorAuthorityRef());
+    assertEquals("M1,M2", actualOutcome.getMeetingsAttended());
+    assertEquals("MHT-1", actualOutcome.getMhtRefNumber());
+    assertEquals("S1", actualOutcome.getStageReached());
+    assertEquals("FOW", actualOutcome.getFollowOnWork());
+    assertEquals("ECS", actualOutcome.getExemptionCriteriaSatisfied());
+    assertEquals("ECF-1", actualOutcome.getExclCaseFundingRef());
+    assertEquals("2024-03-02", actualOutcome.getSurgeryDate());
+    assertEquals("42", actualOutcome.getLineNumber());
+    assertEquals("FS", actualOutcome.getFeeScheme());
+    assertEquals("2024-01-15", actualOutcome.getRepOrderDate());
+    assertEquals("PS", actualOutcome.getPoliceStation());
+    assertEquals("OUTR", actualOutcome.getOutreach());
+    assertEquals("REF", actualOutcome.getReferral());
+    assertEquals("Jane", actualOutcome.getClient2Forename());
+    assertEquals("Roe", actualOutcome.getClient2Surname());
+    assertEquals("1999-12-31", actualOutcome.getClient2DateOfBirth());
+    assertEquals("UCN2", actualOutcome.getClient2Ucn());
+    assertEquals("PC2 2PC", actualOutcome.getClient2PostCode());
+    assertEquals("F", actualOutcome.getClient2Gender());
+    assertEquals("E2", actualOutcome.getClient2Ethnicity());
+    assertEquals("D2", actualOutcome.getClient2Disability());
+    assertEquals("UCID", actualOutcome.getUniqueCaseId());
+    assertEquals("SFC", actualOutcome.getStandardFeeCat());
+    assertEquals("HPCDS-1", actualOutcome.getCourtLocationHpcds());
+    assertEquals("LA-1", actualOutcome.getLocalAuthorityNumber());
+    assertEquals("PA-1", actualOutcome.getPaNumber());
+    assertEquals("2024-04-04", actualOutcome.getMedConcludedDate());
+
+    // Assertions for all String fields with blanks -> null
+    assertNull(actualOutcome.getMatterType());
+    assertNull(actualOutcome.getOutcomeCode());
+    assertNull(actualOutcome.getCrimeMatterType());
+    assertNull(actualOutcome.getMaatId());
+    assertNull(actualOutcome.getSchemeId());
+
+    // Assertions for numeric and boolean fields - remained unchanged
+    assertEquals(10, actualOutcome.getAdviceTime());
+    assertEquals(20, actualOutcome.getTravelTime());
+    assertEquals(30, actualOutcome.getWaitingTime());
+    assertEquals(new BigDecimal("123.45"), actualOutcome.getProfitCost());
+    assertEquals(new BigDecimal("234.56"), actualOutcome.getValueOfCosts());
+    assertEquals(new BigDecimal("12.34"), actualOutcome.getDisbursementsAmount());
+    assertEquals(new BigDecimal("56.78"), actualOutcome.getCounselCost());
+    assertEquals(new BigDecimal("9.99"), actualOutcome.getDisbursementsVat());
+    assertEquals(new BigDecimal("15.00"), actualOutcome.getTravelWaitingCosts());
+    assertEquals(Boolean.TRUE, actualOutcome.getVatIndicator());
+    assertEquals(Boolean.FALSE, actualOutcome.getLondonNonlondonRate());
+    assertEquals(Boolean.TRUE, actualOutcome.getToleranceIndicator());
+    assertEquals(new BigDecimal("7.77"), actualOutcome.getTravelCosts());
+    assertEquals(Boolean.FALSE, actualOutcome.getLegacyCase());
+    assertEquals(99, actualOutcome.getAdjournedHearingFee());
+    assertEquals(Boolean.TRUE, actualOutcome.getPostalApplAccp());
+    assertEquals(Boolean.FALSE, actualOutcome.getSubstantiveHearing());
+    assertEquals(3, actualOutcome.getHoInterview());
+    assertEquals(new BigDecimal("1.11"), actualOutcome.getDetentionTravelWaitingCosts());
+    assertEquals(new BigDecimal("2.22"), actualOutcome.getJrFormFilling());
+    assertEquals(Boolean.TRUE, actualOutcome.getAdditionalTravelPayment());
+    assertEquals(2, actualOutcome.getMedicalReportsClaimed());
+    assertEquals(1, actualOutcome.getDesiAccRep());
+    assertEquals(Boolean.FALSE, actualOutcome.getNationalRefMechanismAdvice());
+    assertEquals(5, actualOutcome.getNoOfClients());
+    assertEquals(6, actualOutcome.getNoOfSurgeryClients());
+    assertEquals(Boolean.TRUE, actualOutcome.getIrcSurgery());
+    assertEquals(new BigDecimal("1000.00"), actualOutcome.getCostsDamagesRecovered());
+    assertEquals(Boolean.TRUE, actualOutcome.getEligibleClient());
+    assertEquals(new BigDecimal("3.33"), actualOutcome.getExcessTravelCosts());
+    assertEquals(Boolean.FALSE, actualOutcome.getDutySolicitor());
+    assertEquals(Boolean.TRUE, actualOutcome.getYouthCourt());
+    assertEquals(7, actualOutcome.getNoOfSuspects());
+    assertEquals(8, actualOutcome.getNoOfPoliceStation());
+    assertEquals(9, actualOutcome.getNumberOfMediationSessions());
+    assertEquals(60, actualOutcome.getMediationTime());
+    assertEquals(Boolean.TRUE, actualOutcome.getClientLegallyAided());
+    assertEquals(Boolean.FALSE, actualOutcome.getClient2LegallyAided());
+    assertEquals(Boolean.TRUE, actualOutcome.getClient2PostalApplAccp());
+  }
+
+  @Test
+  @DisplayName(
+      "BulkSubmissionMatterStart: all String fields trimmed/blanks become null; enums/integers preserved")
+  void normalise_BulkSubmissionMatterStart() {
+    BulkSubmissionMatterStart matterStart = new BulkSubmissionMatterStart();
+    matterStart.setScheduleRef("  SCH-99 ");
+    matterStart.setProcurementArea("  PA ");
+    matterStart.setAccessPoint("  AP ");
+    matterStart.setDeliveryLocation("  LOC ");
+
+    // numeric/enum fields that should remain unchanged
+    matterStart.setNumberOfMatterStarts(11);
+    matterStart.setCategoryCode(CategoryCode.CON); // example enum
+    matterStart.setMediationType(MediationType.MDAC_ALL_ISSUES_CO); // example enum
+
+    GetBulkSubmission200ResponseDetails details = new GetBulkSubmission200ResponseDetails();
+    details.setMatterStarts(new ArrayList<>(List.of(matterStart)));
+    GetBulkSubmission200Response response = new GetBulkSubmission200Response();
+    response.setDetails(details);
+
+    normaliser.normalise(response);
+
+    BulkSubmissionMatterStart n = response.getDetails().getMatterStarts().getFirst();
+
+    assertEquals("SCH-99", n.getScheduleRef());
+    assertEquals("PA", n.getProcurementArea());
+    assertEquals("AP", n.getAccessPoint());
+    assertEquals("LOC", n.getDeliveryLocation());
+
+    assertEquals(11, n.getNumberOfMatterStarts());
+    assertEquals(CategoryCode.CON, n.getCategoryCode());
+    assertEquals(MediationType.MDAC_ALL_ISSUES_CO, n.getMediationType());
+
+    // blank -> null behavior
+    n.setAccessPoint("   ");
+    normaliser.normalise(response);
+    assertNull(n.getAccessPoint());
+  }
+
+  @Test
+  @DisplayName("immigrationClr maps: keys and values are trimmed; blanks become null")
+  void normalise_immigrationClr() {
+    Map<String, String> immClrData1 = new LinkedHashMap<>();
+    immClrData1.put("  Key1 ", "  Val1  ");
+    immClrData1.put(" Key2 ", "   "); // value should become null
+    immClrData1.put("K3", null); // stays null
+    immClrData1.put(" ", "value 4"); // skip blank/null keys
+
+    Map<String, String> immClrData2 = new LinkedHashMap<>();
+    immClrData2.put("\tCode ", "\n  Value  ");
+    immClrData2.put("Another", "  123  ");
+
+    List<Map<String, String>> list = new ArrayList<>();
+    list.add(immClrData1);
+    list.add(immClrData2);
+
+    GetBulkSubmission200ResponseDetails details = new GetBulkSubmission200ResponseDetails();
+    details.setImmigrationClr(list);
+    GetBulkSubmission200Response response = new GetBulkSubmission200Response();
+    response.setDetails(details);
+
+    normaliser.normalise(response);
+
+    List<Map<String, String>> normalised = response.getDetails().getImmigrationClr();
+    assertEquals(2, normalised.size());
+
+    Map<String, String> n1 = normalised.getFirst();
+    assertEquals(3, n1.size());
+    assertTrue(n1.containsKey("Key1"));
+    assertEquals("Val1", n1.get("Key1"));
+    assertTrue(n1.containsKey("Key2"));
+    assertNull(n1.get("Key2"));
+    assertTrue(n1.containsKey("K3"));
+    assertNull(n1.get("K3"));
+
+    Map<String, String> n2 = normalised.get(1);
+    assertEquals("Value", n2.get("Code"));
+    assertEquals("123", n2.get("Another"));
+  }
+
+  // ---------------------------------------------------------------------------
+  // Uppercase fields
+  // ---------------------------------------------------------------------------
+
+  @Nested
+  @DisplayName("UPPERCASE_FIELDS — gender and client2Gender are uppercased after trimming")
+  class UppercaseFields {
+
+    static Stream<Arguments> genderCases() {
+      return Stream.of(
+          Arguments.of("m", "M", "lowercase"),
+          Arguments.of("f", "F", "lowercase"),
+          Arguments.of("u", "U", "lowercase unknown"),
+          Arguments.of("M", "M", "already uppercase"),
+          Arguments.of("F", "F", "already uppercase"),
+          Arguments.of(" m ", "M", "lowercase with surrounding spaces"),
+          Arguments.of(" F ", "F", "uppercase with surrounding spaces"),
+          Arguments.of("  u  ", "U", "unknown with surrounding spaces"));
+    }
+
+    @ParameterizedTest(name = "gender \"{0}\" → \"{1}\" ({2})")
+    @MethodSource("genderCases")
+    @DisplayName("gender field is trimmed and uppercased")
+    @SuppressWarnings("unused")
+    void genderIsTrimmedAndUppercased(String input, String expected, String description) {
+      BulkSubmissionOutcome outcome = new BulkSubmissionOutcome();
+      outcome.setGender(input);
+      normaliser.normalise(buildResponseWithOutcome(outcome));
+      assertEquals(expected, outcome.getGender());
+    }
+
+    @ParameterizedTest(name = "client2Gender \"{0}\" → \"{1}\" ({2})")
+    @MethodSource("genderCases")
+    @DisplayName("client2Gender field is trimmed and uppercased")
+    @SuppressWarnings("unused")
+    void client2GenderIsTrimmedAndUppercased(String input, String expected, String description) {
+      BulkSubmissionOutcome outcome = new BulkSubmissionOutcome();
+      outcome.setClient2Gender(input);
+      normaliser.normalise(buildResponseWithOutcome(outcome));
+      assertEquals(expected, outcome.getClient2Gender());
+    }
+
+    @Test
+    @DisplayName("gender null remains null")
+    void genderNullRemainsNull() {
+      BulkSubmissionOutcome outcome = new BulkSubmissionOutcome();
+      outcome.setGender(null);
+      normaliser.normalise(buildResponseWithOutcome(outcome));
+      assertNull(outcome.getGender());
+    }
+
+    @Test
+    @DisplayName("gender blank becomes null — not uppercased")
+    void genderBlankBecomesNull() {
+      BulkSubmissionOutcome outcome = new BulkSubmissionOutcome();
+      outcome.setGender("   ");
+      normaliser.normalise(buildResponseWithOutcome(outcome));
+      assertNull(outcome.getGender());
+    }
+
+    @Test
+    @DisplayName("client2Gender null remains null")
+    void client2GenderNullRemainsNull() {
+      BulkSubmissionOutcome outcome = new BulkSubmissionOutcome();
+      outcome.setClient2Gender(null);
+      normaliser.normalise(buildResponseWithOutcome(outcome));
+      assertNull(outcome.getClient2Gender());
+    }
+
+    @Test
+    @DisplayName("client2Gender blank becomes null — not uppercased")
+    void client2GenderBlankBecomesNull() {
+      BulkSubmissionOutcome outcome = new BulkSubmissionOutcome();
+      outcome.setClient2Gender("   ");
+      normaliser.normalise(buildResponseWithOutcome(outcome));
+      assertNull(outcome.getClient2Gender());
+    }
+
+    static Stream<Arguments> disabilityCases() {
+      return Stream.of(
+          Arguments.of("ncd", "NCD"),
+          Arguments.of("mob", "MOB"),
+          Arguments.of("dea", "DEA"),
+          Arguments.of("hea", "HEA"),
+          Arguments.of("vis", "VIS"),
+          Arguments.of("bli", "BLI"),
+          Arguments.of("mhc", "MHC"),
+          Arguments.of("ldd", "LDD"),
+          Arguments.of("cog", "COG"),
+          Arguments.of("ill", "ILL"),
+          Arguments.of("oth", "OTH"),
+          Arguments.of("ukn", "UKN"),
+          Arguments.of("phy", "PHY"),
+          Arguments.of("sen", "SEN"),
+          Arguments.of(" ncd ", "NCD"),
+          Arguments.of("NCD", "NCD"));
+    }
+
+    @ParameterizedTest(name = "disability \"{0}\" → \"{1}\"")
+    @MethodSource("disabilityCases")
+    @DisplayName("disability field is trimmed and uppercased")
+    void disabilityIsTrimmedAndUppercased(String input, String expected) {
+      BulkSubmissionOutcome outcome = new BulkSubmissionOutcome();
+      outcome.setDisability(input);
+      normaliser.normalise(buildResponseWithOutcome(outcome));
+      assertEquals(expected, outcome.getDisability());
+    }
+
+    @ParameterizedTest(name = "client2Disability \"{0}\" → \"{1}\"")
+    @MethodSource("disabilityCases")
+    @DisplayName("client2Disability field is trimmed and uppercased")
+    void client2DisabilityIsTrimmedAndUppercased(String input, String expected) {
+      BulkSubmissionOutcome outcome = new BulkSubmissionOutcome();
+      outcome.setClient2Disability(input);
+      normaliser.normalise(buildResponseWithOutcome(outcome));
+      assertEquals(expected, outcome.getClient2Disability());
+    }
+
+    static Stream<Arguments> clientTypeCases() {
+      return Stream.of(
+          Arguments.of("p", "P"),
+          Arguments.of("c", "C"),
+          Arguments.of("j", "J"),
+          Arguments.of(" p ", "P"),
+          Arguments.of("P", "P"));
+    }
+
+    @ParameterizedTest(name = "clientType \"{0}\" → \"{1}\"")
+    @MethodSource("clientTypeCases")
+    @DisplayName("clientType field is trimmed and uppercased")
+    void clientTypeIsTrimmedAndUppercased(String input, String expected) {
+      BulkSubmissionOutcome outcome = new BulkSubmissionOutcome();
+      outcome.setClientType(input);
+      normaliser.normalise(buildResponseWithOutcome(outcome));
+      assertEquals(expected, outcome.getClientType());
+    }
+
+    static Stream<Arguments> adviceTypeCases() {
+      return Stream.of(
+          Arguments.of("ftf", "FTF"),
+          Arguments.of("rem", "REM"),
+          Arguments.of(" ftf ", "FTF"),
+          Arguments.of("FTF", "FTF"));
+    }
+
+    @ParameterizedTest(name = "typeOfAdvice \"{0}\" → \"{1}\"")
+    @MethodSource("adviceTypeCases")
+    @DisplayName("typeOfAdvice field is trimmed and uppercased")
+    void typeOfAdviceIsTrimmedAndUppercased(String input, String expected) {
+      BulkSubmissionOutcome outcome = new BulkSubmissionOutcome();
+      outcome.setTypeOfAdvice(input);
+      normaliser.normalise(buildResponseWithOutcome(outcome));
+      assertEquals(expected, outcome.getTypeOfAdvice());
+    }
+
+    static Stream<Arguments> areaOfLawCases() {
+      return Stream.of(
+          Arguments.of("lower crime", "LOWER CRIME"),
+          Arguments.of("Lower Crime", "LOWER CRIME"),
+          Arguments.of(" lower crime ", "LOWER CRIME"),
+          Arguments.of("LOWER CRIME", "LOWER CRIME"),
+          Arguments.of("legal help", "LEGAL HELP"),
+          Arguments.of("Legal Help", "LEGAL HELP"),
+          Arguments.of(" legal help ", "LEGAL HELP"),
+          Arguments.of("LEGAL HELP", "LEGAL HELP"),
+          Arguments.of("mediation", "MEDIATION"),
+          Arguments.of("Mediation", "MEDIATION"),
+          Arguments.of(" mediation ", "MEDIATION"),
+          Arguments.of("MEDIATION", "MEDIATION"));
+    }
+
+    @ParameterizedTest(name = "areaOfLaw \"{0}\" → \"{1}\"")
+    @MethodSource("areaOfLawCases")
+    @DisplayName("areaOfLaw field is trimmed and uppercased")
+    void areaOfLawIsTrimmedAndUppercased(String input, String expected) {
+      GetBulkSubmission200ResponseDetailsSchedule schedule =
+          new GetBulkSubmission200ResponseDetailsSchedule();
+      schedule.setAreaOfLaw(input);
+      normaliser.normalise(buildResponseWithSchedule(schedule));
+      assertEquals(expected, schedule.getAreaOfLaw());
+    }
+
+    @Test
+    @DisplayName(
+        "UPPERCASE_FIELDS constant contains exactly the expected fields scoped to BulkSubmissionOutcome")
+    void uppercaseFieldsConstantIsCorrect() {
+      assertEquals(2, SubmissionDataNormaliser.UPPERCASE_FIELDS.size());
+      assertEquals(
+          Set.of(
+              "gender",
+              "client2Gender",
+              "disability",
+              "client2Disability",
+              "clientType",
+              "typeOfAdvice"),
+          SubmissionDataNormaliser.UPPERCASE_FIELDS.get(BulkSubmissionOutcome.class));
+      assertEquals(
+          Set.of("areaOfLaw"),
+          SubmissionDataNormaliser.UPPERCASE_FIELDS.get(
+              GetBulkSubmission200ResponseDetailsSchedule.class));
+    }
+
+    @Test
+    @DisplayName("ethnicity is trimmed but NOT uppercased — not in UPPERCASE_FIELDS")
+    void ethnicityIsNotUppercased() {
+      BulkSubmissionOutcome outcome = new BulkSubmissionOutcome();
+      outcome.setEthnicity(" e1 ");
+      normaliser.normalise(buildResponseWithOutcome(outcome));
+      assertEquals("e1", outcome.getEthnicity());
+    }
+
+    private GetBulkSubmission200Response buildResponseWithOutcome(BulkSubmissionOutcome outcome) {
+      GetBulkSubmission200ResponseDetails details =
+          GetBulkSubmission200ResponseDetails.builder().outcomes(List.of(outcome)).build();
+      return GetBulkSubmission200Response.builder().details(details).build();
+    }
+
+    private GetBulkSubmission200Response buildResponseWithSchedule(
+        GetBulkSubmission200ResponseDetailsSchedule schedule) {
+      GetBulkSubmission200ResponseDetails details =
+          GetBulkSubmission200ResponseDetails.builder().schedule(schedule).build();
+      return GetBulkSubmission200Response.builder().details(details).build();
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Edge cases — null guards and exception paths
+  // ---------------------------------------------------------------------------
+
+  @Nested
+  @DisplayName("Edge cases")
+  class EdgeCases {
+
+    // -------------------------------------------------------------------------
+    // normaliseString
+    // -------------------------------------------------------------------------
+
+    @ParameterizedTest(name = "normaliseString({0}) returns null")
+    @NullAndEmptySource
+    @ValueSource(strings = {"   "})
+    @DisplayName("normaliseString — null, empty, and blank all return null")
+    void normaliseString_absentValues_returnNull(String input) {
+      assertNull(normaliser.normaliseString(input));
+    }
+
+    @ParameterizedTest(name = "normaliseString(\"{0}\") returns \"{1}\"")
+    @MethodSource("trimCases")
+    @DisplayName("normaliseString — value is trimmed")
+    void normaliseString_presentValues_areTrimmed(String input, String expected) {
+      assertEquals(expected, normaliser.normaliseString(input));
+    }
+
+    static Stream<Arguments> trimCases() {
+      return Stream.of(
+          Arguments.of("hello", "hello"),
+          Arguments.of("  hello  ", "hello"),
+          Arguments.of("  a b  ", "a b"));
+    }
+
+    // -------------------------------------------------------------------------
+    // normaliseObject
+    // -------------------------------------------------------------------------
+
+    @ParameterizedTest(name = "normaliseObject({0}) does not throw")
+    @MethodSource("safeObjectCases")
+    @DisplayName(
+        "normaliseObject — null, null-in-list, and java-package objects are silently skipped")
+    void normaliseObject_safeInputs_doNotThrow(Object input) {
+      assertDoesNotThrow(() -> normaliser.normaliseObject(input, new HashSet<>()));
+    }
+
+    static Stream<Arguments> safeObjectCases() {
+      List<BulkSubmissionOutcome> listWithNull = new ArrayList<>();
+      listWithNull.add(null);
+      return Stream.of(
+          Arguments.of((Object) null), // null object
+          Arguments.of("hello"), // java.lang.String — java. package
+          Arguments.of(listWithNull) // list containing a null element
+          );
+    }
+
+    @Test
+    @DisplayName("normaliseObject — already visited object is silently skipped (cycle detection)")
+    void normaliseObject_alreadyVisited_isSkipped() {
+      BulkSubmissionOutcome outcome = new BulkSubmissionOutcome();
+      outcome.setGender(" m ");
+      Set<Object> visited = new HashSet<>();
+      visited.add(outcome);
+      normaliser.normaliseObject(outcome, visited);
+      assertEquals(" m ", outcome.getGender());
+    }
+
+    // -------------------------------------------------------------------------
+    // normaliseFieldValue
+    // -------------------------------------------------------------------------
+
+    @ParameterizedTest(name = "normaliseFieldValue with null {0} does not throw")
+    @MethodSource("nullFieldValueCases")
+    @DisplayName("normaliseFieldValue — null object or null field is silently ignored")
+    void normaliseFieldValue_nullArgs_doNotThrow(Object object, Field field) {
+      assertDoesNotThrow(() -> normaliser.normaliseFieldValue(object, field, new HashSet<>()));
+    }
+
+    static Stream<Arguments> nullFieldValueCases() throws Exception {
+      Field realField = BulkSubmissionOutcome.class.getDeclaredField("gender");
+      return Stream.of(
+          Arguments.of(null, realField), Arguments.of(new BulkSubmissionOutcome(), null));
+    }
+
+    @Test
+    @DisplayName(
+        "normaliseFieldValue — IllegalAccessException is wrapped in SubmissionDataNormalisationException")
+    void normaliseFieldValue_illegalAccess_throwsNormalisationException() throws Exception {
+      Field mockField = mock(Field.class);
+      doThrow(new IllegalAccessException("access denied")).when(mockField).get(any());
+      org.mockito.Mockito.when(mockField.getName()).thenReturn("testField");
+
+      BulkSubmissionOutcome outcome = new BulkSubmissionOutcome();
+      var ex =
+          assertThrows(
+              SubmissionDataNormalisationException.class,
+              () -> normaliser.normaliseFieldValue(outcome, mockField, new HashSet<>()));
+
+      assertTrue(ex.getMessage().contains("testField"));
+    }
+
+    // -------------------------------------------------------------------------
+    // normaliseMap
+    // -------------------------------------------------------------------------
+
+    @Test
+    @DisplayName("normaliseMap — non-String key is skipped")
+    void normaliseMap_nonStringKey_isSkipped() {
+      Map<Object, Object> map = new LinkedHashMap<>();
+      map.put(42, "should be skipped");
+      map.put("validKey", "  trimmed  ");
+
+      normaliser.normaliseMap(map);
+
+      assertFalse(map.containsKey(42));
+      assertEquals("trimmed", map.get("validKey"));
+    }
+
+    @Test
+    @DisplayName("normaliseMap — non-String value is stored as null")
+    void normaliseMap_nonStringValue_storedAsNull() {
+      Map<Object, Object> map = new LinkedHashMap<>();
+      map.put("key", 99);
+
+      normaliser.normaliseMap(map);
+
+      assertTrue(map.containsKey("key"));
+      assertNull(map.get("key"));
+    }
+
+    // -------------------------------------------------------------------------
+    // isNormalisableObject
+    // -------------------------------------------------------------------------
+
+    static Stream<Arguments> isNormalisableCases() {
+      return Stream.of(
+          Arguments.of(null, false, "null"),
+          Arguments.of(new ArrayList<>(), true, "List"),
+          Arguments.of(new LinkedHashMap<>(), true, "Map"),
+          Arguments.of(new String[] {"a"}, true, "array"),
+          Arguments.of(new BulkSubmissionOutcome(), true, "non-java DTO"),
+          Arguments.of("java.lang.String value", false, "java-package String"),
+          Arguments.of(42, false, "java-package Integer"));
+    }
+
+    @ParameterizedTest(name = "isNormalisableObject({2}) returns {1}")
+    @MethodSource("isNormalisableCases")
+    @DisplayName("isNormalisableObject — all branches")
+    @SuppressWarnings("unused")
+    void isNormalisableObject_allBranches(Object input, boolean expected, String description) {
+      assertEquals(expected, normaliser.isNormalisableObject(input));
+    }
+  }
+}

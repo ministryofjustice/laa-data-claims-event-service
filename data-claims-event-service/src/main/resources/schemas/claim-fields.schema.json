@@ -154,7 +154,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Suspects Defendants Count must be between 0 and 99"
+          "value": "Suspects Defendants Count must be less than 100"
         }
       ]
     },
@@ -244,7 +244,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Mediation Sessions Count must be between 1 and 99"
+          "value": "Mediation Sessions Count must be less than 100"
         }
       ]
     },
@@ -255,7 +255,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Mediation Time Minutes must be between 0 and 99999"
+          "value": "Mediation Time Minutes must be 99999 or less"
         }
       ]
     },
@@ -335,7 +335,7 @@
     },
     "gender_code": {
       "type": "string",
-      "pattern": "^([MFU])$",
+      "pattern": "^([MmFfUu])$",
       "validationErrorMessages": [
         {
           "key": "ALL",
@@ -471,7 +471,7 @@
     },
     "client_2_gender_code": {
       "type": "string",
-      "pattern": "^([MFU])$",
+      "pattern": "^([MmFfUu])$",
       "validationErrorMessages": [
         {
           "key": "ALL",
@@ -593,7 +593,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Designated Accredited Representative Code must be valid"
+          "value": "Designated Accredited Representative Code must be a number from 1 to 5"
         }
       ]
     },
@@ -617,11 +617,11 @@
     },
     "mental_health_tribunal_reference": {
       "type": "string",
-      "pattern": "^([A-Z]{2}/[0-9]{4}/[0-9]{4}|[A-Z]{2}[0-9]{6})$",
+      "pattern": "^([A-Z]{2}/[0-9]{4}/[0-9]{5}|[A-Z]{2}[0-9]{5})$",
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Mental Health Tribunal Reference must be in format XX/YYYY/YYYY or XXYYYZZZ"
+          "value": "Mental Health Tribunal Reference must be in format AA/NNNN/NNNNN (English) or AANNNNN (Welsh)"
         }
       ]
     },
@@ -635,15 +635,7 @@
       ]
     },
     "follow_on_work": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 1,
-      "validationErrorMessages": [
-        {
-          "key": "ALL",
-          "value": "Follow On Work must be a single character"
-        }
-      ]
+      "type": "string"
     },
     "transfer_date": {
       "type": "string",
@@ -691,7 +683,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Advice Time must be in minutes"
+          "value": "Advice Time must be a number"
         }
       ]
     },
@@ -702,7 +694,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Travel Time must be in minutes"
+          "value": "Travel Time must be a number"
         }
       ]
     },
@@ -713,7 +705,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Waiting Time must be in minutes"
+          "value": "Waiting Time must be a number"
         }
       ]
     },
@@ -725,7 +717,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Net Profit Costs Amount must be a valid monetary value"
+          "value": "Net Profit Costs Amount must be a number with no more than 2 decimal places"
         }
       ]
     },
@@ -834,7 +826,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Adjourned Hearing Fee Amount must be between 0 and 9"
+          "value": "Adjourned Hearing Fee Amount must be a number from 0 to 9"
         }
       ]
     },
@@ -922,7 +914,7 @@
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Medical Reports Count must be between 0 and 10"
+          "value": "Medical Reports Count must be 20 or less"
         }
       ]
     },

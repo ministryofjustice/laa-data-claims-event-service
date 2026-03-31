@@ -1,5 +1,8 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim;
 
+import static uk.gov.justice.laa.dstew.payments.claimsevent.util.DateUtil.DATE_FORMATTER_YYYY_MM_DD;
+
+import java.time.LocalDate;
 import org.springframework.stereotype.Component;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.AbstractDateValidator;
@@ -18,7 +21,9 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 public final class ClientDateOfBirthClaimValidator extends AbstractDateValidator
     implements BasicClaimValidator {
 
-  public static final String MIN_BIRTH_DATE = "1900-01-01";
+  private static final String MIN_BIRTH_DATE_STRING = "1900-01-01";
+  public static final LocalDate MIN_BIRTH_DATE =
+      LocalDate.parse(MIN_BIRTH_DATE_STRING, DATE_FORMATTER_YYYY_MM_DD);
 
   @Override
   public void validate(ClaimResponse claim, SubmissionValidationContext context) {

@@ -59,8 +59,7 @@ public class SubmissionOfficeAreaOfLawAndPeriodValidatorTest {
         "Should accept a submission when there is no previous submission with the same combination of Office,Area 0f law and Submission period")
     @Test
     void shouldAcceptSubmission() {
-      when(mockDataClaimsRestClient.getSubmissions(
-              any(), any(), any(), any(), any(), any(), any(), any(), any()))
+      when(mockDataClaimsRestClient.getSubmissions(any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(new SubmissionsResultSet())));
 
       var submissionValidationContext = new SubmissionValidationContext();
@@ -78,14 +77,8 @@ public class SubmissionOfficeAreaOfLawAndPeriodValidatorTest {
       verify(mockDataClaimsRestClient)
           .getSubmissions(
               officeCodeCaptor.capture(),
-              any(),
-              any(),
-              any(),
               areaOfLawCaptor.capture(),
-              submissionPeriodCaptor.capture(),
-              any(),
-              any(),
-              any());
+              submissionPeriodCaptor.capture());
       assertThat(officeCodeCaptor.getValue()).contains(OFFICE_CODE);
       assertThat(areaOfLawCaptor.getValue()).isEqualTo(AREA_OF_LAW);
       assertThat(submissionPeriodCaptor.getValue()).isEqualTo(SUBMISSION_PERIOD);
@@ -101,8 +94,7 @@ public class SubmissionOfficeAreaOfLawAndPeriodValidatorTest {
               .areaOfLaw(AREA_OF_LAW)
               .submissionPeriod(SUBMISSION_PERIOD)
               .status(SubmissionStatus.VALIDATION_SUCCEEDED);
-      when(mockDataClaimsRestClient.getSubmissions(
-              any(), any(), any(), any(), any(), any(), any(), any(), any()))
+      when(mockDataClaimsRestClient.getSubmissions(any(), any(), any()))
           .thenReturn(
               ResponseEntity.of(
                   Optional.of(
@@ -148,8 +140,7 @@ public class SubmissionOfficeAreaOfLawAndPeriodValidatorTest {
               .areaOfLaw(AREA_OF_LAW)
               .submissionPeriod(SUBMISSION_PERIOD)
               .status(status);
-      when(mockDataClaimsRestClient.getSubmissions(
-              any(), any(), any(), any(), any(), any(), any(), any(), any()))
+      when(mockDataClaimsRestClient.getSubmissions(any(), any(), any()))
           .thenReturn(
               ResponseEntity.of(
                   Optional.of(

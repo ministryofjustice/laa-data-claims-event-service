@@ -24,13 +24,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.CategoryOfLawValidationService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.FeeDetailsResponseWrapper;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.ProviderDetailsService;
-import uk.gov.justice.laa.dstew.payments.claimsevent.util.ClaimEffectiveDateUtil;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.provider.model.FirmOfficeContractAndScheduleDetails;
@@ -44,14 +42,13 @@ class EffectiveCategoryOfLawClaimValidatorTest {
   EffectiveCategoryOfLawClaimValidator validator;
 
   @Mock CategoryOfLawValidationService categoryOfLawValidationService;
-  @Mock ClaimEffectiveDateUtil claimEffectiveDateUtil;
   @Mock ProviderDetailsService providerDetailsService;
 
   @BeforeEach
   void beforeEach() {
     validator =
         new EffectiveCategoryOfLawClaimValidator(
-            categoryOfLawValidationService, claimEffectiveDateUtil, providerDetailsService);
+            categoryOfLawValidationService, providerDetailsService);
   }
 
   @Test
@@ -77,18 +74,12 @@ class EffectiveCategoryOfLawClaimValidatorTest {
                         new FirmOfficeContractAndScheduleLine().categoryOfLaw("categoryOfLaw1")));
 
     when(providerDetailsService.getProviderFirmSchedules(
-            eq("officeAccountNumber"), eq(AreaOfLaw.LEGAL_HELP.getValue()), any(LocalDate.class)))
+            eq("officeAccountNumber"), any(LocalDate.class)))
         .thenReturn(Mono.just(data));
-
-    // Two claims make two separate calls to claimEffectiveDateUtil
-    when(claimEffectiveDateUtil.getEffectiveDate(any())).thenReturn(LocalDate.of(2025, 8, 14));
 
     SubmissionValidationContext context = new SubmissionValidationContext();
 
-    validator.validate(
-        claim, context, AreaOfLaw.LEGAL_HELP, "officeAccountNumber", feeDetailsResponseMap);
-
-    verify(claimEffectiveDateUtil, times(1)).getEffectiveDate(claim);
+    validator.validate(claim, context, "officeAccountNumber", feeDetailsResponseMap);
 
     verify(categoryOfLawValidationService, times(1))
         .validateCategoryOfLaw(claim, feeDetailsResponseMap, providerCategoriesOfLaw, context);
@@ -116,16 +107,13 @@ class EffectiveCategoryOfLawClaimValidatorTest {
             .matterTypeCode("ab:cd");
 
     when(providerDetailsService.getProviderFirmSchedules(
-            eq("officeAccountNumber"), eq(AreaOfLaw.LEGAL_HELP.getValue()), any(LocalDate.class)))
+            eq("officeAccountNumber"), any(LocalDate.class)))
         .thenReturn(Mono.error(exception));
-
-    when(claimEffectiveDateUtil.getEffectiveDate(any())).thenReturn(LocalDate.of(2025, 8, 14));
 
     SubmissionValidationContext context = new SubmissionValidationContext();
     Map<String, FeeDetailsResponseWrapper> feeDetailsResponseMap = Collections.emptyMap();
 
-    validator.validate(
-        claim, context, AreaOfLaw.LEGAL_HELP, "officeAccountNumber", feeDetailsResponseMap);
+    validator.validate(claim, context, "officeAccountNumber", feeDetailsResponseMap);
 
     assertThat(context.hasErrors(claimId.toString())).isTrue();
     assertThat(context.getClaimReport(claimId.toString()).get().getMessages())

@@ -1,13 +1,13 @@
 {
   "request": {
     "method": "POST",
-    "urlPathPattern": "/api/v0/submissions/[a-f0-9\\-]+/matter-starts"
+    "urlPathPattern": "/api/v1/submissions/[a-f0-9\\-]+/matter-starts"
   },
   "response": {
     "status": 201,
     "headers": {
       "Content-Type": "application/json",
-      "Location": "http://localhost:8190/api/v0/submissions/3fa85f64-5717-4562-b3fc-2c963f66afa6/matter-starts/8dc58b31-fb8e-41c8-9565-88b8196572a0"
+      "Location": "http://localhost:8190/api/v1/submissions/3fa85f64-5717-4562-b3fc-2c963f66afa6/matter-starts/8dc58b31-fb8e-41c8-9565-88b8196572a0"
     },
     "jsonBody": {
       "id": "8dc58b31-fb8e-41c8-9565-88b8196572a0"
