@@ -77,7 +77,7 @@ class BulkClaimUpdaterTest {
     var feeDetailsResponseWrapperHashMap = buildFeeDetailsResponseWrapperHashMap();
     var feeCalculationResponse = new FeeCalculationResponse();
 
-    context.putValidCategoryOfLawCode(FEE_CODE, "categoryOfLawCode");
+    context.putAuthorisedCategoryOfLawCode(FEE_CODE, "categoryOfLawCode");
 
     when(mockFeeCalculationService.calculateFee(
             eq(claimResponse), eq(context), eq(AreaOfLaw.LEGAL_HELP)))
@@ -90,7 +90,7 @@ class BulkClaimUpdaterTest {
             feeDetailsResponseWrapperHashMap
                 .get(claimResponse.getFeeCode())
                 .getFeeDetailsResponse(),
-            context.getValidCategoryOfLawCode(FEE_CODE)))
+            context.getAuthorisedCategoryOfLawCode(FEE_CODE)))
         .thenReturn(feeCalculationPatch);
 
     // When
@@ -164,7 +164,7 @@ class BulkClaimUpdaterTest {
     var feeCalculationResponseOne = new FeeCalculationResponse().claimId(CLAIM_ID_ONE.toString());
     var context = new SubmissionValidationContext();
 
-    context.putValidCategoryOfLawCode(FEE_CODE, "categoryOfLawCode");
+    context.putAuthorisedCategoryOfLawCode(FEE_CODE, "categoryOfLawCode");
 
     when(mockFeeCalculationService.calculateFee(
             any(ClaimResponse.class), any(SubmissionValidationContext.class), any(AreaOfLaw.class)))
@@ -204,7 +204,7 @@ class BulkClaimUpdaterTest {
     var feeDetailsResponseWrapperHashMap = buildFeeDetailsResponseWrapperHashMap();
     var feeCalculationResponseOne = new FeeCalculationResponse().claimId(CLAIM_ID_ONE.toString());
 
-    context.putValidCategoryOfLawCode(FEE_CODE, "categoryOfLawCode");
+    context.putAuthorisedCategoryOfLawCode(FEE_CODE, "categoryOfLawCode");
 
     when(mockFeeCalculationService.calculateFee(
             eq(validClaimResponse), eq(context), eq(AreaOfLaw.LEGAL_HELP)))
@@ -217,7 +217,7 @@ class BulkClaimUpdaterTest {
             feeDetailsResponseWrapperHashMap
                 .get(validClaimResponse.getFeeCode())
                 .getFeeDetailsResponse(),
-            context.getValidCategoryOfLawCode(FEE_CODE)))
+            context.getAuthorisedCategoryOfLawCode(FEE_CODE)))
         .thenReturn(feeCalculationPatch);
 
     context.addClaimError(
@@ -270,10 +270,10 @@ class BulkClaimUpdaterTest {
             feeDetailsResponseWrapperHashMap
                 .get(claimResponse.getFeeCode())
                 .getFeeDetailsResponse(),
-            context.getValidCategoryOfLawCode(null)))
+            context.getAuthorisedCategoryOfLawCode(null)))
         .thenReturn(feeCalculationPatch);
 
-    context.putValidCategoryOfLawCode(null, "categoryOfLawCode");
+    context.putAuthorisedCategoryOfLawCode(null, "categoryOfLawCode");
     context.addClaimReports(List.of(new ClaimValidationReport(claimResponse.getId())));
     context.flagForRetry(claimResponse.getId());
     context.addClaimError(

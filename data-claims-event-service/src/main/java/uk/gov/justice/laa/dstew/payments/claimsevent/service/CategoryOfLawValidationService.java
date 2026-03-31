@@ -97,11 +97,11 @@ public class CategoryOfLawValidationService {
     Optional<String> authorisedCategoryOfLaw =
         categoryOfLawCodes.stream().filter(providerCategoriesOfLaw::contains).findFirst();
     if (authorisedCategoryOfLaw.isEmpty()) {
-      context.putValidCategoryOfLawCode(claim.getFeeCode(), null);
+      context.putAuthorisedCategoryOfLawCode(claim.getFeeCode(), null);
       context.addClaimError(
           claim.getId(), ClaimValidationError.INVALID_CATEGORY_OF_LAW_NOT_AUTHORISED_FOR_PROVIDER);
     } else {
-      context.putValidCategoryOfLawCode(claim.getFeeCode(), authorisedCategoryOfLaw.get());
+      context.putAuthorisedCategoryOfLawCode(claim.getFeeCode(), authorisedCategoryOfLaw.get());
     }
   }
 

@@ -24,7 +24,7 @@ public class SubmissionValidationContext {
 
   private final List<ClaimValidationReport> claimReports = new ArrayList<>();
   private final List<ValidationMessagePatch> submissionValidationErrors = new ArrayList<>();
-  private final Map<String, String> validCategoryOfLawCodes = new HashMap<>();
+  private final Map<String, String> authorisedCategoryOfLawCodes = new HashMap<>();
 
   /**
    * Adds a list of submission-level validation errors.
@@ -213,31 +213,31 @@ public class SubmissionValidationContext {
   }
 
   /**
-   * Stores the valid category of law code associated-law validation has been * Stores the valid
-   * category of law code associated with the specified fee code. performed. It records the resolved
-   * category of law so that it can be retrieved later during fee calculation patch generation or
-   * other downstream processes. If a value already exists for the given fee code, it will be
-   * overwritten.
+   * Stores the validated category of law code associated with the specified fee code. This method
+   * records the resolved category of law so that it can be retrieved later during fee calculation,
+   * patch generation, or other downstream processing. If an entry already exists for the fee code,
+   * it will be overwritten.
    *
-   * @param feeCode the fee code for which the category of law has been validated
+   * @param feeCode the fee code for which a validated category of law is being stored
    * @param categoryOfLawCode the resolved (valid) category of law code to associate with the fee
-   *     code; may be {@code null} if no valid category exists
+   *     code; may be {@code null} if no valid category was determined
    */
-  public void putValidCategoryOfLawCode(final String feeCode, final String categoryOfLawCode) {
-    validCategoryOfLawCodes.put(feeCode, categoryOfLawCode);
+  public void putAuthorisedCategoryOfLawCode(final String feeCode, final String categoryOfLawCode) {
+    authorisedCategoryOfLawCodes.put(feeCode, categoryOfLawCode);
   }
 
   /**
-   * Retrieves the previously validated category of law code associated with the given fee code.
-   * This method returns whatever category was stored during validation. If no category has been
-   * recorded for the provided fee code, this method returns {@code null}. Callers should treat a
-   * {@code null} result as indicating that no valid category of law was determined for that fee
-   * code.
+   * Returns the category of law that was previously validated and stored for the specified fee
+   * code. If no authorised category is associated with the given fee code, this method returns
+   * {@code null}.
    *
-   * @param feeCode the fee code for which a category of law lookup is required
-   * @return the resolved valid category of law code, or {@code null} if none exists
+   * <p>A {@code null} return value indicates that no valid or authorised category of law was
+   * determined during validation for that fee code.
+   *
+   * @param feeCode the fee code whose authorised category of law is being requested
+   * @return the authorised category of law code, or {@code null} if none was recorded
    */
-  public String getValidCategoryOfLawCode(final String feeCode) {
-    return validCategoryOfLawCodes.get(feeCode);
+  public String getAuthorisedCategoryOfLawCode(final String feeCode) {
+    return authorisedCategoryOfLawCodes.get(feeCode);
   }
 }
