@@ -19,7 +19,12 @@ updates:
   - package-ecosystem: "gradle"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+      day: wednesday
+      time: "06:00"
+      timezone: Europe/London
+    cooldown:
+      default-days: 7
     registries: "*"
     groups:
       gradle-updates:
@@ -31,7 +36,12 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+      day: wednesday
+      time: "07:00"
+      timezone: Europe/London
+    cooldown:
+      default-days: 7
     groups:
       github-actions:
         patterns:
