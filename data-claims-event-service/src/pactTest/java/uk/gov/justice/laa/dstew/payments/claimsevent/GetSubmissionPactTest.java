@@ -68,6 +68,7 @@ public final class GetSubmissionPactTest extends AbstractPactTest {
               body.booleanType("is_nil_submission", true);
               body.numberType("number_of_claims", 0);
               body.numberType("calculated_total_amount", 0);
+              body.numberType("assessed_total_amount", 0);
               body.datetime("submitted", "yyyy-MM-dd'T'HH:mm:ssXXX");
               body.stringType("created_by_user_id", "string");
               body.minArrayLike(
