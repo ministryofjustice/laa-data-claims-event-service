@@ -31,16 +31,28 @@ management:
   server:
     port: 8081
 
+  # graceful shutdown/draintimeout used by the actor that waits for in-flight messages to finish
+  shutdown:
+    timeout: PT10M
+
   # specify actuator endpoints to enable
   endpoints:
     web:
       exposure:
         include: health, info, prometheus
 
-  # show detailed health status
+  # enable health probes if required by platform
+  # include the maintenance indicator in the readiness health group so /actuator/health/readiness
+  # will return DOWN when maintenance/drain is active
   endpoint:
     health:
       show-details: always
+      probes:
+        enabled: true
+      group:
+        readiness:
+          include:
+            - maintenance
 
 sentry:
   dsn: ${SENTRY_DSN:}

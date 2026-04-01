@@ -19,7 +19,19 @@ spec:
         app: {{ .Release.Name }}-{{ .Chart.Name }}-pod
         app.kubernetes.io/name: {{ .Release.Name }}-{{ .Chart.Name }}
     spec:
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds | default 60 }}
       serviceAccountName: {{ .Values.serviceAccountName }}
+      {{- if .Values.lifecycle.preStop.enabled }}
+      lifecycle:
+        preStop:
+          exec:
+            command:
+              - /bin/sh
+              - -c
+              - |
+                # Try to call the graceful drain endpoint to prevent new messages being accepted.
+                curl --retry 5 --retry-connrefused --max-time {{ .Values.lifecycle.preStop.timeoutSeconds | default 600 }} -s -f -X POST http://localhost:{{ .Values.management.port }}{{ (.Values.lifecycle.preStop.drainEndpoint | default .Values.probe.readinessEndpoint) | default "/actuator/maintenance/drain" }} || true
+      {{- end }}
       {{- if .Values.securityContext }}
       securityContext:
         fsGroup: {{ .Values.securityContext.fsGroup }}
@@ -107,7 +119,7 @@ spec:
               {{- if (((.Values.probe).readiness).endpoint) }}
               path: {{ .Values.probe.readiness.endpoint }}
               {{- else }}
-              path: "/actuator/health/readiness"
+              path: {{ .Values.probe.readinessEndpoint | default "/actuator/health/readiness" }}
               {{- end }}
               {{- if ((.Values.management).port) }}
               port: {{ .Values.management.port }}

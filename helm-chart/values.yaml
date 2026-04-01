@@ -1,5 +1,7 @@
 replicas: 2
 
+terminationGracePeriodSeconds: 600
+
 clusterDomain: apps.live.cloud-platform.service.justice.gov.uk
 metrics:
   mainReleaseName: production
@@ -33,6 +35,17 @@ serviceAccountName: claims-event-service-prod-irsa-serviceaccount
 
 probe:
   enabled: true
+  # readiness endpoint for graceful shutdown - defaults to our actuator drain-ready endpoint
+  # returns DOWN when drain is active, but can be set to the same value as livenessEndpoint if desired
+  readinessEndpoint: /actuator/health/readiness
+
+lifecycle:
+  preStop:
+    enabled: true
+    # endpoint to call to initiate drain; can be set to the same value as probe.readinessEndpoint if desired
+    drainEndpoint: /actuator/maintenance/drain
+    # maximum seconds to wait for the drain call to complete (used as curl --max-time)
+    timeoutSeconds: 600
 
 stickiness:
   enabled: true

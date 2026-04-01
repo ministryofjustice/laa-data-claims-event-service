@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -25,6 +26,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.model.BulkSubmissionMessage
 import uk.gov.justice.laa.dstew.payments.claimsevent.model.SubmissionEventType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.model.SubmissionValidationMessage;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.BulkParsingService;
+import uk.gov.justice.laa.dstew.payments.claimsevent.shutdown.ShutdownService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.SqsVisibilityExtender;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.SubmissionValidationService;
 
@@ -41,8 +43,21 @@ public class SubmissionListenerTest {
 
   @Mock SqsVisibilityExtender mockSqsVisibilityExtender;
   @Mock ObjectProvider<SqsVisibilityExtender> mockVisibilityExtenderProvider;
+  @Mock ShutdownService shutdownService;
 
   @InjectMocks SubmissionListener submissionListener;
+
+  @BeforeEach
+  void setUp() {
+    // By default tests assume the listener is accepting messages; ensure the mock reflects that.
+    // The listener now uses a guard-based acquisition API; stub acquireShutdownGuardOrThrow()
+    // to return a no-op guard so try-with-resources in the listener works in tests.
+    ShutdownService.ShutdownGuard noOpGuard =
+        () -> {
+          // no-op
+        };
+    when(shutdownService.acquireShutdownGuardOrThrow()).thenReturn(noOpGuard);
+  }
 
   @Nested
   @DisplayName("receiveSubmissionEvent")

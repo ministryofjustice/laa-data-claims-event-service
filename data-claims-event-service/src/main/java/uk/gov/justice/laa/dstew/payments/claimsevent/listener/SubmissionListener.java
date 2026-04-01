@@ -11,14 +11,19 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.services.sqs.model.Message;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
+import uk.gov.justice.laa.dstew.payments.claimsevent.shutdown.exception.ShutdownRejectedException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.SubmissionEventProcessingException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.model.BulkSubmissionMessage;
 import uk.gov.justice.laa.dstew.payments.claimsevent.model.SubmissionEventType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.model.SubmissionValidationMessage;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.BulkParsingService;
+import uk.gov.justice.laa.dstew.payments.claimsevent.shutdown.ShutdownService;
+import uk.gov.justice.laa.dstew.payments.claimsevent.shutdown.ShutdownService.ShutdownGuard;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.SqsVisibilityExtender;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.SubmissionValidationService;
+
+import static java.lang.Thread.sleep;
 
 /**
  * Listener for bulk submissions from the Data Claims service.
@@ -39,6 +44,7 @@ public class SubmissionListener {
   private final ObjectMapper objectMapper;
   private final EventServiceMetricService eventServiceMetricService;
   private final ObjectProvider<SqsVisibilityExtender> sqsVisibilityExtenderProvider;
+  private final ShutdownService shutdownService;
 
   /**
    * Construct a new {@code SubmissionListener}.
@@ -52,12 +58,14 @@ public class SubmissionListener {
       SubmissionValidationService submissionValidationService,
       EventServiceMetricService eventServiceMetricService,
       @Qualifier("submissionEventMapper") ObjectMapper objectMapper,
-      ObjectProvider<SqsVisibilityExtender> sqsVisibilityExtenderProvider) {
+      ObjectProvider<SqsVisibilityExtender> sqsVisibilityExtenderProvider,
+      ShutdownService shutdownServiceProvider) {
     this.bulkParsingService = bulkParsingService;
     this.submissionValidationService = submissionValidationService;
     this.eventServiceMetricService = eventServiceMetricService;
     this.objectMapper = objectMapper;
     this.sqsVisibilityExtenderProvider = sqsVisibilityExtenderProvider;
+    this.shutdownService = shutdownServiceProvider;
   }
 
   /**
@@ -74,12 +82,25 @@ public class SubmissionListener {
 
     String receiptHandle = message.receiptHandle();
 
-    try (SqsVisibilityExtender extender = sqsVisibilityExtenderProvider.getObject()) {
+    // Acquire a shutdown guard atomically and reject with a exception if the
+    // service is not accepting new work. The supplier is invoked only when rejection is
+    // required so we avoid constructing exception objects unnecessarily.
+    try (@SuppressWarnings("unused")
+            ShutdownGuard shutdownGuard = shutdownService.acquireShutdownGuardOrThrow();
+        SqsVisibilityExtender extender = sqsVisibilityExtenderProvider.getObject()) {
       extender.start(receiptHandle);
       SubmissionEventType submissionEventType = getSubmissionEventType(message);
+
+      sleep(30000);
+      
       processMessageByType(message, submissionEventType);
     } catch (SubmissionEventProcessingException | IllegalArgumentException ex) {
       throw ex;
+    } catch (ShutdownRejectedException ex) {
+      log.info(
+          "Shutdown in progress - not accepting new messages. messageId={}", message.messageId());
+      throw new SubmissionEventProcessingException(
+          "Service is shutting down - not accepting messages");
     } catch (Exception ex) {
       log.error(
           "Failed to process submission event. messageId={}. Exception: {}",
@@ -88,6 +109,7 @@ public class SubmissionListener {
       throw new SubmissionEventProcessingException(
           "Unhandled exception in submission event processing", ex);
     } finally {
+      // inFlightScope.close() is handled by try-with-resources; just stop metrics here.
       eventServiceMetricService.stopFileParsingTimer(timerRef);
     }
   }
