@@ -29,6 +29,18 @@ jobs:
       gh_token: ${{ secrets.GITHUB_TOKEN }}
       aws_region: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_AWS_REGION }}
 
+  sca-scan:
+    needs:
+      - build
+    uses: ./.github/workflows/sca-analysis.yml
+    permissions:
+      contents: read
+    with:
+      java-version: 21
+      distribution: 'corretto'
+    secrets:
+      gh_token: ${{ secrets.GITHUB_TOKEN }}
+
   pact-test:
     needs: [ build ]
     uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/pact-and-publish.yml@90aa22bf1f55a39b4f10c4f7168356f0669eed77 # v1

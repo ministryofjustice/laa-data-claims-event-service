@@ -35,6 +35,18 @@ jobs:
       github_app_private_key: ${{ secrets.LAA_CCMS_CAAB_SERVICE_KEY }}
       github_app_organisation: 'ministryofjustice'
 
+  sca-scan:
+    needs:
+      - build
+    uses: ./.github/workflows/sca-analysis.yml
+    permissions:
+      contents: read
+    with:
+      java-version: 21
+      distribution: 'corretto'
+    secrets:
+      gh_token: ${{ secrets.GITHUB_TOKEN }}
+
   pact-test:
     needs: [ build ]
     uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/pact-and-publish.yml@90aa22bf1f55a39b4f10c4f7168356f0669eed77 # v1
