@@ -33,6 +33,9 @@ jobs:
     needs:
       - build
     uses: ./.github/workflows/sca-analysis.yml
+    permissions:
+      contents: read
+      security-events: write
     with:
       java-version: 21
       distribution: 'corretto'
