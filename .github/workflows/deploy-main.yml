@@ -74,6 +74,7 @@ jobs:
     needs:
       - ecr-publish-image
       - pact-test
+      - sca-scan
     permissions:
       id-token: write
       contents: read
@@ -90,6 +91,7 @@ jobs:
       - ecr-publish-image
       - pact-test
       - deploy-uat
+      - sca-scan
     permissions:
       id-token: write
       contents: read
@@ -106,6 +108,7 @@ jobs:
       - ecr-publish-image
       - pact-test
       - deploy-staging
+      - sca-scan
     permissions:
       id-token: write
       contents: read
