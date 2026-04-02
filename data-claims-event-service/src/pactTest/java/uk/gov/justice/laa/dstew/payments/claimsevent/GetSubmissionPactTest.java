@@ -105,6 +105,9 @@ public final class GetSubmissionPactTest extends AbstractPactTest {
 
     assertThat(submission).isNotNull();
     assertThat(submission.getSubmissionId()).isEqualTo(SUBMISSION_ID);
+    assertThat(submission.getCalculatedTotalAmount()).isNotNull();
+    assertThat(submission.getAssessedTotalAmount()).isNotNull();
+
   }
 
   @Test
