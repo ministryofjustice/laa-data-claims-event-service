@@ -1,7 +1,5 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.listener;
 
-import static java.lang.Thread.sleep;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.awspring.cloud.sqs.annotation.SqsListener;
@@ -91,7 +89,7 @@ public class SubmissionListener {
       extender.start(receiptHandle);
       SubmissionEventType submissionEventType = getSubmissionEventType(message);
 
-      //sleep(30000);
+      // sleep(30000);
 
       processMessageByType(message, submissionEventType);
     } catch (SubmissionEventProcessingException | IllegalArgumentException ex) {
