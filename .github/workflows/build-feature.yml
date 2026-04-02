@@ -11,6 +11,9 @@ on:
   push:
     branches-ignore:
       - main
+env:
+  JAVA_VERSION: &JAVA_VERSION '25'
+  JDK_DISTRIBUTION: &JDK_DISTRIBUTION 'corretto'
 
 jobs:
   build:
@@ -19,8 +22,8 @@ jobs:
       contents: write
       packages: write
     with:
-      java_version: '25'
-      java_distribution: 'corretto'
+      java_version: *JAVA_VERSION
+      java_distribution: *JDK_DISTRIBUTION
       integration_test_task: "integrationTest"
       publish_package: 'false'
       junit_results_path: 'data-claims-event-service/build/test-results'
@@ -45,6 +48,8 @@ jobs:
       provider_name: "laa-data-claims-api"
       is_provider: false
       pact_tags: "feature"
+      java_version: *JAVA_VERSION
+      java_distribution: *JDK_DISTRIBUTION
     secrets:
       gh_token: ${{ secrets.GITHUB_TOKEN }}
       pact_broker_url: 'https://laa-data-pact-broker.apps.live.cloud-platform.service.justice.gov.uk/'
@@ -61,6 +66,8 @@ jobs:
       jar_subproject: 'data-claims-event-service'
       image_version: ${{ format('{0}-{1}', vars.LAA_DATA_CLAIMS_EVENT_SERVICE_IMAGE_PREFIX, needs.build.outputs.published_artifact_version) }}
       publish: false
+      java_version: *JAVA_VERSION
+      java_distribution: *JDK_DISTRIBUTION
     secrets:
       gh_token: ${{ secrets.GITHUB_TOKEN }}
       ecr_repository: ""
