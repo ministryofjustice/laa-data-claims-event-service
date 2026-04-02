@@ -26,9 +26,9 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.model.BulkSubmissionMessage
 import uk.gov.justice.laa.dstew.payments.claimsevent.model.SubmissionEventType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.model.SubmissionValidationMessage;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.BulkParsingService;
-import uk.gov.justice.laa.dstew.payments.claimsevent.shutdown.ShutdownService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.SqsVisibilityExtender;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.SubmissionValidationService;
+import uk.gov.justice.laa.dstew.payments.claimsevent.shutdown.ShutdownService;
 
 @ExtendWith(MockitoExtension.class)
 public class SubmissionListenerTest {

@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import uk.gov.justice.laa.dstew.payments.claimsevent.shutdown.model.ShutdownStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.shutdown.ShutdownService;
+import uk.gov.justice.laa.dstew.payments.claimsevent.shutdown.model.ShutdownStatus;
 
 /**
  * Controller exposing endpoints to control and query the application's graceful shutdown

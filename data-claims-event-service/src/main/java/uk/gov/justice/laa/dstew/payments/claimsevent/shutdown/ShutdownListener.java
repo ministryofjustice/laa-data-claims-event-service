@@ -43,8 +43,7 @@ public class ShutdownListener implements ApplicationListener<ContextClosedEvent>
     }
 
     log.info(
-            "ContextClosedEvent received - initiating graceful drain with timeout={}",
-            shutdownTimeout);
+        "ContextClosedEvent received - initiating graceful drain with timeout={}", shutdownTimeout);
 
     boolean drained = shutdownService.initiateShutdown(shutdownTimeout);
     if (!drained) {
