@@ -33,7 +33,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.ClaimWithA
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.DuplicateClaimValidator;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.EffectiveCategoryOfLawClaimValidator;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.MandatoryFieldClaimValidator;
-import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponse;
+import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponseV2;
 
 @ExtendWith(MockitoExtension.class)
 class ClaimValidationServiceTest {
@@ -128,8 +128,8 @@ class ClaimValidationServiceTest {
             "id,asc"))
         .thenReturn(ResponseEntity.ok(claimResultSet));
     HashMap<String, FeeDetailsResponseWrapper> feeDetailsResponseMap = new HashMap<>();
-    FeeDetailsResponse feeDetailsResponse =
-        new FeeDetailsResponse().categoryOfLawCode("categoryOfLaw1").feeType("feeType");
+    FeeDetailsResponseV2 feeDetailsResponse =
+        new FeeDetailsResponseV2().categoryOfLawCodes(List.of("categoryOfLaw1")).feeType("feeType");
     feeDetailsResponseMap.put(
         "feeCode1", FeeDetailsResponseWrapper.withFeeDetailsResponse(feeDetailsResponse));
     List<ClaimResponse> claimsList = Arrays.asList(claimOne, claimTwo);
