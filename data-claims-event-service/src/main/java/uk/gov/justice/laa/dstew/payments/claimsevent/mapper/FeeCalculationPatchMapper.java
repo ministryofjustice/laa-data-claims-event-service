@@ -8,7 +8,7 @@ import org.mapstruct.MappingTarget;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BoltOnPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationPatch;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationResponse;
-import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponse;
+import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponseV2;
 
 /**
  * Maps Fee Calculation Response to Fee Calculation Patch.
@@ -31,11 +31,13 @@ public interface FeeCalculationPatchMapper {
       source = "feeCalculationResponse.feeCalculation.boltOnFeeDetails")
   @Mapping(target = "feeType", source = "feeDetailsResponse.feeType")
   @Mapping(target = "feeCodeDescription", source = "feeDetailsResponse.feeCodeDescription")
-  @Mapping(target = "categoryOfLaw", source = "feeDetailsResponse.categoryOfLawCode")
+  @Mapping(target = "categoryOfLaw", source = "categoryOfLawCode")
   @Mapping(target = "calculatedFeeDetailId", ignore = true)
   @Mapping(target = "claimSummaryFeeId", ignore = true)
   FeeCalculationPatch mapToFeeCalculationPatch(
-      FeeCalculationResponse feeCalculationResponse, FeeDetailsResponse feeDetailsResponse);
+      FeeCalculationResponse feeCalculationResponse,
+      FeeDetailsResponseV2 feeDetailsResponse,
+      String categoryOfLawCode);
 
   /**
    * Adds scheme ID and escape case flag to the bolt on details afterwards. Mapstruct doesn't like
