@@ -22,7 +22,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRes
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
-import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponse;
+import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponseV2;
 
 @ExtendWith(MockitoExtension.class)
 class CategoryOfLawValidationServiceTest {
@@ -39,8 +39,10 @@ class CategoryOfLawValidationServiceTest {
     @DisplayName("Validates category of law without errors")
     void validatesCategoryOfLawWithoutErrors() {
       ClaimResponse claim = new ClaimResponse().id("claimId").feeCode("feeCode");
-      FeeDetailsResponse feeDetailsResponse =
-          new FeeDetailsResponse().categoryOfLawCode("categoryOfLaw").feeType("feeType");
+      FeeDetailsResponseV2 feeDetailsResponse =
+          new FeeDetailsResponseV2()
+              .categoryOfLawCodes(List.of("categoryOfLaw"))
+              .feeType("feeType");
       Map<String, FeeDetailsResponseWrapper> feeDetailsResponseWrapperMap =
           Map.of("feeCode", FeeDetailsResponseWrapper.withFeeDetailsResponse(feeDetailsResponse));
       List<String> providerCategoriesOfLaw = List.of("categoryOfLaw");
@@ -48,7 +50,7 @@ class CategoryOfLawValidationServiceTest {
       SubmissionValidationContext context = new SubmissionValidationContext();
       context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
 
-      categoryOfLawValidationService.validateCategoryOfLaw(
+      categoryOfLawValidationService.validateCategoriesOfLaw(
           claim, feeDetailsResponseWrapperMap, providerCategoriesOfLaw, context);
 
       assertThat(context.hasErrors()).isFalse();
@@ -60,8 +62,8 @@ class CategoryOfLawValidationServiceTest {
             + "fee code")
     void marksClaimAsInvalidWhenCategoryOfLawNotFoundForFeeCode() {
       ClaimResponse claim = new ClaimResponse().id("claimId").feeCode("feeCode");
-      FeeDetailsResponse feeDetailsResponse =
-          new FeeDetailsResponse().categoryOfLawCode(null).feeType("feeType");
+      FeeDetailsResponseV2 feeDetailsResponse =
+          new FeeDetailsResponseV2().categoryOfLawCodes(null).feeType("feeType");
       Map<String, FeeDetailsResponseWrapper> feeDetailsResponseWrapperMap = new HashMap<>();
       feeDetailsResponseWrapperMap.put(
           "feeCode", FeeDetailsResponseWrapper.withFeeDetailsResponse(feeDetailsResponse));
@@ -70,7 +72,7 @@ class CategoryOfLawValidationServiceTest {
       SubmissionValidationContext context = new SubmissionValidationContext();
       context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
 
-      categoryOfLawValidationService.validateCategoryOfLaw(
+      categoryOfLawValidationService.validateCategoriesOfLaw(
           claim, feeDetailsResponseWrapperMap, providerCategoriesOfLaw, context);
 
       assertContextClaimError(
@@ -84,8 +86,10 @@ class CategoryOfLawValidationServiceTest {
     @DisplayName("Marks claim as invalid when category of law not found in provider contracts")
     void marksClaimAsInvalidWhenCategoryOfLawNotFoundForProvider() {
       ClaimResponse claim = new ClaimResponse().id("claimId").feeCode("feeCode");
-      FeeDetailsResponse feeDetailsResponse =
-          new FeeDetailsResponse().categoryOfLawCode("categoryOfLaw").feeType("feeType");
+      FeeDetailsResponseV2 feeDetailsResponse =
+          new FeeDetailsResponseV2()
+              .categoryOfLawCodes(List.of("categoryOfLaw"))
+              .feeType("feeType");
       Map<String, FeeDetailsResponseWrapper> feeDetailsResponseWrapperMap = new HashMap<>();
       feeDetailsResponseWrapperMap.put(
           "feeCode", FeeDetailsResponseWrapper.withFeeDetailsResponse(feeDetailsResponse));
@@ -94,7 +98,7 @@ class CategoryOfLawValidationServiceTest {
       SubmissionValidationContext context = new SubmissionValidationContext();
       context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
 
-      categoryOfLawValidationService.validateCategoryOfLaw(
+      categoryOfLawValidationService.validateCategoriesOfLaw(
           claim, feeDetailsResponseWrapperMap, providerCategoriesOfLaw, context);
 
       assertContextClaimError(
@@ -114,7 +118,7 @@ class CategoryOfLawValidationServiceTest {
       SubmissionValidationContext context = new SubmissionValidationContext();
       context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
 
-      categoryOfLawValidationService.validateCategoryOfLaw(
+      categoryOfLawValidationService.validateCategoriesOfLaw(
           claim, feeDetailsResponseWrapperMap, providerCategoriesOfLaw, context);
 
       assertThat(context.isFlaggedForRetry(claim.getId())).isTrue();
@@ -136,11 +140,13 @@ class CategoryOfLawValidationServiceTest {
 
       ClaimResponse claim4 = new ClaimResponse().id("claimId4").feeCode("feeCode4");
 
-      FeeDetailsResponse feeDetailsResponseA =
-          new FeeDetailsResponse().categoryOfLawCode("categoryOfLaw1");
+      FeeDetailsResponseV2 feeDetailsResponseA =
+          new FeeDetailsResponseV2()
+              .categoryOfLawCodes(List.of("categoryOfLaw1", "categoryOfLaw3", "categoryOfLaw4"));
 
-      FeeDetailsResponse feeDetailsResponseB =
-          new FeeDetailsResponse().categoryOfLawCode("categoryOfLaw2");
+      FeeDetailsResponseV2 feeDetailsResponseB =
+          new FeeDetailsResponseV2()
+              .categoryOfLawCodes(List.of("categoryOfLaw2", "categoryOfLaw3", "categoryOfLaw4"));
 
       when(feeSchemePlatformRestClient.getFeeDetails("feeCode1"))
           .thenReturn(ResponseEntity.ok(feeDetailsResponseA));

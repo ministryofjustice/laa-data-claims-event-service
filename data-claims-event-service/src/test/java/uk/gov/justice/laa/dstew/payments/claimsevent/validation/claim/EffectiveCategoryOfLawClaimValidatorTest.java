@@ -82,7 +82,7 @@ class EffectiveCategoryOfLawClaimValidatorTest {
     validator.validate(claim, context, "officeAccountNumber", feeDetailsResponseMap);
 
     verify(categoryOfLawValidationService, times(1))
-        .validateCategoryOfLaw(claim, feeDetailsResponseMap, providerCategoriesOfLaw, context);
+        .validateCategoriesOfLaw(claim, feeDetailsResponseMap, providerCategoriesOfLaw, context);
   }
 
   static Stream<Arguments> exceptionProvider() {

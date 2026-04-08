@@ -71,7 +71,7 @@ public final class EffectiveCategoryOfLawClaimValidator implements ClaimValidato
       List<String> effectiveCategoriesOfLaw =
           getEffectiveCategoriesOfLaw(officeCode, effectiveDate);
       // Get effective category of law lookup
-      categoryOfLawValidationService.validateCategoryOfLaw(
+      categoryOfLawValidationService.validateCategoriesOfLaw(
           claim, feeDetailsResponseMap, effectiveCategoriesOfLaw, context);
     } catch (EventServiceIllegalArgumentException e) {
       log.info(

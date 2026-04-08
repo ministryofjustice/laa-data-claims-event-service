@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.dstew.payments.claimsevent;
+package uk.gov.justice.laa.dstew.payments.claimsevent.dataclaimsapi;
 
 import java.util.List;
 import java.util.UUID;
@@ -7,7 +7,7 @@ import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.listener.SubmissionListener;
 
-public abstract class AbstractPactTest {
+abstract class AbstractPactTest {
   protected static final String CONSUMER = "laa-data-claims-event-service";
   protected static final String PROVIDER = "laa-data-claims-api";
 

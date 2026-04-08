@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.dstew.payments.claimsevent;
+package uk.gov.justice.laa.dstew.payments.claimsevent.dataclaimsapi;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;

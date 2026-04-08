@@ -1,4 +1,4 @@
-package uk.gov.justice.laa.dstew.payments.claimsevent;
+package uk.gov.justice.laa.dstew.payments.claimsevent.dataclaimsapi;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -21,55 +21,54 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.reactive.function.client.WebClientResponseException.BadRequest;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.CreateSubmission201Response;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPost;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.CreateMatterStart201Response;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.MatterStartPost;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.MediationType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.ClaimsApiPactTestConfig;
 
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-    properties = {"laa.claims-api.url=http://localhost:1236"})
+    properties = {"laa.claims-api.url=http://localhost:1233"})
 @PactConsumerTest
 @PactTestFor(providerName = AbstractPactTest.PROVIDER)
-@MockServerConfig(port = "1236") // Same as Claims API URL port
+@MockServerConfig(port = "1233") // Same as Claims API URL port
 @Import(ClaimsApiPactTestConfig.class)
-@DisplayName("POST: /api/v1/submissions PACT tests")
-public final class PostSubmissionPactTest extends AbstractPactTest {
+@DisplayName("POST: /api/v1/submissions/{}/matter-starts PACT tests")
+public final class PostMatterStartsPactTest extends AbstractPactTest {
 
   @Autowired DataClaimsRestClient dataClaimsRestClient;
 
   @SneakyThrows
   @Pact(consumer = CONSUMER)
-  RequestResponsePact postSubmission201(PactDslWithProvider builder) {
-    // Defines expected 201 response for successfully submitting valid submission using matchers
+  RequestResponsePact postMatterStart201(PactDslWithProvider builder) {
+    // Defines expected 201 response for successfully submitting a valid matter start.
     return builder
-        .given("the system is ready to process a valid submission")
-        .uponReceiving("a new submission request")
-        .path("/api/v1/submissions")
+        .given("the system is ready to process a valid matter start")
+        .uponReceiving("a new matter start request")
+        .matchPath("/api/v1/submissions/(" + UUID_REGEX + ")/matter-starts")
         .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
         .method("POST")
-        .body(objectMapper.writeValueAsString(getSubmissionPost()))
+        .body(objectMapper.writeValueAsString(getMatterStartPost()))
         .matchHeader("Content-Type", "application/json")
         .willRespondWith()
         .status(201)
         .headers(Map.of("Content-Type", "application/json"))
-        .body(LambdaDsl.newJsonBody(body -> body.uuid("id", SUBMISSION_ID)).build())
+        .body(LambdaDsl.newJsonBody(body -> body.uuid("id", MATTER_START_ID)).build())
         .toPact();
   }
 
   @SneakyThrows
   @Pact(consumer = CONSUMER)
-  RequestResponsePact postSubmission400(PactDslWithProvider builder) {
-    // Defines expected 400 response for uploading invalid submission
+  RequestResponsePact postMatterStart400(PactDslWithProvider builder) {
+    // Defines expected 400 response for uploading invalid matter start
     return builder
-        .given("the system rejects an invalid submission")
-        .uponReceiving("a request to create a submission with invalid data")
-        .path("/api/v1/submissions")
+        .given("the matter start request contains invalid data")
+        .uponReceiving("a request to create a matter start with invalid data")
+        .matchPath("/api/v1/submissions/(" + UUID_REGEX + ")/matter-starts")
         .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
         .method("POST")
-        .body(objectMapper.writeValueAsString(getSubmissionPost()))
+        .body(objectMapper.writeValueAsString(getMatterStartPost()))
         .matchHeader("Content-Type", "application/json")
         .willRespondWith()
         .status(400)
@@ -79,35 +78,32 @@ public final class PostSubmissionPactTest extends AbstractPactTest {
 
   @Test
   @DisplayName("Verify 201 response")
-  @PactTestFor(pactMethod = "postSubmission201")
+  @PactTestFor(pactMethod = "postMatterStart201")
   void verify201Response() {
-    SubmissionPost submissionPost = getSubmissionPost();
+    MatterStartPost matterStartPost = getMatterStartPost();
 
-    ResponseEntity<CreateSubmission201Response> response =
-        dataClaimsRestClient.createSubmission(submissionPost);
+    ResponseEntity<CreateMatterStart201Response> response =
+        dataClaimsRestClient.createMatterStart(SUBMISSION_ID.toString(), matterStartPost);
     assertThat(response).isNotNull();
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-    assertThat(response.getBody().getId()).isEqualTo(SUBMISSION_ID);
   }
 
-  private SubmissionPost getSubmissionPost() {
-    return new SubmissionPost()
-        .bulkSubmissionId(BULK_SUBMISSION_ID)
-        .submissionId(SUBMISSION_ID)
-        .submissionPeriod("APR-2025")
-        .areaOfLaw(AreaOfLaw.LEGAL_HELP)
-        .numberOfClaims(2)
-        .officeAccountNumber("ABC123")
-        .providerUserId("test-user")
-        .status(SubmissionStatus.READY_FOR_VALIDATION)
-        .createdByUserId("test-user");
+  private static MatterStartPost getMatterStartPost() {
+    return new MatterStartPost()
+        .mediationType(MediationType.MDAC_ALL_ISSUES_CO)
+        .createdByUserId("test-user")
+        .accessPointCode("A0001")
+        .scheduleReference("SCH123");
   }
 
   @Test
   @DisplayName("Verify 400 response")
-  @PactTestFor(pactMethod = "postSubmission400")
+  @PactTestFor(pactMethod = "postMatterStart400")
   void verify400Response() {
-    SubmissionPost submissionPost = getSubmissionPost();
-    assertThrows(BadRequest.class, () -> dataClaimsRestClient.createSubmission(submissionPost));
+    MatterStartPost matterStartPost = getMatterStartPost();
+
+    assertThrows(
+        BadRequest.class,
+        () -> dataClaimsRestClient.createMatterStart(SUBMISSION_ID.toString(), matterStartPost));
   }
 }
