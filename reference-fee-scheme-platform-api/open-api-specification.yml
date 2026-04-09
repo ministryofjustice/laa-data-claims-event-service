@@ -3,7 +3,7 @@ info:
   version: 1.0.0
   title: Fee Scheme API
 paths:
-  /api/v1/fee-details/{feeCode}:
+  /api/v2/fee-details/{feeCode}:
     get:
       tags:
         - feeDetails
@@ -14,15 +14,15 @@ paths:
           description: Fee Code to retrieve Category of Law
           schema:
             type: string
-      summary: Get Category of Law and Fee details
-      operationId: getFeeDetails
+      summary: Get Category of Law and Fee details (v2)
+      operationId: getFeeDetailsV2
       responses:
         '200':
           description: 'Success'
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/FeeDetailsResponse"
+                $ref: "#/components/schemas/FeeDetailsResponseV2"
         '400':
           description: 'Bad request'
         '401':
@@ -37,7 +37,40 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: 'Internal server error'
-
+  /api/v1/fee-details/{feeCode}:
+    get:
+      tags:
+        - feeDetails
+      parameters:
+        - name: feeCode
+          in: path
+          required: true
+          description: Fee Code to retrieve Category of Law
+          schema:
+            type: string
+      summary: Get Category of Law and Fee details (v1)
+      operationId: getFeeDetailsV1
+      responses:
+        '200':
+          description: 'Success'
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeeDetailsResponseV1"
+        '400':
+          description: 'Bad request'
+        '401':
+          description: 'Unauthorized'
+        '403':
+          description: 'Forbidden'
+        '404':
+          description: 'Category code not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: 'Internal server error'
   /api/v1/fee-calculation:
     post:
       tags:
@@ -70,13 +103,29 @@ paths:
 
 components:
   schemas:
-    FeeDetailsResponse:
+    FeeDetailsResponseV1:
       required:
         - categoryOfLawCode
       properties:
         categoryOfLawCode:
           type: string
           description: "Category of law corresponding to fee code"
+        feeCodeDescription:
+          type: string
+          description: "Description of fee code"
+        feeType:
+          type: string
+          description: "Type of fee, Fixed, Hourly, disbursement only"
+
+    FeeDetailsResponseV2:
+      required:
+        - categoryOfLawCode
+      properties:
+        categoryOfLawCodes:
+          type: array
+          items:
+            type: string
+          description: "Category of law code(s) corresponding to fee code"
         feeCodeDescription:
           type: string
           description: "Description of fee code"
@@ -98,7 +147,7 @@ components:
         startDate:
           type: string
           format: date
-          description: "Legal Help: case start date."
+          description: "Civil: case start date."
         policeStationId:
           type: string
           description: "Police Station ID."
@@ -266,7 +315,7 @@ components:
         properties:
           type:
             type: string
-            enum: [ERROR, WARNING]
+            enum: [ ERROR, WARNING ]
           code:
             type: string
           message:
