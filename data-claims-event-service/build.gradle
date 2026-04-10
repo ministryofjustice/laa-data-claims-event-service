@@ -11,6 +11,14 @@ def versions = [
         testcontainers : '1.20.1'
 ]
 
+processResources {
+    filesMatching('application.yml') {
+        filter {
+            it.replace('@version@', version)
+        }
+    }
+}
+
 test {
     useJUnitPlatform()
     finalizedBy jacocoTestReport
@@ -81,6 +89,7 @@ dependencies {
     implementation 'io.awspring.cloud:spring-cloud-aws-starter-sqs'
     implementation 'software.amazon.awssdk:sts:2.33.7'
 
+    implementation 'org.springframework.boot:spring-boot-micrometer-tracing-brave'
     implementation 'io.micrometer:micrometer-tracing-bridge-brave'
     implementation 'jakarta.validation:jakarta.validation-api:3.1.1'
     implementation 'org.projectlombok:lombok:1.18.38'

@@ -1,6 +1,7 @@
 spring:
   application:
     name: laa-data-claims-event-service
+    version: "@version@"
 
   threads:
     virtual:
@@ -15,7 +16,18 @@ spring:
 
 logging:
   level:
+    root: ${ROOT_LOGGING_LEVEL:info}
+    org.springframework: ${SPRING_LOGGING_LEVEL:info}
     uk.gov.justice.laa.dstew.payments.claimsevent: ${APPLICATION_LOGGING_LEVEL:INFO}
+  structured:
+    format:
+      console: ecs
+    ecs:
+      service:
+        name: ${spring.application.name:default}
+        version: ${spring.application.version:default}
+        environment: ${spring.profiles.active:default}
+        node_name: ${HOSTNAME:unknown}
 
 # used by actuator info endpoint
 info:
