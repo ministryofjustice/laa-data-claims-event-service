@@ -1,7 +1,6 @@
 spring:
   application:
     name: laa-data-claims-event-service
-    version: ${application.version}
 
   threads:
     virtual:
@@ -24,8 +23,8 @@ logging:
       console: ecs
     ecs:
       service:
-        name: ${spring.application.name:default}
-        version: ${spring.application.version:default}
+        name: laa-data-claims-event-service
+        version: ${application.version}
         environment: ${spring.profiles.active:default}
         node_name: ${HOSTNAME:unknown}
 
