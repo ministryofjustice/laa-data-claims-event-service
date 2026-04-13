@@ -1,7 +1,7 @@
 spring:
   application:
     name: laa-data-claims-event-service
-    version: "@version@"
+    version: ${application.version}
 
   threads:
     virtual:
