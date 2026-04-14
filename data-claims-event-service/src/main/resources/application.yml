@@ -24,7 +24,7 @@ logging:
     ecs:
       service:
         name: laa-data-claims-event-service
-        version: ${application.version}
+        version: ${spring.application.version:default}
         environment: ${spring.profiles.active:default}
         node_name: ${HOSTNAME:unknown}
 
