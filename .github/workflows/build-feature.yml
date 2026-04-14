@@ -15,10 +15,6 @@ env:
   JAVA_VERSION: &JAVA_VERSION '25'
   JDK_DISTRIBUTION: &JDK_DISTRIBUTION 'corretto'
 
-env:
-  JAVA_VERSION: &JAVA_VERSION '25'
-  JDK_DISTRIBUTION: &JDK_DISTRIBUTION 'corretto'
-
 jobs:
   build:
     uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/gradle-build-and-publish.yml@dc4173bfc12f714d7e8cbdd9f524d00ef02e25c4 # v2
@@ -34,8 +30,6 @@ jobs:
       junit_report_path: 'data-claims-event-service/build/reports/tests'
       checkstyle_report_path: 'data-claims-event-service/build/reports/checkstyle'
       jacoco_coverage_report_path: 'data-claims-event-service/build/reports/jacoco'
-      java_version: *JAVA_VERSION
-      java_distribution: *JDK_DISTRIBUTION
     secrets:
       gh_token: ${{ secrets.GITHUB_TOKEN }}
       aws_region: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_AWS_REGION }}

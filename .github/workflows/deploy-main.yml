@@ -27,8 +27,6 @@ jobs:
       junit_report: 'false'
       checkstyle_report: 'false'
       jacoco_coverage_report: 'false'
-      java_version: *JAVA_VERSION
-      java_distribution: *JDK_DISTRIBUTION
     secrets:
       gh_token: ${{ secrets.GITHUB_TOKEN }}
       aws_region: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_AWS_REGION }}
@@ -47,8 +45,6 @@ jobs:
       publish_pact_results: true
       git_branch: 'main'
       pact_tags: '${{ needs.assemble.outputs.published_artifact_version }},candidate'
-      java_version: *JAVA_VERSION
-      java_distribution: *JDK_DISTRIBUTION
     secrets:
       gh_token: ${{ secrets.GITHUB_TOKEN }}
       pact_broker_url: ${{ secrets.PACT_BROKER_URL }}
