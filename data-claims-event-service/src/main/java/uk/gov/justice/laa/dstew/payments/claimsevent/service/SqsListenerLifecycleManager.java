@@ -10,9 +10,9 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.shutdown.ShutdownHookRegist
 /**
  * Minimal lifecycle manager that stops awspring SQS listener containers/pollers on this JVM.
  *
- * This class is intentionally explicit and conservative: it only operates on beans of type
- * {@link io.awspring.cloud.sqs.listener.SqsMessageListenerContainer} and does not attempt
- * broad or reflective fallbacks to avoid stopping unrelated components.
+ * <p>This class is intentionally explicit and conservative: it only operates on beans of type
+ * {@link io.awspring.cloud.sqs.listener.SqsMessageListenerContainer} and does not attempt broad or
+ * reflective fallbacks to avoid stopping unrelated components.
  */
 @Slf4j
 @Component
@@ -38,7 +38,6 @@ public class SqsListenerLifecycleManager {
   /** Stop any awspring SQS listener container beans found in the application context. */
   public void stopAllListeners() {
     log.info("Stopping awspring SQS listener containers on this JVM...");
-
 
     Map<String, ?> containers = ctx.getBeansOfType(SqsMessageListenerContainer.class);
     if (!containers.isEmpty()) {
