@@ -69,8 +69,6 @@ jobs:
       jar_subproject: 'data-claims-event-service'
       image_version: ${{ format('{0}-{1}', vars.LAA_DATA_CLAIMS_EVENT_SERVICE_IMAGE_PREFIX, needs.build.outputs.published_artifact_version) }}
       publish: false
-      java_version: *JAVA_VERSION
-      java_distribution: *JDK_DISTRIBUTION
     secrets:
       gh_token: ${{ secrets.GITHUB_TOKEN }}
       ecr_repository: ""
