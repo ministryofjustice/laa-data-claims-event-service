@@ -90,8 +90,7 @@ public class FeeCalculationService {
     log.error(
         "Fee calculation request failed with status {}: {}",
         ex.getStatusCode(),
-        ex.getResponseBodyAsString(),
-        ex);
+        ex.getResponseBodyAsString());
 
     context.addClaimMessages(claim.getId(), getValidationMessagePatches(ex, errorType));
   }

@@ -1,5 +1,7 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.listener;
 
+import static java.lang.Thread.sleep;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.awspring.cloud.sqs.annotation.SqsListener;
@@ -43,6 +45,8 @@ public class SubmissionListener {
   private final EventServiceMetricService eventServiceMetricService;
   private final ObjectProvider<SqsVisibilityExtender> sqsVisibilityExtenderProvider;
   private final ShutdownService shutdownService;
+
+  // ...existing fields...
 
   /**
    * Construct a new {@code SubmissionListener}.
@@ -89,7 +93,7 @@ public class SubmissionListener {
       extender.start(receiptHandle);
       SubmissionEventType submissionEventType = getSubmissionEventType(message);
 
-      // sleep(30000);
+      sleep(15000);
 
       processMessageByType(message, submissionEventType);
     } catch (SubmissionEventProcessingException | IllegalArgumentException ex) {
@@ -97,9 +101,28 @@ public class SubmissionListener {
     } catch (ShutdownRejectedException ex) {
       log.info(
           "Shutdown in progress - not accepting new messages. messageId={}", message.messageId());
+
+      // Attempt to make the message visible immediately so another consumer can pick it up
+      try (SqsVisibilityExtender extender = sqsVisibilityExtenderProvider.getObject()) {
+        extender.makeVisibleNow(receiptHandle);
+        log.info("Changed message visibility to 0 for messageId={}", message.messageId());
+      } catch (Exception e) {
+        log.warn(
+            "Failed to change message visibility for messageId={}. Message will remain invisible until timeout",
+            message.messageId(),
+            e);
+      }
+
+      // Rethrow so the listener framework does not consider the message processed (and will not
+      // delete it)
+      throw ex;
+    } catch (InterruptedException ie) {
+      Thread.currentThread().interrupt();
+      log.error(
+          "Interrupted while processing submission event. messageId={}", message.messageId(), ie);
       throw new SubmissionEventProcessingException(
-          "Service is shutting down - not accepting messages");
-    } catch (Exception ex) {
+          "Interrupted during submission event processing", ie);
+    } catch (RuntimeException ex) {
       log.error(
           "Failed to process submission event. messageId={}. Exception: {}",
           message.messageId(),

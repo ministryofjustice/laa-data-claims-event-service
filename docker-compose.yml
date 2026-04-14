@@ -1,6 +1,6 @@
 services:
   event-service:
-    container_name: data-claims-event-service-app
+    #container_name: data-claims-event-service-app
     profiles:
       - application
     build:
@@ -11,8 +11,8 @@ services:
       secrets:
         - github_actor
         - github_token
-    ports:
-      - "8182:8081"
+    #ports:
+    #  - "8182:8081"
     environment:
       - CLAIMS_API_HOSTNAME=http://host.docker.internal:8080
       - CLAIMS_API_ACCESS_TOKEN=f67f968e-b479-4e61-b66e-f57984931e56
@@ -32,6 +32,10 @@ services:
       - SPRING_CLOUD_AWS_CREDENTIALS_SECRET-KEY=dummy-access-key
     depends_on:
       - localstack
+    ports:
+      - "8081"
+    deploy:
+      replicas: 2   # <-- “X services”
 
   localstack:
     container_name: event-service-localstack
@@ -46,6 +50,7 @@ services:
       - "./docker-scripts/init-localstack.sh:/etc/localstack/init/ready.d/init-localstack.sh"
       - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
+
   data-claim-api-wiremock:
     image: wiremock/wiremock:latest
     container_name: data-claim-api-wiremock
@@ -61,6 +66,7 @@ services:
     restart: always
     ports:
       - "8190:8080"
+
   fee-scheme-platform-api-wiremock:
     image: wiremock/wiremock:latest
     container_name: fee-scheme-platform-api-wiremock
@@ -76,6 +82,7 @@ services:
     restart: always
     ports:
       - "8191:8080"
+
   provider-details-api-wiremock:
     image: wiremock/wiremock:latest
     container_name: provider-details-api-wiremock

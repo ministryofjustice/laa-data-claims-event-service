@@ -85,15 +85,13 @@ public final class EffectiveCategoryOfLawClaimValidator implements ClaimValidato
           ex.getStatusCode(),
           ex.getMessage(),
           officeCode,
-          effectiveDate,
-          ex);
+          effectiveDate);
       handleProviderDetailsApiError(context, claim.getId());
     } catch (Exception ex) {
       log.error(
           "Unexpected error during category of law validation for officeCode={}, effectiveDate={}",
           officeCode,
-          effectiveDate,
-          ex);
+          effectiveDate);
       handleProviderDetailsApiError(context, claim.getId());
     }
   }

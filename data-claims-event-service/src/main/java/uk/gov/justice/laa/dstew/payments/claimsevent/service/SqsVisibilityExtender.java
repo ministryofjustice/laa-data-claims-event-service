@@ -92,6 +92,49 @@ public class SqsVisibilityExtender implements AutoCloseable {
     }
   }
 
+  /**
+   * Change the visibility timeout for a specific message. This will resolve the queue URL if
+   * necessary.
+   *
+   * @param receiptHandle the receipt handle of the message
+   * @param visibilityTimeoutSeconds the visibility timeout to set (seconds)
+   */
+  public void changeVisibility(final String receiptHandle, final int visibilityTimeoutSeconds) {
+    try {
+      if (this.queueUrl == null) {
+        this.queueUrl =
+            sqsClient
+                .getQueueUrl(GetQueueUrlRequest.builder().queueName(queueName).build())
+                .queueUrl();
+      }
+
+      ChangeMessageVisibilityRequest request =
+          ChangeMessageVisibilityRequest.builder()
+              .queueUrl(this.queueUrl)
+              .receiptHandle(receiptHandle)
+              .visibilityTimeout(visibilityTimeoutSeconds)
+              .build();
+
+      sqsClient.changeMessageVisibility(request);
+    } catch (Exception ex) {
+      log.error(
+          "Failed to change SQS message visibility for receiptHandle={}. visibilitySeconds={}",
+          receiptHandle,
+          visibilityTimeoutSeconds,
+          ex);
+      throw ex;
+    }
+  }
+
+  /**
+   * Make the message visible immediately.
+   *
+   * @param receiptHandle the receipt handle of the message
+   */
+  public void makeVisibleNow(final String receiptHandle) {
+    changeVisibility(receiptHandle, 1);
+  }
+
   @Override
   public void close() {
     if (scheduledTask != null) {

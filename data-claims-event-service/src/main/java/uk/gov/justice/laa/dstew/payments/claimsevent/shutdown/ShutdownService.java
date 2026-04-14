@@ -29,6 +29,11 @@ public class ShutdownService {
   private final AtomicInteger inFlightCount = new AtomicInteger(0);
   private final ReentrantLock lock = new ReentrantLock();
   private final Condition drainedCondition = lock.newCondition();
+  private final ShutdownHookRegistry hookRegistry;
+
+  public ShutdownService(ShutdownHookRegistry hookRegistry) {
+    this.hookRegistry = hookRegistry;
+  }
 
   /**
    * A small AutoCloseable guard returned to callers to mark a unit of processing work. When the
@@ -84,6 +89,7 @@ public class ShutdownService {
 
     // If count reaches zero, signal any thread waiting for drains.
     if (current == 0) {
+      log.info("In-flight count went zero - signaling any waiting shutdown initiator");
       lock.lock();
       try {
         drainedCondition.signalAll();
@@ -134,6 +140,20 @@ public class ShutdownService {
    */
   public boolean initiateShutdown(Duration timeout) {
     log.info("Initiating graceful shutdown. timeout={}", timeout);
+    // Run registered on-shutdown hooks (e.g. stop local pollers) so this JVM doesn't re-receive
+    // messages
+    try {
+      hookRegistry.runOnShutdown();
+      // small grace period to allow threads to settle
+      try {
+        Thread.sleep(200);
+      } catch (InterruptedException ie) {
+        Thread.currentThread().interrupt();
+      }
+    } catch (Exception e) {
+      log.warn("Failed to run on-shutdown hooks cleanly: {}", e.getMessage(), e);
+    }
+
     // Set flags under lock to prevent races with acquireShutdownGuard()
     lock.lock();
     try {
@@ -182,6 +202,12 @@ public class ShutdownService {
       drainedCondition.signalAll();
     } finally {
       lock.unlock();
+    }
+    // Run registered on-cancel hooks (e.g. restart pollers)
+    try {
+      hookRegistry.runOnCancel();
+    } catch (Exception e) {
+      log.warn("Failed to run on-cancel hooks cleanly: {}", e.getMessage(), e);
     }
   }
 

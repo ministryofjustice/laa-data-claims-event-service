@@ -13,7 +13,8 @@ class ShutdownServiceConcurrencyTest {
 
   @Test
   void shutdown_waits_for_existing_work_and_rejects_new_acquires() throws Exception {
-    ShutdownService shutdownService = new ShutdownService();
+    // ShutdownService now requires a ShutdownHookRegistry; tests can provide a simple instance.
+    ShutdownService shutdownService = new ShutdownService(new ShutdownHookRegistry());
 
     CountDownLatch t1Started = new CountDownLatch(1);
     CountDownLatch t1Release = new CountDownLatch(1);
@@ -56,8 +57,9 @@ class ShutdownServiceConcurrencyTest {
             "initiator");
     initiator.start();
 
-    // Give the initiator a moment to set accepting=false
-    TimeUnit.MILLISECONDS.sleep(100);
+    // Give the initiator a moment to set accepting=false (must be longer than the service's
+    // internal grace sleep)
+    TimeUnit.MILLISECONDS.sleep(350);
 
     // T2: attempt to acquire during shutdown -> should be rejected with supplied exception
     assertThrows(RuntimeException.class, shutdownService::acquireShutdownGuardOrThrow);
