@@ -12,6 +12,10 @@ on:
     branches: [ main ]
     types: [ closed ]
 
+env:
+  JAVA_VERSION: &JAVA_VERSION '25'
+  JDK_DISTRIBUTION: &JDK_DISTRIBUTION 'corretto'
+
 jobs:
   build:
     if: ${{ github.event.pull_request.merged == true }}
@@ -28,6 +32,8 @@ jobs:
       junit_report_path: 'data-claims-event-service/build/reports/tests'
       checkstyle_report_path: 'data-claims-event-service/build/reports/checkstyle'
       jacoco_coverage_report_path: 'data-claims-event-service/build/reports/jacoco'
+      java_version: *JAVA_VERSION
+      java_distribution: *JDK_DISTRIBUTION
     secrets:
       gh_token: ${{ secrets.GITHUB_TOKEN }}
       aws_region: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_AWS_REGION }}
@@ -45,6 +51,8 @@ jobs:
       pacticipant_name: "laa-data-claims-event-service"
       pact_test_task: "pactTest"
       publish_pact_results: true
+      java_version: *JAVA_VERSION
+      java_distribution: *JDK_DISTRIBUTION
     secrets:
       gh_token: ${{ secrets.GITHUB_TOKEN }}
       pact_broker_url: 'https://laa-data-pact-broker.apps.live.cloud-platform.service.justice.gov.uk/'

@@ -12,6 +12,10 @@ on:
     branches-ignore:
       - main
 
+env:
+  JAVA_VERSION: &JAVA_VERSION '25'
+  JDK_DISTRIBUTION: &JDK_DISTRIBUTION 'corretto'
+
 jobs:
   build:
     uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/gradle-build-and-publish.yml@90aa22bf1f55a39b4f10c4f7168356f0669eed77 # v1
@@ -25,6 +29,8 @@ jobs:
       junit_report_path: 'data-claims-event-service/build/reports/tests'
       checkstyle_report_path: 'data-claims-event-service/build/reports/checkstyle'
       jacoco_coverage_report_path: 'data-claims-event-service/build/reports/jacoco'
+      java_version: *JAVA_VERSION
+      java_distribution: *JDK_DISTRIBUTION
     secrets:
       gh_token: ${{ secrets.GITHUB_TOKEN }}
       aws_region: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_AWS_REGION }}
@@ -43,6 +49,8 @@ jobs:
       provider_name: "laa-data-claims-api"
       is_provider: false
       pact_tags: "feature"
+      java_version: *JAVA_VERSION
+      java_distribution: *JDK_DISTRIBUTION
     secrets:
       gh_token: ${{ secrets.GITHUB_TOKEN }}
       pact_broker_url: 'https://laa-data-pact-broker.apps.live.cloud-platform.service.justice.gov.uk/'
@@ -55,7 +63,10 @@ jobs:
     permissions:
       contents: read
       id-token: write
+      security-events: write
     with:
+      java_version: *JAVA_VERSION
+      java_distribution: *JDK_DISTRIBUTION
       jar_subproject: 'data-claims-event-service'
       image_version: ${{ format('{0}-{1}', vars.LAA_DATA_CLAIMS_EVENT_SERVICE_IMAGE_PREFIX, needs.build.outputs.published_artifact_version) }}
       publish: false
@@ -64,3 +75,4 @@ jobs:
       ecr_repository: ""
       ecr_region: ""
       ecr_role_to_assume: ""
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}

@@ -8,6 +8,10 @@ on:
 permissions:
   contents: read
 
+env:
+  JAVA_VERSION: &JAVA_VERSION '25'
+  JDK_DISTRIBUTION: &JDK_DISTRIBUTION 'corretto'
+
 jobs:
   assemble:
     uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/gradle-build-and-publish.yml@90aa22bf1f55a39b4f10c4f7168356f0669eed77 # v1
@@ -21,6 +25,8 @@ jobs:
       junit_report: 'false'
       checkstyle_report: 'false'
       jacoco_coverage_report: 'false'
+      java_version: *JAVA_VERSION
+      java_distribution: *JDK_DISTRIBUTION
     secrets:
       gh_token: ${{ secrets.GITHUB_TOKEN }}
       aws_region: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_AWS_REGION }}
@@ -37,6 +43,8 @@ jobs:
       publish_pact_results: true
       git_branch: 'main'
       pact_tags: '${{ needs.assemble.outputs.published_artifact_version }},candidate'
+      java_version: *JAVA_VERSION
+      java_distribution: *JDK_DISTRIBUTION
     secrets:
       gh_token: ${{ secrets.GITHUB_TOKEN }}
       pact_broker_url: ${{ secrets.PACT_BROKER_URL }}
@@ -50,6 +58,8 @@ jobs:
       contents: read
       id-token: write
     with:
+      java_version: *JAVA_VERSION
+      java_distribution: *JDK_DISTRIBUTION
       jar_subproject: 'data-claims-event-service'
       image_version: ${{ format('{0}-{1}', vars.LAA_DATA_CLAIMS_EVENT_SERVICE_IMAGE_PREFIX, needs.assemble.outputs.published_artifact_version) }}
     secrets:

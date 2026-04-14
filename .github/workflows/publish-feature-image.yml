@@ -8,6 +8,10 @@ on:
 permissions:
   contents: read
 
+env:
+  JAVA_VERSION: &JAVA_VERSION '25'
+  JDK_DISTRIBUTION: &JDK_DISTRIBUTION 'corretto'
+
 jobs:
   define-feature-version:
     runs-on: ubuntu-latest
@@ -40,6 +44,8 @@ jobs:
       junit_report: 'false'
       checkstyle_report: 'false'
       jacoco_coverage_report: 'false'
+      java_version: *JAVA_VERSION
+      java_distribution: *JDK_DISTRIBUTION
     secrets:
       gh_token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -53,6 +59,8 @@ jobs:
       jar_subproject: 'data-claims-event-service'
       image_version: ${{ format('{0}-{1}', vars.LAA_DATA_CLAIMS_EVENT_SERVICE_IMAGE_PREFIX, needs.assemble.outputs.published_artifact_version) }}
       image_scan: false
+      java_version: *JAVA_VERSION
+      java_distribution: *JDK_DISTRIBUTION
     secrets:
       gh_token: ${{ secrets.GITHUB_TOKEN }}
       ecr_repository: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_REPOSITORY }}
