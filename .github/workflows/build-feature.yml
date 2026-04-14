@@ -74,4 +74,4 @@ jobs:
       ecr_repository: ""
       ecr_region: ""
       ecr_role_to_assume: ""
-      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      snyk_token: ${{ secrets.SNYK_TOKEN }}
