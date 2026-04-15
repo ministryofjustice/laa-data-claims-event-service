@@ -69,8 +69,16 @@ jobs:
       pact_broker_username: ${{ secrets.PACT_BROKER_USERNAME }}
       pact_broker_password: ${{ secrets.PACT_BROKER_PASSWORD }}
 
+  snyk-auth:
+    name: Obtain Short-lived token
+    uses: ministryofjustice/laa-reusable-github-actions/.github/actions/snyk-auth/action.yml@main
+    with:
+      client_id: ${{ secrets.SNYK_CLIENT_ID }}
+      client_secret: ${{ secrets.SNYK_CLIENT_SECRET }}ß
+
   publish-image:
     needs:
+      - snyk-auth
       - pact-test
       - sca-scan
     uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/ecr-publish-image.yml@68d8f5aeccd47fa5baa1fe6c63269569b682e656 # v2
@@ -88,3 +96,4 @@ jobs:
       ecr_repository: ""
       ecr_region: ""
       ecr_role_to_assume: ""
+      snyk_token: ${{ needs.snyk-auth.outputs.token }}
