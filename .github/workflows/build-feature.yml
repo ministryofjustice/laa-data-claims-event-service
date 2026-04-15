@@ -74,7 +74,7 @@ jobs:
     uses: ministryofjustice/laa-reusable-github-actions/.github/actions/snyk-auth/action.yml@main
     with:
       client_id: ${{ secrets.SNYK_CLIENT_ID }}
-      client_secret: ${{ secrets.SNYK_CLIENT_SECRET }}ß
+      client_secret: ${{ secrets.SNYK_CLIENT_SECRET }}
 
   publish-image:
     needs:
