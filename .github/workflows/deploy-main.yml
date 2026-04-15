@@ -70,6 +70,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
+      security-events: write
     with:
       java_version: *JAVA_VERSION
       java_distribution: *JDK_DISTRIBUTION
@@ -80,6 +81,7 @@ jobs:
       ecr_repository: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_REPOSITORY }}
       ecr_region: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_REGION }}
       ecr_role_to_assume: ${{ secrets.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_ROLE_TO_ASSUME }}
+      snyk_token: ${{ secrets.SNYK_TOKEN }}
 
   deploy-uat:
     needs:
