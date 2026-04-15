@@ -81,6 +81,15 @@ jobs:
         with:
           client_id: ${{ secrets.SNYK_CLIENT_ID }}
           client_secret: ${{ secrets.SNYK_CLIENT_SECRET }}
+      - name: Debug: show step output (masked)
+        run: |
+          TOK='${{ steps.snyk_auth.outputs.token }}'
+          if [ -z "$TOK" ]; then
+            echo "STEP-OUTPUT: token is EMPTY"
+          else
+            echo "STEP-OUTPUT: token length: ${#TOK}"
+            echo "STEP-OUTPUT: token suffix: ${TOK: -4}"
+          fi
 
   snyk-verify:
     needs: [snyk-auth]
