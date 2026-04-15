@@ -56,6 +56,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
+      security-events: write
     with:
       java_version: *JAVA_VERSION
       java_distribution: *JDK_DISTRIBUTION
