@@ -35,8 +35,6 @@ jobs:
       aws_region: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_AWS_REGION }}
 
   sca-scan:
-    needs:
-      - build
     uses: ./.github/workflows/sca-analysis.yml
     permissions:
       contents: read
@@ -48,7 +46,6 @@ jobs:
       gh_token: ${{ secrets.GITHUB_TOKEN }}
 
   pact-test:
-    needs: [ build ]
     uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/pact-and-publish.yml@dc4173bfc12f714d7e8cbdd9f524d00ef02e25c4 # v2
     permissions:
       contents: write
@@ -71,6 +68,7 @@ jobs:
 
   publish-image:
     needs:
+      - build
       - pact-test
       - sca-scan
     uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/ecr-publish-image.yml@68d8f5aeccd47fa5baa1fe6c63269569b682e656 # v2
