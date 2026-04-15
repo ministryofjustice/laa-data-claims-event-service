@@ -81,6 +81,16 @@ jobs:
         with:
           client_id: ${{ secrets.SNYK_CLIENT_ID }}
           client_secret: ${{ secrets.SNYK_CLIENT_SECRET }}
+      - name: Debug, confirm action emitted token (masked)
+        run: |
+          TOKEN='${{ steps.snyk_auth.outputs.token }}'
+          if [ -z "$TOKEN" ]; then
+            echo "SNYK token is EMPTY"
+            exit 1
+          fi
+          echo "SNYK token length: ${#TOKEN}"
+          # print last 4 characters only
+          echo "SNYK token suffix: ${TOKEN: -4}"
 
   publish-image:
     needs:
