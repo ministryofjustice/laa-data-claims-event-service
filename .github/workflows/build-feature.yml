@@ -26,6 +26,7 @@ jobs:
       java_distribution: *JDK_DISTRIBUTION
       integration_test_task: "integrationTest"
       publish_package: 'false'
+      semgrep_check: 'true'
       junit_results_path: 'data-claims-event-service/build/test-results'
       junit_report_path: 'data-claims-event-service/build/reports/tests'
       checkstyle_report_path: 'data-claims-event-service/build/reports/checkstyle'
@@ -34,8 +35,18 @@ jobs:
       gh_token: ${{ secrets.GITHUB_TOKEN }}
       aws_region: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_AWS_REGION }}
 
+  sca-scan:
+    uses: ./.github/workflows/sca-analysis.yml
+    permissions:
+      contents: read
+      security-events: write
+    with:
+      java_version: *JAVA_VERSION
+      java_distribution: *JDK_DISTRIBUTION
+    secrets:
+      gh_token: ${{ secrets.GITHUB_TOKEN }}
+
   pact-test:
-    needs: [ build ]
     uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/pact-and-publish.yml@dc4173bfc12f714d7e8cbdd9f524d00ef02e25c4 # v2
     permissions:
       contents: write
@@ -56,12 +67,16 @@ jobs:
       pact_broker_username: ${{ secrets.PACT_BROKER_USERNAME }}
       pact_broker_password: ${{ secrets.PACT_BROKER_PASSWORD }}
 
-  scan-image:
-    needs: [ pact-test ]
+  publish-image:
+    needs:
+      - build
+      - pact-test
+      - sca-scan
     uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/ecr-publish-image.yml@68d8f5aeccd47fa5baa1fe6c63269569b682e656 # v2
     permissions:
       contents: read
       id-token: write
+      security-events: write
     with:
       jar_subproject: 'data-claims-event-service'
       image_version: ${{ format('{0}-{1}', vars.LAA_DATA_CLAIMS_EVENT_SERVICE_IMAGE_PREFIX, needs.build.outputs.published_artifact_version) }}
@@ -73,3 +88,4 @@ jobs:
       ecr_repository: ""
       ecr_region: ""
       ecr_role_to_assume: ""
+      snyk_token: ${{ secrets.SNYK_TOKEN }}

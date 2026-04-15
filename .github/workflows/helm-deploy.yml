@@ -62,21 +62,32 @@ jobs:
         id: login-ecr
 
       - name: Set helm chart app version
+        env:
+          IMAGE_TAG: ${{ inputs.image_tag }}
         run: |
-          yq eval-all "( .appVersion = \"${{ inputs.image_tag }}\" )" -i helm-chart/Chart.yaml
+          # use env var to avoid injecting github context directly into the shell
+          yq eval-all "( .appVersion = \"$IMAGE_TAG\" )" -i helm-chart/Chart.yaml
           cat helm-chart/Chart.yaml
 
       - name: Install or upgrade helm charts
         id: helm-install
+        env:
+          DEPLOYMENT_NAME: ${{ inputs.deployment_name }}
+          ENV_VALUES_FILE: "helm-chart/values/env-${{ inputs.environment }}.yaml"
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_REPOSITORY }}
         run: |
-          echo "Deploying Helm release '${{ inputs.deployment_name }}'..."
+          echo "Deploying Helm release '$DEPLOYMENT_NAME'..."
           helm upgrade --install --wait --timeout 5m \
-            -f helm-chart/values/env-${{ inputs.environment }}.yaml \
-            ${{ inputs.deployment_name }} helm-chart \
-            --set image.repository=${{ steps.login-ecr.outputs.registry }}/${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_REPOSITORY }}
-          IMAGES=$(helm get manifest ${{ inputs.deployment_name }} | yq -o=json '.' | jq -sc '[.[] | select(.kind == "Deployment") | select(.spec.template.spec.containers[0].image | contains("${{ steps.login-ecr.outputs.registry }}/${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_REPOSITORY }}")) | {image_version_tag: .metadata.labels.appVersion, release_tag: .metadata.name}]')
+            -f "$ENV_VALUES_FILE" \
+            "$DEPLOYMENT_NAME" helm-chart \
+            --set image.repository="$REGISTRY/$REPOSITORY"
+
+          REG_REPO="$REGISTRY/$REPOSITORY"
+          IMAGES=$(helm get manifest "$DEPLOYMENT_NAME" | yq -o=json '.' | jq -sc --arg registry "$REG_REPO" '[.[] | select(.kind == "Deployment") | select(.spec.template.spec.containers[0].image | contains($registry)) | {image_version_tag: .metadata.labels.appVersion, release_tag: .metadata.name}]')
+
           echo "images=$IMAGES" >> $GITHUB_OUTPUT
-          echo "Deployed Images: $(echo $IMAGES | jq)"
+          echo "Deployed Images: $(echo "$IMAGES" | jq)"
 
       - name: Record deployment to pact broker
         id: record-deployment-to-pact-broker

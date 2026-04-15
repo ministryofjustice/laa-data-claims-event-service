@@ -8,7 +8,8 @@ plugins {
 
 def versions = [
         sentry : '8.31.0',
-        testcontainers : '1.20.1'
+        testcontainers : '1.20.1',
+        jackson : '2.21.2'
 ]
 
 test {
@@ -38,7 +39,7 @@ jacocoTestCoverageVerification {
 dependencyManagement {
     imports {
         // Upgrade to fix vulnerabilities in netty
-        mavenBom('io.netty:netty-bom:4.2.9.Final')
+        mavenBom('io.netty:netty-bom:4.2.12.Final')
     }
     dependencies {
         dependencySet(group: 'io.sentry', version: versions.sentry) {
@@ -46,9 +47,9 @@ dependencyManagement {
             entry 'sentry-logback'
         }
         // Force jackson-core 2.x to fix Trivy vulnerability (transitive was pulling 2.20.2)
-        dependency 'com.fasterxml.jackson.core:jackson-core:2.21.1'
+        dependency "com.fasterxml.jackson.core:jackson-core:$versions.jackson"
         // Force jackson-core 3.x to fix Trivy vulnerability (AWS SDK pulls tools.jackson 3.0.4)
-        dependency 'tools.jackson.core:jackson-core:3.1.0'
+        dependency 'tools.jackson.core:jackson-core:3.1.1'
     }
 }
 
@@ -96,7 +97,7 @@ dependencies {
     implementation 'org.mapstruct:mapstruct:1.6.3'
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
 
-    implementation platform('com.fasterxml.jackson:jackson-bom:2.21.1')
+    implementation platform("com.fasterxml.jackson:jackson-bom:$versions.jackson")
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml'
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
