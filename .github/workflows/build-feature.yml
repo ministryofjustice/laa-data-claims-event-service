@@ -97,7 +97,7 @@ jobs:
     steps:
       - name: Verify Snyk token via API (masked)
         env:
-          TOKEN: ${{ needs.snyk-auth.outputs.token }}
+          TOKEN: ${{ needs['snyk-auth'].outputs.token }}
         run: |
           if [ -z "$TOKEN" ]; then
             echo "SNYK token is EMPTY"
@@ -135,4 +135,4 @@ jobs:
       ecr_repository: ""
       ecr_region: ""
       ecr_role_to_assume: ""
-      snyk_token: ${{ needs.snyk-auth.outputs.token }}
+      snyk_token: ${{ needs['snyk-auth'].outputs.token }}
