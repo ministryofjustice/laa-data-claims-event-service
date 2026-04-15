@@ -35,7 +35,7 @@ jobs:
 
       - name: Can I deploy?
         id: can-i-deploy
-        uses: ministryofjustice/laa-ccms-common-workflows/.github/actions/pact-can-i-deploy@90aa22bf1f55a39b4f10c4f7168356f0669eed77 # v1
+        uses: ministryofjustice/laa-ccms-common-workflows/.github/actions/pact-can-i-deploy@dc4173bfc12f714d7e8cbdd9f524d00ef02e25c4 # v2.1.1
         with:
           pacticipant: 'laa-data-claims-event-service'
           environment: ${{ inputs.claim_api_environment_name }}
@@ -52,13 +52,13 @@ jobs:
           kubectl config use-context ${{ secrets.KUBE_CLUSTER }}
 
       - name: Configure aws credentials
-        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7 # v6
+        uses: aws-actions/configure-aws-credentials@ec61189d14ec14c8efccab744f656cffd0e33f37 # v6
         with:
           role-to-assume: ${{ secrets.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_ROLE_TO_ASSUME }}
           aws-region: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_REGION }}
 
       - name: Login ecr
-        uses: aws-actions/amazon-ecr-login@5a88a04c91d5c6f97aae0d9be790e64d9b1d47b7 # v1
+        uses: aws-actions/amazon-ecr-login@f2e9fc6c2b355c1890b65e6f6f0e2ac3e6e22f78 # v2.1.2
         id: login-ecr
 
       - name: Set helm chart app version
@@ -80,7 +80,7 @@ jobs:
 
       - name: Record deployment to pact broker
         id: record-deployment-to-pact-broker
-        uses: ministryofjustice/laa-ccms-common-workflows/.github/actions/pact-record-deployment@90aa22bf1f55a39b4f10c4f7168356f0669eed77 # v1
+        uses: ministryofjustice/laa-ccms-common-workflows/.github/actions/pact-record-deployment@dc4173bfc12f714d7e8cbdd9f524d00ef02e25c4 # v2.1.1
         with:
           pacticipant: 'laa-data-claims-event-service'
           environment: ${{ inputs.claim_api_environment_name }}
