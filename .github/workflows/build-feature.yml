@@ -95,6 +95,23 @@ jobs:
     needs: [snykauth]
     runs-on: ubuntu-latest
     steps:
+      - name: Debug, show available output keys and masked token suffix
+        env:
+          OUT_JSON: ${{ toJSON(needs.snykauth.outputs) }}
+        run: |
+          # print keys present under snykauth.outputs
+          echo "snykauth.outputs keys:"
+          echo "$OUT_JSON" | jq -r 'keys[]?' || echo "(none)"
+
+          # try common token keys, but do not print the token itself
+          TOK=$(echo "$OUT_JSON" | jq -r '.token // .snyk_token // .output_token // empty')
+          if [ -z "$TOK" ]; then
+            echo "snykauth.outputs contains no token key or token is empty"
+          else
+            echo "snykauth.outputs token length: ${#TOK}"
+            echo "snykauth.outputs token suffix: ${TOK: -4}"
+          fi
+
       - name: Verify Snyk token via API (masked)
         env:
           TOKEN: ${{ needs.snykauth.outputs.token }}
