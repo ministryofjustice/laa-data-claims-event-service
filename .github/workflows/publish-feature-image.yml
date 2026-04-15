@@ -30,6 +30,7 @@ jobs:
           COMMIT_HASH=$(git rev-parse --short HEAD)
           echo "feature_version=${{ steps.get-feature-name.outputs.result }}-${COMMIT_HASH}-SNAPSHOT" >> $GITHUB_OUTPUT
           echo "Feature version: ${{ steps.get-feature-name.outputs.result }}-${COMMIT_HASH}-SNAPSHOT"
+
   assemble:
     needs: [ define-feature-version ]
     uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/gradle-build-and-publish.yml@dc4173bfc12f714d7e8cbdd9f524d00ef02e25c4 # v2
