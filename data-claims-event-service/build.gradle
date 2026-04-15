@@ -1,14 +1,15 @@
 plugins {
-    id 'io.freefair.lombok' version '8.14'
+    id 'io.freefair.lombok' version '9.2.0'
     id("com.diffplug.spotless") version "7.2.1"
-    id 'uk.gov.laa.springboot.laa-spring-boot-gradle-plugin' version '2.0.8'
+    id 'uk.gov.laa.springboot.laa-spring-boot-gradle-plugin' version '2.2.3'
     id "io.sentry.jvm.gradle" version "5.12.2"
     id 'au.com.dius.pact' version '4.6.19'
 }
 
 def versions = [
         sentry : '8.31.0',
-        testcontainers : '1.20.1'
+        testcontainers : '1.20.1',
+        jackson : '2.21.2'
 ]
 
 test {
@@ -38,7 +39,7 @@ jacocoTestCoverageVerification {
 dependencyManagement {
     imports {
         // Upgrade to fix vulnerabilities in netty
-        mavenBom('io.netty:netty-bom:4.2.9.Final')
+        mavenBom('io.netty:netty-bom:4.2.12.Final')
     }
     dependencies {
         dependencySet(group: 'io.sentry', version: versions.sentry) {
@@ -46,9 +47,9 @@ dependencyManagement {
             entry 'sentry-logback'
         }
         // Force jackson-core 2.x to fix Trivy vulnerability (transitive was pulling 2.20.2)
-        dependency 'com.fasterxml.jackson.core:jackson-core:2.21.1'
+        dependency "com.fasterxml.jackson.core:jackson-core:$versions.jackson"
         // Force jackson-core 3.x to fix Trivy vulnerability (AWS SDK pulls tools.jackson 3.0.4)
-        dependency 'tools.jackson.core:jackson-core:3.1.0'
+        dependency 'tools.jackson.core:jackson-core:3.1.1'
     }
 }
 
@@ -59,6 +60,7 @@ dependencies {
      */
 
     // Upgrade to fix CVE-2026-1225 vulnerability in logback-core
+    implementation 'ch.qos.logback:logback-core:1.5.25'
     implementation 'ch.qos.logback:logback-classic:1.5.25'
 
     implementation project(':reference-provider-details-api')
@@ -83,14 +85,18 @@ dependencies {
 
     implementation 'io.micrometer:micrometer-tracing-bridge-brave'
     implementation 'jakarta.validation:jakarta.validation-api:3.1.1'
-    implementation 'org.projectlombok:lombok:1.18.38'
+
+    compileOnly 'org.projectlombok:lombok:1.18.44'
+    annotationProcessor 'org.projectlombok:lombok:1.18.44'
+    testCompileOnly 'org.projectlombok:lombok:1.18.44'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.44'
 
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9'
 
     implementation 'org.mapstruct:mapstruct:1.6.3'
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
 
-    implementation platform('com.fasterxml.jackson:jackson-bom:2.21.1')
+    implementation platform("com.fasterxml.jackson:jackson-bom:$versions.jackson")
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml'
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
@@ -163,7 +169,7 @@ spotless {
         importOrder()
         removeUnusedImports()
         cleanthat()
-        googleJavaFormat()
+        googleJavaFormat('1.27.0')
     }
 }
 

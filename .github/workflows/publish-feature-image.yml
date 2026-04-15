@@ -8,6 +8,10 @@ on:
 permissions:
   contents: read
 
+env:
+  JAVA_VERSION: &JAVA_VERSION '25'
+  JDK_DISTRIBUTION: &JDK_DISTRIBUTION 'corretto'
+
 jobs:
   define-feature-version:
     runs-on: ubuntu-latest
@@ -26,13 +30,16 @@ jobs:
           COMMIT_HASH=$(git rev-parse --short HEAD)
           echo "feature_version=${{ steps.get-feature-name.outputs.result }}-${COMMIT_HASH}-SNAPSHOT" >> $GITHUB_OUTPUT
           echo "Feature version: ${{ steps.get-feature-name.outputs.result }}-${COMMIT_HASH}-SNAPSHOT"
+
   assemble:
     needs: [ define-feature-version ]
-    uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/gradle-build-and-publish.yml@90aa22bf1f55a39b4f10c4f7168356f0669eed77 # v1
+    uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/gradle-build-and-publish.yml@dc4173bfc12f714d7e8cbdd9f524d00ef02e25c4 # v2
     permissions:
       contents: write
       packages: write
     with:
+      java_version: *JAVA_VERSION
+      java_distribution: *JDK_DISTRIBUTION
       build_command: 'assemble'
       publish_package: 'false'
       override_version: ${{ needs.define-feature-version.outputs.feature_version }}
@@ -45,11 +52,14 @@ jobs:
 
   ecr-publish-image:
     needs: [ assemble ]
-    uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/ecr-publish-image.yml@90aa22bf1f55a39b4f10c4f7168356f0669eed77 # v1
+    uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/ecr-publish-image.yml@68d8f5aeccd47fa5baa1fe6c63269569b682e656 # v2
     permissions:
       contents: read
       id-token: write
+      security-events: write
     with:
+      java_version: *JAVA_VERSION
+      java_distribution: *JDK_DISTRIBUTION
       jar_subproject: 'data-claims-event-service'
       image_version: ${{ format('{0}-{1}', vars.LAA_DATA_CLAIMS_EVENT_SERVICE_IMAGE_PREFIX, needs.assemble.outputs.published_artifact_version) }}
       image_scan: false
@@ -58,3 +68,4 @@ jobs:
       ecr_repository: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_REPOSITORY }}
       ecr_region: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_REGION }}
       ecr_role_to_assume: ${{ secrets.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_ROLE_TO_ASSUME }}
+      snyk_token: ${{ secrets.SNYK_TOKEN }}
