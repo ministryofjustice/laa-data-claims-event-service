@@ -31,9 +31,9 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.service.FeeDetailsResponseW
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.ProviderDetailsService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
-import uk.gov.justice.laa.provider.model.FirmOfficeContractAndScheduleDetails;
-import uk.gov.justice.laa.provider.model.FirmOfficeContractAndScheduleLine;
-import uk.gov.justice.laa.provider.model.ProviderFirmOfficeContractAndScheduleDto;
+import uk.gov.justice.laadata.providers.model.FirmOfficeContractAndScheduleDetails;
+import uk.gov.justice.laadata.providers.model.FirmOfficeContractAndScheduleLine;
+import uk.gov.justice.laadata.providers.model.ProviderFirmOfficeContractAndScheduleDto;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Effective category of law claim validator test")
