@@ -49,8 +49,8 @@ jobs:
       contents: read
       security-events: write
     with:
-      java-version: '21'
-      distribution: 'corretto'
+      java-version: *JAVA_VERSION
+      distribution:  *JDK_DISTRIBUTION
     secrets:
       gh_token: ${{ secrets.GITHUB_TOKEN }}
 

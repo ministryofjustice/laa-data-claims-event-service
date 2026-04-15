@@ -71,10 +71,16 @@ jobs:
 
   snyk-auth:
     name: Obtain Short-lived token
-    uses: ministryofjustice/laa-reusable-github-actions/.github/actions/snyk-auth/action.yml@main
-    with:
-      client_id: ${{ secrets.SNYK_CLIENT_ID }}
-      client_secret: ${{ secrets.SNYK_CLIENT_SECRET }}
+    runs-on: ubuntu-latest
+    outputs:
+      token: ${{ steps.snyk_auth.outputs.token }}
+    steps:
+      - name: Obtain Short-lived token
+        id: snyk_auth
+        uses: ministryofjustice/laa-reusable-github-actions/.github/actions/snyk-auth/action.yml@main
+        with:
+          client_id: ${{ secrets.SNYK_CLIENT_ID }}
+          client_secret: ${{ secrets.SNYK_CLIENT_SECRET }}
 
   publish-image:
     needs:
