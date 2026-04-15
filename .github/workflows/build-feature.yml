@@ -81,16 +81,29 @@ jobs:
         with:
           client_id: ${{ secrets.SNYK_CLIENT_ID }}
           client_secret: ${{ secrets.SNYK_CLIENT_SECRET }}
-      - name: Debug, confirm action emitted token (masked)
+
+  snyk-verify:
+    needs: [snyk-auth]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify Snyk token via API (masked)
+        env:
+          TOKEN: ${{ needs.snyk-auth.outputs.token }}
         run: |
-          TOKEN='${{ steps.snyk_auth.outputs.token }}'
           if [ -z "$TOKEN" ]; then
             echo "SNYK token is EMPTY"
             exit 1
           fi
           echo "SNYK token length: ${#TOKEN}"
-          # print last 4 characters only
           echo "SNYK token suffix: ${TOKEN: -4}"
+          # Verify token by calling a Snyk API endpoint that requires auth.
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: token $TOKEN" https://snyk.io/api/v1/orgs)
+          echo "Snyk /orgs endpoint HTTP status: $HTTP_STATUS"
+          if [ "$HTTP_STATUS" -ne 200 ]; then
+            echo "Snyk token verification failed (HTTP $HTTP_STATUS). Token likely invalid or lacks permissions."
+            exit 1
+          fi
+          echo "Snyk token verified OK (HTTP 200)."
 
   publish-image:
     needs:
