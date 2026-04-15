@@ -69,83 +69,14 @@ jobs:
       pact_broker_username: ${{ secrets.PACT_BROKER_USERNAME }}
       pact_broker_password: ${{ secrets.PACT_BROKER_PASSWORD }}
 
-  snykauth:
-    name: Obtain Short-lived token
-    runs-on: ubuntu-latest
-    outputs:
-      token: ${{ steps.snyk_auth.outputs.token }}
-    steps:
-      - name: Obtain Short-lived token
-        id: snyk_auth
-        uses: ministryofjustice/laa-reusable-github-actions/.github/actions/snyk-auth@main
-        with:
-          client_id: ${{ secrets.SNYK_CLIENT_ID }}
-          client_secret: ${{ secrets.SNYK_CLIENT_SECRET }}
-      - name: Debug, show step output (masked)
-        run: |
-          TOK='${{ steps.snyk_auth.outputs.token }}'
-          if [ -z "$TOK" ]; then
-            echo "STEP-OUTPUT: token is EMPTY"
-          else
-            echo "STEP-OUTPUT: token length: ${#TOK}"
-            echo "STEP-OUTPUT: token suffix: ${TOK: -4}"
-          fi
-      - name: Publish job output (safe)
-        if: ${{ success() }}
-        run: |
-          # do not print the token; just set the job output so downstream jobs can read it
-          echo "token=${{ steps.snyk_auth.outputs.token }}" >> $GITHUB_OUTPUT
-
-  snyk-verify:
-    needs: [snykauth]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Debug, show available output keys and masked token suffix
-        env:
-          OUT_JSON: ${{ toJSON(needs.snykauth.outputs) }}
-        run: |
-          # print keys present under snykauth.outputs
-          echo "snykauth.outputs keys:"
-          echo "$OUT_JSON" | jq -r 'keys[]?' || echo "(none)"
-
-          # try common token keys, but do not print the token itself
-          TOK=$(echo "$OUT_JSON" | jq -r '.token // .snyk_token // .output_token // empty')
-          if [ -z "$TOK" ]; then
-            echo "snykauth.outputs contains no token key or token is empty"
-          else
-            echo "snykauth.outputs token length: ${#TOK}"
-            echo "snykauth.outputs token suffix: ${TOK: -4}"
-          fi
-
-      - name: Verify Snyk token via API (masked)
-        env:
-          TOKEN: ${{ needs.snykauth.outputs.token }}
-        run: |
-          if [ -z "$TOKEN" ]; then
-            echo "SNYK token is EMPTY"
-            exit 1
-          fi
-          echo "SNYK token length: ${#TOKEN}"
-          echo "SNYK token suffix: ${TOKEN: -4}"
-          # Verify token by calling a Snyk API endpoint that requires auth.
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: token $TOKEN" https://snyk.io/api/v1/orgs)
-          echo "Snyk /orgs endpoint HTTP status: $HTTP_STATUS"
-          if [ "$HTTP_STATUS" -ne 200 ]; then
-            echo "Snyk token verification failed (HTTP $HTTP_STATUS). Token likely invalid or lacks permissions."
-            exit 1
-          fi
-          echo "Snyk token verified OK (HTTP 200)."
-
   publish-image:
     needs:
-      - snykauth
       - pact-test
       - sca-scan
     uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/ecr-publish-image.yml@68d8f5aeccd47fa5baa1fe6c63269569b682e656 # v2
     permissions:
       contents: read
       id-token: write
-      security-events: write
     with:
       jar_subproject: 'data-claims-event-service'
       image_version: ${{ format('{0}-{1}', vars.LAA_DATA_CLAIMS_EVENT_SERVICE_IMAGE_PREFIX, needs.build.outputs.published_artifact_version) }}
@@ -157,4 +88,4 @@ jobs:
       ecr_repository: ""
       ecr_region: ""
       ecr_role_to_assume: ""
-      snyk_token: ${{ needs.snykauth.outputs.token }}
+      snyk_token: ${{ secrets.SNYK_TOKEN }}
