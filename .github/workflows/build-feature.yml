@@ -90,6 +90,11 @@ jobs:
             echo "STEP-OUTPUT: token length: ${#TOK}"
             echo "STEP-OUTPUT: token suffix: ${TOK: -4}"
           fi
+      - name: Publish job output (safe)
+        if: ${{ success() }}
+        run: |
+          # do not print the token; just set the job output so downstream jobs can read it
+          echo "token=${{ steps.snyk_auth.outputs.token }}" >> $GITHUB_OUTPUT
 
   snyk-verify:
     needs: [snykauth]
