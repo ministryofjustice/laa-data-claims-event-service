@@ -17,10 +17,6 @@ test {
     finalizedBy jacocoTestReport
 }
 
-repositories {
-    mavenCentral()
-}
-
 jacocoTestReport {
     afterEvaluate {
         classDirectories.setFrom(files(classDirectories.files.collect {

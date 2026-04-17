@@ -1,5 +1,6 @@
 pluginManagement {
     repositories {
+        mavenCentral()
         maven {
             name = "gitHubPackages"
             url = 'https://maven.pkg.github.com/ministryofjustice/laa-spring-boot-common'
