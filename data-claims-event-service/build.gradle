@@ -17,6 +17,10 @@ test {
     finalizedBy jacocoTestReport
 }
 
+repositories {
+    mavenCentral()
+}
+
 jacocoTestReport {
     afterEvaluate {
         classDirectories.setFrom(files(classDirectories.files.collect {
@@ -66,7 +70,7 @@ dependencies {
     implementation project(':reference-fee-scheme-platform-api')
 
     implementation 'uk.gov.justice.laa.datastewardship.payments:data-claims-api-models:1.0.41'
-    implementation 'uk.gov.justice.laadata.providers:providers-api:1.23.0'
+    implementation 'uk.gov.justice.laadata.providers:providers-api:1.40.1'
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-registry-prometheus'
