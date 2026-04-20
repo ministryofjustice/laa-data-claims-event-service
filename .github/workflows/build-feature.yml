@@ -32,7 +32,7 @@ jobs:
       checkstyle_report_path: 'data-claims-event-service/build/reports/checkstyle'
       jacoco_coverage_report_path: 'data-claims-event-service/build/reports/jacoco'
     secrets:
-      gh_token: ${{ github.token }}
+      gh_token: ${{ secrets.GITHUB_TOKEN }}
       aws_region: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_AWS_REGION }}
 
   sca-scan:
@@ -44,7 +44,7 @@ jobs:
       java_version: *JAVA_VERSION
       java_distribution: *JDK_DISTRIBUTION
     secrets:
-      gh_token: ${{ github.token }}
+      gh_token: ${{ secrets.GITHUB_TOKEN }}
 
   pact-test:
     uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/pact-and-publish.yml@dc4173bfc12f714d7e8cbdd9f524d00ef02e25c4 # v2
@@ -62,7 +62,7 @@ jobs:
       java_version: *JAVA_VERSION
       java_distribution: *JDK_DISTRIBUTION
     secrets:
-      gh_token: ${{ github.token }}
+      gh_token: ${{ secrets.GITHUB_TOKEN }}
       pact_broker_url: 'https://laa-data-pact-broker.apps.live.cloud-platform.service.justice.gov.uk/'
       pact_broker_username: ${{ secrets.PACT_BROKER_USERNAME }}
       pact_broker_password: ${{ secrets.PACT_BROKER_PASSWORD }}
@@ -84,7 +84,7 @@ jobs:
       java_version: *JAVA_VERSION
       java_distribution: *JDK_DISTRIBUTION
     secrets:
-      gh_token: ${{ github.token }}
+      gh_token: ${{ secrets.GITHUB_TOKEN }}
       ecr_repository: ""
       ecr_region: ""
       ecr_role_to_assume: ""
