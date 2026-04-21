@@ -12,14 +12,26 @@ on:
     branches-ignore:
       - main
 
-permissions:
-  contents: read
-
 env:
   JAVA_VERSION: &JAVA_VERSION '25'
   JDK_DISTRIBUTION: &JDK_DISTRIBUTION 'corretto'
 
 jobs:
+  get-token:
+    runs-on: ubuntu-latest
+    outputs:
+      token: ${{ steps.app-token.outputs.token }}
+    steps:
+      - name: Create GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3
+        with:
+          skip-token-revoke: 'true'
+          app-id: ${{ vars.LAA_CCMS_CAAB_SERVICE_APP_ID }}
+          private-key: ${{ secrets.LAA_CCMS_CAAB_SERVICE_KEY }}
+          owner: ministryofjustice
+          permission-actions: write
+
   build:
     uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/gradle-build-and-publish.yml@dc4173bfc12f714d7e8cbdd9f524d00ef02e25c4 # v2
     permissions:
@@ -36,7 +48,7 @@ jobs:
       checkstyle_report_path: 'data-claims-event-service/build/reports/checkstyle'
       jacoco_coverage_report_path: 'data-claims-event-service/build/reports/jacoco'
     secrets:
-      gh_token: ${{ secrets.GITHUB_TOKEN }}
+      gh_token: ${{ needs.get-token.outputs.token }}"
       aws_region: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_AWS_REGION }}
 
   sca-scan:
