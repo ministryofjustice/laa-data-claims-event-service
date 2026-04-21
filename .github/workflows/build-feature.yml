@@ -11,6 +11,10 @@ on:
   push:
     branches-ignore:
       - main
+
+permissions:
+  contents: read
+
 env:
   JAVA_VERSION: &JAVA_VERSION '25'
   JDK_DISTRIBUTION: &JDK_DISTRIBUTION 'corretto'
@@ -39,6 +43,7 @@ jobs:
     uses: ./.github/workflows/sca-analysis.yml
     permissions:
       contents: read
+      packages: read
       security-events: write
     with:
       java_version: *JAVA_VERSION
