@@ -40,20 +40,6 @@ jacocoTestCoverageVerification {
 repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()
-
-     def githubRepoConfig = { repoUrl ->
-        maven {
-            url = repoUrl
-            credentials {
-                username = System.getenv("GITHUB_ACTOR")?.trim() ?: project.findProperty('project.ext.gitPackageUser')
-                password = System.getenv("GITHUB_TOKEN")?.trim() ?: project.findProperty('project.ext.gitPackageKey')
-            }
-        }
-    }
-
-    // Configure repositories using the defined GitHub config
-    githubRepoConfig('https://maven.pkg.github.com/ministryofjustice/laa-data-provider-data')
-    githubRepoConfig('https://maven.pkg.github.com/ministryofjustice/laa-data-claims-api')
 }
 
 dependencyManagement {

@@ -31,12 +31,35 @@ jobs:
           private-key: ${{ secrets.LAA_CCMS_CAAB_SERVICE_KEY }}
           owner: ministryofjustice
           permission-actions: write
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Set up JDK 
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          java-version: *JAVA_VERSION
+          distribution: *JDK_DISTRIBUTION
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
+
+      - name: Gradle build
+        run: ./gradlew build
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+      
 
   build:
+    needs:
+        - get-token
     uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/gradle-build-and-publish.yml@dc4173bfc12f714d7e8cbdd9f524d00ef02e25c4 # v2
     permissions:
       contents: write
       packages: write
+    
     with:
       java_version: *JAVA_VERSION
       java_distribution: *JDK_DISTRIBUTION
