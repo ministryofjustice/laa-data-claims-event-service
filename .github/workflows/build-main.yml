@@ -35,11 +35,9 @@ jobs:
       checkstyle_report_path: 'data-claims-event-service/build/reports/checkstyle'
       jacoco_coverage_report_path: 'data-claims-event-service/build/reports/jacoco'
     secrets:
-      gh_token: ${{ secrets.GITHUB_TOKEN }}
+      # requires a pat due to accessing a private github repos packages (data-claims-api)
+      gh_token: ${{ secrets.PHILS_PAT_TOKEN }} 
       aws_region: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_AWS_REGION }}
-      github_app_id: ${{ vars.LAA_CCMS_CAAB_SERVICE_APP_ID }}
-      github_app_private_key: ${{ secrets.LAA_CCMS_CAAB_SERVICE_KEY }}
-      github_app_organisation: 'ministryofjustice'
 
   sca-scan:
     needs:
@@ -52,7 +50,8 @@ jobs:
       java_version: *JAVA_VERSION
       java_distribution:  *JDK_DISTRIBUTION
     secrets:
-      gh_token: ${{ secrets.GITHUB_TOKEN }}
+      # requires a pat due to accessing a private github repos packages (data-claims-api)
+      gh_token: ${{ secrets.PHILS_PAT_TOKEN }} 
 
   pact-test:
     needs: [ build ]
@@ -67,7 +66,8 @@ jobs:
       pact_test_task: "pactTest"
       publish_pact_results: true
     secrets:
-      gh_token: ${{ secrets.GITHUB_TOKEN }}
+      # requires a pat due to accessing a private github repos packages (data-claims-api)
+      gh_token: ${{ secrets.PHILS_PAT_TOKEN }} 
       pact_broker_url: 'https://laa-data-pact-broker.apps.live.cloud-platform.service.justice.gov.uk/'
       pact_broker_username: ${{ secrets.PACT_BROKER_USERNAME }}
       pact_broker_password: ${{ secrets.PACT_BROKER_PASSWORD }}

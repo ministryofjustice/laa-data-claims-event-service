@@ -17,49 +17,12 @@ env:
   JDK_DISTRIBUTION: &JDK_DISTRIBUTION 'corretto'
 
 jobs:
-  get-token:
-    runs-on: ubuntu-latest
-    outputs:
-      token: ${{ steps.app-token.outputs.token }}
-    steps:
-      - name: Create GitHub App token
-        id: app-token
-        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3
-        with:
-          skip-token-revoke: 'true'
-          app-id: ${{ vars.LAA_CCMS_CAAB_SERVICE_APP_ID }}
-          private-key: ${{ secrets.LAA_CCMS_CAAB_SERVICE_KEY }}
-          owner: ministryofjustice
-          permission-actions: write
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          token: ${{ steps.app-token.outputs.token }}
-
-      - name: Set up JDK 
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
-        with:
-          java-version: *JAVA_VERSION
-          distribution: *JDK_DISTRIBUTION
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
-
-      - name: Gradle build
-        run: ./gradlew build
-        env:
-          GITHUB_ACTOR: ${{ github.actor }}
-          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
-      
-
   build:
-    needs:
-        - get-token
     uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/gradle-build-and-publish.yml@dc4173bfc12f714d7e8cbdd9f524d00ef02e25c4 # v2
     permissions:
       contents: write
       packages: write
-    
+  
     with:
       java_version: *JAVA_VERSION
       java_distribution: *JDK_DISTRIBUTION
@@ -71,7 +34,8 @@ jobs:
       checkstyle_report_path: 'data-claims-event-service/build/reports/checkstyle'
       jacoco_coverage_report_path: 'data-claims-event-service/build/reports/jacoco'
     secrets:
-      gh_token: ${{ needs.get-token.outputs.token }}"
+      # requires a pat due to accessing a private github repos packages (data-claims-api)
+      gh_token: ${{ secrets.PHILS_PAT_TOKEN }}
       aws_region: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_AWS_REGION }}
 
   sca-scan:
@@ -84,7 +48,8 @@ jobs:
       java_version: *JAVA_VERSION
       java_distribution: *JDK_DISTRIBUTION
     secrets:
-      gh_token: ${{ secrets.GITHUB_TOKEN }}
+      # requires a pat due to accessing a private github repos packages (data-claims-api)
+      gh_token: ${{ secrets.PHILS_PAT_TOKEN }}
 
   pact-test:
     uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/pact-and-publish.yml@dc4173bfc12f714d7e8cbdd9f524d00ef02e25c4 # v2
@@ -102,7 +67,8 @@ jobs:
       java_version: *JAVA_VERSION
       java_distribution: *JDK_DISTRIBUTION
     secrets:
-      gh_token: ${{ secrets.GITHUB_TOKEN }}
+      # requires a pat due to accessing a private github repos packages (data-claims-api)
+      gh_token: ${{ secrets.PHILS_PAT_TOKEN }}
       pact_broker_url: 'https://laa-data-pact-broker.apps.live.cloud-platform.service.justice.gov.uk/'
       pact_broker_username: ${{ secrets.PACT_BROKER_USERNAME }}
       pact_broker_password: ${{ secrets.PACT_BROKER_PASSWORD }}
@@ -124,7 +90,8 @@ jobs:
       java_version: *JAVA_VERSION
       java_distribution: *JDK_DISTRIBUTION
     secrets:
-      gh_token: ${{ secrets.GITHUB_TOKEN }}
+      # requires a pat due to accessing a private github repos packages (data-claims-api)
+      gh_token: ${{ secrets.PHILS_PAT_TOKEN }} 
       ecr_repository: ""
       ecr_region: ""
       ecr_role_to_assume: ""
