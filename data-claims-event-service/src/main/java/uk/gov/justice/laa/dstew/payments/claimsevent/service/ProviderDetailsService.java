@@ -20,8 +20,8 @@ import reactor.core.publisher.Mono;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.model.ProviderDetailsCachedSchedules;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.model.ProviderDetailsCoverageWindow;
-import uk.gov.justice.laa.provider.model.FirmOfficeContractAndScheduleDetails;
-import uk.gov.justice.laa.provider.model.ProviderFirmOfficeContractAndScheduleDto;
+import uk.gov.justice.laadata.providers.model.FirmOfficeContractAndScheduleDetails;
+import uk.gov.justice.laadata.providers.model.ProviderFirmOfficeContractAndScheduleDto;
 
 /**
  * Service layer for ProviderDetailsRestClient, in order to apply the retry backoff.

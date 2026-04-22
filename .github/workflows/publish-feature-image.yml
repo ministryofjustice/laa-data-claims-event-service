@@ -48,7 +48,8 @@ jobs:
       checkstyle_report: 'false'
       jacoco_coverage_report: 'false'
     secrets:
-      gh_token: ${{ secrets.GITHUB_TOKEN }}
+      # requires a pat due to accessing a private github repos packages (data-claims-api)
+      gh_token: ${{ secrets.PHILS_PAT_TOKEN }} 
 
   ecr-publish-image:
     needs: [ assemble ]
@@ -64,7 +65,8 @@ jobs:
       image_version: ${{ format('{0}-{1}', vars.LAA_DATA_CLAIMS_EVENT_SERVICE_IMAGE_PREFIX, needs.assemble.outputs.published_artifact_version) }}
       image_scan: false
     secrets:
-      gh_token: ${{ secrets.GITHUB_TOKEN }}
+      # requires a pat due to accessing a private github repos packages (data-claims-api)
+      gh_token: ${{ secrets.PHILS_PAT_TOKEN }} 
       ecr_repository: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_REPOSITORY }}
       ecr_region: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_REGION }}
       ecr_role_to_assume: ${{ secrets.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_ROLE_TO_ASSUME }}

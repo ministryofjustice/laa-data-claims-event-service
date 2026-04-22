@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.service.annotation.GetExchange;
 import org.springframework.web.service.annotation.HttpExchange;
 import reactor.core.publisher.Mono;
-import uk.gov.justice.laa.provider.model.ProviderFirmOfficeContractAndScheduleDto;
+import uk.gov.justice.laadata.providers.model.ProviderFirmOfficeContractAndScheduleDto;
 
 /**
  * REST client interface for fetching provider office details and schedules. This interface

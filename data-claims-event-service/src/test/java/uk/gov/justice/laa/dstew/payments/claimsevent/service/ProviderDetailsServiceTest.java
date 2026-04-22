@@ -17,9 +17,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.ProviderDetailsRestClient;
-import uk.gov.justice.laa.provider.model.FirmOfficeContractAndScheduleDetails;
-import uk.gov.justice.laa.provider.model.ProviderFirmOfficeContractAndScheduleDto;
-import uk.gov.justice.laa.provider.model.ProviderFirmOfficeSummary;
+import uk.gov.justice.laadata.providers.model.FirmOfficeContractAndScheduleDetails;
+import uk.gov.justice.laadata.providers.model.ProviderFirmOfficeContractAndScheduleDto;
+import uk.gov.justice.laadata.providers.model.ProviderFirmOfficeSummary;
 
 @ExtendWith(MockitoExtension.class)
 class ProviderDetailsServiceTest {

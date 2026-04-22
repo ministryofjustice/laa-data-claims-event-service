@@ -7,7 +7,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import org.junit.jupiter.api.Test;
-import uk.gov.justice.laa.provider.model.ProviderFirmOfficeContractAndScheduleDto;
+import uk.gov.justice.laadata.providers.model.ProviderFirmOfficeContractAndScheduleDto;
 
 class ProviderDetailsCachedSchedulesTest {
 

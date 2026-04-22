@@ -23,9 +23,9 @@ import reactor.test.StepVerifier;
 import software.amazon.awssdk.http.HttpStatusCode;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MessageListenerBase;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MockServerIntegrationTest;
-import uk.gov.justice.laa.provider.model.FirmOfficeContractAndScheduleDetails;
-import uk.gov.justice.laa.provider.model.ProviderFirmOfficeContractAndScheduleDto;
-import uk.gov.justice.laa.provider.model.ProviderFirmOfficeSummary;
+import uk.gov.justice.laadata.providers.model.FirmOfficeContractAndScheduleDetails;
+import uk.gov.justice.laadata.providers.model.ProviderFirmOfficeContractAndScheduleDto;
+import uk.gov.justice.laadata.providers.model.ProviderFirmOfficeSummary;
 
 @ActiveProfiles("test")
 @ImportTestcontainers(MessageListenerBase.class)
