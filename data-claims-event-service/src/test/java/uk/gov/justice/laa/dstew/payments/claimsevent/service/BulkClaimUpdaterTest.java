@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 
 import java.util.*;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,7 +18,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.*;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.mapper.FeeCalculationPatchMapper;
-import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
+import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.MetricNames;
+import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.MetricPublisher;
+import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.MetricTimer;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationSource;
@@ -30,7 +33,7 @@ import uk.gov.justice.laa.fee.scheme.model.FeeDetailsResponseV2;
 class BulkClaimUpdaterTest {
 
   @Mock DataClaimsRestClient dataClaimsRestClient;
-  @Mock EventServiceMetricService mockEventServiceMetricService;
+  @Mock MetricPublisher mockEventServiceMetricService;
   @Mock FeeCalculationPatchMapper mockFeeCalculationPatchMapper;
   @Mock FeeCalculationService mockFeeCalculationService;
 
@@ -44,6 +47,15 @@ class BulkClaimUpdaterTest {
   private final UUID CLAIM_ID_ONE = new UUID(1, 1);
   private final UUID CLAIM_ID_TWO = new UUID(1, 2);
   private static final String FEE_CODE = "feeCode1";
+
+  @BeforeEach
+  void setUp() {
+    // timer() returns a MetricTimer (AutoCloseable) — stub leniently because some tests
+    // exercise code paths that never reach getFeeCalculationResponse (e.g. empty claim list,
+    // flagged-for-retry), so the stub would otherwise be flagged as unnecessary by Mockito.
+    MetricTimer noOpTimer = mock(MetricTimer.class);
+    lenient().when(mockEventServiceMetricService.timer(any(), any())).thenReturn(noOpTimer);
+  }
 
   @Test
   @DisplayName("Should not update any claims when no claims added")
@@ -63,12 +75,10 @@ class BulkClaimUpdaterTest {
     // Then
     verify(dataClaimsRestClient, never()).updateClaim(any(), any(), any());
     verify(mockFeeCalculationService, never()).calculateFee(any(), any(), any());
-    verify(mockEventServiceMetricService, never()).startFspValidationTimer(any());
-    verify(mockEventServiceMetricService, never()).stopFspValidationTimer(any());
+    verify(mockEventServiceMetricService, never()).timer(any(), any());
     verify(mockFeeCalculationPatchMapper, never()).mapToFeeCalculationPatch(any(), any(), any());
   }
 
-  @Test
   @DisplayName("Should update one claim to valid when no errors")
   void shouldUpdateOneClaimToValidWhenNoErrors() {
     // Given
@@ -101,8 +111,8 @@ class BulkClaimUpdaterTest {
         context,
         feeDetailsResponseWrapperHashMap);
     // Then
-    verify(mockEventServiceMetricService).startFspValidationTimer(claimIdCaptor.capture());
-    verify(mockEventServiceMetricService).stopFspValidationTimer(claimIdCaptor.capture());
+    verify(mockEventServiceMetricService)
+        .timer(eq(MetricNames.FSP_VALIDATION_TIME), claimIdCaptor.capture());
     verify(mockFeeCalculationService)
         .calculateFee(eq(claimResponse), eq(context), eq(AreaOfLaw.LEGAL_HELP));
     verify(dataClaimsRestClient, times(1))
@@ -138,8 +148,8 @@ class BulkClaimUpdaterTest {
         context,
         feeDetailsResponseWrapperHashMap);
     // Then
-    verify(mockEventServiceMetricService).startFspValidationTimer(claimIdCaptor.capture());
-    verify(mockEventServiceMetricService).stopFspValidationTimer(claimIdCaptor.capture());
+    verify(mockEventServiceMetricService)
+        .timer(eq(MetricNames.FSP_VALIDATION_TIME), claimIdCaptor.capture());
     verify(mockFeeCalculationService)
         .calculateFee(eq(claimResponse), eq(context), eq(AreaOfLaw.LEGAL_HELP));
     verify(dataClaimsRestClient, times(1))
@@ -186,12 +196,10 @@ class BulkClaimUpdaterTest {
         context,
         feeDetailsResponseWrapperHashMap);
     // Then
-
     verify(dataClaimsRestClient, times(2)).updateClaim(any(), any(), any());
     verify(mockFeeCalculationService, times(2)).calculateFee(any(), any(), any());
+    verify(mockEventServiceMetricService, times(2)).timer(any(), any());
     verify(mockFeeCalculationPatchMapper, times(2)).mapToFeeCalculationPatch(any(), any(), any());
-    verify(mockEventServiceMetricService, times(2)).startFspValidationTimer(any());
-    verify(mockEventServiceMetricService, times(2)).stopFspValidationTimer(any());
   }
 
   @Test
@@ -302,7 +310,6 @@ class BulkClaimUpdaterTest {
   @DisplayName("Should not update claim to invalid when the claim is flagged for retry")
   void shouldNotUpdateClaimToInvalidWhenTheClaimIsFlaggedForRetry() {
     // Given
-
     var claimResponse = buildClaimResponse(CLAIM_ID_ONE);
     var feeDetailsResponseWrapperHashMap = buildFeeDetailsResponseWrapperHashMap();
     var context = new SubmissionValidationContext();
@@ -317,12 +324,9 @@ class BulkClaimUpdaterTest {
         context,
         feeDetailsResponseWrapperHashMap);
     // Then
-
-    // Should skip INVALID claim so only claim two exists
     verify(dataClaimsRestClient, never()).updateClaim(any(), any(), any());
     verify(mockFeeCalculationService, never()).calculateFee(any(), any(), any());
-    verify(mockEventServiceMetricService, never()).startFspValidationTimer(any());
-    verify(mockEventServiceMetricService, never()).stopFspValidationTimer(any());
+    verify(mockEventServiceMetricService, never()).timer(any(), any());
     verify(mockFeeCalculationPatchMapper, never()).mapToFeeCalculationPatch(any(), any(), any());
   }
 
