@@ -1026,7 +1026,9 @@
     },
     "created_by_user_id": {
       "type": "string"
-    }
+    },
+    "has_assessment": {},
+    "version": {}
   },
   "additionalProperties": false,
   "required": [
