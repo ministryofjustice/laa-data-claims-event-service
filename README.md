@@ -143,3 +143,9 @@ By default, the application outputs logs in ECS JSON format with distributed tra
 `./gradlew bootRun`
 
 `./gradlew bootRun --args='--spring.profiles.active=wiremock'`
+
+### Attach debugger to remote JVM
+When running the application in docker, you can attach a debugger to the remote JVM by creating
+a new run configuration in IntelliJ IDEA. The port the JVM is exposed on is 5081.
+
+![RemoteJVMEventServiceConfiguration.png](docs/RemoteJVMEventServiceConfiguration.png)
