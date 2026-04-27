@@ -72,17 +72,17 @@ jobs:
       - build
       - pact-test
       - sca-scan
-    uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/ecr-publish-image.yml@68d8f5aeccd47fa5baa1fe6c63269569b682e656 # v2
+    uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/ecr-publish-image.yml@dc4173bfc12f714d7e8cbdd9f524d00ef02e25c4 # v2
     permissions:
       contents: read
       id-token: write
       security-events: write
     with:
+      java_version: *JAVA_VERSION
+      java_distribution: *JDK_DISTRIBUTION
       jar_subproject: 'data-claims-event-service'
       image_version: ${{ format('{0}-{1}', vars.LAA_DATA_CLAIMS_EVENT_SERVICE_IMAGE_PREFIX, needs.build.outputs.published_artifact_version) }}
       publish: false
-      java_version: *JAVA_VERSION
-      java_distribution: *JDK_DISTRIBUTION
     secrets:
       gh_token: ${{ secrets.GITHUB_TOKEN }}
       ecr_repository: ""

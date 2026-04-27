@@ -79,6 +79,65 @@ export AWS_REGION=us-east-1
 export BULK_CLAIM_QUEUE_NAME=claims-api-queue
 ```
 
+
+## Logging Configuration
+
+This application uses ECS (Elastic Common Schema) structured logging for production environments and console logging for local development.
+For local development logging use: ```./gradlew bootRun --args='--spring.profiles.active=wiremock'```
+and add the following to your application-local.yaml
+
+###  Structured Logging (Default/Production)
+By default, the application outputs logs in ECS JSON format with distributed tracing support:
+```
+{
+    "@timestamp":"2026-04-10T16:00:49.135055091Z",
+    "log":
+        {
+            "level":"INFO",
+            "logger":"uk.gov.laa.springboot.auth.ApiAuthenticationFilter"
+        },
+    "process":
+        {
+            "pid":1,
+            "thread":{"name":"http-nio-8080-exec-10"}
+        },
+    "service":
+        {
+            "name":"LAA Data Stewardship Payments - Claims Data Application",
+            "version":"1.0.33-SNAPSHOT",
+            "environment":"default",
+            "node":{"name":"02e3a9903fa1"}
+        },
+    "message":"Endpoint 'GET /api/v1/submissions/019d781f-b75e-7ce5-a91f-a5f5a8970f14/claims/019d781f-ba19-7d68-82c0-66c1d69e357c' requested by test-runner.",
+    "traceId":"69d91eb1dfc02bcf7eacafafe2b18563",
+    "spanId":"d9a679919ac18e0e",
+    "ecs":{"version":"8.11"}
+    }
+    
+{
+    "@timestamp":"2026-04-10T16:18:15.084580589Z",
+    "log":{
+        "level":"INFO",
+        "logger":"uk.gov.justice.laa.dstew.payments.claimsevent.DataClaimsEventServiceApplication"
+    },
+    "process":
+        {
+            "pid":1,
+            "thread":{"name":"main"}
+        },
+    "service":
+        {
+            "name":"laa-data-claims-event-service",
+            "version":"0.0.155-SNAPSHOT",
+            "environment":"default",
+            "node":{"name":"18950db45db5"}
+        },
+    "message":"Started DataClaimsEventServiceApplication in 4.656 seconds (process running for 5.421)",
+    "tags":["COMMONS-LOGGING"],
+    "ecs":{"version":"8.11"}
+}
+````
+
 ### Run application
 
 `./gradlew bootRun`
