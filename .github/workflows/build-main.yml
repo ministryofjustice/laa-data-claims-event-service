@@ -55,7 +55,7 @@ jobs:
 
   pact-test:
     needs: [ build ]
-    uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/pact-and-publish.yml@dc4173bfc12f714d7e8cbdd9f524d00ef02e25c4 # v2
+    uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/pact-and-publish.yml@6b613e3dea1d758d69e788826f56e832aa0d8026 # v2
     permissions:
       contents: write
       packages: write
@@ -66,8 +66,8 @@ jobs:
       java_version: *JAVA_VERSION
       java_distribution: *JDK_DISTRIBUTION
     secrets:
-      # requires a pat due to accessing a private github repos packages (providers-api)
-      gh_token: ${{ secrets.PHILS_PAT_TOKEN }} 
+      gh_token: ${{ secrets.GITHUB_TOKEN }}
+      gh_pat_token: ${{ secrets.PHILS_PAT_TOKEN }}
       pact_broker_url: 'https://laa-data-pact-broker.apps.live.cloud-platform.service.justice.gov.uk/'
       pact_broker_username: ${{ secrets.PACT_BROKER_USERNAME }}
       pact_broker_password: ${{ secrets.PACT_BROKER_PASSWORD }}
