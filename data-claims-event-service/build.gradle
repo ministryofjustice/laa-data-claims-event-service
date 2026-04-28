@@ -1,6 +1,7 @@
 plugins {
     id 'io.freefair.lombok' version '9.2.0'
     id("com.diffplug.spotless") version "7.2.1"
+    id 'uk.gov.laa.springboot.laa-spring-boot-gradle-plugin' version '2.2.6'
     id "io.sentry.jvm.gradle" version "5.12.2"
     id 'au.com.dius.pact' version '4.6.19'
 }
@@ -10,8 +11,6 @@ def versions = [
         testcontainers : '1.20.1',
         jackson : '2.21.2'
 ]
-
-apply plugin: 'uk.gov.laa.springboot.laa-spring-boot-gradle-plugin'
 
 test {
     useJUnitPlatform()
@@ -35,11 +34,6 @@ jacocoTestCoverageVerification {
                                         '**/controller/**','**/service/TempService.class'])
         }))
     }
-}
-
-repositories {
-    // Use Maven Central for resolving dependencies.
-    mavenCentral()
 }
 
 dependencyManagement {
@@ -69,10 +63,10 @@ dependencies {
     implementation 'ch.qos.logback:logback-core:1.5.25'
     implementation 'ch.qos.logback:logback-classic:1.5.25'
 
+    implementation project(':reference-provider-details-api')
     implementation project(':reference-fee-scheme-platform-api')
 
-    implementation 'uk.gov.justice.laa.datastewardship.payments:data-claims-api-models:1.0.41'
-    implementation 'uk.gov.justice.laadata.providers:providers-api:1.40.1'
+    implementation 'uk.gov.justice.laa.datastewardship.payments:data-claims-api-models:1.0.39'
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-registry-prometheus'
