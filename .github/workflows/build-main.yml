@@ -36,7 +36,7 @@ jobs:
       java_distribution: *JDK_DISTRIBUTION
     secrets:
       # requires a pat due to accessing a private github repos packages (providers-api)
-      gh_token: ${{ secrets.PHILS_PAT_TOKEN }} 
+      gh_token: ${{ secrets.PHILS_PAT_TOKEN }}
       aws_region: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_AWS_REGION }}
 
   sca-scan:
@@ -67,7 +67,7 @@ jobs:
       java_distribution: *JDK_DISTRIBUTION
     secrets:
       # requires a pat due to accessing a private github repos packages (providers-api)
-      gh_token: ${{ secrets.PHILS_PAT_TOKEN }} 
+      gh_token: ${{ secrets.PHILS_PAT_TOKEN }}
       pact_broker_url: 'https://laa-data-pact-broker.apps.live.cloud-platform.service.justice.gov.uk/'
       pact_broker_username: ${{ secrets.PACT_BROKER_USERNAME }}
       pact_broker_password: ${{ secrets.PACT_BROKER_PASSWORD }}
