@@ -42,6 +42,9 @@ repositories {
     mavenCentral()
 }
 
+// Upgrade to fix HTTP Request Smuggling (SNYK-JAVA-IONETTY-16425695)
+ext['netty.version'] = '4.2.13.Final'
+
 dependencyManagement {
     imports {
         // Upgrade to fix vulnerabilities in netty
