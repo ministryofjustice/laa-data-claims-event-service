@@ -33,6 +33,7 @@ services:
       - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
     depends_on:
       - localstack
+
   localstack:
     container_name: event-service-localstack
     image: localstack/localstack:4.14.0
