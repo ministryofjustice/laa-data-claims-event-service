@@ -31,9 +31,10 @@ services:
       - SPRING_CLOUD_AWS_CREDENTIALS_ACCESS-KEY=dummy-access-key
       - SPRING_CLOUD_AWS_CREDENTIALS_SECRET-KEY=dummy-access-key
       - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
-
+    depends_on:
+      - localstack
   localstack:
-    container_name: event-service-localstack
+    # container_name: event-service-localstack
     image: localstack/localstack:4.14.0
     ports:
       - "4566:4566"
