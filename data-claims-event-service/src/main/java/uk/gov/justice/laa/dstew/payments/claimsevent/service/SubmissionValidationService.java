@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+import uk.gov.justice.laa.dstew.payments.claims.validation.core.model.ValidationResult;
+import uk.gov.justice.laa.dstew.payments.claims.validation.core.service.ValidationService;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionErrorCode;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionStatus;
@@ -31,6 +33,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.submission.Submi
 @AllArgsConstructor
 public class SubmissionValidationService {
 
+  private final ValidationService validationService;
   private final ClaimValidationService claimValidationService;
   private final BulkClaimUpdater bulkClaimUpdater;
   private final DataClaimsRestClient dataClaimsRestClient;
@@ -57,6 +60,15 @@ public class SubmissionValidationService {
     submissionValidatorList.stream()
         .sorted(Comparator.comparingInt(SubmissionValidator::priority))
         .forEach(validator -> validator.validate(submission, context));
+
+    // run 1
+    System.out.println("-----------------------");
+    System.out.println("Submission level validation start:");
+    ValidationResult validationResult = validationService.validateSubmission(submission);
+    System.out.println(validationResult.toString());
+    validationResult.getIssues().forEach(System.out::println);
+    System.out.println("Submission level validation end:");
+    System.out.println("-----------------------");
 
     // Only validate claims if no submission level validation errors have been recorded.
     if (!context.hasSubmissionLevelErrors()) {

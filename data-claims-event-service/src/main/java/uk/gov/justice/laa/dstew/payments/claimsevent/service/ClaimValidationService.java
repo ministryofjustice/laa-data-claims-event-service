@@ -1,16 +1,25 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
+import uk.gov.justice.laa.dstew.payments.claims.validation.core.model.Claim;
+import uk.gov.justice.laa.dstew.payments.claims.validation.core.model.ValidationIssue;
+import uk.gov.justice.laa.dstew.payments.claims.validation.core.model.ValidationResult;
+import uk.gov.justice.laa.dstew.payments.claims.validation.core.service.ValidationService;
+import uk.gov.justice.laa.dstew.payments.claims.validation.core.util.ClaimMapper;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResultSet;
@@ -40,6 +49,9 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.MandatoryF
 @Service
 public class ClaimValidationService {
 
+  private static final String SCHEMA_CONFIG_WARNING_CODE = "SCHEMA_CONFIG_WARNING";
+
+  private final ValidationService validationService;
   private final CategoryOfLawValidationService categoryOfLawValidationService;
   private final DataClaimsRestClient dataClaimsRestClient;
   private final EventServiceMetricService eventServiceMetricService;
@@ -58,6 +70,7 @@ public class ClaimValidationService {
    * @param claimValidationBatchSize The batch size of claims to validate at once
    */
   public ClaimValidationService(
+      ValidationService validationService,
       CategoryOfLawValidationService categoryOfLawValidationService,
       DataClaimsRestClient dataClaimsRestClient,
       EventServiceMetricService eventServiceMetricService,
@@ -70,6 +83,7 @@ public class ClaimValidationService {
     this.bulkClaimUpdater = bulkClaimUpdater;
     this.claimValidator = claimValidator;
     this.claimValidationBatchSize = claimValidationBatchSize;
+    this.validationService = validationService;
   }
 
   /**
@@ -129,6 +143,10 @@ public class ClaimValidationService {
             submission.getAreaOfLaw(),
             submission.getOfficeAccountNumber(),
             context);
+
+        // Map and validate claim using a dedicated helper method (keeps mapping logic isolated)
+        ValidationResult validationResult =
+            claimsValidatorValidateClaim(claim, submission, context, finalSubmissionClaims);
       }
 
       // Increment page number
@@ -273,5 +291,215 @@ public class ClaimValidationService {
     if (messages.stream().anyMatch(x -> x.getType().equals(ValidationMessageType.WARNING))) {
       eventServiceMetricService.incrementTotalClaimsValidatedAndWarningsFound();
     }
+  }
+
+  /**
+   * Map a ClaimResponse to the internal validation Claim model and run the validation service.
+   *
+   * <p>Submission-level fields (areaOfLaw and officeAccountNumber) are set here because they are
+   * not available on the ClaimResponse itself.
+   */
+  private ValidationResult claimsValidatorValidateClaim(
+      ClaimResponse claimResponse,
+      SubmissionResponse submission,
+      SubmissionValidationContext context,
+      List<ClaimResponse> finalSubmissionClaims) {
+
+    log.info("Claim level validation start: claimId={}", claimResponse.getId());
+
+    // Map ClaimResponse -> validation-core Claim before calling validation service
+    Claim mappedClaim = ClaimMapper.fromClaimResponse(claimResponse);
+
+    // populate submission-level context fields the mapper cannot infer
+    mappedClaim.setAreaOfLaw(submission.getAreaOfLaw());
+    mappedClaim.setOfficeAccountNumber(submission.getOfficeAccountNumber());
+
+    List<Claim> relatedClaims =
+        finalSubmissionClaims.stream().map(ClaimMapper::fromClaimResponse).toList();
+
+    // V1 Claim Validation
+    ValidationResult validationResult =
+        validationService.validateClaim(mappedClaim, null, relatedClaims);
+
+    if (validationResult == null) {
+      log.warn("Validation service returned null for claim {}", claimResponse.getId());
+      return null;
+    }
+
+    // === REGRESSION DETECTION: Compare new validator results with old validator ===
+    compareValidationResults(claimResponse.getId(), validationResult.getIssues(), context);
+
+    log.info("Claim level validation end: claimId={}", claimResponse.getId());
+
+    return validationResult;
+  }
+
+  /**
+   * Compare new validation issues against existing validation report to detect regressions.
+   *
+   * @param claimId the claim ID
+   * @param newIssues issues from the new validator (from ValidationResult.getIssues())
+   * @param context the submission validation context containing the old validator's report
+   */
+  private void compareValidationResults(
+      String claimId, List<ValidationIssue> newIssues, SubmissionValidationContext context) {
+
+    // This warning is expected during migration while schema coverage is being expanded.
+    List<ValidationIssue> unmatchedNewIssues =
+        Optional.ofNullable(newIssues).orElseGet(List::of).stream()
+            .filter(
+                issue ->
+                    issue != null
+                        && !SCHEMA_CONFIG_WARNING_CODE.equalsIgnoreCase(
+                            normaliseText(issue.getCode())))
+            .collect(Collectors.toCollection(ArrayList::new));
+
+    List<ValidationMessagePatch> unmatchedExistingMessages =
+        context
+            .getClaimReport(claimId)
+            .map(ClaimValidationReport::getMessages)
+            .filter(Objects::nonNull)
+            .map(ArrayList::new)
+            .orElseGet(ArrayList::new);
+
+    if (unmatchedExistingMessages.isEmpty() && unmatchedNewIssues.isEmpty()) {
+      log.debug("Claim {} validators matched: both produced no issues", claimId);
+      return;
+    }
+
+    removeExactMatches(unmatchedNewIssues, unmatchedExistingMessages);
+
+    if (unmatchedExistingMessages.isEmpty() && unmatchedNewIssues.isEmpty()) {
+      log.debug("Claim {} validators matched exactly", claimId);
+      return;
+    }
+
+    Iterator<ValidationIssue> newIssueIterator = unmatchedNewIssues.iterator();
+    while (newIssueIterator.hasNext()) {
+      ValidationIssue newIssue = newIssueIterator.next();
+      ValidationMessagePatch likelyExistingMessage =
+          findLikelyMatchingExistingMessage(newIssue, unmatchedExistingMessages);
+
+      if (likelyExistingMessage == null) {
+        continue;
+      }
+
+      logMismatchDetails(claimId, newIssue, likelyExistingMessage);
+      unmatchedExistingMessages.remove(likelyExistingMessage);
+      newIssueIterator.remove();
+    }
+
+    unmatchedNewIssues.forEach(
+        issue ->
+            log.warn("Claim {} issue only in new validator: {}", claimId, describeNewIssue(issue)));
+
+    unmatchedExistingMessages.forEach(
+        message ->
+            log.warn(
+                "Claim {} issue only in existing validator: {}",
+                claimId,
+                describeExistingMessage(message)));
+  }
+
+  private void removeExactMatches(
+      List<ValidationIssue> newIssues, List<ValidationMessagePatch> existingMessages) {
+    Iterator<ValidationIssue> newIssueIterator = newIssues.iterator();
+    while (newIssueIterator.hasNext()) {
+      ValidationIssue newIssue = newIssueIterator.next();
+      ValidationMessagePatch exactExistingMessage =
+          findExactMatchingExistingMessage(newIssue, existingMessages);
+
+      if (exactExistingMessage == null) {
+        continue;
+      }
+
+      existingMessages.remove(exactExistingMessage);
+      newIssueIterator.remove();
+    }
+  }
+
+  private ValidationMessagePatch findExactMatchingExistingMessage(
+      ValidationIssue newIssue, List<ValidationMessagePatch> existingMessages) {
+    return existingMessages.stream()
+        .filter(
+            existingMessage ->
+                sameText(newIssue.getMessage(), existingMessage.getDisplayMessage())
+                    && sameText(
+                        newIssue.getTechnicalMessage(), existingMessage.getTechnicalMessage())
+                    && Objects.equals(
+                        normaliseSeverity(newIssue), normaliseMessageType(existingMessage)))
+        .findFirst()
+        .orElse(null);
+  }
+
+  private ValidationMessagePatch findLikelyMatchingExistingMessage(
+      ValidationIssue newIssue, List<ValidationMessagePatch> existingMessages) {
+    return existingMessages.stream()
+        .filter(
+            existingMessage ->
+                sameText(newIssue.getMessage(), existingMessage.getDisplayMessage())
+                    || sameText(
+                        newIssue.getTechnicalMessage(), existingMessage.getTechnicalMessage()))
+        .findFirst()
+        .orElse(null);
+  }
+
+  private void logMismatchDetails(
+      String claimId, ValidationIssue newIssue, ValidationMessagePatch existingMessage) {
+    List<String> differences = new ArrayList<>();
+
+    if (!sameText(newIssue.getMessage(), existingMessage.getDisplayMessage())) {
+      differences.add("message");
+    }
+
+    if (!sameText(newIssue.getTechnicalMessage(), existingMessage.getTechnicalMessage())) {
+      differences.add("technicalMessage");
+    }
+
+    if (!Objects.equals(normaliseSeverity(newIssue), normaliseMessageType(existingMessage))) {
+      differences.add("severity/type");
+    }
+
+    log.warn(
+        "Claim {} validator mismatch for likely matching issue. Differences in {}. New=[{}], Existing=[{}]",
+        claimId,
+        String.join(", ", differences),
+        describeNewIssue(newIssue),
+        describeExistingMessage(existingMessage));
+  }
+
+  private boolean sameText(String left, String right) {
+    return Objects.equals(normaliseText(left), normaliseText(right));
+  }
+
+  private String normaliseText(String value) {
+    if (!StringUtils.hasText(value)) {
+      return null;
+    }
+
+    return value.trim().replaceAll("\\s+", " ");
+  }
+
+  private String normaliseSeverity(ValidationIssue issue) {
+    return issue.getSeverity() == null ? null : issue.getSeverity().name();
+  }
+
+  private String normaliseMessageType(ValidationMessagePatch message) {
+    return message.getType() == null ? null : message.getType().name();
+  }
+
+  private String describeNewIssue(ValidationIssue issue) {
+    return String.format(
+        "code=%s, severity=%s, message=%s, technicalMessage=%s",
+        issue.getCode(), issue.getSeverity(), issue.getMessage(), issue.getTechnicalMessage());
+  }
+
+  private String describeExistingMessage(ValidationMessagePatch message) {
+    return String.format(
+        "source=%s, type=%s, displayMessage=%s, technicalMessage=%s",
+        message.getSource(),
+        message.getType(),
+        message.getDisplayMessage(),
+        message.getTechnicalMessage());
   }
 }

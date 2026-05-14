@@ -14,7 +14,6 @@ import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.YearMonth;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
@@ -46,6 +45,9 @@ import org.testcontainers.containers.MockServerContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 import software.amazon.awssdk.http.HttpStatusCode;
+import uk.gov.justice.laa.dstew.payments.claims.validation.core.config.DataClaimsApiConfig;
+import uk.gov.justice.laa.dstew.payments.claims.validation.core.config.FeeSchemeApiConfig;
+import uk.gov.justice.laa.dstew.payments.claims.validation.core.config.ProviderDetailsApiConfig;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.ApiProperties;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.DataClaimsApiProperties;
@@ -63,7 +65,7 @@ public abstract class MockServerIntegrationTest {
   private static final String DATA_CLAIMS_API_PATH = API_VERSION_1 + "claims";
   private static final String PROVIDER_OFFICES = API_VERSION_1 + "provider-offices/";
   private static final String SCHEDULES_ENDPOINT = "/schedules";
-  private static final String FEE_DETAILS = API_VERSION_2 + "fee-details/";
+  private static final String FEE_DETAILS = API_VERSION_2 + "'fee-details/'";
   private static final String FEE_CALCULATION = API_VERSION_1 + "fee-calculation";
   private static final String CLAIMS_ENDPOINT = "/claims/";
 
@@ -80,7 +82,7 @@ public abstract class MockServerIntegrationTest {
   protected ObjectMapper objectMapper = new ObjectMapper();
 
   private static MockServerContainer createContainer() {
-    List<String> portBinding = Arrays.asList("30000:1080");
+    List<String> portBinding = List.of("30000:1080");
     MockServerContainer container =
         new MockServerContainer(MOCKSERVER_IMAGE)
             .waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofSeconds(30)));
@@ -179,6 +181,17 @@ public abstract class MockServerIntegrationTest {
             HttpRequest.request()
                 .withMethod(HttpMethod.GET.toString())
                 .withPath(FEE_DETAILS + feeCode))
+        .respond(
+            HttpResponse.response()
+                .withStatusCode(HttpStatusCode.OK)
+                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
+                .withBody(readJsonFromFile(expectedResponse)));
+    // TODO: remove when fixed
+    mockServerClient
+        .when(
+            HttpRequest.request()
+                .withMethod(HttpMethod.GET.toString())
+                .withPath("/api/v1/fee-details/" + feeCode))
         .respond(
             HttpResponse.response()
                 .withStatusCode(HttpStatusCode.OK)
@@ -420,5 +433,44 @@ public abstract class MockServerIntegrationTest {
         }
       };
     }
+
+    @Bean
+    @Primary
+    public DataClaimsApiConfig coreDataClaimsApiConfig() {
+      DataClaimsApiConfig cfg = new DataClaimsApiConfig();
+      cfg.setUrl("http://localhost:30000");
+      cfg.setAccessToken("");
+      return cfg;
+    }
+
+    @Bean
+    @Primary
+    public FeeSchemeApiConfig coreFeeSchemeApiConfig() {
+      FeeSchemeApiConfig cfg = new FeeSchemeApiConfig();
+      cfg.setUrl("http://localhost:30000");
+      cfg.setAccessToken("");
+      return cfg;
+    }
+
+    @Bean
+    @Primary
+    public ProviderDetailsApiConfig coreProviderDetailsApiConfig() {
+      ProviderDetailsApiConfig cfg = new ProviderDetailsApiConfig();
+      cfg.setUrl("http://localhost:30000");
+      cfg.setAccessToken("");
+      return cfg;
+    }
+
+    // @Bean
+    // @Primary
+    // public ClaimValidation coreClaimValidation() {
+    //  return new ClaimValidation(Collections.emptyList());
+    // }
+
+    // @Bean
+    // @Primary
+    // public SubmissionValidation coreSubmissionValidation() {
+    //  return new SubmissionValidation(Collections.emptyList());
+    // }
   }
 }
