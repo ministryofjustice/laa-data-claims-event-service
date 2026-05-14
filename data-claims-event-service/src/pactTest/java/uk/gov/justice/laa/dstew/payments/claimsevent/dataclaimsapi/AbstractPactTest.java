@@ -29,11 +29,15 @@ abstract class AbstractPactTest {
   }
 
   protected static final List<String> USER_OFFICES = List.of("ABC123", "XYZ789");
-  protected static final UUID BULK_SUBMISSION_ID = UUID.randomUUID();
-  protected static final UUID SUBMISSION_ID = UUID.randomUUID();
-  protected static final UUID CLAIM_ID = UUID.randomUUID();
-  protected static final UUID CLAIM_SUMMARY_FEE_ID = UUID.randomUUID();
-  protected static final UUID MATTER_START_ID = UUID.randomUUID();
+  protected static final UUID BULK_SUBMISSION_ID =
+      UUID.fromString("00000000-0000-0000-0000-000000000001");
+  protected static final UUID SUBMISSION_ID =
+      UUID.fromString("00000000-0000-0000-0000-000000000002");
+  protected static final UUID CLAIM_ID = UUID.fromString("00000000-0000-0000-0000-000000000003");
+  protected static final UUID CLAIM_SUMMARY_FEE_ID =
+      UUID.fromString("00000000-0000-0000-0000-000000000004");
+  protected static final UUID MATTER_START_ID =
+      UUID.fromString("00000000-0000-0000-0000-000000000005");
 
   protected final ObjectMapper objectMapper = new ObjectMapper();
 

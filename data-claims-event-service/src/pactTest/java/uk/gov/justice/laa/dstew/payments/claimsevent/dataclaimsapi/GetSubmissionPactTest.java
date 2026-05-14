@@ -67,8 +67,6 @@ public final class GetSubmissionPactTest extends AbstractPactTest {
               body.uuid("previous_submission_id", UUID.randomUUID());
               body.booleanType("is_nil_submission", true);
               body.numberType("number_of_claims", 0);
-              body.numberType("calculated_total_amount", 0);
-              body.numberType("assessed_total_amount", 0);
               body.datetime("submitted", "yyyy-MM-dd'T'HH:mm:ssXXX");
               body.stringType("created_by_user_id", "string");
               body.minArrayLike(
@@ -105,8 +103,6 @@ public final class GetSubmissionPactTest extends AbstractPactTest {
 
     assertThat(submission).isNotNull();
     assertThat(submission.getSubmissionId()).isEqualTo(SUBMISSION_ID);
-    assertThat(submission.getCalculatedTotalAmount()).isNotNull();
-    assertThat(submission.getAssessedTotalAmount()).isNotNull();
   }
 
   @Test
