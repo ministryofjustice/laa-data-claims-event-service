@@ -65,7 +65,7 @@ public abstract class MockServerIntegrationTest {
   private static final String DATA_CLAIMS_API_PATH = API_VERSION_1 + "claims";
   private static final String PROVIDER_OFFICES = API_VERSION_1 + "provider-offices/";
   private static final String SCHEDULES_ENDPOINT = "/schedules";
-  private static final String FEE_DETAILS = API_VERSION_2 + "'fee-details/'";
+  private static final String FEE_DETAILS = API_VERSION_2 + "fee-details/";
   private static final String FEE_CALCULATION = API_VERSION_1 + "fee-calculation";
   private static final String CLAIMS_ENDPOINT = "/claims/";
 
