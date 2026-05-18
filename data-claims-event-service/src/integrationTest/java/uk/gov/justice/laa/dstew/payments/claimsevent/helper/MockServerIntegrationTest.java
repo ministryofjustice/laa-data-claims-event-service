@@ -186,17 +186,6 @@ public abstract class MockServerIntegrationTest {
                 .withStatusCode(HttpStatusCode.OK)
                 .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
                 .withBody(readJsonFromFile(expectedResponse)));
-    // TODO: remove when fixed
-    mockServerClient
-        .when(
-            HttpRequest.request()
-                .withMethod(HttpMethod.GET.toString())
-                .withPath("/api/v1/fee-details/" + feeCode))
-        .respond(
-            HttpResponse.response()
-                .withStatusCode(HttpStatusCode.OK)
-                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
-                .withBody(readJsonFromFile(expectedResponse)));
   }
 
   protected void stubForGetProviderOffice(

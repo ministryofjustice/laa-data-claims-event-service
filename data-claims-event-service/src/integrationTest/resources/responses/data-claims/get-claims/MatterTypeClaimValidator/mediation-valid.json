@@ -5,7 +5,7 @@
   "size": 1,
   "content": [
     {
-      "id": "77777777-0001-4000-8000-000000000005",
+      "id": "11111111-1111-4111-8111-111111111113",
       "submission_id": "0561d67b-30ed-412e-8231-f6296a53538d",
       "status": "READY_TO_PROCESS",
       "schedule_reference": "0U733A/2018/02",
@@ -60,7 +60,7 @@
       "case_id": "818",
       "unique_case_id": "818",
       "case_stage_code": null,
-      "stage_reached_code": "STAG",
+      "stage_reached_code": "IN",
       "standard_fee_category_code": null,
       "outcome_code": "A",
       "designated_accredited_representative_code": null,

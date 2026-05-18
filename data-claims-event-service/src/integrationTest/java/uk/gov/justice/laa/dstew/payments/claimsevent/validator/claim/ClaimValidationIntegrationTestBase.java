@@ -4,9 +4,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeAll;
@@ -39,18 +41,25 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
     properties = {"spring.cloud.aws.sqs.enabled=false", "laa.bulk-claim-queue.name=not-used"})
 public abstract class ClaimValidationIntegrationTestBase extends MockServerIntegrationTest {
 
+  // ── Path prefix constants ────────────────────────────────────────────────
+  protected static final String CLAIMS_BASE_PATH = "data-claims/get-claims/";
+  protected static final String SUBMISSION_BASE_PATH = "data-claims/get-submission/";
+
+  // ── Submission fixture constants ─────────────────────────────────────────
+  protected static final String SUBMISSION_LEGAL_HELP =
+      SUBMISSION_BASE_PATH + "get-submission-with-claim.json";
+  protected static final String SUBMISSION_CRIME_LOWER =
+      SUBMISSION_BASE_PATH + "get-submission-with-claim-crime-lower.json";
+  protected static final String SUBMISSION_MEDIATION =
+      SUBMISSION_BASE_PATH + "get-submission-with-claim-mediation.json";
+
   @Autowired protected ValidationService validationService;
 
   @Autowired protected SubmissionValidationService submissionValidationService;
 
-  protected static final UUID SUBMISSION_ID =
-      UUID.fromString("0561d67b-30ed-412e-8231-f6296a53538d");
-  protected static final UUID BULK_SUBMISSION_ID =
-      UUID.fromString("3fa85f64-5717-4562-b3fc-2c963f66afa6");
-
   protected final ObjectMapper mapper = objectMapper;
 
-  protected uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw testAreaOfLaw;
+  protected AreaOfLaw testAreaOfLaw;
   protected String testOfficeAccountNumber;
 
   @BeforeAll
@@ -58,15 +67,19 @@ public abstract class ClaimValidationIntegrationTestBase extends MockServerInteg
     // parent MockServerIntegrationTest.beforeAll will have run
   }
 
+  /**
+   * Runs the full submission validation flow using the given submission fixture and claims fixture.
+   * Submission ID and bulk submission ID are read dynamically from the submission fixture file.
+   */
   protected SubmissionValidationContext runSubmissionValidationWithClaims(
-      String fixtureRelativePath) throws Exception {
-    String submissionFixture = "data-claims/get-submission/get-submission-with-claim.json";
-    stubForGetSubmission(SUBMISSION_ID, submissionFixture);
-    stubForGetClaims(Collections.emptyList(), fixtureRelativePath);
+      String submissionFixture, String claimsFixture) throws Exception {
 
-    // capture submission-level values used by mapping/validation
     String submissionJson = readJsonFromFile(submissionFixture);
     JsonNode submissionNode = mapper.readTree(submissionJson);
+
+    UUID submissionId = UUID.fromString(submissionNode.get("submission_id").asText());
+    UUID bulkSubmissionId = UUID.fromString(submissionNode.get("bulk_submission_id").asText());
+
     if (submissionNode.has("area_of_law") && submissionNode.get("area_of_law").isTextual()) {
       String a = submissionNode.get("area_of_law").asText().replace(' ', '_').toUpperCase();
       try {
@@ -80,12 +93,15 @@ public abstract class ClaimValidationIntegrationTestBase extends MockServerInteg
       testOfficeAccountNumber = submissionNode.get("office_account_number").asText();
     }
 
-    String claimsJson = readJsonFromFile(fixtureRelativePath);
+    stubForGetSubmission(submissionId, submissionFixture);
+    stubForGetClaims(Collections.emptyList(), claimsFixture);
+
+    String claimsJson = readJsonFromFile(claimsFixture);
     JsonNode root = mapper.readTree(claimsJson);
     if (root.has("content") && root.get("content").isArray()) {
       for (JsonNode claimNode : root.get("content")) {
         if (claimNode.has("id") && claimNode.get("id").isTextual()) {
-          stubForUpdateClaim(SUBMISSION_ID, UUID.fromString(claimNode.get("id").asText()));
+          stubForUpdateClaim(submissionId, UUID.fromString(claimNode.get("id").asText()));
         }
         if (claimNode.has("fee_code") && !claimNode.get("fee_code").isNull()) {
           String feeCode = claimNode.get("fee_code").asText();
@@ -100,21 +116,59 @@ public abstract class ClaimValidationIntegrationTestBase extends MockServerInteg
     }
 
     stubForPostFeeCalculation("fee-scheme/post-fee-calculation-200.json");
-    stubForUpdateSubmission(SUBMISSION_ID);
-    stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
+    stubForUpdateSubmission(submissionId);
+    stubForUpdateBulkSubmission(bulkSubmissionId);
     stubForGetFeeDetails("CAPA", "fee-scheme/get-fee-details-disbursement.json");
-    stubForGetProviderOffice(
-        "AQ2B3C", Collections.emptyList(), "provider-details/get-firm-schedules-openapi-200.json");
+    if (testOfficeAccountNumber != null) {
+      stubForGetProviderOffice(
+          testOfficeAccountNumber,
+          Collections.emptyList(),
+          "provider-details/get-firm-schedules-openapi-200.json");
+    }
 
-    // Stub submission search by criteria used by submission validation flow
+    AreaOfLaw criteriaAreaOfLaw = testAreaOfLaw != null ? testAreaOfLaw : AreaOfLaw.LEGAL_HELP;
     getStubForGetSubmissionByCriteria(
         List.of(
-            Parameter.param("offices", "AQ2B3C"),
-            Parameter.param("area_of_law", AreaOfLaw.LEGAL_HELP.name()),
+            Parameter.param(
+                "offices", testOfficeAccountNumber != null ? testOfficeAccountNumber : "AQ2B3C"),
+            Parameter.param("area_of_law", criteriaAreaOfLaw.name()),
             Parameter.param("submission_period", "APR-2025")),
         "data-claims/get-submission/get-submissions-by-filter_no_content.json");
 
-    return submissionValidationService.validateSubmission(SUBMISSION_ID);
+    return submissionValidationService.validateSubmission(submissionId);
+  }
+
+  /**
+   * Collects all distinct ValidationIssue codes produced by the new validation engine across every
+   * claim in the given claims fixture. Use this in the error-code assertion test.
+   */
+  protected Set<String> collectValidationIssueCodes(String submissionFixture, String claimsFixture)
+      throws Exception {
+    SubmissionValidationContext context =
+        runSubmissionValidationWithClaims(submissionFixture, claimsFixture);
+    List<ClaimResponse> claims = parseClaimsFromFixture(claimsFixture);
+    Set<String> codes = new HashSet<>();
+    for (ClaimResponse cr : claims) {
+      Claim mapped = ClaimMapper.fromClaimResponse(cr);
+      if (testAreaOfLaw != null) mapped.setAreaOfLaw(testAreaOfLaw);
+      if (testOfficeAccountNumber != null) mapped.setOfficeAccountNumber(testOfficeAccountNumber);
+      List<ValidationIssue> issues =
+          validationService.validateClaim(mapped, null, List.of(mapped)).getIssues();
+      if (issues != null) {
+        for (ValidationIssue issue : issues) {
+          System.out.printf(
+              "[collectValidationIssueCodes] claim=%s code=%s path=%s severity=%s message=%s technical=%s%n",
+              cr.getId(),
+              issue.getCode(),
+              issue.getPath(),
+              issue.getSeverity(),
+              issue.getMessage(),
+              issue.getTechnicalMessage());
+          if (issue.getCode() != null) codes.add(issue.getCode());
+        }
+      }
+    }
+    return codes;
   }
 
   protected List<ClaimResponse> parseClaimsFromFixture(String fixtureRelativePath)
@@ -136,8 +190,6 @@ public abstract class ClaimValidationIntegrationTestBase extends MockServerInteg
     List<ClaimResponse> onlyThis = List.of(claimResponse);
     List<Claim> relatedClaims = onlyThis.stream().map(ClaimMapper::fromClaimResponse).toList();
 
-    // Map and populate submission-level fields the validation service expects (same as
-    // claimsValidatorValidateClaim)
     Claim mapped = ClaimMapper.fromClaimResponse(claimResponse);
     if (testAreaOfLaw != null) {
       mapped.setAreaOfLaw(testAreaOfLaw);
@@ -146,7 +198,6 @@ public abstract class ClaimValidationIntegrationTestBase extends MockServerInteg
       mapped.setOfficeAccountNumber(testOfficeAccountNumber);
     }
 
-    // ensure related claims also have submission-level fields set
     List<Claim> related =
         relatedClaims.stream()
             .peek(
@@ -156,9 +207,6 @@ public abstract class ClaimValidationIntegrationTestBase extends MockServerInteg
                     c.setOfficeAccountNumber(testOfficeAccountNumber);
                 })
             .collect(Collectors.toList());
-
-    // TODO: remove when mapper fixed
-    mapped.setStageReachedCode(claimResponse.getStageReachedCode());
 
     List<ValidationIssue> issues =
         validationService.validateClaim(mapped, null, related).getIssues();
@@ -191,12 +239,16 @@ public abstract class ClaimValidationIntegrationTestBase extends MockServerInteg
 
     if (!unmatchedNew.isEmpty() || !unmatchedExisting.isEmpty()) {
       StringBuilder sb = new StringBuilder();
-      sb.append("Claim ").append(claimResponse.getId()).append(" mismatch:\n");
+      sb.append("Claim ").append(claimResponse.getId()).append(" mismatch")
+          .append(" [new=").append(unmatchedNew.size())
+          .append(", existing=").append(unmatchedExisting.size()).append("]:\n");
       for (ValidationIssue ni : unmatchedNew) {
         sb.append("Only in new: code=")
             .append(ni.getCode())
             .append(" severity=")
             .append(ni.getSeverity())
+            .append(" path=")
+            .append(ni.getPath())
             .append(" message=")
             .append(ni.getMessage())
             .append(" technical=")

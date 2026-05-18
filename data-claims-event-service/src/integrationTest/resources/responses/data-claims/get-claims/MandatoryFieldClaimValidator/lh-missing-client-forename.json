@@ -5,19 +5,19 @@
   "size": 1,
   "content": [
     {
-      "id": "11111111-1111-4111-8111-111111111111",
+      "id": "aa000001-0000-4000-8000-000000000007",
       "submission_id": "0561d67b-30ed-412e-8231-f6296a53538d",
       "status": "READY_TO_PROCESS",
       "schedule_reference": "0U733A/2018/02",
       "line_number": 1,
       "case_reference_number": "EF/4560/2018/4364684",
       "unique_file_number": "290419/818",
-      "case_start_date": "2025-01-01",
+      "case_start_date": "2019-04-29",
       "case_concluded_date": "2025-04-30",
       "matter_type_code": "AB12:CD34",
       "crime_matter_type_code": null,
       "fee_scheme_code": null,
-      "fee_code": "CAPA",
+      "fee_code": "IPLH",
       "procurement_area_code": "PA20000",
       "access_point_code": "AP20000",
       "delivery_location": null,
@@ -35,7 +35,7 @@
       "mediation_time_minutes": null,
       "outreach_location": null,
       "referral_source": null,
-      "client_forename": "Alex",
+      "client_forename": null,
       "client_surname": "Legal",
       "client_date_of_birth": "1985-05-05",
       "unique_client_number": "05051985/L/LEX",
@@ -60,9 +60,9 @@
       "case_id": "818",
       "unique_case_id": null,
       "case_stage_code": null,
-      "stage_reached_code": "INVC",
+      "stage_reached_code": "IN",
       "standard_fee_category_code": null,
-      "outcome_code": null,
+      "outcome_code": "EA",
       "designated_accredited_representative_code": null,
       "is_postal_application_accepted": false,
       "is_client_2_postal_application_accepted": null,
@@ -111,4 +111,3 @@
     }
   ]
 }
-

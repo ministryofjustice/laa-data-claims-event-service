@@ -60,7 +60,7 @@
       "case_id": "818",
       "unique_case_id": null,
       "case_stage_code": null,
-      "stage_reached_code": "IN",
+      "stage_reached_code": "INVB",
       "standard_fee_category_code": null,
       "outcome_code": "CP01",
       "designated_accredited_representative_code": null,
