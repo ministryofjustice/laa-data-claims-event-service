@@ -9,7 +9,7 @@ spring:
   cloud:
     aws:
       sqs:
-        queue-not-found-strategy: fail
+        queue-not-found-strategy: create
       region:
         static: ${AWS_REGION}
 
