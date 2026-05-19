@@ -43,6 +43,15 @@ services:
       - SERVICES=sqs,sns
       - DEBUG=1
       - AWS_DEFAULT_REGION=us-east-1
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "awslocal sqs get-queue-url --queue-name claims-api-queue > /dev/null 2>&1",
+        ]
+      interval: 5s
+      retries: 10
+      timeout: 5s
     volumes:
       - "./docker-scripts/init-localstack.sh:/etc/localstack/init/ready.d/init-localstack.sh"
       - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
