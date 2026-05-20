@@ -2,8 +2,6 @@ README.md
 .gradle
 build/
 bin/
-uk/
-schemas/
 META-INF/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
