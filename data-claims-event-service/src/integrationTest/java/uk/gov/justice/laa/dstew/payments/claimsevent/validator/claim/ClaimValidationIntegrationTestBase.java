@@ -242,8 +242,20 @@ public abstract class ClaimValidationIntegrationTestBase extends MockServerInteg
       ValidationIssue ni = newIt.next();
       ValidationMessagePatch match = findExactExisting(ni, unmatchedExisting);
       if (match != null) {
+        System.out.printf(
+            "[assertExactMatch] MATCHED claim=%s code=%s message=%s%n",
+            currentClaim.getId(), ni.getCode(), ni.getMessage());
         newIt.remove();
         unmatchedExisting.remove(match);
+      } else {
+        System.out.printf(
+            "[assertExactMatch] NO MATCH claim=%s code=%s severity=%s path=%s message=%s technical=%s%n",
+            currentClaim.getId(),
+            ni.getCode(),
+            ni.getSeverity(),
+            ni.getPath(),
+            ni.getMessage(),
+            ni.getTechnicalMessage());
       }
     }
 

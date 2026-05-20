@@ -54,7 +54,7 @@ public final class ValidationResultComparator {
     unmatchedExisting.forEach(
         em ->
             log.warn(
-                "[VALIDATOR-DRY_RUN] {} only in existing validator: {}",
+                "[VALIDATOR-DRY-RUN] {} only in existing validator: {}",
                 label,
                 describeExisting(em)));
   }
@@ -96,13 +96,13 @@ public final class ValidationResultComparator {
 
   private static String describeNew(ValidationIssue ni) {
     return String.format(
-        "code=%s severity=%s message=%s technical=%s",
+        "code=[%s] severity=[%s] message=[%s] technical=[%s]",
         ni.getCode(), ni.getSeverity(), ni.getMessage(), ni.getTechnicalMessage());
   }
 
   private static String describeExisting(ValidationMessagePatch em) {
     return String.format(
-        "source=%s type=%s display=%s technical=%s",
+        "source=[%s] severity=[%s] message=[%s] technical=[%s]",
         em.getSource(), em.getType(), em.getDisplayMessage(), em.getTechnicalMessage());
   }
 

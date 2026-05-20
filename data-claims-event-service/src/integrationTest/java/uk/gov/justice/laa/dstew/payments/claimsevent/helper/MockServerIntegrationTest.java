@@ -465,17 +465,5 @@ public abstract class MockServerIntegrationTest {
       cfg.setAccessToken("");
       return cfg;
     }
-
-    // @Bean
-    // @Primary
-    // public ClaimValidation coreClaimValidation() {
-    //  return new ClaimValidation(Collections.emptyList());
-    // }
-
-    // @Bean
-    // @Primary
-    // public SubmissionValidation coreSubmissionValidation() {
-    //  return new SubmissionValidation(Collections.emptyList());
-    // }
   }
 }

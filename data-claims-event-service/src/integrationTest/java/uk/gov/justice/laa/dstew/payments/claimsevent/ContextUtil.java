@@ -12,7 +12,7 @@ public final class ContextUtil {
   public static void assertContextHasNoErrors(SubmissionValidationContext context) {
     SoftAssertions.assertSoftly(
         softly -> {
-          // softly.assertThat(context.hasErrors()).isFalse();
+          softly.assertThat(context.hasErrors()).isFalse();
           if (context.hasErrors()) {
             for (var error : context.getSubmissionValidationErrors()) {
               softly.fail(error.getDisplayMessage());
