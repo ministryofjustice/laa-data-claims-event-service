@@ -1,12 +1,16 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+import uk.gov.justice.laa.dstew.payments.claims.validation.core.model.ValidationIssue;
 import uk.gov.justice.laa.dstew.payments.claims.validation.core.model.ValidationResult;
 import uk.gov.justice.laa.dstew.payments.claims.validation.core.service.ValidationService;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionErrorCode;
@@ -17,6 +21,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionClaim;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
@@ -61,14 +66,7 @@ public class SubmissionValidationService {
         .sorted(Comparator.comparingInt(SubmissionValidator::priority))
         .forEach(validator -> validator.validate(submission, context));
 
-    // run 1
-    System.out.println("-----------------------");
-    System.out.println("Submission level validation start:");
-    ValidationResult validationResult = validationService.validateSubmission(submission);
-    System.out.println(validationResult.toString());
-    validationResult.getIssues().forEach(System.out::println);
-    System.out.println("Submission level validation end:");
-    System.out.println("-----------------------");
+    compareSubmissionValidationResults(submissionId, submission, context);
 
     // Only validate claims if no submission level validation errors have been recorded.
     if (!context.hasSubmissionLevelErrors()) {
@@ -119,6 +117,89 @@ public class SubmissionValidationService {
     dataClaimsRestClient.updateBulkSubmission(
         String.valueOf(bulkSubmissionId), bulkSubmissionPatch);
     return context;
+  }
+
+  /**
+   * Dry-run comparison: runs the new submission-level validator and compares its issues against the
+   * existing submission validation errors already recorded in the context. Any differences are
+   * logged as WARN; if everything matches it logs at DEBUG and continues silently.
+   */
+  private void compareSubmissionValidationResults(
+      UUID submissionId, SubmissionResponse submission, SubmissionValidationContext context) {
+
+    ValidationResult validationResult = validationService.validateSubmission(submission);
+    List<ValidationIssue> newIssues =
+        validationResult != null && validationResult.getIssues() != null
+            ? new ArrayList<>(validationResult.getIssues())
+            : new ArrayList<>();
+
+    List<ValidationMessagePatch> existingErrors =
+        new ArrayList<>(context.getSubmissionValidationErrors());
+
+    // remove exact matches
+    Iterator<ValidationIssue> newIt = newIssues.iterator();
+    while (newIt.hasNext()) {
+      ValidationIssue ni = newIt.next();
+      ValidationMessagePatch match = findExactSubmissionMatch(ni, existingErrors);
+      if (match != null) {
+        newIt.remove();
+        existingErrors.remove(match);
+      }
+    }
+
+    if (newIssues.isEmpty() && existingErrors.isEmpty()) {
+      log.debug("Submission {} validators matched exactly at submission level", submissionId);
+      return;
+    }
+
+    log.warn(
+        "Submission {} mismatch at submission level [new={}, existing={}]",
+        submissionId,
+        newIssues.size(),
+        existingErrors.size());
+    newIssues.forEach(
+        ni ->
+            log.warn(
+                "Submission {} only in new: code={} severity={} message={} technical={}",
+                submissionId,
+                ni.getCode(),
+                ni.getSeverity(),
+                ni.getMessage(),
+                ni.getTechnicalMessage()));
+    existingErrors.forEach(
+        em ->
+            log.warn(
+                "Submission {} only in existing: source={} type={} display={} technical={}",
+                submissionId,
+                em.getSource(),
+                em.getType(),
+                em.getDisplayMessage(),
+                em.getTechnicalMessage()));
+  }
+
+  private ValidationMessagePatch findExactSubmissionMatch(
+      ValidationIssue ni, List<ValidationMessagePatch> existing) {
+    String sev = ni.getSeverity() == null ? null : ni.getSeverity().name();
+    return existing.stream()
+        .filter(
+            em -> {
+              String type = em.getType() == null ? null : em.getType().name();
+              return Objects.equals(
+                      normaliseText(ni.getMessage()), normaliseText(em.getDisplayMessage()))
+                  && Objects.equals(
+                      normaliseText(ni.getTechnicalMessage()),
+                      normaliseText(em.getTechnicalMessage()))
+                  && Objects.equals(sev, type);
+            })
+        .findFirst()
+        .orElse(null);
+  }
+
+  private String normaliseText(String value) {
+    if (value == null || value.isBlank()) {
+      return null;
+    }
+    return value.trim().replaceAll("\\s+", " ");
   }
 
   private SubmissionValidationContext initialiseValidationContext(SubmissionResponse submission) {

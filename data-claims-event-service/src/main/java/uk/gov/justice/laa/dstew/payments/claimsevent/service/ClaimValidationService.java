@@ -315,7 +315,33 @@ public class ClaimValidationService {
     mappedClaim.setOfficeAccountNumber(submission.getOfficeAccountNumber());
 
     List<Claim> relatedClaims =
-        finalSubmissionClaims.stream().map(ClaimMapper::fromClaimResponse).toList();
+        finalSubmissionClaims.stream()
+            .map(ClaimMapper::fromClaimResponse)
+            .peek(
+                c -> {
+                  c.setAreaOfLaw(submission.getAreaOfLaw());
+                  c.setOfficeAccountNumber(submission.getOfficeAccountNumber());
+                })
+            .toList();
+
+    boolean presentInRelated = relatedClaims.stream().anyMatch(c -> Objects.equals(c, mappedClaim));
+    if (!presentInRelated) {
+      relatedClaims.stream()
+          .filter(c -> Objects.equals(c.getId(), mappedClaim.getId()))
+          .findFirst()
+          .ifPresentOrElse(
+              candidate -> logClaimDiff(claimResponse.getId(), mappedClaim, candidate),
+              () ->
+                  log.debug(
+                      "Claim {} NOT PRESENT in relatedClaims and no id match found (size={})",
+                      claimResponse.getId(),
+                      relatedClaims.size()));
+    } else {
+      log.debug(
+          "Claim {} PRESENT (exact match) in relatedClaims (size={})",
+          claimResponse.getId(),
+          relatedClaims.size());
+    }
 
     // V1 Claim Validation
     ValidationResult validationResult =
@@ -346,7 +372,7 @@ public class ClaimValidationService {
 
     // This warning is expected during migration while schema coverage is being expanded.
     List<ValidationIssue> unmatchedNewIssues =
-        Optional.ofNullable(newIssues).orElseGet(List::of).stream()
+        Optional.of(newIssues).orElseGet(List::of).stream()
             .filter(
                 issue ->
                     issue != null
@@ -501,5 +527,335 @@ public class ClaimValidationService {
         message.getType(),
         message.getDisplayMessage(),
         message.getTechnicalMessage());
+  }
+
+  private void logClaimDiff(String claimId, Claim expected, Claim actual) {
+    List<String> diffs = new ArrayList<>();
+    checkField(diffs, "areaOfLaw", expected.getAreaOfLaw(), actual.getAreaOfLaw());
+    checkField(
+        diffs,
+        "officeAccountNumber",
+        expected.getOfficeAccountNumber(),
+        actual.getOfficeAccountNumber());
+    checkField(diffs, "submissionId", expected.getSubmissionId(), actual.getSubmissionId());
+    checkField(diffs, "status", expected.getStatus(), actual.getStatus());
+    checkField(diffs, "lineNumber", expected.getLineNumber(), actual.getLineNumber());
+    checkField(
+        diffs, "scheduleReference", expected.getScheduleReference(), actual.getScheduleReference());
+    checkField(
+        diffs, "submissionPeriod", expected.getSubmissionPeriod(), actual.getSubmissionPeriod());
+    checkField(
+        diffs,
+        "caseReferenceNumber",
+        expected.getCaseReferenceNumber(),
+        actual.getCaseReferenceNumber());
+    checkField(
+        diffs, "uniqueFileNumber", expected.getUniqueFileNumber(), actual.getUniqueFileNumber());
+    checkField(diffs, "caseStartDate", expected.getCaseStartDate(), actual.getCaseStartDate());
+    checkField(
+        diffs, "caseConcludedDate", expected.getCaseConcludedDate(), actual.getCaseConcludedDate());
+    checkField(diffs, "caseId", expected.getCaseId(), actual.getCaseId());
+    checkField(diffs, "uniqueCaseId", expected.getUniqueCaseId(), actual.getUniqueCaseId());
+    checkField(diffs, "caseStageCode", expected.getCaseStageCode(), actual.getCaseStageCode());
+    checkField(diffs, "matterTypeCode", expected.getMatterTypeCode(), actual.getMatterTypeCode());
+    checkField(
+        diffs,
+        "crimeMatterTypeCode",
+        expected.getCrimeMatterTypeCode(),
+        actual.getCrimeMatterTypeCode());
+    checkField(diffs, "feeSchemeCode", expected.getFeeSchemeCode(), actual.getFeeSchemeCode());
+    checkField(diffs, "feeCode", expected.getFeeCode(), actual.getFeeCode());
+    checkField(
+        diffs,
+        "procurementAreaCode",
+        expected.getProcurementAreaCode(),
+        actual.getProcurementAreaCode());
+    checkField(
+        diffs, "accessPointCode", expected.getAccessPointCode(), actual.getAccessPointCode());
+    checkField(
+        diffs, "deliveryLocation", expected.getDeliveryLocation(), actual.getDeliveryLocation());
+    checkField(
+        diffs,
+        "representationOrderDate",
+        expected.getRepresentationOrderDate(),
+        actual.getRepresentationOrderDate());
+    checkField(
+        diffs,
+        "suspectsDefendantsCount",
+        expected.getSuspectsDefendantsCount(),
+        actual.getSuspectsDefendantsCount());
+    checkField(
+        diffs,
+        "policeStationCourtAttendancesCount",
+        expected.getPoliceStationCourtAttendancesCount(),
+        actual.getPoliceStationCourtAttendancesCount());
+    checkField(
+        diffs,
+        "policeStationCourtPrisonId",
+        expected.getPoliceStationCourtPrisonId(),
+        actual.getPoliceStationCourtPrisonId());
+    checkField(diffs, "dsccNumber", expected.getDsccNumber(), actual.getDsccNumber());
+    checkField(diffs, "maatId", expected.getMaatId(), actual.getMaatId());
+    checkField(
+        diffs,
+        "prisonLawPriorApprovalNumber",
+        expected.getPrisonLawPriorApprovalNumber(),
+        actual.getPrisonLawPriorApprovalNumber());
+    checkField(
+        diffs, "isDutySolicitor", expected.getIsDutySolicitor(), actual.getIsDutySolicitor());
+    checkField(diffs, "isYouthCourt", expected.getIsYouthCourt(), actual.getIsYouthCourt());
+    checkField(diffs, "schemeId", expected.getSchemeId(), actual.getSchemeId());
+    checkField(
+        diffs,
+        "mediationSessionsCount",
+        expected.getMediationSessionsCount(),
+        actual.getMediationSessionsCount());
+    checkField(
+        diffs,
+        "mediationTimeMinutes",
+        expected.getMediationTimeMinutes(),
+        actual.getMediationTimeMinutes());
+    checkField(
+        diffs, "outreachLocation", expected.getOutreachLocation(), actual.getOutreachLocation());
+    checkField(diffs, "referralSource", expected.getReferralSource(), actual.getReferralSource());
+    checkField(diffs, "clientForename", expected.getClientForename(), actual.getClientForename());
+    checkField(diffs, "clientSurname", expected.getClientSurname(), actual.getClientSurname());
+    checkField(
+        diffs, "clientDateOfBirth", expected.getClientDateOfBirth(), actual.getClientDateOfBirth());
+    checkField(
+        diffs,
+        "uniqueClientNumber",
+        expected.getUniqueClientNumber(),
+        actual.getUniqueClientNumber());
+    checkField(diffs, "clientPostcode", expected.getClientPostcode(), actual.getClientPostcode());
+    checkField(diffs, "genderCode", expected.getGenderCode(), actual.getGenderCode());
+    checkField(diffs, "ethnicityCode", expected.getEthnicityCode(), actual.getEthnicityCode());
+    checkField(diffs, "disabilityCode", expected.getDisabilityCode(), actual.getDisabilityCode());
+    checkField(diffs, "isLegallyAided", expected.getIsLegallyAided(), actual.getIsLegallyAided());
+    checkField(diffs, "clientTypeCode", expected.getClientTypeCode(), actual.getClientTypeCode());
+    checkField(
+        diffs,
+        "homeOfficeClientNumber",
+        expected.getHomeOfficeClientNumber(),
+        actual.getHomeOfficeClientNumber());
+    checkField(
+        diffs,
+        "claReferenceNumber",
+        expected.getClaReferenceNumber(),
+        actual.getClaReferenceNumber());
+    checkField(
+        diffs, "claExemptionCode", expected.getClaExemptionCode(), actual.getClaExemptionCode());
+    checkField(
+        diffs, "client2Forename", expected.getClient2Forename(), actual.getClient2Forename());
+    checkField(diffs, "client2Surname", expected.getClient2Surname(), actual.getClient2Surname());
+    checkField(
+        diffs,
+        "client2DateOfBirth",
+        expected.getClient2DateOfBirth(),
+        actual.getClient2DateOfBirth());
+    checkField(diffs, "client2Ucn", expected.getClient2Ucn(), actual.getClient2Ucn());
+    checkField(
+        diffs, "client2Postcode", expected.getClient2Postcode(), actual.getClient2Postcode());
+    checkField(
+        diffs, "client2GenderCode", expected.getClient2GenderCode(), actual.getClient2GenderCode());
+    checkField(
+        diffs,
+        "client2EthnicityCode",
+        expected.getClient2EthnicityCode(),
+        actual.getClient2EthnicityCode());
+    checkField(
+        diffs,
+        "client2DisabilityCode",
+        expected.getClient2DisabilityCode(),
+        actual.getClient2DisabilityCode());
+    checkField(
+        diffs,
+        "client2IsLegallyAided",
+        expected.getClient2IsLegallyAided(),
+        actual.getClient2IsLegallyAided());
+    checkField(
+        diffs, "stageReachedCode", expected.getStageReachedCode(), actual.getStageReachedCode());
+    checkField(
+        diffs,
+        "standardFeeCategoryCode",
+        expected.getStandardFeeCategoryCode(),
+        actual.getStandardFeeCategoryCode());
+    checkField(diffs, "outcomeCode", expected.getOutcomeCode(), actual.getOutcomeCode());
+    checkField(
+        diffs,
+        "designatedAccreditedRepresentativeCode",
+        expected.getDesignatedAccreditedRepresentativeCode(),
+        actual.getDesignatedAccreditedRepresentativeCode());
+    checkField(
+        diffs,
+        "isPostalApplicationAccepted",
+        expected.getIsPostalApplicationAccepted(),
+        actual.getIsPostalApplicationAccepted());
+    checkField(
+        diffs,
+        "isClient2PostalApplicationAccepted",
+        expected.getIsClient2PostalApplicationAccepted(),
+        actual.getIsClient2PostalApplicationAccepted());
+    checkField(
+        diffs,
+        "mentalHealthTribunalReference",
+        expected.getMentalHealthTribunalReference(),
+        actual.getMentalHealthTribunalReference());
+    checkField(diffs, "isNrmAdvice", expected.getIsNrmAdvice(), actual.getIsNrmAdvice());
+    checkField(diffs, "followOnWork", expected.getFollowOnWork(), actual.getFollowOnWork());
+    checkField(diffs, "transferDate", expected.getTransferDate(), actual.getTransferDate());
+    checkField(
+        diffs,
+        "exemptionCriteriaSatisfied",
+        expected.getExemptionCriteriaSatisfied(),
+        actual.getExemptionCriteriaSatisfied());
+    checkField(
+        diffs,
+        "exceptionalCaseFundingReference",
+        expected.getExceptionalCaseFundingReference(),
+        actual.getExceptionalCaseFundingReference());
+    checkField(diffs, "isLegacyCase", expected.getIsLegacyCase(), actual.getIsLegacyCase());
+    checkField(diffs, "adviceTime", expected.getAdviceTime(), actual.getAdviceTime());
+    checkField(diffs, "travelTime", expected.getTravelTime(), actual.getTravelTime());
+    checkField(diffs, "waitingTime", expected.getWaitingTime(), actual.getWaitingTime());
+    checkField(
+        diffs,
+        "netProfitCostsAmount",
+        expected.getNetProfitCostsAmount(),
+        actual.getNetProfitCostsAmount());
+    checkField(
+        diffs,
+        "netDisbursementAmount",
+        expected.getNetDisbursementAmount(),
+        actual.getNetDisbursementAmount());
+    checkField(
+        diffs,
+        "netCounselCostsAmount",
+        expected.getNetCounselCostsAmount(),
+        actual.getNetCounselCostsAmount());
+    checkField(
+        diffs,
+        "disbursementsVatAmount",
+        expected.getDisbursementsVatAmount(),
+        actual.getDisbursementsVatAmount());
+    checkField(
+        diffs,
+        "travelWaitingCostsAmount",
+        expected.getTravelWaitingCostsAmount(),
+        actual.getTravelWaitingCostsAmount());
+    checkField(
+        diffs,
+        "netWaitingCostsAmount",
+        expected.getNetWaitingCostsAmount(),
+        actual.getNetWaitingCostsAmount());
+    checkField(
+        diffs, "isVatApplicable", expected.getIsVatApplicable(), actual.getIsVatApplicable());
+    checkField(
+        diffs,
+        "isToleranceApplicable",
+        expected.getIsToleranceApplicable(),
+        actual.getIsToleranceApplicable());
+    checkField(
+        diffs,
+        "priorAuthorityReference",
+        expected.getPriorAuthorityReference(),
+        actual.getPriorAuthorityReference());
+    checkField(diffs, "isLondonRate", expected.getIsLondonRate(), actual.getIsLondonRate());
+    checkField(
+        diffs,
+        "adjournedHearingFeeAmount",
+        expected.getAdjournedHearingFeeAmount(),
+        actual.getAdjournedHearingFeeAmount());
+    checkField(
+        diffs,
+        "isAdditionalTravelPayment",
+        expected.getIsAdditionalTravelPayment(),
+        actual.getIsAdditionalTravelPayment());
+    checkField(
+        diffs,
+        "costsDamagesRecoveredAmount",
+        expected.getCostsDamagesRecoveredAmount(),
+        actual.getCostsDamagesRecoveredAmount());
+    checkField(
+        diffs,
+        "meetingsAttendedCode",
+        expected.getMeetingsAttendedCode(),
+        actual.getMeetingsAttendedCode());
+    checkField(
+        diffs,
+        "detentionTravelWaitingCostsAmount",
+        expected.getDetentionTravelWaitingCostsAmount(),
+        actual.getDetentionTravelWaitingCostsAmount());
+    checkField(
+        diffs,
+        "jrFormFillingAmount",
+        expected.getJrFormFillingAmount(),
+        actual.getJrFormFillingAmount());
+    checkField(
+        diffs, "isEligibleClient", expected.getIsEligibleClient(), actual.getIsEligibleClient());
+    checkField(
+        diffs, "courtLocationCode", expected.getCourtLocationCode(), actual.getCourtLocationCode());
+    checkField(diffs, "adviceTypeCode", expected.getAdviceTypeCode(), actual.getAdviceTypeCode());
+    checkField(
+        diffs,
+        "medicalReportsCount",
+        expected.getMedicalReportsCount(),
+        actual.getMedicalReportsCount());
+    checkField(diffs, "isIrcSurgery", expected.getIsIrcSurgery(), actual.getIsIrcSurgery());
+    checkField(diffs, "surgeryDate", expected.getSurgeryDate(), actual.getSurgeryDate());
+    checkField(
+        diffs,
+        "surgeryClientsCount",
+        expected.getSurgeryClientsCount(),
+        actual.getSurgeryClientsCount());
+    checkField(
+        diffs,
+        "surgeryMattersCount",
+        expected.getSurgeryMattersCount(),
+        actual.getSurgeryMattersCount());
+    checkField(diffs, "cmrhOralCount", expected.getCmrhOralCount(), actual.getCmrhOralCount());
+    checkField(
+        diffs,
+        "cmrhTelephoneCount",
+        expected.getCmrhTelephoneCount(),
+        actual.getCmrhTelephoneCount());
+    checkField(
+        diffs,
+        "aitHearingCentreCode",
+        expected.getAitHearingCentreCode(),
+        actual.getAitHearingCentreCode());
+    checkField(
+        diffs,
+        "isSubstantiveHearing",
+        expected.getIsSubstantiveHearing(),
+        actual.getIsSubstantiveHearing());
+    checkField(diffs, "hoInterview", expected.getHoInterview(), actual.getHoInterview());
+    checkField(
+        diffs,
+        "localAuthorityNumber",
+        expected.getLocalAuthorityNumber(),
+        actual.getLocalAuthorityNumber());
+    checkField(
+        diffs, "createdByUserId", expected.getCreatedByUserId(), actual.getCreatedByUserId());
+    checkField(diffs, "isAmended", expected.getIsAmended(), actual.getIsAmended());
+    checkField(diffs, "hasAssessment", expected.getHasAssessment(), actual.getHasAssessment());
+    checkField(diffs, "version", expected.getVersion(), actual.getVersion());
+
+    if (diffs.isEmpty()) {
+      log.debug(
+          "Claim {} id-matched in relatedClaims but equals() returned false — no field diffs found (possible reference issue)",
+          claimId);
+    } else {
+      log.debug(
+          "Claim {} NOT PRESENT (exact match) in relatedClaims. Differing fields: {}",
+          claimId,
+          diffs);
+    }
+  }
+
+  private void checkField(List<String> diffs, String name, Object expected, Object actual) {
+    if (!Objects.equals(expected, actual)) {
+      diffs.add(name + "[expected=" + expected + ", actual=" + actual + "]");
+    }
   }
 }

@@ -288,6 +288,22 @@ public abstract class MockServerIntegrationTest {
                 .withBody(json(readJsonFromFile(expectedResponse))));
   }
 
+  protected void stubForGetClaimsFromPreviousSubmission(
+      final String officeCode,
+      final String feeCode,
+      final String uniqueFileNumber,
+      final String uniqueClientNumber,
+      final String expectedResponse)
+      throws Exception {
+    stubForGetClaims(
+        List.of(
+            Parameter.param("office_code", officeCode),
+            Parameter.param("fee_code", feeCode),
+            Parameter.param("unique_file_number", uniqueFileNumber),
+            Parameter.param("unique_client_number", uniqueClientNumber)),
+        expectedResponse);
+  }
+
   protected void stubForGetClaim(UUID submissionId, UUID claimId, String expectedResponse)
       throws Exception {
     mockServerClient

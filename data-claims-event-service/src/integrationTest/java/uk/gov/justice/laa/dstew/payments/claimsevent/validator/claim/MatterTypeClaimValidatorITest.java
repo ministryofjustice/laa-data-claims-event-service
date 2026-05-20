@@ -32,7 +32,7 @@ public class MatterTypeClaimValidatorITest extends ClaimValidationIntegrationTes
     var context = runSubmissionValidationWithClaims(submission, VALIDATOR_PATH + claimsResponse);
     var claims = parseClaimsFromFixture(VALIDATOR_PATH + claimsResponse);
     for (var cr : claims) {
-      assertExactMatchBetweenValidationAndReport(cr, context);
+      assertExactMatchBetweenValidationAndReport(cr, claims, context);
     }
   }
 

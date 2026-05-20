@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Primary;
 import uk.gov.justice.laa.dstew.payments.claims.validation.core.config.DataClaimsApiConfig;
 import uk.gov.justice.laa.dstew.payments.claims.validation.core.config.FeeSchemeApiConfig;
 import uk.gov.justice.laa.dstew.payments.claims.validation.core.config.ProviderDetailsApiConfig;
+import uk.gov.justice.laa.dstew.payments.claims.validation.core.provider.impl.HttpFeeSchemeProvider;
 import uk.gov.justice.laa.dstew.payments.claims.validation.core.validator.claim.ClaimValidation;
 import uk.gov.justice.laa.dstew.payments.claims.validation.core.validator.submission.SubmissionValidation;
 
@@ -26,7 +27,7 @@ public class ClaimsApiPactTestConfig {
 
   @Bean
   public ClaimValidation coreClaimValidation() {
-    return new ClaimValidation(Collections.emptyList());
+    return new ClaimValidation(Collections.emptyList(), Mockito.mock(HttpFeeSchemeProvider.class));
   }
 
   @Bean

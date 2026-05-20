@@ -28,7 +28,7 @@ public final class DuplicateClaimCrimeLowerValidationServiceStrategy
       List<ClaimResponse> submissionClaims,
       String officeCode,
       SubmissionValidationContext context) {
-    log.debug("Validating duplicates for claim {}", claim.getId());
+    log.info("Validating duplicates for claim {}", claim.getId());
     if (!context.isFlaggedForRetry(claim.getId())) {
       List<ClaimResponse> claimsToCompare =
           filterCurrentClaimWithValidStatusAndWithinPeriod(claim, submissionClaims);
@@ -55,24 +55,24 @@ public final class DuplicateClaimCrimeLowerValidationServiceStrategy
         // implemented but then removed as part of BC-418. Please check
         // https://github.com/ministryofjustice/laa-data-claims-event-service/releases/tag/0.0.121
         // for the previous implementation of this check.
-        log.debug("Fee code is PROD, skipping duplicate check for claim {}", claim.getId());
+        log.info("Fee code is PROD, skipping duplicate check for claim {}", claim.getId());
         // Escape early
         return;
       }
 
       if (!submissionDuplicateClaims.isEmpty()) {
-        log.debug("Duplicate claims found in submission");
+        log.info("Duplicate claims found in submission");
         logDuplicates(claim, submissionDuplicateClaims);
         context.addClaimError(
             claim.getId(), ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_EXISTING_SUBMISSION);
       }
       if (officeDuplicateClaims != null && !officeDuplicateClaims.isEmpty()) {
-        log.debug("Duplicate claims found in another submission for this office");
+        log.info("Duplicate claims found in another submission for this office");
         logDuplicates(claim, officeDuplicateClaims);
         context.addClaimError(
             claim.getId(), ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_ANOTHER_SUBMISSION);
       }
     }
-    log.debug("Duplicate validation completed for claim {}", claim.getId());
+    log.info("Duplicate validation completed for claim {}", claim.getId());
   }
 }

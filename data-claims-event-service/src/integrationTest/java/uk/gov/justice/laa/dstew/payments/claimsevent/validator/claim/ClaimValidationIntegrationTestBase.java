@@ -10,8 +10,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.mockserver.model.Parameter;
@@ -67,6 +67,11 @@ public abstract class ClaimValidationIntegrationTestBase extends MockServerInteg
     // parent MockServerIntegrationTest.beforeAll will have run
   }
 
+  @BeforeEach
+  void resetMockServerBeforeEach() {
+    mockServerClient.reset();
+  }
+
   /**
    * Runs the full submission validation flow using the given submission fixture and claims fixture.
    * Submission ID and bulk submission ID are read dynamically from the submission fixture file.
@@ -88,6 +93,7 @@ public abstract class ClaimValidationIntegrationTestBase extends MockServerInteg
         testAreaOfLaw = null;
       }
     }
+
     if (submissionNode.has("office_account_number")
         && submissionNode.get("office_account_number").isTextual()) {
       testOfficeAccountNumber = submissionNode.get("office_account_number").asText();
@@ -106,9 +112,10 @@ public abstract class ClaimValidationIntegrationTestBase extends MockServerInteg
         if (claimNode.has("fee_code") && !claimNode.get("fee_code").isNull()) {
           String feeCode = claimNode.get("fee_code").asText();
           if (feeCode != null && !feeCode.isBlank()) {
-            try {
+            if (feeCode.equals("CAPA")) {
+              stubForGetFeeDetails("CAPA", "fee-scheme/get-fee-details-disbursement.json");
+            } else {
               stubForGetFeeDetails(feeCode, "fee-scheme/get-fee-details-200.json");
-            } catch (Exception ignored) {
             }
           }
         }
@@ -116,9 +123,10 @@ public abstract class ClaimValidationIntegrationTestBase extends MockServerInteg
     }
 
     stubForPostFeeCalculation("fee-scheme/post-fee-calculation-200.json");
+
     stubForUpdateSubmission(submissionId);
     stubForUpdateBulkSubmission(bulkSubmissionId);
-    stubForGetFeeDetails("CAPA", "fee-scheme/get-fee-details-disbursement.json");
+
     if (testOfficeAccountNumber != null) {
       stubForGetProviderOffice(
           testOfficeAccountNumber,
@@ -148,17 +156,25 @@ public abstract class ClaimValidationIntegrationTestBase extends MockServerInteg
         runSubmissionValidationWithClaims(submissionFixture, claimsFixture);
     List<ClaimResponse> claims = parseClaimsFromFixture(claimsFixture);
     Set<String> codes = new HashSet<>();
-    for (ClaimResponse cr : claims) {
-      Claim mapped = ClaimMapper.fromClaimResponse(cr);
-      if (testAreaOfLaw != null) mapped.setAreaOfLaw(testAreaOfLaw);
-      if (testOfficeAccountNumber != null) mapped.setOfficeAccountNumber(testOfficeAccountNumber);
+
+    // set up all the related claims
+    List<Claim> relatedClaims = claims.stream().map(ClaimMapper::fromClaimResponse).toList();
+    relatedClaims.forEach(
+        c -> {
+          c.setAreaOfLaw(testAreaOfLaw);
+          c.setOfficeAccountNumber(testOfficeAccountNumber);
+        });
+
+    for (Claim currentClaim : relatedClaims) {
+
       List<ValidationIssue> issues =
-          validationService.validateClaim(mapped, null, List.of(mapped)).getIssues();
+          validationService.validateClaim(currentClaim, null, relatedClaims).getIssues();
+
       if (issues != null) {
         for (ValidationIssue issue : issues) {
           System.out.printf(
               "[collectValidationIssueCodes] claim=%s code=%s path=%s severity=%s message=%s technical=%s%n",
-              cr.getId(),
+              currentClaim.getId(),
               issue.getCode(),
               issue.getPath(),
               issue.getSeverity(),
@@ -186,40 +202,60 @@ public abstract class ClaimValidationIntegrationTestBase extends MockServerInteg
   }
 
   protected void assertExactMatchBetweenValidationAndReport(
-      ClaimResponse claimResponse, SubmissionValidationContext context) throws Exception {
-    List<ClaimResponse> onlyThis = List.of(claimResponse);
-    List<Claim> relatedClaims = onlyThis.stream().map(ClaimMapper::fromClaimResponse).toList();
+      ClaimResponse currentClaim, List<ClaimResponse> claims, SubmissionValidationContext context)
+      throws Exception {
 
-    Claim mapped = ClaimMapper.fromClaimResponse(claimResponse);
-    if (testAreaOfLaw != null) {
-      mapped.setAreaOfLaw(testAreaOfLaw);
-    }
-    if (testOfficeAccountNumber != null) {
-      mapped.setOfficeAccountNumber(testOfficeAccountNumber);
-    }
+    // set-up claim being validated
+    Claim mapped = ClaimMapper.fromClaimResponse(currentClaim);
+    mapped.setAreaOfLaw(testAreaOfLaw);
+    mapped.setOfficeAccountNumber(testOfficeAccountNumber);
 
-    List<Claim> related =
-        relatedClaims.stream()
-            .peek(
-                c -> {
-                  if (testAreaOfLaw != null) c.setAreaOfLaw(testAreaOfLaw);
-                  if (testOfficeAccountNumber != null)
-                    c.setOfficeAccountNumber(testOfficeAccountNumber);
-                })
-            .collect(Collectors.toList());
+    // set up all the related claims
+    List<Claim> relatedClaims = claims.stream().map(ClaimMapper::fromClaimResponse).toList();
+    relatedClaims.forEach(
+        c -> {
+          c.setAreaOfLaw(testAreaOfLaw);
+          c.setOfficeAccountNumber(testOfficeAccountNumber);
+        });
 
     List<ValidationIssue> issues =
-        validationService.validateClaim(mapped, null, related).getIssues();
+        validationService.validateClaim(mapped, null, relatedClaims).getIssues();
 
-    var reportOpt = context.getClaimReport(claimResponse.getId());
+    var reportOpt = context.getClaimReport(currentClaim.getId());
     if (reportOpt.isEmpty()) {
       if (issues == null || issues.isEmpty()) {
         return;
       }
-      throw new AssertionError("No claim report available for claim " + claimResponse.getId());
+      throw new AssertionError("No claim report available for claim " + currentClaim.getId());
     }
 
     List<ValidationMessagePatch> existing = reportOpt.get().getMessages();
+
+    // ── Debug output ─────────────────────────────────────────────────────────
+    System.out.printf(
+        "[assertExactMatch] claim=%s issues(new)=%d patches(existing)=%d%n",
+        currentClaim.getId(),
+        issues == null ? 0 : issues.size(),
+        existing == null ? 0 : existing.size());
+    if (issues != null) {
+      for (ValidationIssue ni : issues) {
+        System.out.printf(
+            "  [new]      code=%-50s sev=%-5s path=%-30s msg=%s | technical=%s%n",
+            ni.getCode(),
+            ni.getSeverity(),
+            ni.getPath(),
+            ni.getMessage(),
+            ni.getTechnicalMessage());
+      }
+    }
+    if (existing != null) {
+      for (ValidationMessagePatch em : existing) {
+        System.out.printf(
+            "  [existing] src=%-30s type=%-5s display=%s | technical=%s%n",
+            em.getSource(), em.getType(), em.getDisplayMessage(), em.getTechnicalMessage());
+      }
+    }
+    // ─────────────────────────────────────────────────────────────────────────
 
     List<ValidationIssue> unmatchedNew = new ArrayList<>();
     if (issues != null) unmatchedNew.addAll(issues);
@@ -239,9 +275,14 @@ public abstract class ClaimValidationIntegrationTestBase extends MockServerInteg
 
     if (!unmatchedNew.isEmpty() || !unmatchedExisting.isEmpty()) {
       StringBuilder sb = new StringBuilder();
-      sb.append("Claim ").append(claimResponse.getId()).append(" mismatch")
-          .append(" [new=").append(unmatchedNew.size())
-          .append(", existing=").append(unmatchedExisting.size()).append("]:\n");
+      sb.append("Claim ")
+          .append(currentClaim.getId())
+          .append(" mismatch")
+          .append(" [new=")
+          .append(unmatchedNew.size())
+          .append(", existing=")
+          .append(unmatchedExisting.size())
+          .append("]:\n");
       for (ValidationIssue ni : unmatchedNew) {
         sb.append("Only in new: code=")
             .append(ni.getCode())
