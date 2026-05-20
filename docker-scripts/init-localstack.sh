@@ -1,4 +1,21 @@
 #!/bin/bash
+set -e
+
+echo "Waiting for SNS service and SQS service to be available"
+
+echo "Waiting for SNS..."
+until awslocal sns list-topics > /dev/null 2>&1; do
+  echo "SNS is not ready yet"
+  sleep 2
+done
+echo "Waiting for SQS..."
+until awslocal sqs list-queues > /dev/null 2>&1; do
+  echo "SQS is not ready yet"
+  sleep 2
+done
+
+echo "Initializing localstack SNS"
+TOPIC_ARN=$(awslocal sns create-topic --name claims-events --query 'TopicArn' --output text)
 
 echo "Initializing localstack SNS"
 TOPIC_ARN=$(awslocal sns create-topic --name claims-events --query 'TopicArn' --output text)

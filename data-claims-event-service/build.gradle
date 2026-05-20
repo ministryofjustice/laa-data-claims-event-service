@@ -43,6 +43,8 @@ repositories {
     mavenCentral()
 }
 
+ext['tomcat.version'] = '11.0.22'
+
 dependencyManagement {
     imports {
         // Upgrade to fix vulnerabilities in netty
