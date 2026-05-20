@@ -14,7 +14,7 @@ public class ExclusionsRegistry {
 
   /**
    * List of field names that should be excluded from mandatory field validation for
-   * disbursement-only claims
+   * disbursement-only claims.
    */
   private final List<String> disbursementOnlyExclusions =
       List.of(

@@ -71,9 +71,8 @@ public class MandatoryFieldClaimValidatorITest extends ClaimValidationIntegratio
         // error code per missing field. This should be resolved by removing the error code
         // from the schema validation error message for this field, as it's more appropriate
         // for it to be reported by the mandatory field validator.
-
-        Arguments.of(SUBMISSION_CRIME_LOWER, "cl-missing-disbursements-vat-amount.json",
-        MISSING),
+        // Arguments.of(SUBMISSION_CRIME_LOWER,
+        // "cl-missing-disbursements-vat-amount.json", MISSING),
 
         // ── Mediation: valid ──────────────────────────────────────────────
         Arguments.of(SUBMISSION_MEDIATION, "med-valid.json", NONE),

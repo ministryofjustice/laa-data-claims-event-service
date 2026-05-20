@@ -49,9 +49,14 @@ public final class ValidationResultComparator {
       return;
     }
 
-    unmatched.forEach(ni -> log.warn("[VALIDATOR-DRY_RUN] {} only in new validator: {}", label, describeNew(ni)));
+    unmatched.forEach(
+        ni -> log.warn("[VALIDATOR-DRY_RUN] {} only in new validator: {}", label, describeNew(ni)));
     unmatchedExisting.forEach(
-        em -> log.warn("[VALIDATOR-DRY_RUN] {} only in existing validator: {}", label, describeExisting(em)));
+        em ->
+            log.warn(
+                "[VALIDATOR-DRY_RUN] {} only in existing validator: {}",
+                label,
+                describeExisting(em)));
   }
 
   // ── Private helpers ────────────────────────────────────────────────────────
