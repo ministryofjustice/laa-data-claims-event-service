@@ -231,32 +231,6 @@ public abstract class ClaimValidationIntegrationTestBase extends MockServerInteg
 
     List<ValidationMessagePatch> existing = reportOpt.get().getMessages();
 
-    // ── Debug output ─────────────────────────────────────────────────────────
-    System.out.printf(
-        "[assertExactMatch] claim=%s issues(new)=%d patches(existing)=%d%n",
-        currentClaim.getId(),
-        issues == null ? 0 : issues.size(),
-        existing == null ? 0 : existing.size());
-    if (issues != null) {
-      for (ValidationIssue ni : issues) {
-        System.out.printf(
-            "  [new]      code=%-50s sev=%-5s path=%-30s msg=%s | technical=%s%n",
-            ni.getCode(),
-            ni.getSeverity(),
-            ni.getPath(),
-            ni.getMessage(),
-            ni.getTechnicalMessage());
-      }
-    }
-    if (existing != null) {
-      for (ValidationMessagePatch em : existing) {
-        System.out.printf(
-            "  [existing] src=%-30s type=%-5s display=%s | technical=%s%n",
-            em.getSource(), em.getType(), em.getDisplayMessage(), em.getTechnicalMessage());
-      }
-    }
-    // ─────────────────────────────────────────────────────────────────────────
-
     List<ValidationIssue> unmatchedNew = new ArrayList<>();
     if (issues != null) unmatchedNew.addAll(issues);
 
