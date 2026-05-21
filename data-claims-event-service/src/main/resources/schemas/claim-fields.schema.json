@@ -524,12 +524,12 @@
     },
     "unique_case_id": {
       "type": "string",
-      "pattern": "^\\s*\\S.*$",
+      "pattern": "^$|[0-9]{6}/[0-9]{3}$",
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Unique Case ID must contain at least one non-whitespace character"
-        }
+            "value": "Unique Case ID must be in the format DDMMYY/NNN, for example '010125/001'"
+          }
       ]
     },
     "case_stage_code": {
