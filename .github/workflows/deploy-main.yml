@@ -14,7 +14,7 @@ env:
 
 jobs:
   assemble:
-    uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/gradle-build-and-publish.yml@345e0172073b135f5bb0dfaa8ba3731abe1054cc # v2
+    uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/gradle-build-and-publish.yml@345e0172073b135f5bb0dfaa8ba3731abe1054cc # v2.1.2
     permissions:
       contents: write
       packages: write
@@ -29,7 +29,7 @@ jobs:
       jacoco_coverage_report: 'false'
     secrets:
       # requires a pat due to accessing a private github repos packages (providers-api)
-      gh_token: ${{ secrets.PHILS_PAT_TOKEN }} 
+      gh_token: ${{ secrets.PHILS_PAT_TOKEN }}
       aws_region: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_AWS_REGION }}
 
   sca-scan:
@@ -44,11 +44,11 @@ jobs:
       java_distribution: *JDK_DISTRIBUTION
     secrets:
       # requires a pat due to accessing a private github repos packages (providers-api)
-      gh_token: ${{ secrets.PHILS_PAT_TOKEN }} 
+      gh_token: ${{ secrets.PHILS_PAT_TOKEN }}
 
   pact-test:
     needs: [ assemble ]
-    uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/pact-and-publish.yml@345e0172073b135f5bb0dfaa8ba3731abe1054cc # v2
+    uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/pact-and-publish.yml@345e0172073b135f5bb0dfaa8ba3731abe1054cc # v2.1.2
     permissions:
       contents: write
       packages: write
@@ -62,14 +62,14 @@ jobs:
       pact_tags: '${{ needs.assemble.outputs.published_artifact_version }},candidate'
     secrets:
       # requires a pat due to accessing a private github repos packages (providers-api)
-      gh_token: ${{ secrets.PHILS_PAT_TOKEN }} 
+      gh_token: ${{ secrets.PHILS_PAT_TOKEN }}
       pact_broker_url: ${{ secrets.PACT_BROKER_URL }}
       pact_broker_username: ${{ secrets.PACT_BROKER_USERNAME }}
       pact_broker_password: ${{ secrets.PACT_BROKER_PASSWORD }}
 
   ecr-publish-image:
     needs: [ assemble ]
-    uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/ecr-publish-image.yml@345e0172073b135f5bb0dfaa8ba3731abe1054cc # v2
+    uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/ecr-publish-image.yml@345e0172073b135f5bb0dfaa8ba3731abe1054cc # v2.1.2
     permissions:
       contents: read
       id-token: write
@@ -81,7 +81,7 @@ jobs:
       image_version: ${{ format('{0}-{1}', vars.LAA_DATA_CLAIMS_EVENT_SERVICE_IMAGE_PREFIX, needs.assemble.outputs.published_artifact_version) }}
     secrets:
       # requires a pat due to accessing a private github repos packages (providers-api)
-      gh_token: ${{ secrets.PHILS_PAT_TOKEN }} 
+      gh_token: ${{ secrets.PHILS_PAT_TOKEN }}
       ecr_repository: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_REPOSITORY }}
       ecr_region: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_REGION }}
       ecr_role_to_assume: ${{ secrets.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_ROLE_TO_ASSUME }}
