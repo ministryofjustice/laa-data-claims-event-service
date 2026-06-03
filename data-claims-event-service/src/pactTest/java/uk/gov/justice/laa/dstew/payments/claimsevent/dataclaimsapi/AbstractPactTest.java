@@ -2,11 +2,19 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.dataclaimsapi;
 
 import java.util.List;
 import java.util.UUID;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.listener.SubmissionListener;
 
+// Force a deterministic test method execution order across all pact subclasses.
+// Without this, JUnit may execute @Pact-producing methods in a different order
+// between runs, which reorders interactions in the published pact JSON. That
+// makes the pact content for the same consumer version differ byte-for-byte
+// between runs, causing the broker to reject re-publishes with HTTP 409.
+@TestMethodOrder(MethodOrderer.MethodName.class)
 abstract class AbstractPactTest {
   protected static final String CONSUMER = "laa-data-claims-event-service";
   protected static final String PROVIDER = "laa-data-claims-api";
