@@ -67,9 +67,6 @@ dependencies {
      * Upgrades to resolve vulnerabilities
      */
 
-    // Upgrade to fix CVE-2026-1225 vulnerability in logback-core
-    implementation 'ch.qos.logback:logback-core:1.5.25'
-    implementation 'ch.qos.logback:logback-classic:1.5.25'
 
     implementation project(':reference-fee-scheme-platform-api')
 
@@ -86,7 +83,7 @@ dependencies {
     implementation 'org.springframework.data:spring-data-commons'
 
     // Import spring-cloud-aws BOM (Bill Of Materials) for dependency management
-    implementation platform('io.awspring.cloud:spring-cloud-aws:4.0.0')
+    implementation platform('io.awspring.cloud:spring-cloud-aws:4.0.2')
     implementation 'io.awspring.cloud:spring-cloud-aws-starter'
     implementation 'io.awspring.cloud:spring-cloud-aws-starter-sqs'
     implementation 'software.amazon.awssdk:sts:2.33.7'
