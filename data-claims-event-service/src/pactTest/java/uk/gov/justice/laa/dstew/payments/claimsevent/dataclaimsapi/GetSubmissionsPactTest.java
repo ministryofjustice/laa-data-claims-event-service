@@ -10,7 +10,6 @@ import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.core.model.RequestResponsePact;
 import au.com.dius.pact.core.model.annotations.Pact;
 import java.util.Map;
-import java.util.UUID;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -43,10 +42,10 @@ public final class GetSubmissionsPactTest extends AbstractPactTest {
         .given("a submission exists for the search criteria")
         .uponReceiving("a search request for submissions")
         .path("/api/v1/submissions")
-        .matchQuery("offices", "([A-Z0-9]{6})")
-        .matchQuery("area_of_law", "(LEGAL_HELP|CRIME_LOWER|MEDIATION)")
+        .matchQuery("offices", "([A-Z0-9]{6})", "ABC123")
+        .matchQuery("area_of_law", "(LEGAL_HELP|CRIME_LOWER|MEDIATION)", "LEGAL_HELP")
         .queryMatchingDate("submission_period", "MMM-2025")
-        .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
+        .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX, EXAMPLE_AUTH_TOKEN)
         .method("GET")
         .willRespondWith()
         .status(200)
@@ -65,7 +64,7 @@ public final class GetSubmissionsPactTest extends AbstractPactTest {
                             submission.stringType("area_of_law", "CRIME LOWER");
                             submission.stringType("provider_user_id", "string");
                             submission.stringType("status", "CREATED");
-                            submission.uuid("previous_submission_id", UUID.randomUUID());
+                            submission.uuid("previous_submission_id", PREVIOUS_SUBMISSION_ID);
                             submission.booleanType("is_nil_submission", true);
                             submission.numberType("number_of_claims", 0);
                             submission.datetime("submitted", "yyyy-MM-dd'T'HH:mm:ssXXX");
@@ -88,10 +87,10 @@ public final class GetSubmissionsPactTest extends AbstractPactTest {
         .given("no submission exists")
         .uponReceiving("a search request for submissions that returns no results")
         .path("/api/v1/submissions")
-        .matchQuery("offices", "([A-Z0-9]{6})")
-        .matchQuery("area_of_law", "(LEGAL_HELP|CRIME_LOWER|MEDIATION)")
+        .matchQuery("offices", "([A-Z0-9]{6})", "ABC123")
+        .matchQuery("area_of_law", "(LEGAL_HELP|CRIME_LOWER|MEDIATION)", "LEGAL_HELP")
         .queryMatchingDate("submission_period", "MMM-2025")
-        .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
+        .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX, EXAMPLE_AUTH_TOKEN)
         .method("GET")
         .willRespondWith()
         .status(200)

@@ -15,14 +15,17 @@ abstract class AbstractPactTest {
 
   protected static final String UUID_REGEX =
       "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
-  protected static final UUID CLAIM_ID = UUID.randomUUID();
+  // Fixed UUIDs: random values mutate the published pact on every run and cause the
+  // broker to reject re-publishes for the same consumer version (HTTP 409).
+  protected static final UUID CLAIM_ID = UUID.fromString("00000000-0000-0000-0000-0000000000c1");
 
   protected static final ObjectMapper objectMapper =
       new ObjectMapper()
           .registerModule(new JavaTimeModule()) // Needed!
           .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-  protected static final UUID SUBMISSION_ID = UUID.randomUUID();
+  protected static final UUID SUBMISSION_ID =
+      UUID.fromString("00000000-0000-0000-0000-0000000000c2");
 
   // Required Context Spring Beans
   @MockitoBean SubmissionListener submissionListener;

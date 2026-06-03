@@ -46,8 +46,10 @@ public final class PostClaimPactTest extends AbstractPactTest {
     return builder
         .given("the system is ready to process a valid claim")
         .uponReceiving("a new claim request")
-        .matchPath("/api/v1/submissions/(" + UUID_REGEX + ")/claims")
-        .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
+        .matchPath(
+            "/api/v1/submissions/(" + UUID_REGEX + ")/claims",
+            "/api/v1/submissions/" + EXAMPLE_UUID + "/claims")
+        .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX, EXAMPLE_AUTH_TOKEN)
         .method("POST")
         .body(objectMapper.writeValueAsString(getClaimPost()))
         .matchHeader("Content-Type", "application/json")
@@ -65,8 +67,10 @@ public final class PostClaimPactTest extends AbstractPactTest {
     return builder
         .given("the claim request contains invalid data")
         .uponReceiving("a request to create a claim with invalid data")
-        .matchPath("/api/v1/submissions/(" + UUID_REGEX + ")/claims")
-        .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
+        .matchPath(
+            "/api/v1/submissions/(" + UUID_REGEX + ")/claims",
+            "/api/v1/submissions/" + EXAMPLE_UUID + "/claims")
+        .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX, EXAMPLE_AUTH_TOKEN)
         .method("POST")
         .body(objectMapper.writeValueAsString(getClaimPost()))
         .matchHeader("Content-Type", "application/json")
