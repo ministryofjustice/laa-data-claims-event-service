@@ -35,7 +35,7 @@ jobs:
 
       - name: Can I deploy?
         id: can-i-deploy
-        uses: ministryofjustice/laa-ccms-common-workflows/.github/actions/pact-can-i-deploy@90aa22bf1f55a39b4f10c4f7168356f0669eed77 # v1
+        uses: ministryofjustice/laa-ccms-common-workflows/.github/actions/pact-can-i-deploy@dc4173bfc12f714d7e8cbdd9f524d00ef02e25c4 # v2.1.1
         with:
           pacticipant: 'laa-data-claims-event-service'
           environment: ${{ inputs.claim_api_environment_name }}
@@ -52,35 +52,46 @@ jobs:
           kubectl config use-context ${{ secrets.KUBE_CLUSTER }}
 
       - name: Configure aws credentials
-        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7 # v6
+        uses: aws-actions/configure-aws-credentials@d979d5b3a71173a29b74b5b88418bfda9437d885 # v6
         with:
           role-to-assume: ${{ secrets.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_ROLE_TO_ASSUME }}
           aws-region: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_REGION }}
 
       - name: Login ecr
-        uses: aws-actions/amazon-ecr-login@5a88a04c91d5c6f97aae0d9be790e64d9b1d47b7 # v1
+        uses: aws-actions/amazon-ecr-login@fa648b43de3d4d023bcb3f89ed6940096949c419 # v2.1.5
         id: login-ecr
 
       - name: Set helm chart app version
+        env:
+          IMAGE_TAG: ${{ inputs.image_tag }}
         run: |
-          yq eval-all "( .appVersion = \"${{ inputs.image_tag }}\" )" -i helm-chart/Chart.yaml
+          # use env var to avoid injecting github context directly into the shell
+          yq eval-all "( .appVersion = \"$IMAGE_TAG\" )" -i helm-chart/Chart.yaml
           cat helm-chart/Chart.yaml
 
       - name: Install or upgrade helm charts
         id: helm-install
+        env:
+          DEPLOYMENT_NAME: ${{ inputs.deployment_name }}
+          ENV_VALUES_FILE: "helm-chart/values/env-${{ inputs.environment }}.yaml"
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_REPOSITORY }}
         run: |
-          echo "Deploying Helm release '${{ inputs.deployment_name }}'..."
+          echo "Deploying Helm release '$DEPLOYMENT_NAME'..."
           helm upgrade --install --wait --timeout 5m \
-            -f helm-chart/values/env-${{ inputs.environment }}.yaml \
-            ${{ inputs.deployment_name }} helm-chart \
-            --set image.repository=${{ steps.login-ecr.outputs.registry }}/${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_REPOSITORY }}
-          IMAGES=$(helm get manifest ${{ inputs.deployment_name }} | yq -o=json '.' | jq -sc '[.[] | select(.kind == "Deployment") | select(.spec.template.spec.containers[0].image | contains("${{ steps.login-ecr.outputs.registry }}/${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_REPOSITORY }}")) | {image_version_tag: .metadata.labels.appVersion, release_tag: .metadata.name}]')
+            -f "$ENV_VALUES_FILE" \
+            "$DEPLOYMENT_NAME" helm-chart \
+            --set image.repository="$REGISTRY/$REPOSITORY"
+
+          REG_REPO="$REGISTRY/$REPOSITORY"
+          IMAGES=$(helm get manifest "$DEPLOYMENT_NAME" | yq -o=json '.' | jq -sc --arg registry "$REG_REPO" '[.[] | select(.kind == "Deployment") | select(.spec.template.spec.containers[0].image | contains($registry)) | {image_version_tag: .metadata.labels.appVersion, release_tag: .metadata.name}]')
+
           echo "images=$IMAGES" >> $GITHUB_OUTPUT
-          echo "Deployed Images: $(echo $IMAGES | jq)"
+          echo "Deployed Images: $(echo "$IMAGES" | jq)"
 
       - name: Record deployment to pact broker
         id: record-deployment-to-pact-broker
-        uses: ministryofjustice/laa-ccms-common-workflows/.github/actions/pact-record-deployment@90aa22bf1f55a39b4f10c4f7168356f0669eed77 # v1
+        uses: ministryofjustice/laa-ccms-common-workflows/.github/actions/pact-record-deployment@dc4173bfc12f714d7e8cbdd9f524d00ef02e25c4 # v2.1.1
         with:
           pacticipant: 'laa-data-claims-event-service'
           environment: ${{ inputs.claim_api_environment_name }}

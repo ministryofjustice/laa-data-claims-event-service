@@ -5,14 +5,19 @@ services:
       - application
     build:
       context: .
-      dockerfile: Dockerfile
-      args:
-        - BUILD_SOURCE=internal
+      dockerfile: Dockerfile_internal
       secrets:
         - github_actor
         - github_token
+<<<<<<< HEAD
     #ports:
     #  - "8182:8081"
+=======
+    # Information on why these ports here: https://github.com/ministryofjustice/laa-data-claims-parent#exposed-ports
+    ports:
+      - "8181:8081"
+      - "5081:5005"
+>>>>>>> main
     environment:
       - CLAIMS_API_HOSTNAME=http://host.docker.internal:8080
       - CLAIMS_API_ACCESS_TOKEN=f67f968e-b479-4e61-b66e-f57984931e56
@@ -30,22 +35,37 @@ services:
       - SPRING_CLOUD_AWS_SQS_ENDPOINT=http://localstack:4566
       - SPRING_CLOUD_AWS_CREDENTIALS_ACCESS-KEY=dummy-access-key
       - SPRING_CLOUD_AWS_CREDENTIALS_SECRET-KEY=dummy-access-key
+      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
     depends_on:
+<<<<<<< HEAD
       - localstack
     ports:
       - "8081"
     deploy:
       replicas: 2   # <-- “X services”
+=======
+      localstack:
+        condition: service_healthy
+>>>>>>> main
 
   localstack:
     container_name: event-service-localstack
-    image: localstack/localstack:3.8.1
+    image: localstack/localstack:4.14.0
     ports:
       - "4566:4566"
     environment:
-      - SERVICES=sqs
+      - SERVICES=sqs,sns
       - DEBUG=1
       - AWS_DEFAULT_REGION=us-east-1
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "awslocal sqs get-queue-url --queue-name claims-api-queue > /dev/null 2>&1",
+        ]
+      interval: 5s
+      retries: 10
+      timeout: 5s
     volumes:
       - "./docker-scripts/init-localstack.sh:/etc/localstack/init/ready.d/init-localstack.sh"
       - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
