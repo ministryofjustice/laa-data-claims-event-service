@@ -22,6 +22,7 @@ import org.springframework.boot.testcontainers.context.ImportTestcontainers;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import uk.gov.justice.laa.dstew.payments.claims.validation.core.service.ValidationService;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MessageListenerBase;
@@ -52,6 +53,8 @@ public abstract class SubmissionValidationIntegrationTestBase extends MockServer
   protected static final String SUBMISSION_BASE_PATH = "data-claims/get-submission/";
 
   @Autowired protected SubmissionValidationService submissionValidationService;
+
+  @Autowired protected ValidationService validationService;
 
   protected final ObjectMapper mapper = objectMapper;
 
