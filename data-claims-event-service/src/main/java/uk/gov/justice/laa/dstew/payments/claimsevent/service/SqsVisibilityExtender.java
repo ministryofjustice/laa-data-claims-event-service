@@ -29,6 +29,7 @@ public class SqsVisibilityExtender implements AutoCloseable {
   private ScheduledFuture<?> scheduledTask;
   private String receiptHandle;
   private String queueUrl;
+  private boolean completed;
 
   /**
    * Constructs an instance of SqsVisibilityExtender.
@@ -51,6 +52,14 @@ public class SqsVisibilityExtender implements AutoCloseable {
     this.visibilityExtensionIntervalSeconds = visibilityExtensionIntervalSeconds;
     this.scheduler = Executors.newScheduledThreadPool(1);
     this.queueName = queueName;
+  }
+
+  /**
+   * Marks processing as successfully completed so that {@link #close()} does not reset the message
+   * visibility. Call this immediately before the try-with-resources block exits normally.
+   */
+  public void markCompleted() {
+    this.completed = true;
   }
 
   /**
@@ -98,5 +107,33 @@ public class SqsVisibilityExtender implements AutoCloseable {
       scheduledTask.cancel(true);
     }
     scheduler.shutdownNow();
+    try {
+      scheduler.awaitTermination(5, TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }
+
+    if (!completed && receiptHandle != null && queueUrl != null) {
+      /*
+       * resets the SQS message visibility to 0 if processing did not complete normally
+       */
+      try {
+        log.debug(
+            "Processing did not complete normally; resetting SQS visibility to 0 for"
+                + " receiptHandle={}",
+            receiptHandle);
+        sqsClient.changeMessageVisibility(
+            ChangeMessageVisibilityRequest.builder()
+                .queueUrl(queueUrl)
+                .receiptHandle(receiptHandle)
+                .visibilityTimeout(0)
+                .build());
+      } catch (Exception ex) {
+        log.warn(
+            "Failed to reset SQS visibility for receiptHandle={}: {}",
+            receiptHandle,
+            ex.getMessage());
+      }
+    }
   }
 }
