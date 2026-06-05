@@ -19,6 +19,10 @@ spec:
         app: {{ .Release.Name }}-{{ .Chart.Name }}-pod
         app.kubernetes.io/name: {{ .Release.Name }}-{{ .Chart.Name }}
     spec:
+      # Add terminationGracePeriodSeconds to the pod spec so k8s waits long enough before sending SIGKILL
+      # lifecycle timeout (120s) + 30s JVM buffer, a conservative estimate
+      # always be greater than spring.lifecycle.timeout-per-shutdown-phase
+      terminationGracePeriodSeconds: 150
       serviceAccountName: {{ .Values.serviceAccountName }}
       {{- if .Values.securityContext }}
       securityContext:
