@@ -42,8 +42,10 @@ public final class GetClaimPactTest extends AbstractPactTest {
     return builder
         .given("a claim exists")
         .uponReceiving("a request to fetch an existing claim")
-        .matchPath("/api/v1/submissions/(" + UUID_REGEX + ")/claims/(" + UUID_REGEX + ")")
-        .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
+        .matchPath(
+            "/api/v1/submissions/(" + UUID_REGEX + ")/claims/(" + UUID_REGEX + ")",
+            "/api/v1/submissions/" + EXAMPLE_UUID + "/claims/" + EXAMPLE_UUID)
+        .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX, EXAMPLE_AUTH_TOKEN)
         .method("GET")
         .willRespondWith()
         .status(200)
@@ -210,8 +212,10 @@ public final class GetClaimPactTest extends AbstractPactTest {
     return builder
         .given("no claim exists")
         .uponReceiving("a request to fetch a non-existent claim")
-        .matchPath("/api/v1/submissions/(" + UUID_REGEX + ")/claims/(" + UUID_REGEX + ")")
-        .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
+        .matchPath(
+            "/api/v1/submissions/(" + UUID_REGEX + ")/claims/(" + UUID_REGEX + ")",
+            "/api/v1/submissions/" + EXAMPLE_UUID + "/claims/" + EXAMPLE_UUID)
+        .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX, EXAMPLE_AUTH_TOKEN)
         .method("GET")
         .willRespondWith()
         .status(404)
@@ -226,8 +230,10 @@ public final class GetClaimPactTest extends AbstractPactTest {
     return builder
         .given("no claim exists")
         .uponReceiving("a request to fetch a claim from a non-existent submission")
-        .matchPath("/api/v1/submissions/(" + UUID_REGEX + ")/claims/(" + UUID_REGEX + ")")
-        .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
+        .matchPath(
+            "/api/v1/submissions/(" + UUID_REGEX + ")/claims/(" + UUID_REGEX + ")",
+            "/api/v1/submissions/" + EXAMPLE_UUID + "/claims/" + EXAMPLE_UUID)
+        .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX, EXAMPLE_AUTH_TOKEN)
         .method("GET")
         .willRespondWith()
         .status(404)

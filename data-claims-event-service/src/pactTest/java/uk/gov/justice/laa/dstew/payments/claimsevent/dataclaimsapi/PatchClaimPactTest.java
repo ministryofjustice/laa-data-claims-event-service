@@ -45,8 +45,10 @@ public final class PatchClaimPactTest extends AbstractPactTest {
     return builder
         .given("the system is ready to update a claim")
         .uponReceiving("a patch claim request updating status only")
-        .matchPath("/api/v1/submissions/(" + UUID_REGEX + ")/claims/(" + UUID_REGEX + ")")
-        .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
+        .matchPath(
+            "/api/v1/submissions/(" + UUID_REGEX + ")/claims/(" + UUID_REGEX + ")",
+            "/api/v1/submissions/" + EXAMPLE_UUID + "/claims/" + EXAMPLE_UUID)
+        .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX, EXAMPLE_AUTH_TOKEN)
         .method("PATCH")
         .body(objectMapper.writeValueAsString(getClaimPatch()))
         .matchHeader("Content-Type", "application/json")
@@ -62,8 +64,10 @@ public final class PatchClaimPactTest extends AbstractPactTest {
     return builder
         .given("the claim patch contains invalid data")
         .uponReceiving("a request to patch a submission with invalid data")
-        .matchPath("/api/v1/submissions/(" + UUID_REGEX + ")/claims/(" + UUID_REGEX + ")")
-        .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
+        .matchPath(
+            "/api/v1/submissions/(" + UUID_REGEX + ")/claims/(" + UUID_REGEX + ")",
+            "/api/v1/submissions/" + EXAMPLE_UUID + "/claims/" + EXAMPLE_UUID)
+        .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX, EXAMPLE_AUTH_TOKEN)
         .method("PATCH")
         .body(objectMapper.writeValueAsString(getClaimPatch()))
         .matchHeader("Content-Type", "application/json")
