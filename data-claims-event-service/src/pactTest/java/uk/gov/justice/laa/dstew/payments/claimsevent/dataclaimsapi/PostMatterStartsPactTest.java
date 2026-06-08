@@ -46,8 +46,10 @@ public final class PostMatterStartsPactTest extends AbstractPactTest {
     return builder
         .given("the system is ready to process a valid matter start")
         .uponReceiving("a new matter start request")
-        .matchPath("/api/v1/submissions/(" + UUID_REGEX + ")/matter-starts")
-        .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
+        .matchPath(
+            "/api/v1/submissions/(" + UUID_REGEX + ")/matter-starts",
+            "/api/v1/submissions/" + EXAMPLE_UUID + "/matter-starts")
+        .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX, EXAMPLE_AUTH_TOKEN)
         .method("POST")
         .body(objectMapper.writeValueAsString(getMatterStartPost()))
         .matchHeader("Content-Type", "application/json")
@@ -65,8 +67,10 @@ public final class PostMatterStartsPactTest extends AbstractPactTest {
     return builder
         .given("the matter start request contains invalid data")
         .uponReceiving("a request to create a matter start with invalid data")
-        .matchPath("/api/v1/submissions/(" + UUID_REGEX + ")/matter-starts")
-        .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
+        .matchPath(
+            "/api/v1/submissions/(" + UUID_REGEX + ")/matter-starts",
+            "/api/v1/submissions/" + EXAMPLE_UUID + "/matter-starts")
+        .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX, EXAMPLE_AUTH_TOKEN)
         .method("POST")
         .body(objectMapper.writeValueAsString(getMatterStartPost()))
         .matchHeader("Content-Type", "application/json")

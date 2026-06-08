@@ -43,8 +43,10 @@ public final class PatchBulkSubmissionPactTest extends AbstractPactTest {
     return builder
         .given("the system is ready to update a bulk submission")
         .uponReceiving("a patch bulk submission request updating status only")
-        .matchPath("/api/v1/bulk-submissions/(" + UUID_REGEX + ")")
-        .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
+        .matchPath(
+            "/api/v1/bulk-submissions/(" + UUID_REGEX + ")",
+            "/api/v1/bulk-submissions/" + EXAMPLE_UUID)
+        .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX, EXAMPLE_AUTH_TOKEN)
         .method("PATCH")
         .body(objectMapper.writeValueAsString(getBulkSubmissionPatch()))
         .matchHeader("Content-Type", "application/json")
@@ -60,8 +62,10 @@ public final class PatchBulkSubmissionPactTest extends AbstractPactTest {
     return builder
         .given("the bulk submission patch contains invalid data")
         .uponReceiving("a request to patch a bulk submission with invalid data")
-        .matchPath("/api/v1/bulk-submissions/(" + UUID_REGEX + ")")
-        .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
+        .matchPath(
+            "/api/v1/bulk-submissions/(" + UUID_REGEX + ")",
+            "/api/v1/bulk-submissions/" + EXAMPLE_UUID)
+        .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX, EXAMPLE_AUTH_TOKEN)
         .method("PATCH")
         .body(objectMapper.writeValueAsString(getBulkSubmissionPatch()))
         .matchHeader("Content-Type", "application/json")

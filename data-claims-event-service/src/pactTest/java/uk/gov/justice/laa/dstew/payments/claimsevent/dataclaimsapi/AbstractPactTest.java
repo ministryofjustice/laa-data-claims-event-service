@@ -2,11 +2,19 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.dataclaimsapi;
 
 import java.util.List;
 import java.util.UUID;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.listener.SubmissionListener;
 
+// Force a deterministic test method execution order across all pact subclasses.
+// Without this, JUnit may execute @Pact-producing methods in a different order
+// between runs, which reorders interactions in the published pact JSON. That
+// makes the pact content for the same consumer version differ byte-for-byte
+// between runs, causing the broker to reject re-publishes with HTTP 409.
+@TestMethodOrder(MethodOrderer.MethodName.class)
 abstract class AbstractPactTest {
   protected static final String CONSUMER = "laa-data-claims-event-service";
   protected static final String PROVIDER = "laa-data-claims-api";
@@ -14,6 +22,13 @@ abstract class AbstractPactTest {
   protected static final String UUID_REGEX =
       "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
   protected static final String ANY_FORMAT_REGEX = "([a-zA-Z0-9_]+)";
+
+  // Fixed example values for matchers. Pact generates a RANDOM example when only a
+  // regex is supplied, which mutates the published contract on every run and causes the
+  // broker to reject re-publishes for the same consumer version (HTTP 409). Always pass
+  // these concrete examples to the 3-arg matchHeader/matchPath overloads.
+  protected static final String EXAMPLE_AUTH_TOKEN = "00000000-0000-0000-0000-0000000000aa";
+  protected static final String EXAMPLE_UUID = "00000000-0000-0000-0000-0000000000bb";
 
   // Any number, but not 0 alone. Maximum 8 digits
   protected static final String ANY_NUMBER_REGEX = "([1-9][0-9]{0,7})";
@@ -38,6 +53,8 @@ abstract class AbstractPactTest {
       UUID.fromString("00000000-0000-0000-0000-000000000004");
   protected static final UUID MATTER_START_ID =
       UUID.fromString("00000000-0000-0000-0000-000000000005");
+  protected static final UUID PREVIOUS_SUBMISSION_ID =
+      UUID.fromString("00000000-0000-0000-0000-000000000006");
 
   protected final ObjectMapper objectMapper = new ObjectMapper();
 

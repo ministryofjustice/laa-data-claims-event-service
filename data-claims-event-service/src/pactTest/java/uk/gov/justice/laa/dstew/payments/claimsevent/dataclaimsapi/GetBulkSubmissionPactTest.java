@@ -42,8 +42,10 @@ public final class GetBulkSubmissionPactTest extends AbstractPactTest {
     return builder
         .given("a bulk submission exists")
         .uponReceiving("a request to fetch a specific bulk submission")
-        .matchPath("/api/v1/bulk-submissions/(" + UUID_REGEX + ")")
-        .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
+        .matchPath(
+            "/api/v1/bulk-submissions/(" + UUID_REGEX + ")",
+            "/api/v1/bulk-submissions/" + EXAMPLE_UUID)
+        .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX, EXAMPLE_AUTH_TOKEN)
         .method("GET")
         .willRespondWith()
         .status(200)
@@ -208,7 +210,9 @@ public final class GetBulkSubmissionPactTest extends AbstractPactTest {
     return builder
         .given("no bulk submission exists")
         .uponReceiving("a request to fetch a non-existent bulk submission")
-        .matchPath("/api/v1/bulk-submissions/(" + UUID_REGEX + ")")
+        .matchPath(
+            "/api/v1/bulk-submissions/(" + UUID_REGEX + ")",
+            "/api/v1/bulk-submissions/" + EXAMPLE_UUID)
         .method("GET")
         .willRespondWith()
         .status(404)

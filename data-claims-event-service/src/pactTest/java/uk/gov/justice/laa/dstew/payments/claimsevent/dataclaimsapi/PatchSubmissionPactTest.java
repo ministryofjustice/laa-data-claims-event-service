@@ -45,8 +45,9 @@ public final class PatchSubmissionPactTest extends AbstractPactTest {
     return builder
         .given("the system is ready to update a submission")
         .uponReceiving("a patch submission request updating status only")
-        .matchPath("/api/v1/submissions/(" + UUID_REGEX + ")")
-        .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
+        .matchPath(
+            "/api/v1/submissions/(" + UUID_REGEX + ")", "/api/v1/submissions/" + EXAMPLE_UUID)
+        .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX, EXAMPLE_AUTH_TOKEN)
         .method("PATCH")
         .body(objectMapper.writeValueAsString(getSubmissionPatch()))
         .matchHeader("Content-Type", "application/json")
@@ -62,8 +63,9 @@ public final class PatchSubmissionPactTest extends AbstractPactTest {
     return builder
         .given("the submission patch contains invalid data")
         .uponReceiving("a request to patch a submission with invalid data")
-        .matchPath("/api/v1/submissions/(" + UUID_REGEX + ")")
-        .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
+        .matchPath(
+            "/api/v1/submissions/(" + UUID_REGEX + ")", "/api/v1/submissions/" + EXAMPLE_UUID)
+        .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX, EXAMPLE_AUTH_TOKEN)
         .method("PATCH")
         .body(objectMapper.writeValueAsString(getSubmissionPatch()))
         .matchHeader("Content-Type", "application/json")
