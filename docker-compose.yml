@@ -32,7 +32,8 @@ services:
       - SPRING_CLOUD_AWS_CREDENTIALS_SECRET-KEY=dummy-access-key
       - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
     depends_on:
-      - localstack
+      localstack:
+        condition: service_healthy
 
   localstack:
     container_name: event-service-localstack
@@ -40,9 +41,18 @@ services:
     ports:
       - "4566:4566"
     environment:
-      - SERVICES=sqs
+      - SERVICES=sqs,sns
       - DEBUG=1
       - AWS_DEFAULT_REGION=us-east-1
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "awslocal sqs get-queue-url --queue-name claims-api-queue > /dev/null 2>&1",
+        ]
+      interval: 5s
+      retries: 10
+      timeout: 5s
     volumes:
       - "./docker-scripts/init-localstack.sh:/etc/localstack/init/ready.d/init-localstack.sh"
       - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"

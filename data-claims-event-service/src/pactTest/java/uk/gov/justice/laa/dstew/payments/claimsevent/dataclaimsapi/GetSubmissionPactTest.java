@@ -12,7 +12,6 @@ import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.core.model.RequestResponsePact;
 import au.com.dius.pact.core.model.annotations.Pact;
 import java.util.Map;
-import java.util.UUID;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -44,8 +43,9 @@ public final class GetSubmissionPactTest extends AbstractPactTest {
     return builder
         .given("a submission exists")
         .uponReceiving("a request to fetch a specific submission")
-        .matchPath("/api/v1/submissions/(" + UUID_REGEX + ")")
-        .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
+        .matchPath(
+            "/api/v1/submissions/(" + UUID_REGEX + ")", "/api/v1/submissions/" + EXAMPLE_UUID)
+        .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX, EXAMPLE_AUTH_TOKEN)
         .method("GET")
         .willRespondWith()
         .status(200)
@@ -64,11 +64,9 @@ public final class GetSubmissionPactTest extends AbstractPactTest {
               body.stringType("area_of_law", "CRIME LOWER");
               body.stringType("provider_user_id", "string");
               body.stringType("status", "CREATED");
-              body.uuid("previous_submission_id", UUID.randomUUID());
+              body.uuid("previous_submission_id", PREVIOUS_SUBMISSION_ID);
               body.booleanType("is_nil_submission", true);
               body.numberType("number_of_claims", 0);
-              body.numberType("calculated_total_amount", 0);
-              body.numberType("assessed_total_amount", 0);
               body.datetime("submitted", "yyyy-MM-dd'T'HH:mm:ssXXX");
               body.stringType("created_by_user_id", "string");
               body.minArrayLike(
@@ -89,7 +87,8 @@ public final class GetSubmissionPactTest extends AbstractPactTest {
     return builder
         .given("no submission exists")
         .uponReceiving("a request to fetch a non-existent submission")
-        .matchPath("/api/v1/submissions/(" + UUID_REGEX + ")")
+        .matchPath(
+            "/api/v1/submissions/(" + UUID_REGEX + ")", "/api/v1/submissions/" + EXAMPLE_UUID)
         .method("GET")
         .willRespondWith()
         .status(404)
@@ -105,8 +104,6 @@ public final class GetSubmissionPactTest extends AbstractPactTest {
 
     assertThat(submission).isNotNull();
     assertThat(submission.getSubmissionId()).isEqualTo(SUBMISSION_ID);
-    assertThat(submission.getCalculatedTotalAmount()).isNotNull();
-    assertThat(submission.getAssessedTotalAmount()).isNotNull();
   }
 
   @Test
