@@ -48,7 +48,7 @@ public final class PostSubmissionPactTest extends AbstractPactTest {
         .given("the system is ready to process a valid submission")
         .uponReceiving("a new submission request")
         .path("/api/v1/submissions")
-        .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
+        .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX, EXAMPLE_AUTH_TOKEN)
         .method("POST")
         .body(objectMapper.writeValueAsString(getSubmissionPost()))
         .matchHeader("Content-Type", "application/json")
@@ -67,13 +67,13 @@ public final class PostSubmissionPactTest extends AbstractPactTest {
         .given("the system rejects an invalid submission")
         .uponReceiving("a request to create a submission with invalid data")
         .path("/api/v1/submissions")
-        .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
+        .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX, EXAMPLE_AUTH_TOKEN)
         .method("POST")
         .body(objectMapper.writeValueAsString(getSubmissionPost()))
         .matchHeader("Content-Type", "application/json")
         .willRespondWith()
         .status(400)
-        .matchHeader("Content-Type", "application/(problem\\+)?json")
+        .matchHeader("Content-Type", "application/(problem\\+)?json", "application/problem+json")
         .toPact();
   }
 
