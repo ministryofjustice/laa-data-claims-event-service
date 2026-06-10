@@ -290,7 +290,8 @@ public class ClaimValidationService {
   /**
    * Maps a ClaimResponse to the internal validation Claim model, runs the new validation service,
    * and compares the results against the existing report. Differences are logged as WARN via {@link
-   * ValidationResultComparator}.
+   * ValidationResultComparator}. Any unexpected error is caught and logged to prevent disruption to
+   * the existing validation flow.
    */
   private void compareClaimValidationResults(
       ClaimResponse claimResponse,
@@ -298,44 +299,51 @@ public class ClaimValidationService {
       SubmissionValidationContext context,
       List<ClaimResponse> finalSubmissionClaims) {
 
-    Claim mappedClaim = ClaimMapper.fromClaimResponse(claimResponse);
-    mappedClaim.setAreaOfLaw(submission.getAreaOfLaw());
-    mappedClaim.setOfficeAccountNumber(submission.getOfficeAccountNumber());
+    try {
+      Claim mappedClaim = ClaimMapper.fromClaimResponse(claimResponse);
+      mappedClaim.setAreaOfLaw(submission.getAreaOfLaw());
+      mappedClaim.setOfficeAccountNumber(submission.getOfficeAccountNumber());
 
-    List<Claim> relatedClaims =
-        finalSubmissionClaims.stream().map(ClaimMapper::fromClaimResponse).toList();
+      List<Claim> relatedClaims =
+          finalSubmissionClaims.stream().map(ClaimMapper::fromClaimResponse).toList();
 
-    relatedClaims.forEach(
-        c -> {
-          c.setAreaOfLaw(submission.getAreaOfLaw());
-          c.setOfficeAccountNumber(submission.getOfficeAccountNumber());
-        });
+      relatedClaims.forEach(
+          c -> {
+            c.setAreaOfLaw(submission.getAreaOfLaw());
+            c.setOfficeAccountNumber(submission.getOfficeAccountNumber());
+          });
 
-    ValidationResult validationResult =
-        validationService.validateClaim(mappedClaim, null, relatedClaims);
+      ValidationResult validationResult =
+          validationService.validateClaim(mappedClaim, null, relatedClaims);
 
-    if (validationResult == null) {
-      log.warn("Validation service returned null for claim {}", claimResponse.getId());
-      return;
+      if (validationResult == null) {
+        log.warn("Validation service returned null for claim {}", claimResponse.getId());
+        return;
+      }
+
+      // Filter out schema config warnings — expected during migration
+      List<ValidationIssue> filteredNewIssues =
+          Optional.ofNullable(validationResult.getIssues()).orElseGet(List::of).stream()
+              .filter(
+                  issue ->
+                      issue != null
+                          && !SCHEMA_CONFIG_WARNING_CODE.equalsIgnoreCase(
+                              issue.getCode() != null ? issue.getCode().trim() : null))
+              .toList();
+
+      List<ValidationMessagePatch> existingMessages =
+          context
+              .getClaimReport(claimResponse.getId())
+              .map(ClaimValidationReport::getMessages)
+              .orElseGet(List::of);
+
+      ValidationResultComparator.compare(
+          "Claim " + claimResponse.getId(), filteredNewIssues, existingMessages);
+    } catch (Exception e) {
+      log.error(
+          "Error during dry-run claim validation comparison for claim {} - existing validation unaffected",
+          claimResponse.getId(),
+          e);
     }
-
-    // Filter out schema config warnings — expected during migration
-    List<ValidationIssue> filteredNewIssues =
-        Optional.ofNullable(validationResult.getIssues()).orElseGet(List::of).stream()
-            .filter(
-                issue ->
-                    issue != null
-                        && !SCHEMA_CONFIG_WARNING_CODE.equalsIgnoreCase(
-                            issue.getCode() != null ? issue.getCode().trim() : null))
-            .toList();
-
-    List<ValidationMessagePatch> existingMessages =
-        context
-            .getClaimReport(claimResponse.getId())
-            .map(ClaimValidationReport::getMessages)
-            .orElseGet(List::of);
-
-    ValidationResultComparator.compare(
-        "Claim " + claimResponse.getId(), filteredNewIssues, existingMessages);
   }
 }

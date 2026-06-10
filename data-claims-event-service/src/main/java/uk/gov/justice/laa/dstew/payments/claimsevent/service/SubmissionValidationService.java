@@ -119,23 +119,31 @@ public class SubmissionValidationService {
   /**
    * Runs the new submission-level validator and compares its issues against the existing submission
    * validation errors recorded in the context. Differences are logged as WARN via {@link
-   * ValidationResultComparator}.
+   * ValidationResultComparator}. Any unexpected error is caught and logged to prevent disruption to
+   * the existing validation flow.
    */
   private void compareSubmissionValidationResults(
       UUID submissionId, SubmissionResponse submission, SubmissionValidationContext context) {
 
-    ValidationResult validationResult = validationService.validateSubmission(submission);
+    try {
+      ValidationResult validationResult = validationService.validateSubmission(submission);
 
-    if (validationResult == null) {
-      log.warn("Validation service returned null for submission {}", submissionId);
-      return;
+      if (validationResult == null) {
+        log.warn("Validation service returned null for submission {}", submissionId);
+        return;
+      }
+
+      var newIssues =
+          Optional.of(validationResult).map(ValidationResult::getIssues).orElseGet(List::of);
+
+      ValidationResultComparator.compare(
+          "Submission " + submissionId, newIssues, context.getSubmissionValidationErrors());
+    } catch (Exception e) {
+      log.error(
+          "Error during dry-run submission validation comparison for submission {} - existing validation unaffected",
+          submissionId,
+          e);
     }
-
-    var newIssues =
-        Optional.of(validationResult).map(ValidationResult::getIssues).orElseGet(List::of);
-
-    ValidationResultComparator.compare(
-        "Submission " + submissionId, newIssues, context.getSubmissionValidationErrors());
   }
 
   private SubmissionValidationContext initialiseValidationContext(SubmissionResponse submission) {
