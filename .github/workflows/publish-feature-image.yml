@@ -18,7 +18,7 @@ jobs:
     outputs:
       feature_version: ${{ steps.get-feature-version.outputs.feature_version }}
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: ministryofjustice/laa-ccms-common-workflows/.github/actions/remove-prefix@3eaf64bb987ef0648a2380d4e49927d1693ec195 # v2.2.1
         id: get-feature-name
         with:
@@ -49,7 +49,7 @@ jobs:
       jacoco_coverage_report: 'false'
     secrets:
       # requires a pat due to accessing a private github repos packages (providers-api)
-      gh_token: ${{ secrets.PHILS_PAT_TOKEN }} 
+      gh_token: ${{ secrets.PHILS_PAT_TOKEN }}
 
   ecr-publish-image:
     needs: [ assemble ]
@@ -66,7 +66,7 @@ jobs:
       image_scan: false
     secrets:
       # requires a pat due to accessing a private github repos packages (providers-api)
-      gh_token: ${{ secrets.PHILS_PAT_TOKEN }} 
+      gh_token: ${{ secrets.PHILS_PAT_TOKEN }}
       ecr_repository: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_REPOSITORY }}
       ecr_region: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_REGION }}
       ecr_role_to_assume: ${{ secrets.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_ROLE_TO_ASSUME }}
