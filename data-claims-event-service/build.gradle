@@ -43,12 +43,11 @@ repositories {
 }
 
 ext['tomcat.version'] = '11.0.22'
-ext['netty.version'] = '4.2.15.Final'
 
 dependencyManagement {
     imports {
         // Upgrade to fix vulnerabilities in netty
-        mavenBom('io.netty:netty-bom:4.2.13.Final')
+        mavenBom('io.netty:netty-bom:4.2.15.Final')
     }
     dependencies {
         dependencySet(group: 'io.sentry', version: versions.sentry) {
