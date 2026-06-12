@@ -78,6 +78,8 @@ public class SubmissionListener {
       extender.start(receiptHandle);
       SubmissionEventType submissionEventType = getSubmissionEventType(message);
       processMessageByType(message, submissionEventType);
+      // calls extender.markCompleted() just before the try-with-resources exits normally
+      extender.markCompleted();
     } catch (SubmissionEventProcessingException | IllegalArgumentException ex) {
       throw ex;
     } catch (Exception ex) {

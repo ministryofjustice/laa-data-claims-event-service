@@ -114,6 +114,12 @@ resources:
     cpu: 25m
     memory: 1G
 
+shutdown:
+  # Must be greater than spring.lifecycle.timeout-per-shutdown-phase (120s) to allow in-flight work to finish
+  terminationGracePeriodSeconds: 150
+  # Short sleep to allow the readiness probe state to propagate before SIGTERM processing begins
+  preStopSleepSeconds: 5
+
 sentry:
   enabled: true
   environment: production
