@@ -219,7 +219,7 @@ public final class GetClaimPactTest extends AbstractPactTest {
         .method("GET")
         .willRespondWith()
         .status(404)
-        .matchHeader("Content-Type", "application/(problem\\+)?json")
+        .matchHeader("Content-Type", "application/(problem\\+)?json", "application/problem+json")
         .toPact();
   }
 
@@ -237,7 +237,7 @@ public final class GetClaimPactTest extends AbstractPactTest {
         .method("GET")
         .willRespondWith()
         .status(404)
-        .matchHeader("Content-Type", "application/(problem\\+)?json")
+        .matchHeader("Content-Type", "application/(problem\\+)?json", "application/problem+json")
         .toPact();
   }
 
