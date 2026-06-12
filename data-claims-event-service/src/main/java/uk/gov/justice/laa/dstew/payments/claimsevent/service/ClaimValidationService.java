@@ -11,6 +11,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
+import uk.gov.justice.laa.dstew.payments.claims.validation.core.model.Claim;
+import uk.gov.justice.laa.dstew.payments.claims.validation.core.model.ValidationIssue;
+import uk.gov.justice.laa.dstew.payments.claims.validation.core.model.ValidationResult;
+import uk.gov.justice.laa.dstew.payments.claims.validation.core.service.ValidationService;
+import uk.gov.justice.laa.dstew.payments.claims.validation.core.util.ClaimMapper;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResultSet;
@@ -20,6 +25,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessageType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.EventServiceIllegalArgumentException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
+import uk.gov.justice.laa.dstew.payments.claimsevent.util.ValidationResultComparator;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
@@ -40,6 +46,9 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.MandatoryF
 @Service
 public class ClaimValidationService {
 
+  private static final String SCHEMA_CONFIG_WARNING_CODE = "SCHEMA_CONFIG_WARNING";
+
+  private final ValidationService validationService;
   private final CategoryOfLawValidationService categoryOfLawValidationService;
   private final DataClaimsRestClient dataClaimsRestClient;
   private final EventServiceMetricService eventServiceMetricService;
@@ -50,14 +59,16 @@ public class ClaimValidationService {
   /**
    * Claim validation service constructor.
    *
-   * @param categoryOfLawValidationService The category of law validation service
-   * @param dataClaimsRestClient The data claims rest client
-   * @param eventServiceMetricService The event service
-   * @param bulkClaimUpdater The bulk claim updater
-   * @param claimValidator The claim validator
-   * @param claimValidationBatchSize The batch size of claims to validate at once
+   * @param validationService the new validation service
+   * @param categoryOfLawValidationService the category of law validation service
+   * @param dataClaimsRestClient the data claims rest client
+   * @param eventServiceMetricService the event service metric service
+   * @param bulkClaimUpdater the bulk claim updater
+   * @param claimValidator the list of claim validators
+   * @param claimValidationBatchSize the batch size of claims to validate at once
    */
   public ClaimValidationService(
+      ValidationService validationService,
       CategoryOfLawValidationService categoryOfLawValidationService,
       DataClaimsRestClient dataClaimsRestClient,
       EventServiceMetricService eventServiceMetricService,
@@ -70,6 +81,7 @@ public class ClaimValidationService {
     this.bulkClaimUpdater = bulkClaimUpdater;
     this.claimValidator = claimValidator;
     this.claimValidationBatchSize = claimValidationBatchSize;
+    this.validationService = validationService;
   }
 
   /**
@@ -81,7 +93,7 @@ public class ClaimValidationService {
       SubmissionResponse submission, SubmissionValidationContext context) {
 
     int pageNumber = 0;
-    Integer totalPages = Integer.MAX_VALUE;
+    int totalPages = Integer.MAX_VALUE;
 
     // Loop over multiple pages in order to process claims in batches
     while (pageNumber < totalPages) {
@@ -118,17 +130,17 @@ public class ClaimValidationService {
           categoryOfLawValidationService.getFeeDetailsResponseForAllFeeCodesInClaims(
               submissionClaims);
 
-      List<ClaimResponse> finalSubmissionClaims = submissionClaims;
-
       // Submit validation tasks for each claim
       for (ClaimResponse claim : submissionClaims) {
         validateClaim(
             claim,
-            finalSubmissionClaims,
+            submissionClaims,
             feeDetailsResponseMap,
             submission.getAreaOfLaw(),
             submission.getOfficeAccountNumber(),
             context);
+
+        compareClaimValidationResults(claim, submission, context, submissionClaims);
       }
 
       // Increment page number
@@ -272,6 +284,66 @@ public class ClaimValidationService {
 
     if (messages.stream().anyMatch(x -> x.getType().equals(ValidationMessageType.WARNING))) {
       eventServiceMetricService.incrementTotalClaimsValidatedAndWarningsFound();
+    }
+  }
+
+  /**
+   * Maps a ClaimResponse to the internal validation Claim model, runs the new validation service,
+   * and compares the results against the existing report. Differences are logged as WARN via {@link
+   * ValidationResultComparator}. Any unexpected error is caught and logged to prevent disruption to
+   * the existing validation flow.
+   */
+  private void compareClaimValidationResults(
+      ClaimResponse claimResponse,
+      SubmissionResponse submission,
+      SubmissionValidationContext context,
+      List<ClaimResponse> finalSubmissionClaims) {
+
+    try {
+      Claim mappedClaim = ClaimMapper.fromClaimResponse(claimResponse);
+      mappedClaim.setAreaOfLaw(submission.getAreaOfLaw());
+      mappedClaim.setOfficeAccountNumber(submission.getOfficeAccountNumber());
+
+      List<Claim> relatedClaims =
+          finalSubmissionClaims.stream().map(ClaimMapper::fromClaimResponse).toList();
+
+      relatedClaims.forEach(
+          c -> {
+            c.setAreaOfLaw(submission.getAreaOfLaw());
+            c.setOfficeAccountNumber(submission.getOfficeAccountNumber());
+          });
+
+      ValidationResult validationResult =
+          validationService.validateClaim(mappedClaim, null, relatedClaims);
+
+      if (validationResult == null) {
+        log.warn("Validation service returned null for claim {}", claimResponse.getId());
+        return;
+      }
+
+      // Filter out schema config warnings — expected during migration
+      List<ValidationIssue> filteredNewIssues =
+          Optional.ofNullable(validationResult.getIssues()).orElseGet(List::of).stream()
+              .filter(
+                  issue ->
+                      issue != null
+                          && !SCHEMA_CONFIG_WARNING_CODE.equalsIgnoreCase(
+                              issue.getCode() != null ? issue.getCode().trim() : null))
+              .toList();
+
+      List<ValidationMessagePatch> existingMessages =
+          context
+              .getClaimReport(claimResponse.getId())
+              .map(ClaimValidationReport::getMessages)
+              .orElseGet(List::of);
+
+      ValidationResultComparator.compare(
+          "Claim " + claimResponse.getId(), filteredNewIssues, existingMessages);
+    } catch (Exception e) {
+      log.error(
+          "Error during dry-run claim validation comparison for claim {} - existing validation unaffected",
+          claimResponse.getId(),
+          e);
     }
   }
 }

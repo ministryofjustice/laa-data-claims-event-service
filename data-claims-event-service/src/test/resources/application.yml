@@ -1,6 +1,18 @@
 laa:
   bulk-claim-queue:
     name: test-queue-name
+  fee-scheme-platform-api:
+    url: http://localhost:0
+    accessToken: not-used
+  provider-details-api:
+    url: http://localhost:0
+    accessToken: not-used
+  claims-api:
+    url: http://localhost:0
+    accessToken: not-used
+  data-claims-api:
+    url: http://localhost:0
+    accessToken: not-used
 
 spring:
   cloud:
