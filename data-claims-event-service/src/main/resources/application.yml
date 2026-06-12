@@ -63,18 +63,43 @@ sentry:
     minimum-breadcrumb-level: info
 
 laa:
+  metrics:
+    namespace: claims_event_service_
+    warn-threshold-seconds: 2.0
+    
   provider-details-api:
     host: ${PROVIDER_DETAILS_API_HOSTNAME}
     url: ${laa.provider-details-api.host}
     accessToken: ${PROVIDER_DETAILS_API_ACCESS_TOKEN}
+    connection-timeout-ms: 2000
+    response-timeout-ms: 10000
+    max-connections: 50
+    pending-acquire-timeout-ms: 5000
+    max-in-memory-buffer-bytes: 262144
+
   claims-api:
     host: ${CLAIMS_API_HOSTNAME}
     url: ${laa.claims-api.host}
     accessToken: ${CLAIMS_API_ACCESS_TOKEN}
+    connection-timeout-ms: 2000
+    # Raised to 30s to accommodate large bulk-submission response payloads.
+    response-timeout-ms: 30000
+    # Higher pool ceiling to support concurrent claim validation workloads.
+    max-connections: 200
+    pending-acquire-timeout-ms: 10000
+    # Raised to 50 MB to prevent DataBufferLimitException on large bulk-submission payloads.
+    max-in-memory-buffer-bytes: 52428800
+
   fee-scheme-platform-api:
     host: ${FEE_SCHEME_PLATFORM_API_URL}
     url: ${laa.fee-scheme-platform-api.host}
     accessToken: ${FEE_SCHEME_PLATFORM_API_ACCESS_TOKEN}
+    connection-timeout-ms: 2000
+    response-timeout-ms: 10000
+    max-connections: 50
+    pending-acquire-timeout-ms: 5000
+    max-in-memory-buffer-bytes: 262144
+
   bulk-claim-queue:
     name: ${BULK_CLAIM_QUEUE_NAME}
     visibility-timeout-seconds: 600
