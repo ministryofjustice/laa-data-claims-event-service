@@ -65,10 +65,9 @@ public final class PostSubmissionPactTest extends AbstractPactTest {
         // Defines expected 201 response for successfully submitting valid submission using matchers
         return builder
                 .given("the system is ready to process a valid submission")
-                .given("the system is ready to process a valid submission")
                 .uponReceiving("a new submission request with created status")
                 .path("/api/v1/submissions")
-                .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
+                .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX, EXAMPLE_AUTH_TOKEN)
                 .method("POST")
                 .body(objectMapper.writeValueAsString(getSubmissionPost()))
                 .matchHeader("Content-Type", "application/json")
@@ -114,7 +113,7 @@ public final class PostSubmissionPactTest extends AbstractPactTest {
 
     @Test
     @DisplayName("Verify 201 response with submissionStatus CREATED - no validation")
-    @PactTestFor(pactMethod = "postSubmission201createdStatus")
+    @PactTestFor(pactMethod = "postSubmission201CreatedStatus")
     void verify201ResponseWithCreatedStatus() {
         SubmissionPost submissionPost = getSubmissionPost();
 
