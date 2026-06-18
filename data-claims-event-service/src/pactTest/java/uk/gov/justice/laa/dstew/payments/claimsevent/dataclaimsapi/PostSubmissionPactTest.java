@@ -123,6 +123,14 @@ public final class PostSubmissionPactTest extends AbstractPactTest {
     assertThat(response.getBody().getId()).isEqualTo(SUBMISSION_ID);
   }
 
+  @Test
+  @DisplayName("Verify 400 response")
+  @PactTestFor(pactMethod = "postSubmission400")
+  void verify400Response() {
+    SubmissionPost submissionPost = getSubmissionPostReadyForValidationStatus();
+    assertThrows(BadRequest.class, () -> dataClaimsRestClient.createSubmission(submissionPost));
+  }
+
   private SubmissionPost getSubmissionPostReadyForValidationStatus() {
     return new SubmissionPost()
         .bulkSubmissionId(BULK_SUBMISSION_ID)
@@ -149,13 +157,5 @@ public final class PostSubmissionPactTest extends AbstractPactTest {
         .providerUserId("test-user")
         .status(SubmissionStatus.CREATED)
         .createdByUserId("test-user");
-  }
-
-  @Test
-  @DisplayName("Verify 400 response")
-  @PactTestFor(pactMethod = "postSubmission400")
-  void verify400Response() {
-    SubmissionPost submissionPost = getSubmissionPostReadyForValidationStatus();
-    assertThrows(BadRequest.class, () -> dataClaimsRestClient.createSubmission(submissionPost));
   }
 }
