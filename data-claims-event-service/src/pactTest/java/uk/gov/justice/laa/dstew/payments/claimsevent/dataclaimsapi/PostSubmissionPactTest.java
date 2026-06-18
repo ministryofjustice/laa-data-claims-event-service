@@ -42,7 +42,7 @@ public final class PostSubmissionPactTest extends AbstractPactTest {
 
   @SneakyThrows
   @Pact(consumer = CONSUMER)
-  RequestResponsePact postSubmission201(PactDslWithProvider builder) {
+  RequestResponsePact postSubmission201CreatedStatus(PactDslWithProvider builder) {
     // Defines expected 201 response for successfully submitting valid submission using matchers
     return builder
         .given("the system is ready to process a valid submission")
@@ -50,7 +50,7 @@ public final class PostSubmissionPactTest extends AbstractPactTest {
         .path("/api/v1/submissions")
         .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX, EXAMPLE_AUTH_TOKEN)
         .method("POST")
-        .body(objectMapper.writeValueAsString(getSubmissionPost()))
+        .body(objectMapper.writeValueAsString(getSubmissionPostCreatedStatus()))
         .matchHeader("Content-Type", "application/json")
         .willRespondWith()
         .status(201)
@@ -58,6 +58,25 @@ public final class PostSubmissionPactTest extends AbstractPactTest {
         .body(LambdaDsl.newJsonBody(body -> body.uuid("id", SUBMISSION_ID)).build())
         .toPact();
   }
+
+    @SneakyThrows
+    @Pact(consumer = CONSUMER)
+    RequestResponsePact postSubmission201ReadyForValidationStatus(PactDslWithProvider builder) {
+        // Defines expected 201 response for successfully submitting valid submission using matchers
+        return builder
+                .given("the system is ready to process a valid submission")
+                .uponReceiving("a new submission request")
+                .path("/api/v1/submissions")
+                .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX, EXAMPLE_AUTH_TOKEN)
+                .method("POST")
+                .body(objectMapper.writeValueAsString(getSubmissionPostReadyForValidationStatus()))
+                .matchHeader("Content-Type", "application/json")
+                .willRespondWith()
+                .status(201)
+                .headers(Map.of("Content-Type", "application/json"))
+                .body(LambdaDsl.newJsonBody(body -> body.uuid("id", SUBMISSION_ID)).build())
+                .toPact();
+    }
 
   @SneakyThrows
   @Pact(consumer = CONSUMER)
@@ -69,7 +88,7 @@ public final class PostSubmissionPactTest extends AbstractPactTest {
         .path("/api/v1/submissions")
         .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX, EXAMPLE_AUTH_TOKEN)
         .method("POST")
-        .body(objectMapper.writeValueAsString(getSubmissionPost()))
+        .body(objectMapper.writeValueAsString(getSubmissionPostReadyForValidationStatus()))
         .matchHeader("Content-Type", "application/json")
         .willRespondWith()
         .status(400)
@@ -79,9 +98,9 @@ public final class PostSubmissionPactTest extends AbstractPactTest {
 
   @Test
   @DisplayName("Verify 201 response")
-  @PactTestFor(pactMethod = "postSubmission201")
-  void verify201Response() {
-    SubmissionPost submissionPost = getSubmissionPost();
+  @PactTestFor(pactMethod = "postSubmission201CreatedStatus")
+  void verify201ResponseCreatedStatus() {
+    SubmissionPost submissionPost = getSubmissionPostCreatedStatus();
 
     ResponseEntity<CreateSubmission201Response> response =
         dataClaimsRestClient.createSubmission(submissionPost);
@@ -90,24 +109,52 @@ public final class PostSubmissionPactTest extends AbstractPactTest {
     assertThat(response.getBody().getId()).isEqualTo(SUBMISSION_ID);
   }
 
-  private SubmissionPost getSubmissionPost() {
+    @Test
+    @DisplayName("Verify 201 response")
+    @PactTestFor(pactMethod = "postSubmission201ReadyForValidationStatus")
+    void verify201ResponseReadyForValidationStatus() {
+        SubmissionPost submissionPost = getSubmissionPostReadyForValidationStatus();
+
+        ResponseEntity<CreateSubmission201Response> response =
+                dataClaimsRestClient.createSubmission(submissionPost);
+        assertThat(response).isNotNull();
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(response.getBody().getId()).isEqualTo(SUBMISSION_ID);
+    }
+
+  private SubmissionPost getSubmissionPostReadyForValidationStatus() {
     return new SubmissionPost()
         .bulkSubmissionId(BULK_SUBMISSION_ID)
         .submissionId(SUBMISSION_ID)
         .submissionPeriod("APR-2025")
         .areaOfLaw(AreaOfLaw.LEGAL_HELP)
-        .numberOfClaims(2)
+        .numberOfClaims(0)
         .officeAccountNumber("ABC123")
         .providerUserId("test-user")
+        .isNilSubmission(true)
+        .legalHelpSubmissionReference("123ABC")
         .status(SubmissionStatus.READY_FOR_VALIDATION)
         .createdByUserId("test-user");
   }
+
+    private SubmissionPost getSubmissionPostCreatedStatus() {
+        return new SubmissionPost()
+                .bulkSubmissionId(BULK_SUBMISSION_ID)
+                .submissionId(SUBMISSION_ID)
+                .submissionPeriod("APR-2025")
+                .areaOfLaw(AreaOfLaw.LEGAL_HELP)
+                .numberOfClaims(0)
+                .officeAccountNumber("ABC123")
+                .providerUserId("test-user")
+                .status(SubmissionStatus.CREATED)
+                .createdByUserId("test-user");
+    }
 
   @Test
   @DisplayName("Verify 400 response")
   @PactTestFor(pactMethod = "postSubmission400")
   void verify400Response() {
-    SubmissionPost submissionPost = getSubmissionPost();
+    SubmissionPost submissionPost = getSubmissionPostReadyForValidationStatus();
     assertThrows(BadRequest.class, () -> dataClaimsRestClient.createSubmission(submissionPost));
   }
 }
