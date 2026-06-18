@@ -100,10 +100,7 @@ public final class PostSubmissionPactTest extends AbstractPactTest {
   @DisplayName("Verify 201 response with submissionStatus READY_FOR_VALIDATION - gets validated")
   @PactTestFor(pactMethod = "postSubmission201ReadyToValidateStatus")
   void verify201ResponseWithReadyForValidationStatus() {
-    SubmissionPost submissionPost = getSubmissionPost();
-    submissionPost.setIsNilSubmission(false);
-    submissionPost.setStatus(SubmissionStatus.READY_FOR_VALIDATION);
-    submissionPost.setLegalHelpSubmissionReference("ABC123");
+    SubmissionPost submissionPost = getNilSubmissionPost();
     ResponseEntity<CreateSubmission201Response> response =
         dataClaimsRestClient.createSubmission(submissionPost);
     assertThat(response).isNotNull();
@@ -136,6 +133,20 @@ public final class PostSubmissionPactTest extends AbstractPactTest {
         .status(SubmissionStatus.CREATED)
         .createdByUserId("test-user");
   }
+
+    private SubmissionPost getNilSubmissionPost() {
+        return new SubmissionPost()
+                .bulkSubmissionId(null)
+                .submissionId(SUBMISSION_ID)
+                .submissionPeriod("APR-2025")
+                .areaOfLaw(AreaOfLaw.CRIME_LOWER)
+                .numberOfClaims(0)
+                .officeAccountNumber("ABC321")
+                .providerUserId("test-user")
+                .status(SubmissionStatus.READY_FOR_VALIDATION)
+                .crimeLowerScheduleNumber("ABC123")
+                .createdByUserId("test-user");
+    }
 
   @Test
   @DisplayName("Verify 400 response")
