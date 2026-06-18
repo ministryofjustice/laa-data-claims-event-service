@@ -96,7 +96,7 @@ public final class PostSubmissionPactTest extends AbstractPactTest {
         .submissionId(SUBMISSION_ID)
         .submissionPeriod("APR-2025")
         .areaOfLaw(AreaOfLaw.LEGAL_HELP)
-        .numberOfClaims(0)
+        .numberOfClaims(2)
         .officeAccountNumber("ABC123")
         .providerUserId("test-user")
         .status(SubmissionStatus.CREATED)
