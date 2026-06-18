@@ -42,7 +42,7 @@ public final class PostSubmissionPactTest extends AbstractPactTest {
 
   @SneakyThrows
   @Pact(consumer = CONSUMER)
-  RequestResponsePact postSubmission201ReadyForValidationStatus(PactDslWithProvider builder) {
+  RequestResponsePact postSubmission201(PactDslWithProvider builder) {
     // Defines expected 201 response for successfully submitting valid submission using matchers
     return builder
         .given("the system is ready to process a valid submission")
@@ -79,8 +79,8 @@ public final class PostSubmissionPactTest extends AbstractPactTest {
 
   @Test
   @DisplayName("Verify 201 response")
-  @PactTestFor(pactMethod = "postSubmission201CreatedStatus")
-  void verify201ResponseCreatedStatus() {
+  @PactTestFor(pactMethod = "postSubmission201")
+  void verify201Response() {
     SubmissionPost submissionPost = getSubmissionPost();
 
     ResponseEntity<CreateSubmission201Response> response =
@@ -88,14 +88,6 @@ public final class PostSubmissionPactTest extends AbstractPactTest {
     assertThat(response).isNotNull();
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     assertThat(response.getBody().getId()).isEqualTo(SUBMISSION_ID);
-  }
-
-  @Test
-  @DisplayName("Verify 400 response")
-  @PactTestFor(pactMethod = "postSubmission400")
-  void verify400Response() {
-    SubmissionPost submissionPost = getSubmissionPost();
-    assertThrows(BadRequest.class, () -> dataClaimsRestClient.createSubmission(submissionPost));
   }
 
   private SubmissionPost getSubmissionPost() {
@@ -109,5 +101,13 @@ public final class PostSubmissionPactTest extends AbstractPactTest {
         .providerUserId("test-user")
         .status(SubmissionStatus.CREATED)
         .createdByUserId("test-user");
+  }
+
+  @Test
+  @DisplayName("Verify 400 response")
+  @PactTestFor(pactMethod = "postSubmission400")
+  void verify400Response() {
+    SubmissionPost submissionPost = getSubmissionPost();
+    assertThrows(BadRequest.class, () -> dataClaimsRestClient.createSubmission(submissionPost));
   }
 }
