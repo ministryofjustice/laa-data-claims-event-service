@@ -42,11 +42,11 @@ public final class PostSubmissionPactTest extends AbstractPactTest {
 
   @SneakyThrows
   @Pact(consumer = CONSUMER)
-  RequestResponsePact postSubmission201(PactDslWithProvider builder) {
+  RequestResponsePact postSubmission201ReadyToValidateStatus(PactDslWithProvider builder) {
     // Defines expected 201 response for successfully submitting valid submission using matchers
     return builder
-        .given("the system is ready to process a valid submission")
-        .uponReceiving("a new submission request")
+        .given("the system is ready to process a valid nil submission")
+        .uponReceiving("a new submission request with ready to validate status")
         .path("/api/v1/submissions")
         .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX, EXAMPLE_AUTH_TOKEN)
         .method("POST")
@@ -58,6 +58,26 @@ public final class PostSubmissionPactTest extends AbstractPactTest {
         .body(LambdaDsl.newJsonBody(body -> body.uuid("id", SUBMISSION_ID)).build())
         .toPact();
   }
+
+    @SneakyThrows
+    @Pact(consumer = CONSUMER)
+    RequestResponsePact postSubmission201CreatedStatus(PactDslWithProvider builder) {
+        // Defines expected 201 response for successfully submitting valid submission using matchers
+        return builder
+                .given("the system is ready to process a valid submission")
+                .given("the system is ready to process a valid submission")
+                .uponReceiving("a new submission request with created status")
+                .path("/api/v1/submissions")
+                .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX)
+                .method("POST")
+                .body(objectMapper.writeValueAsString(getSubmissionPost()))
+                .matchHeader("Content-Type", "application/json")
+                .willRespondWith()
+                .status(201)
+                .headers(Map.of("Content-Type", "application/json"))
+                .body(LambdaDsl.newJsonBody(body -> body.uuid("id", SUBMISSION_ID)).build())
+                .toPact();
+    }
 
   @SneakyThrows
   @Pact(consumer = CONSUMER)
@@ -78,17 +98,32 @@ public final class PostSubmissionPactTest extends AbstractPactTest {
   }
 
   @Test
-  @DisplayName("Verify 201 response")
-  @PactTestFor(pactMethod = "postSubmission201")
-  void verify201Response() {
+  @DisplayName("Verify 201 response with submissionStatus READY_FOR_VALIDATION - gets validated")
+  @PactTestFor(pactMethod = "postSubmission201ReadyToValidateStatus")
+  void verify201ResponseWithReadyForValidationStatus() {
     SubmissionPost submissionPost = getSubmissionPost();
-
+    submissionPost.setIsNilSubmission(false);
+    submissionPost.setStatus(SubmissionStatus.READY_FOR_VALIDATION);
+    submissionPost.setLegalHelpSubmissionReference("ABC123");
     ResponseEntity<CreateSubmission201Response> response =
         dataClaimsRestClient.createSubmission(submissionPost);
     assertThat(response).isNotNull();
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     assertThat(response.getBody().getId()).isEqualTo(SUBMISSION_ID);
   }
+
+    @Test
+    @DisplayName("Verify 201 response with submissionStatus CREATED - no validation")
+    @PactTestFor(pactMethod = "postSubmission201createdStatus")
+    void verify201ResponseWithCreatedStatus() {
+        SubmissionPost submissionPost = getSubmissionPost();
+
+        ResponseEntity<CreateSubmission201Response> response =
+                dataClaimsRestClient.createSubmission(submissionPost);
+        assertThat(response).isNotNull();
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(response.getBody().getId()).isEqualTo(SUBMISSION_ID);
+    }
 
   private SubmissionPost getSubmissionPost() {
     return new SubmissionPost()
@@ -99,7 +134,7 @@ public final class PostSubmissionPactTest extends AbstractPactTest {
         .numberOfClaims(2)
         .officeAccountNumber("ABC123")
         .providerUserId("test-user")
-        .status(SubmissionStatus.READY_FOR_VALIDATION)
+        .status(SubmissionStatus.CREATED)
         .createdByUserId("test-user");
   }
 
