@@ -45,7 +45,8 @@ public final class PostSubmissionPactTest extends AbstractPactTest {
   RequestResponsePact postSubmission201CreatedStatus(PactDslWithProvider builder) {
     // Defines expected 201 response for successfully submitting valid submission using matchers
     return builder
-        .given("the system is ready to process a submission with created status without pre-validation")
+        .given(
+            "the system is ready to process a submission with created status without pre-validation")
         .uponReceiving("a new submission request")
         .path("/api/v1/submissions")
         .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX, EXAMPLE_AUTH_TOKEN)
