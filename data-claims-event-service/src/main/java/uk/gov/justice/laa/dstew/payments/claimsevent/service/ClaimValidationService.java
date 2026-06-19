@@ -60,7 +60,8 @@ public class ClaimValidationService {
    * Claim validation service constructor.
    *
    * @param validationService the new validation service
-   * @param categoryOfLawValidationService the category of law validation service
+   * @param categoryOfLawValidationService the category of law validation service used only to
+   *     pre-fetch data from the PDA API and does no validation from this instance.
    * @param dataClaimsRestClient the data claims rest client
    * @param eventServiceMetricService the event service metric service
    * @param bulkClaimUpdater the bulk claim updater
@@ -295,22 +296,22 @@ public class ClaimValidationService {
    */
   private void compareClaimValidationResults(
       ClaimResponse claimResponse,
-      SubmissionResponse submission,
+      SubmissionResponse submissionResponse,
       SubmissionValidationContext context,
-      List<ClaimResponse> finalSubmissionClaims) {
+      List<ClaimResponse> submissionClaims) {
 
     try {
       Claim mappedClaim = ClaimMapper.fromClaimResponse(claimResponse);
-      mappedClaim.setAreaOfLaw(submission.getAreaOfLaw());
-      mappedClaim.setOfficeAccountNumber(submission.getOfficeAccountNumber());
+      mappedClaim.setAreaOfLaw(submissionResponse.getAreaOfLaw());
+      mappedClaim.setOfficeAccountNumber(submissionResponse.getOfficeAccountNumber());
 
       List<Claim> relatedClaims =
-          finalSubmissionClaims.stream().map(ClaimMapper::fromClaimResponse).toList();
+          submissionClaims.stream().map(ClaimMapper::fromClaimResponse).toList();
 
       relatedClaims.forEach(
           c -> {
-            c.setAreaOfLaw(submission.getAreaOfLaw());
-            c.setOfficeAccountNumber(submission.getOfficeAccountNumber());
+            c.setAreaOfLaw(submissionResponse.getAreaOfLaw());
+            c.setOfficeAccountNumber(submissionResponse.getOfficeAccountNumber());
           });
 
       ValidationResult validationResult =

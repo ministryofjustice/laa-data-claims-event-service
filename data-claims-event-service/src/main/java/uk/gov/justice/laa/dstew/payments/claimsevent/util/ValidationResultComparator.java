@@ -21,6 +21,10 @@ public final class ValidationResultComparator {
 
   private ValidationResultComparator() {}
 
+  // log message template for only-in messages; use SLF4J placeholders so the logger performs
+  // substitution
+  private static final String ONLY_IN_TEMPLATE = "[VALIDATOR-DRY-RUN] {} only in {} validator: {}";
+
   /**
    * Compares new validation issues against existing validation messages for a single entity (claim
    * or submission).
@@ -49,14 +53,9 @@ public final class ValidationResultComparator {
       return;
     }
 
-    unmatched.forEach(
-        ni -> log.warn("[VALIDATOR-DRY_RUN] {} only in new validator: {}", label, describeNew(ni)));
+    unmatched.forEach(ni -> log.warn(ONLY_IN_TEMPLATE, label, "new", describeNew(ni)));
     unmatchedExisting.forEach(
-        em ->
-            log.warn(
-                "[VALIDATOR-DRY-RUN] {} only in existing validator: {}",
-                label,
-                describeExisting(em)));
+        em -> log.warn(ONLY_IN_TEMPLATE, label, "existing", describeExisting(em)));
   }
 
   // ── Private helpers ────────────────────────────────────────────────────────

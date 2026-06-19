@@ -20,9 +20,13 @@ logging:
     uk.gov.justice.laa.dstew.payments.claimsevent: ${APPLICATION_LOGGING_LEVEL:INFO}
   structured:
     format:
-      console: "" # disables structured logging locally
-  pattern:
-    console: "%clr(%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX}){faint} %clr(%5p) %clr(${PID:- }){magenta} %clr{faint} %clr([%15.15t]){faint} %clr([%X{traceId:-},%X{spanId:-}]){yellow} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n"
+      console: ecs
+    ecs:
+      service:
+        name: laa-data-claims-event-service
+        version: ${spring.application.version:default}
+        environment: ${spring.profiles.active:default}
+        node_name: ${HOSTNAME:unknown}
 
 # used by actuator info endpoint
 info:
@@ -76,6 +80,21 @@ laa:
     name: ${BULK_CLAIM_QUEUE_NAME}
     visibility-timeout-seconds: 600
     visibility-extension-interval-seconds: 10
+  dstew:
+    payments:
+      validator:
+        provider-details-api:
+          url: ${PROVIDER_DETAILS_API_HOSTNAME}
+          accessToken: ${PROVIDER_DETAILS_API_ACCESS_TOKEN}
+          authHeader: "X-Authorization"
+        data-claims-api:
+          url: ${CLAIMS_API_HOSTNAME}
+          accessToken: ${CLAIMS_API_ACCESS_TOKEN}
+        fee-scheme-platform-api:
+          url: ${FEE_SCHEME_PLATFORM_API_URL}
+          accessToken: ${FEE_SCHEME_PLATFORM_API_ACCESS_TOKEN}
+        submission:
+          minimum-period: ${SUBMISSION_VALIDATION_MINIMUM_PERIOD:APR-2025}
 
 submission:
   validation:

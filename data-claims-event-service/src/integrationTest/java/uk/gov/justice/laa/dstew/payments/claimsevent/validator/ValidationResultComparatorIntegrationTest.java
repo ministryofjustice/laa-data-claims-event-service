@@ -119,7 +119,7 @@ public class ValidationResultComparatorIntegrationTest
         .anyMatch(
             e ->
                 e.getLevel() == Level.WARN
-                    && e.getFormattedMessage().contains("[VALIDATOR-DRY_RUN]")
+                    && e.getFormattedMessage().contains("[VALIDATOR-DRY-RUN]")
                     && e.getFormattedMessage().contains("only in new validator"));
   }
 
