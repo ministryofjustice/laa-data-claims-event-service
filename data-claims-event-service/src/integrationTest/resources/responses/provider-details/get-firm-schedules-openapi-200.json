@@ -84,7 +84,7 @@
           "withdrawalType": "string",
           "withdrawalReason": "string",
           "attributeCategory": "string",
-          "uniqueAuthorisationRef":null
+          "uniqueAuthorisationRef": 0
         }
       ]
     }

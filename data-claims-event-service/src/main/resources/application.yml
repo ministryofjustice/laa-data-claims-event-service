@@ -67,6 +67,7 @@ laa:
     host: ${PROVIDER_DETAILS_API_HOSTNAME}
     url: ${laa.provider-details-api.host}
     accessToken: ${PROVIDER_DETAILS_API_ACCESS_TOKEN}
+    authHeader: "X-Authorization"
   claims-api:
     host: ${CLAIMS_API_HOSTNAME}
     url: ${laa.claims-api.host}
@@ -79,6 +80,21 @@ laa:
     name: ${BULK_CLAIM_QUEUE_NAME}
     visibility-timeout-seconds: 600
     visibility-extension-interval-seconds: 10
+  dstew:
+    payments:
+      validator:
+        provider-details-api:
+          url: ${PROVIDER_DETAILS_API_HOSTNAME}
+          accessToken: ${PROVIDER_DETAILS_API_ACCESS_TOKEN}
+          authHeader: "X-Authorization"
+        data-claims-api:
+          url: ${CLAIMS_API_HOSTNAME}
+          accessToken: ${CLAIMS_API_ACCESS_TOKEN}
+        fee-scheme-platform-api:
+          url: ${FEE_SCHEME_PLATFORM_API_URL}
+          accessToken: ${FEE_SCHEME_PLATFORM_API_ACCESS_TOKEN}
+        submission:
+          minimum-period: ${SUBMISSION_VALIDATION_MINIMUM_PERIOD:APR-2025}
 
 submission:
   validation:

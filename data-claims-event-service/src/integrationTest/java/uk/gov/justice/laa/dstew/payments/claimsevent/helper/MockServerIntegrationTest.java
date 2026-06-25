@@ -14,7 +14,6 @@ import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.YearMonth;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
@@ -46,6 +45,9 @@ import org.testcontainers.containers.MockServerContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 import software.amazon.awssdk.http.HttpStatusCode;
+import uk.gov.justice.laa.dstew.payments.claims.validation.core.config.DataClaimsApiConfig;
+import uk.gov.justice.laa.dstew.payments.claims.validation.core.config.FeeSchemeApiConfig;
+import uk.gov.justice.laa.dstew.payments.claims.validation.core.config.ProviderDetailsApiConfig;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.ApiProperties;
 import uk.gov.justice.laa.dstew.payments.claimsevent.config.DataClaimsApiProperties;
@@ -80,7 +82,7 @@ public abstract class MockServerIntegrationTest {
   protected ObjectMapper objectMapper = new ObjectMapper();
 
   private static MockServerContainer createContainer() {
-    List<String> portBinding = Arrays.asList("30000:1080");
+    List<String> portBinding = List.of("30000:1080");
     MockServerContainer container =
         new MockServerContainer(MOCKSERVER_IMAGE)
             .waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofSeconds(30)));
@@ -286,6 +288,22 @@ public abstract class MockServerIntegrationTest {
                 .withBody(json(readJsonFromFile(expectedResponse))));
   }
 
+  protected void stubForGetClaimsFromPreviousSubmission(
+      final String officeCode,
+      final String feeCode,
+      final String uniqueFileNumber,
+      final String uniqueClientNumber,
+      final String expectedResponse)
+      throws Exception {
+    stubForGetClaims(
+        List.of(
+            Parameter.param("office_code", officeCode),
+            Parameter.param("fee_code", feeCode),
+            Parameter.param("unique_file_number", uniqueFileNumber),
+            Parameter.param("unique_client_number", uniqueClientNumber)),
+        expectedResponse);
+  }
+
   protected void stubForGetClaim(UUID submissionId, UUID claimId, String expectedResponse)
       throws Exception {
     mockServerClient
@@ -419,6 +437,33 @@ public abstract class MockServerIntegrationTest {
           return YearMonth.of(2025, 5);
         }
       };
+    }
+
+    @Bean
+    @Primary
+    public DataClaimsApiConfig coreDataClaimsApiConfig() {
+      DataClaimsApiConfig cfg = new DataClaimsApiConfig();
+      cfg.setUrl("http://localhost:30000");
+      cfg.setAccessToken("");
+      return cfg;
+    }
+
+    @Bean
+    @Primary
+    public FeeSchemeApiConfig coreFeeSchemeApiConfig() {
+      FeeSchemeApiConfig cfg = new FeeSchemeApiConfig();
+      cfg.setUrl("http://localhost:30000");
+      cfg.setAccessToken("");
+      return cfg;
+    }
+
+    @Bean
+    @Primary
+    public ProviderDetailsApiConfig coreProviderDetailsApiConfig() {
+      ProviderDetailsApiConfig cfg = new ProviderDetailsApiConfig();
+      cfg.setUrl("http://localhost:30000");
+      cfg.setAccessToken("");
+      return cfg;
     }
   }
 }

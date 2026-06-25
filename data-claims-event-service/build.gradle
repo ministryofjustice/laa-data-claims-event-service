@@ -39,10 +39,12 @@ jacocoTestCoverageVerification {
 
 repositories {
     // Use Maven Central for resolving dependencies.
+    mavenLocal()
     mavenCentral()
 }
 
 ext['tomcat.version'] = '11.0.22'
+ext['spring-framework.version'] = '7.0.8'
 
 dependencyManagement {
     imports {
@@ -68,9 +70,12 @@ dependencies {
      */
 
 
+    // TODO: Remove when we have a proper API to use instead of the internal
+    //  one currently pulling from reference-fee-scheme-platform-api on validation
     implementation project(':reference-fee-scheme-platform-api')
 
     implementation 'uk.gov.justice.laa.datastewardship.payments:data-claims-api-models:1.0.41'
+    implementation 'uk.gov.justice.laa.dstew.payments.claims.validation:claims-validation-core:1.0.21'
     implementation 'uk.gov.justice.laadata.providers:providers-api:1.40.1'
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
@@ -128,6 +133,14 @@ dependencies {
 
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     testImplementation 'au.com.dius.pact.consumer:junit5:4.6.19'
+
+    testImplementation('org.springframework.boot:spring-boot-starter-test') {
+        // exclude the repackaged android-json coming in via jsonassert
+        exclude group: 'com.vaadin.external.google', module: 'android-json'
+    }
+
+    // ensure a known org.json implementation is present
+    testImplementation 'org.json:json:20250517'
 }
 
 // To keep pact stuff separate

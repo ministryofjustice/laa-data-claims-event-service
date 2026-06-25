@@ -18,6 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
+import uk.gov.justice.laa.dstew.payments.claims.validation.core.service.ValidationService;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResultSet;
@@ -50,6 +51,7 @@ class ClaimValidationServiceTest {
   public interface StubClaimWithAreaOfLawValidator
       extends ClaimValidator, ClaimWithAreaOfLawValidator {}
 
+  @Mock ValidationService validationService;
   @Mock StubBasicClaimValidator basicClaimValidator;
   @Mock StubClaimWithAreaOfLawValidator claimWithAreaOfLawValidator;
   @Mock EffectiveCategoryOfLawClaimValidator effectiveCategoryOfLawClaimValidator;
@@ -61,6 +63,7 @@ class ClaimValidationServiceTest {
   void beforeEach() {
     claimValidationService =
         new ClaimValidationService(
+            validationService,
             categoryOfLawValidationService,
             dataClaimsRestClient,
             eventServiceMetricService,

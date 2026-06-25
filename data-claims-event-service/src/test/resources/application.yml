@@ -1,6 +1,29 @@
 laa:
   bulk-claim-queue:
     name: test-queue-name
+  fee-scheme-platform-api:
+    url: http://localhost:0
+    accessToken: not-used
+  provider-details-api:
+    url: http://localhost:0
+    accessToken: not-used
+  claims-api:
+    url: http://localhost:0
+    accessToken: not-used
+  dstew:
+    payments:
+      validator:
+        provider-details-api:
+          url: http://localhost:0
+          accessToken: not-used
+        data-claims-api:
+          url: http://localhost:0
+          accessToken: not-used
+        fee-scheme-platform-api:
+          url: http://localhost:0
+          accessToken: not-used
+        submission:
+          minimum-period: ${SUBMISSION_VALIDATION_MINIMUM_PERIOD:JAN-2018}
 
 spring:
   cloud:
