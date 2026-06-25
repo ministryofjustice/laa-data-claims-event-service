@@ -32,20 +32,6 @@ jobs:
       gh_token: ${{ secrets.PHILS_PAT_TOKEN }} 
       aws_region: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_AWS_REGION }}
 
-  sca-scan:
-    needs:
-      - assemble
-    uses: ./.github/workflows/sca-analysis.yml
-    permissions:
-      contents: read
-      security-events: write
-    with:
-      java_version: *JAVA_VERSION
-      java_distribution: *JDK_DISTRIBUTION
-    secrets:
-      # requires a pat due to accessing a private github repos packages (providers-api)
-      gh_token: ${{ secrets.PHILS_PAT_TOKEN }} 
-
   pact-test:
     needs: [ assemble ]
     uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/pact-and-publish.yml@a5b870c152d0bc4a7f67a23f2c226868f94d7041 # v2.2.2
@@ -91,7 +77,6 @@ jobs:
     needs:
       - ecr-publish-image
       - pact-test
-      - sca-scan
     permissions:
       id-token: write
       contents: read
@@ -108,7 +93,6 @@ jobs:
       - ecr-publish-image
       - pact-test
       - deploy-uat
-      - sca-scan
     permissions:
       id-token: write
       contents: read
@@ -125,7 +109,6 @@ jobs:
       - ecr-publish-image
       - pact-test
       - deploy-staging
-      - sca-scan
     permissions:
       id-token: write
       contents: read
