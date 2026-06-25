@@ -1696,6 +1696,45 @@
       ],
       "title": "Used Tenured Gen (MB)",
       "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "Shows the average latency of outbound HTTP client requests, grouped by downstream API, HTTP method, and response status.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 60 },
+      "id": 1001,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      },
+      "pluginVersion": "11.3.0",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "editorMode": "code",
+          "expr": "sum by (api, method, status) (rate(claims_event_service_http_client_requests_seconds_sum{container=\"$container\"}[$__range])) / sum by (api, method, status) (rate(claims_event_service_http_client_requests_seconds_count{container=\"$container\"}[$__range]))",
+          "format": "time_series",
+          "instant": false,
+          "legendFormat": "{{api}} {{method}} {{status}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "HTTP Client Request Latency (by API, Method, Status)",
+      "type": "timeseries"
     }
   ],
   "preload": false,
