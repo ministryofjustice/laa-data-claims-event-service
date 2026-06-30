@@ -6,6 +6,10 @@ spring:
     virtual:
       enabled: true
 
+  lifecycle:
+    # a conservative starting point - this is the total time for the application to shut down
+    timeout-per-shutdown-phase: 120s
+
   cloud:
     aws:
       sqs:
@@ -37,6 +41,7 @@ info:
 
 server:
   port: 8085
+  shutdown: graceful
 
 management:
   server:
@@ -52,6 +57,8 @@ management:
   endpoint:
     health:
       show-details: always
+      probes:
+        enabled: true
 
 sentry:
   dsn: ${SENTRY_DSN:}
