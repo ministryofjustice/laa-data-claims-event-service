@@ -16,6 +16,9 @@ on:
       image_tag:
         required: true
         type: string
+    secrets:
+      ecr_role_to_assume:
+        required: true
 
 permissions:
   contents: read
@@ -54,7 +57,7 @@ jobs:
       - name: Configure aws credentials
         uses: aws-actions/configure-aws-credentials@e7f100cf4c008499ea8adda475de1042d6975c7b # v6.2.0
         with:
-          role-to-assume: ${{ secrets.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_ROLE_TO_ASSUME }}
+          role-to-assume: ${{ secrets.ecr_role_to_assume }}
           aws-region: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_REGION }}
 
       - name: Login ecr

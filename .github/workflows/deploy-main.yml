@@ -2,8 +2,15 @@ name: Deploy main
 
 on:
   push:
-    tags:
-      - '*'
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      release_type:
+        type: choice
+        required: true
+        default: "patch"
+        description: "Release type"
+        options: [ "patch", "minor", "major" ]
 
 permissions:
   contents: read
@@ -13,28 +20,28 @@ env:
   JDK_DISTRIBUTION: &JDK_DISTRIBUTION 'corretto'
 
 jobs:
-  assemble:
-    uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/gradle-build-and-publish.yml@a5b870c152d0bc4a7f67a23f2c226868f94d7041 # v2.2.2
+  release:
+    uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/gradle-build-and-publish.yml@4daa796eff475c7a107e17daf4e4882b8a1b949b # v2.3.0
     permissions:
       contents: write
       packages: write
     with:
-      java_version: *JAVA_VERSION
-      java_distribution: *JDK_DISTRIBUTION
       build_command: 'assemble'
-      publish_package: 'false'
       junit_results: 'false'
       junit_report: 'false'
       checkstyle_report: 'false'
       jacoco_coverage_report: 'false'
+      java_version: *JAVA_VERSION
+      java_distribution: *JDK_DISTRIBUTION
+      release_type: ${{ inputs.release_type != 'auto' && inputs.release_type || '' }}
     secrets:
       # requires a pat due to accessing a private github repos packages (providers-api)
-      gh_token: ${{ secrets.PHILS_PAT_TOKEN }} 
+      gh_token: ${{ secrets.PHILS_PAT_TOKEN }}
       aws_region: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_AWS_REGION }}
 
   pact-test:
-    needs: [ assemble ]
-    uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/pact-and-publish.yml@a5b870c152d0bc4a7f67a23f2c226868f94d7041 # v2.2.2
+    needs: [ release ]
+    uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/pact-and-publish.yml@4daa796eff475c7a107e17daf4e4882b8a1b949b # v2.3.0
     permissions:
       contents: write
       packages: write
@@ -45,17 +52,17 @@ jobs:
       pact_test_task: "pactTest"
       publish_pact_results: true
       git_branch: 'main'
-      pact_tags: '${{ needs.assemble.outputs.published_artifact_version }},candidate'
+      pact_tags: '${{ needs.release.outputs.published_artifact_version }},candidate'
     secrets:
       # requires a pat due to accessing a private github repos packages (providers-api)
-      gh_token: ${{ secrets.PHILS_PAT_TOKEN }} 
+      gh_token: ${{ secrets.PHILS_PAT_TOKEN }}
       pact_broker_url: ${{ secrets.PACT_BROKER_URL }}
       pact_broker_username: ${{ secrets.PACT_BROKER_USERNAME }}
       pact_broker_password: ${{ secrets.PACT_BROKER_PASSWORD }}
 
   ecr-publish-image:
-    needs: [ assemble ]
-    uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/ecr-publish-image.yml@a5b870c152d0bc4a7f67a23f2c226868f94d7041 # v2.2.2
+    needs: [ release ]
+    uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/ecr-publish-image.yml@4daa796eff475c7a107e17daf4e4882b8a1b949b # v2.3.0
     permissions:
       contents: read
       id-token: write
@@ -64,10 +71,10 @@ jobs:
       java_version: *JAVA_VERSION
       java_distribution: *JDK_DISTRIBUTION
       jar_subproject: 'data-claims-event-service'
-      image_version: ${{ format('{0}-{1}', vars.LAA_DATA_CLAIMS_EVENT_SERVICE_IMAGE_PREFIX, needs.assemble.outputs.published_artifact_version) }}
+      image_version: ${{ format('{0}-{1}', vars.LAA_DATA_CLAIMS_EVENT_SERVICE_IMAGE_PREFIX, needs.release.outputs.published_artifact_version) }}
     secrets:
       # requires a pat due to accessing a private github repos packages (providers-api)
-      gh_token: ${{ secrets.PHILS_PAT_TOKEN }} 
+      gh_token: ${{ secrets.PHILS_PAT_TOKEN }}
       ecr_repository: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_REPOSITORY }}
       ecr_region: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_REGION }}
       ecr_role_to_assume: ${{ secrets.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_ROLE_TO_ASSUME }}
@@ -86,7 +93,8 @@ jobs:
       deployment_name: uat
       claim_api_environment_name: main
       image_tag: ${{ needs.ecr-publish-image.outputs.published_image_version }}
-    secrets: inherit
+    secrets:
+      ecr_role_to_assume: ${{ secrets.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_ROLE_TO_ASSUME }}
 
   deploy-staging:
     needs:
@@ -102,7 +110,8 @@ jobs:
       deployment_name: stg
       claim_api_environment_name: stg
       image_tag: ${{ needs.ecr-publish-image.outputs.published_image_version }}
-    secrets: inherit
+    secrets:
+      ecr_role_to_assume: ${{ secrets.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_ROLE_TO_ASSUME }}
 
   deploy-production:
     needs:
@@ -118,4 +127,5 @@ jobs:
       deployment_name: prod
       claim_api_environment_name: prod
       image_tag: ${{ needs.ecr-publish-image.outputs.published_image_version }}
-    secrets: inherit
+    secrets:
+      ecr_role_to_assume: ${{ secrets.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_ROLE_TO_ASSUME }}
