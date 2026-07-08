@@ -86,7 +86,14 @@ jobs:
       deployment_name: uat
       claim_api_environment_name: main
       image_tag: ${{ needs.ecr-publish-image.outputs.published_image_version }}
-    secrets: inherit
+    secrets:
+      pact_broker_username: ${{ secrets.PACT_BROKER_USERNAME }}
+      pact_broker_password: ${{ secrets.PACT_BROKER_PASSWORD }}
+      kube_cert: ${{ secrets.KUBE_CERT }}
+      KUBE_CLUSTER: ${{ secrets.KUBE_CLUSTER }}
+      KUBE_TOKEN: ${{ secrets.KUBE_TOKEN }}
+      KUBE_NAMESPACE: ${{ secrets.KUBE_NAMESPACE }}
+      LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_ROLE_TO_ASSUME: ${{ secrets.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_ROLE_TO_ASSUME }}
 
   deploy-staging:
     needs:
@@ -102,7 +109,14 @@ jobs:
       deployment_name: stg
       claim_api_environment_name: stg
       image_tag: ${{ needs.ecr-publish-image.outputs.published_image_version }}
-    secrets: inherit
+    secrets:
+      pact_broker_username: ${{ secrets.PACT_BROKER_USERNAME }}
+      pact_broker_password: ${{ secrets.PACT_BROKER_PASSWORD }}
+      kube_cert: ${{ secrets.KUBE_CERT }}
+      KUBE_CLUSTER: ${{ secrets.KUBE_CLUSTER }}
+      KUBE_TOKEN: ${{ secrets.KUBE_TOKEN }}
+      KUBE_NAMESPACE: ${{ secrets.KUBE_NAMESPACE }}
+      LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_ROLE_TO_ASSUME: ${{ secrets.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_ROLE_TO_ASSUME }}
 
   deploy-production:
     needs:
@@ -118,4 +132,11 @@ jobs:
       deployment_name: prod
       claim_api_environment_name: prod
       image_tag: ${{ needs.ecr-publish-image.outputs.published_image_version }}
-    secrets: inherit
+    secrets:
+      pact_broker_username: ${{ secrets.PACT_BROKER_USERNAME }}
+      pact_broker_password: ${{ secrets.PACT_BROKER_PASSWORD }}
+      kube_cert: ${{ secrets.KUBE_CERT }}
+      KUBE_CLUSTER: ${{ secrets.KUBE_CLUSTER }}
+      KUBE_TOKEN: ${{ secrets.KUBE_TOKEN }}
+      KUBE_NAMESPACE: ${{ secrets.KUBE_NAMESPACE }}
+      LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_ROLE_TO_ASSUME: ${{ secrets.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_ROLE_TO_ASSUME }}

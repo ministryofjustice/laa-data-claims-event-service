@@ -16,6 +16,21 @@ on:
       image_tag:
         required: true
         type: string
+    secrets:
+      pact_broker_username:
+        required: true
+      pact_broker_password:
+        required: true
+      kube_cert:
+        required: true
+      KUBE_CLUSTER:
+        required: true
+      KUBE_TOKEN:
+        required: true
+      KUBE_NAMESPACE:
+        required: true
+      LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_ROLE_TO_ASSUME:
+        required: true
 
 permissions:
   contents: read
