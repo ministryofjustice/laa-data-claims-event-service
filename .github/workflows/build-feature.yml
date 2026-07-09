@@ -23,7 +23,8 @@ jobs:
       snyk_token_present: ${{ steps.check.outputs.snyk_token_present }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        # Pinned to a full commit SHA to avoid mutable tag supply-chain risk (semgrep finding)
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608
 
       - name: Check Snyk secrets presence and validate token (no install)
         id: check
