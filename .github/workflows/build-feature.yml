@@ -123,6 +123,5 @@ jobs:
       ecr_repository: ""
       ecr_region: ""
       ecr_role_to_assume: ""
-      snyk_token: ${{ secrets.SNYK_TOKEN }}
       snyk_client_id: ${{ secrets.SNYK_CLIENT_ID }}
       snyk_client_secret: ${{ secrets.SNYK_CLIENT_SECRET }}
