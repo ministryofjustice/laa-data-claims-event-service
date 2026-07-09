@@ -17,6 +17,46 @@ env:
   JDK_DISTRIBUTION: &JDK_DISTRIBUTION 'corretto'
 
 jobs:
+  snyk-diagnostics:
+    runs-on: ubuntu-latest
+    outputs:
+      snyk_token_present: ${{ steps.check.outputs.snyk_token_present }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check Snyk secrets presence and validate token (no install)
+        id: check
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          SNYK_CLIENT_ID: ${{ secrets.SNYK_CLIENT_ID }}
+          SNYK_CLIENT_SECRET: ${{ secrets.SNYK_CLIENT_SECRET }}
+        run: |
+          set -euo pipefail
+          echo "SNYK_TOKEN present: ${SNYK_TOKEN:+yes}"
+          echo "SNYK_CLIENT_ID present: ${SNYK_CLIENT_ID:+yes}"
+          echo "SNYK_CLIENT_SECRET present: ${SNYK_CLIENT_SECRET:+yes}"
+          if [ -z "${SNYK_TOKEN:-}" ]; then
+            echo "snyk_token_present=false" >> $GITHUB_OUTPUT
+            echo "No SNYK_TOKEN available in this job"
+            exit 0
+          fi
+
+          # Validate token using Snyk API (no CLI install, no config persistence)
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: token $SNYK_TOKEN" \
+            "https://snyk.io/api/v1/orgs" || echo "000")
+
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "snyk_token_present=true" >> $GITHUB_OUTPUT
+            echo "Snyk token validated (200 OK)"
+          elif [ "$HTTP_CODE" = "401" ]; then
+            echo "snyk_token_present=false" >> $GITHUB_OUTPUT
+            echo "Snyk returned 401 Unauthorized: token invalid or lacks access (SNYK-0005)"
+          else
+            echo "snyk_token_present=false" >> $GITHUB_OUTPUT
+            echo "Snyk token check returned HTTP status: $HTTP_CODE (network error or unexpected response)"
+          fi
   build:
     uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/gradle-build-and-publish.yml@4daa796eff475c7a107e17daf4e4882b8a1b949b # v2.3.0
     permissions:
@@ -64,6 +104,7 @@ jobs:
     needs:
       - build
       - pact-test
+      - snyk-diagnostics
     uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/ecr-publish-image.yml@4daa796eff475c7a107e17daf4e4882b8a1b949b # v2.3.0
     permissions:
       contents: read
