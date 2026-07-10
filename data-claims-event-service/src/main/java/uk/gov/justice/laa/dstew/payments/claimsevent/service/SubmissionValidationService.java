@@ -93,7 +93,7 @@ public class SubmissionValidationService {
       log.debug("Validation completed for submission {} with no errors", submissionId);
       submissionPatch.status(SubmissionStatus.VALIDATION_SUCCEEDED);
       eventServiceMetricService.incrementTotalValidSubmissions();
-      bulkSubmissionPatch.status(BulkSubmissionStatus.VALIDATION_SUCCEEDED);
+      bulkSubmissionPatch.status(BulkSubmissionStatus.READY_FOR_FINAL_SUBMISSION);
     }
 
     // Record what submission errors were found
