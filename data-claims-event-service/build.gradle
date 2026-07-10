@@ -8,7 +8,7 @@ plugins {
 def versions = [
         sentry : '8.31.0',
         testcontainers : '1.20.1',
-        jackson : '2.21.2'
+        jackson : '2.21.5' // bumped to patch release to address Snyk jackson-databind finding
 ]
 
 apply plugin: 'uk.gov.laa.springboot.laa-spring-boot-gradle-plugin'
@@ -42,7 +42,7 @@ repositories {
     mavenCentral()
 }
 
-ext['tomcat.version'] = '11.0.22'
+ext['tomcat.version'] = '11.0.23' // bumped patch release to address Snyk tomcat-embed findings
 
 dependencyManagement {
     imports {
@@ -58,6 +58,11 @@ dependencyManagement {
         dependency "com.fasterxml.jackson.core:jackson-core:$versions.jackson"
         // Force jackson-core 3.x to fix Trivy vulnerability (AWS SDK pulls tools.jackson 3.0.4)
         dependency 'tools.jackson.core:jackson-core:3.1.1'
+        // Force patched versions to address Snyk findings
+        dependency 'ch.qos.logback:logback-core:1.5.36'
+        dependency "com.fasterxml.jackson.core:jackson-databind:2.21.5"
+        dependency 'org.apache.tomcat.embed:tomcat-embed-core:11.0.23'
+        dependency 'org.springframework.retry:spring-retry:2.0.13'
     }
 }
 

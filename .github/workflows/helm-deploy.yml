@@ -16,6 +16,21 @@ on:
       image_tag:
         required: true
         type: string
+    secrets:
+      pact_broker_username:
+        required: true
+      pact_broker_password:
+        required: true
+      kube_cert:
+        required: true
+      KUBE_CLUSTER:
+        required: true
+      KUBE_TOKEN:
+        required: true
+      KUBE_NAMESPACE:
+        required: true
+      LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_ROLE_TO_ASSUME:
+        required: true
 
 permissions:
   contents: read
@@ -35,7 +50,7 @@ jobs:
 
       - name: Can I deploy?
         id: can-i-deploy
-        uses: ministryofjustice/laa-ccms-common-workflows/.github/actions/pact-can-i-deploy@a5b870c152d0bc4a7f67a23f2c226868f94d7041 # v2.2.2
+        uses: ministryofjustice/laa-ccms-common-workflows/.github/actions/pact-can-i-deploy@4daa796eff475c7a107e17daf4e4882b8a1b949b # v2.3.0
         with:
           pacticipant: 'laa-data-claims-event-service'
           environment: ${{ inputs.claim_api_environment_name }}
@@ -52,7 +67,7 @@ jobs:
           kubectl config use-context ${{ secrets.KUBE_CLUSTER }}
 
       - name: Configure aws credentials
-        uses: aws-actions/configure-aws-credentials@e7f100cf4c008499ea8adda475de1042d6975c7b # v6.2.0
+        uses: aws-actions/configure-aws-credentials@254c19bd240aabef8777f48595e9d2d7b972184b # v6.2.1
         with:
           role-to-assume: ${{ secrets.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_ROLE_TO_ASSUME }}
           aws-region: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_REGION }}
@@ -91,7 +106,7 @@ jobs:
 
       - name: Record deployment to pact broker
         id: record-deployment-to-pact-broker
-        uses: ministryofjustice/laa-ccms-common-workflows/.github/actions/pact-record-deployment@a5b870c152d0bc4a7f67a23f2c226868f94d7041 # v2.2.2
+        uses: ministryofjustice/laa-ccms-common-workflows/.github/actions/pact-record-deployment@4daa796eff475c7a107e17daf4e4882b8a1b949b # v2.3.0
         with:
           pacticipant: 'laa-data-claims-event-service'
           environment: ${{ inputs.claim_api_environment_name }}
