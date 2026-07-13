@@ -63,6 +63,8 @@ dependencyManagement {
         dependency "com.fasterxml.jackson.core:jackson-databind:2.21.5"
         dependency 'org.apache.tomcat.embed:tomcat-embed-core:11.0.23'
         dependency 'org.springframework.retry:spring-retry:2.0.13'
+        // Bump Log4j API to resolve Snyk issue (upgrade from 2.25.4 -> 2.25.5)
+        dependency "org.apache.logging.log4j:log4j-api:2.25.5"
     }
 }
 
