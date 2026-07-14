@@ -1,11 +1,22 @@
 # Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
 version: v1.25.1
 # ignores vulnerabilities until expiry date; change duration by modifying expiry date
-#
 ignore:
-  SNYK-JAVA-ORGSPRINGFRAMEWORKRETRY-17260993:
+  SNYK-JAVA-ORGHDRHISTOGRAM-17821182:
     - '*':
-        reason: Allocation of Resources Without Limits or Throttling in spring-retry; awaiting upgrade to 2.0.13
-        expires: 2026-06-26T00:00:00.000Z
-
+        reason: Transitive via micrometer-core/actuator; low severity, no fix available yet
+        expires: 2026-07-28T00:00:00.000Z
+  SNYK-JAVA-ORGHDRHISTOGRAM-17821183:
+    - '*':
+        reason: Transitive via micrometer-core/actuator; low severity, no fix available yet
+        expires: 2026-07-28T00:00:00.000Z
+  'snyk:lic:maven:com.puppycrawl.tools:checkstyle:LGPL-2.1':
+    - '*':
+        reason: Build-time tool only
+  'snyk:lic:maven:net.sf.saxon:Saxon-HE:MPL-2.0':
+    - '*':
+        reason: Build-time tool only (used by checkstyle)
+  'snyk:lic:maven:org.mozilla:rhino:MPL-2.0':
+    - '*':
+        reason: Test-time tool only (used by MockServer)
 patch: {}
