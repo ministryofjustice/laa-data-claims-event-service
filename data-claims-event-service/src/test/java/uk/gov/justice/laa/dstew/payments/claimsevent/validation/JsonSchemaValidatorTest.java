@@ -627,9 +627,9 @@ class JsonSchemaValidatorTest {
     @DisplayName("should accept surgeryMattersCount as omitted - distinguishes omitted from 0")
     @Test
     void validateSurgeryMattersCountOmitted_ShouldBeValid() {
-      // surgeryMattersCount accepts 0-99, with omitted values remaining distinct from 0
+      // surgeryMattersCount accepts 0-99; omitting the field should be valid
       ClaimResponse claim = getMinimumValidClaim();
-      // surgeryMattersCount not set - should remain null and be omitted from JSON
+      // surgeryMattersCount not set - should remain null
       final List<ValidationMessagePatch> errors =
           jsonSchemaValidator.validate("claim", claim, AreaOfLaw.LEGAL_HELP);
       assertThat(errors)
