@@ -624,7 +624,7 @@ class JsonSchemaValidatorTest {
                   + "999999)");
     }
 
-    @DisplayName("should accept surgeryMattersCount as omitted - distinguishes omitted from 0")
+    @DisplayName("should accept omitted surgeryMattersCount (null)")
     @Test
     void validateSurgeryMattersCountOmitted_ShouldBeValid() {
       // surgeryMattersCount accepts 0-99; omitting the field should be valid
