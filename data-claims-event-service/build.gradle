@@ -61,8 +61,8 @@ dependencyManagement {
         // Force jackson-core 2.x to fix Trivy vulnerability (transitive was pulling 2.20.2)
         dependency "com.fasterxml.jackson.core:jackson-core:$versions.jackson"
         // Force jackson-core 3.x to fix Trivy vulnerability (AWS SDK pulls tools.jackson 3.0.4)
-        dependency 'tools.jackson.core:jackson-core:3.1.1'
-        // Bumped jackson databind to resolve Snyk issue (upgrade from 3.1.4 -> 3.1.5)
+        // Bumped jackson tools to resolve Snyk issue (upgrade from 3.1.4 -> 3.1.5)
+        dependency 'tools.jackson.core:jackson-core:3.1.5'
         dependency 'tools.jackson.core:jackson-databind:3.1.5'
         // Force patched versions to address Snyk findings
         dependency 'ch.qos.logback:logback-core:1.5.36'
