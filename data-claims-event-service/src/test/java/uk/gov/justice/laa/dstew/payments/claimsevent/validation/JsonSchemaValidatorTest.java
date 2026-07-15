@@ -630,6 +630,12 @@ class JsonSchemaValidatorTest {
       // surgeryMattersCount accepts 0-99; omitting the field should be valid
       ClaimResponse claim = getMinimumValidClaim();
       // surgeryMattersCount not set - should remain null
+
+      assertThat(claim)
+          .as("precondition: surgeryMattersCount should be omitted (null) for this test")
+          .extracting("surgeryMattersCount")
+          .isNull();
+
       final List<ValidationMessagePatch> errors =
           jsonSchemaValidator.validate("claim", claim, AreaOfLaw.LEGAL_HELP);
       assertThat(errors)
