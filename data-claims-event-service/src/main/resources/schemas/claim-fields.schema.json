@@ -950,12 +950,12 @@
     },
     "surgery_matters_count": {
       "type": "integer",
-      "minimum": 1,
-      "maximum": 20,
+      "minimum": 0,
+      "maximum": 99,
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Surgery Matters Count must be between 1 and 20"
+          "value": "Surgery Matters Count must be between 0 and 99"
         }
       ]
     },

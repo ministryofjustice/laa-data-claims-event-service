@@ -13,6 +13,10 @@ def versions = [
 
 apply plugin: 'uk.gov.laa.springboot.laa-spring-boot-gradle-plugin'
 
+checkstyle {
+    toolVersion = '11.0.0'
+}
+
 test {
     useJUnitPlatform()
     finalizedBy jacocoTestReport
@@ -56,13 +60,19 @@ dependencyManagement {
         }
         // Force jackson-core 2.x to fix Trivy vulnerability (transitive was pulling 2.20.2)
         dependency "com.fasterxml.jackson.core:jackson-core:$versions.jackson"
-        // Force jackson-core 3.x to fix Trivy vulnerability (AWS SDK pulls tools.jackson 3.0.4)
-        dependency 'tools.jackson.core:jackson-core:3.1.1'
+        // Force jackson tools to 3.1.5 to fix Trivy/Snyk vulnerability (AWS SDK pulls tools.jackson 3.0.4)
+        dependency 'tools.jackson.core:jackson-core:3.1.5'
+        dependency 'tools.jackson.core:jackson-databind:3.1.5'
         // Force patched versions to address Snyk findings
         dependency 'ch.qos.logback:logback-core:1.5.36'
         dependency "com.fasterxml.jackson.core:jackson-databind:2.21.5"
         dependency 'org.apache.tomcat.embed:tomcat-embed-core:11.0.23'
         dependency 'org.springframework.retry:spring-retry:2.0.13'
+        // Bump Log4j API to resolve Snyk issue (upgrade from 2.25.4 -> 2.25.5)
+        dependency "org.apache.logging.log4j:log4j-api:2.25.5"
+        dependency 'commons-beanutils:commons-beanutils:1.11.0'
+        dependency 'org.apache.httpcomponents.core5:httpcore5-h2:5.4.3'
+        dependency 'org.codehaus.plexus:plexus-utils:4.0.3'
     }
 }
 
@@ -122,7 +132,7 @@ dependencies {
     testImplementation "org.testcontainers:mockserver:$versions.testcontainers"
     testImplementation "org.testcontainers:localstack:$versions.testcontainers"
     testImplementation 'org.awaitility:awaitility'
-    testImplementation 'org.mock-server:mockserver-client-java:5.15.0'
+    testImplementation 'org.mock-server:mockserver-client-java:6.0.0'
     testImplementation("io.projectreactor:reactor-test:3.1.0.RELEASE")
     // Sentry
     implementation platform("io.sentry:sentry-bom:$versions.sentry")
