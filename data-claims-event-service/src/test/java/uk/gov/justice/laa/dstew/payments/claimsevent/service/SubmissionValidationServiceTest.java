@@ -21,6 +21,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
+import uk.gov.justice.laa.dstew.payments.claims.validation.core.model.ValidationResult;
+import uk.gov.justice.laa.dstew.payments.claims.validation.core.service.ValidationService;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
@@ -47,17 +49,24 @@ class SubmissionValidationServiceTest {
 
   @Mock private EventServiceMetricService eventServiceMetricService;
 
+  @Mock private ValidationService validationService;
+
   private SubmissionValidationService submissionValidationService;
 
   @BeforeEach
   void beforeEach() {
     submissionValidationService =
         new SubmissionValidationService(
+            validationService,
             claimValidationService,
             bulkClaimUpdater,
             dataClaimsRestClient,
             singletonList(submissionValidator),
             eventServiceMetricService);
+    // Ensure ValidationService.validateSubmission returns a non-null ValidationResult so
+    // SubmissionValidationService can proceed without NullPointerException during tests.
+    when(validationService.validateSubmission(any()))
+        .thenReturn(ValidationResult.builder().isValid(true).issues(List.of()).build());
   }
 
   @Nested
