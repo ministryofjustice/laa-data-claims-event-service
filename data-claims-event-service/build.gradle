@@ -52,7 +52,7 @@ ext['tomcat.version'] = '11.0.23' // bumped patch release to address Snyk tomcat
 dependencyManagement {
     imports {
         // Upgrade to fix vulnerabilities in netty
-        mavenBom('io.netty:netty-bom:4.2.15.Final')
+        mavenBom('io.netty:netty-bom:4.2.16.Final')
     }
     dependencies {
         dependencySet(group: 'io.sentry', version: versions.sentry) {
