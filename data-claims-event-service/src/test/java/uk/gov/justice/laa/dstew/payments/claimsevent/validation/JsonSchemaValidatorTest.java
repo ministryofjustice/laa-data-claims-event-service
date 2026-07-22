@@ -30,6 +30,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvFileSource;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.core.io.ClassPathResource;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
@@ -565,7 +566,8 @@ class JsonSchemaValidatorTest {
       "adviceTypeCode, ABC, LEGAL HELP, Advice Type Code must be valid",
       "medicalReportsCount, 11, LEGAL HELP, Medical Reports Count must be 20 or less",
       "surgeryClientsCount, 21, LEGAL HELP, Surgery Clients Count must be between 1 and 20",
-      "surgeryMattersCount, 21, LEGAL HELP, Surgery Matters Count must be between 1 and 20",
+      "surgeryMattersCount, -1, LEGAL HELP, Surgery Matters Count must be between 0 and 99",
+      "surgeryMattersCount, 100, LEGAL HELP, Surgery Matters Count must be between 0 and 99",
       "cmrhOralCount, 10, LEGAL HELP, CMRH Oral Count must be between 0 and 9",
       "cmrhTelephoneCount, 10, LEGAL HELP, CMRH Telephone Count must be between 0 and 9",
       "aitHearingCentreCode, 99, LEGAL HELP, AIT Hearing Centre Code must be valid",
@@ -620,6 +622,163 @@ class JsonSchemaValidatorTest {
                   + "value: 999999)"
                   + " : ethnicity_code: must be at most 2 characters long (provided value: "
                   + "999999)");
+    }
+
+    @DisplayName("should accept omitted surgeryMattersCount (null)")
+    @Test
+    void validateSurgeryMattersCountOmitted_ShouldBeValid() {
+      // surgeryMattersCount accepts 0-99; omitting the field should be valid
+      ClaimResponse claim = getMinimumValidClaim();
+      // surgeryMattersCount not set - should remain null
+
+      assertThat(claim)
+          .as("precondition: surgeryMattersCount should be omitted (null) for this test")
+          .extracting("surgeryMattersCount")
+          .isNull();
+
+      final List<ValidationMessagePatch> errors =
+          jsonSchemaValidator.validate("claim", claim, AreaOfLaw.LEGAL_HELP);
+      assertThat(errors)
+          .as(
+              "surgeryMattersCount is optional: blank/omitted values should be accepted (no"
+                  + " validation error)")
+          .isEmpty();
+    }
+
+    @DisplayName(
+        "should accept surgeryMattersCount as explicit 0 - validates 0 is distinct from" + " blank")
+    @Test
+    void validateSurgeryMattersCountAsZero_ShouldBeValid() {
+      // 0 is now a valid explicit value (previously invalid at 1-20 range)
+      ClaimResponse claim = getMinimumValidClaim();
+      setField(claim, "surgeryMattersCount", "0");
+      final List<ValidationMessagePatch> errors =
+          jsonSchemaValidator.validate("claim", claim, AreaOfLaw.LEGAL_HELP);
+      assertThat(errors).as("surgeryMattersCount: 0 is valid (minimum boundary)").isEmpty();
+    }
+
+    @DisplayName("should validate surgeryMattersCount boundary: 99 is max valid value")
+    @Test
+    void validateSurgeryMattersCountAtMaxBoundary_ShouldBeValid() {
+      ClaimResponse claim = getMinimumValidClaim();
+      setField(claim, "surgeryMattersCount", "99");
+      final List<ValidationMessagePatch> errors =
+          jsonSchemaValidator.validate("claim", claim, AreaOfLaw.LEGAL_HELP);
+      assertThat(errors).as("surgeryMattersCount: 99 is valid (maximum boundary)").isEmpty();
+    }
+
+    @DisplayName("should reject surgeryMattersCount below 0")
+    @Test
+    void validateSurgeryMattersCountBelowMin_ShouldFail() {
+      ClaimResponse claim = getMinimumValidClaim();
+      setField(claim, "surgeryMattersCount", "-1");
+      final List<ValidationMessagePatch> errors =
+          jsonSchemaValidator.validate("claim", claim, AreaOfLaw.LEGAL_HELP);
+      assertThat(errors)
+          .as("surgeryMattersCount: -1 should be rejected (below minimum of 0)")
+          .isNotEmpty();
+      assertThat(errors.getFirst().getDisplayMessage())
+          .contains("Surgery Matters Count must be between 0 and 99");
+    }
+
+    @DisplayName("should reject surgeryMattersCount above 99")
+    @Test
+    void validateSurgeryMattersCountAboveMax_ShouldFail() {
+      ClaimResponse claim = getMinimumValidClaim();
+      setField(claim, "surgeryMattersCount", "100");
+      final List<ValidationMessagePatch> errors =
+          jsonSchemaValidator.validate("claim", claim, AreaOfLaw.LEGAL_HELP);
+      assertThat(errors)
+          .as("surgeryMattersCount: 100 should be rejected (above maximum of 99)")
+          .isNotEmpty();
+      assertThat(errors.getFirst().getDisplayMessage())
+          .contains("Surgery Matters Count must be between 0 and 99");
+    }
+
+    @DisplayName("should reject decimal values for integer-only surgery count fields")
+    @ParameterizedTest(name = "{0}={1} should be rejected as non-whole number")
+    @CsvSource({"surgery_matters_count, 10.5", "surgery_clients_count, 2.3"})
+    void validateSurgeryCountsWithDecimalValues_ShouldFail(String fieldName, String decimalValue)
+        throws Exception {
+      List<ValidationMessagePatch> errors =
+          validateForInvalidDataTypes("claim", getMinimumValidClaim(), fieldName, decimalValue);
+
+      assertThat(errors).isNotEmpty();
+      assertThat(errors)
+          .extracting(ValidationMessagePatch::getTechnicalMessage)
+          .anyMatch(
+              message -> message.contains("number found, integer expected"),
+              "Expected integer type validation error for decimal input");
+    }
+
+    @DisplayName("should reject non-number values for integer-only surgery count fields")
+    @ParameterizedTest(name = "{0}={1} should be rejected as non-numeric")
+    @CsvSource({
+      "surgery_matters_count, '\"abc\"'",
+      "surgery_clients_count, '\"not-a-number\"'",
+      "surgery_matters_count, true",
+      "surgery_clients_count, false"
+    })
+    void validateSurgeryCountsWithNonNumericValues_ShouldFail(String fieldName, String badJsonValue)
+        throws Exception {
+      List<ValidationMessagePatch> errors =
+          validateForInvalidDataTypes("claim", getMinimumValidClaim(), fieldName, badJsonValue);
+
+      assertThat(errors).isNotEmpty();
+      assertThat(errors)
+          .extracting(ValidationMessagePatch::getTechnicalMessage)
+          .anyMatch(
+              message ->
+                  message.contains("string found, integer expected")
+                      || message.contains("boolean found, integer expected"),
+              "Expected integer type validation error for non-numeric input");
+    }
+
+    @DisplayName("should reject surgeryClientsCount below 1 - verify 1-20 range unchanged")
+    @ParameterizedTest(name = "surgeryClientsCount={0} should be rejected (below minimum of 1)")
+    @ValueSource(ints = {0, -1})
+    void validateSurgeryClientsCountBelowMin_ShouldFail(int value) {
+      // AC: Surgery Clients Count remains unchanged - must be between 1 and 20
+      ClaimResponse claim = getMinimumValidClaim();
+      setField(claim, "surgeryClientsCount", String.valueOf(value));
+      final List<ValidationMessagePatch> errors =
+          jsonSchemaValidator.validate("claim", claim, AreaOfLaw.LEGAL_HELP);
+      assertThat(errors)
+          .as("surgeryClientsCount=" + value + " should be rejected (unchanged 1-20 range)")
+          .isNotEmpty();
+      assertThat(errors.getFirst().getDisplayMessage())
+          .contains("Surgery Clients Count must be between 1 and 20");
+    }
+
+    @DisplayName("should reject surgeryClientsCount above 20 - verify 1-20 range unchanged")
+    @ParameterizedTest(name = "surgeryClientsCount={0} should be rejected (above maximum of 20)")
+    @ValueSource(ints = {21, 100})
+    void validateSurgeryClientsCountAboveMax_ShouldFail(int value) {
+      // AC: Surgery Clients Count remains unchanged - must be between 1 and 20
+      ClaimResponse claim = getMinimumValidClaim();
+      setField(claim, "surgeryClientsCount", String.valueOf(value));
+      final List<ValidationMessagePatch> errors =
+          jsonSchemaValidator.validate("claim", claim, AreaOfLaw.LEGAL_HELP);
+      assertThat(errors)
+          .as("surgeryClientsCount=" + value + " should be rejected (unchanged 1-20 range)")
+          .isNotEmpty();
+      assertThat(errors.getFirst().getDisplayMessage())
+          .contains("Surgery Clients Count must be between 1 and 20");
+    }
+
+    @DisplayName(
+        "should accept surgeryClientsCount within valid range - verify 1-20 range unchanged")
+    @ParameterizedTest(name = "surgeryClientsCount={0} should be accepted (within 1-20 range)")
+    @ValueSource(ints = {1, 5, 10, 15, 20})
+    void validateSurgeryClientsCountValidRange_ShouldPass(int value) {
+      // AC: Surgery Clients Count remains unchanged - verify 1-20 still works
+      ClaimResponse claim = getMinimumValidClaim();
+      setField(claim, "surgeryClientsCount", String.valueOf(value));
+      final List<ValidationMessagePatch> errors =
+          jsonSchemaValidator.validate("claim", claim, AreaOfLaw.LEGAL_HELP);
+      assertThat(errors)
+          .as("surgeryClientsCount=" + value + " should be accepted (unchanged 1-20 range)")
+          .isEmpty();
     }
   }
 

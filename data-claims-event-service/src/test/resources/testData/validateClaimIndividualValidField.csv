@@ -120,3 +120,8 @@ clientTypeCode, C
 clientTypeCode, J
 mentalHealthTribunalReference, AB/1234/12345
 mentalHealthTribunalReference, AB12345
+surgeryMattersCount, 0
+surgeryMattersCount, 1
+surgeryMattersCount, 20
+surgeryMattersCount, 21
+surgeryMattersCount, 99

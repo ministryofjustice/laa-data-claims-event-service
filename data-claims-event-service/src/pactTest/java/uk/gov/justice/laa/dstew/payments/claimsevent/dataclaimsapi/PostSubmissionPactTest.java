@@ -99,7 +99,7 @@ public final class PostSubmissionPactTest extends AbstractPactTest {
         .numberOfClaims(2)
         .officeAccountNumber("ABC123")
         .providerUserId("test-user")
-        .status(SubmissionStatus.READY_FOR_VALIDATION)
+        .status(SubmissionStatus.CREATED)
         .createdByUserId("test-user");
   }
 

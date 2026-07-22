@@ -66,7 +66,7 @@ class SubmissionValidationServiceTest {
     // Ensure ValidationService.validateSubmission returns a non-null ValidationResult so
     // SubmissionValidationService can proceed without NullPointerException during tests.
     when(validationService.validateSubmission(any()))
-        .thenReturn(new ValidationResult(true, List.of()));
+        .thenReturn(ValidationResult.builder().isValid(true).issues(List.of()).build());
   }
 
   @Nested

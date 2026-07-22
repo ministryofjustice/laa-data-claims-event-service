@@ -5,7 +5,7 @@ services:
       - application
     build:
       context: .
-      dockerfile: Dockerfile_internal
+      dockerfile: Dockerfile
       secrets:
         - github_actor
         - github_token
