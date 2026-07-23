@@ -1,7 +1,17 @@
 plugins {
-    id 'uk.gov.laa.springboot.laa-spring-boot-gradle-plugin' version '2.2.12' apply false
+    id 'uk.gov.justice.service.laa.laa-spring-boot-gradle-plugin' version '3.0.0' apply false
 }
 
 subprojects {
     group = 'uk.gov.justice.laa.dstew.payments.claimsevent'
+
+    // Centralised Checkstyle version for all modules.
+    // Applied in afterEvaluate so it overrides the default set by the laa-spring-boot-gradle-plugin.
+    plugins.withId('checkstyle') {
+        afterEvaluate {
+            checkstyle {
+                toolVersion = '11.0.0'
+            }
+        }
+    }
 }
