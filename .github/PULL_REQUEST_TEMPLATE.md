@@ -1,6 +1,6 @@
 ## Summary
 
-[Link to story](https://dsdmoj.atlassian.net/browse/LASB-XXX)
+[Link to story](https://dsdmoj.atlassian.net/browse/DSTEW-XXXX)
 
 Describe what you did and why.
 

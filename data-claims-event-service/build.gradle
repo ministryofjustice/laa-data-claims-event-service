@@ -1,4 +1,5 @@
 plugins {
+    id 'uk.gov.justice.service.laa.laa-spring-boot-gradle-plugin'
     id 'io.freefair.lombok' version '9.2.0'
     id("com.diffplug.spotless") version "7.2.1"
     id "io.sentry.jvm.gradle" version "5.12.2"
@@ -11,11 +12,6 @@ def versions = [
         jackson : '2.21.5' // bumped to patch release to address Snyk jackson-databind finding
 ]
 
-apply plugin: 'uk.gov.laa.springboot.laa-spring-boot-gradle-plugin'
-
-checkstyle {
-    toolVersion = '11.0.0'
-}
 
 test {
     useJUnitPlatform()
@@ -41,17 +37,13 @@ jacocoTestCoverageVerification {
     }
 }
 
-repositories {
-    // Use Maven Central for resolving dependencies.
-    mavenCentral()
-}
 
 ext['tomcat.version'] = '11.0.23' // bumped patch release to address Snyk tomcat-embed findings
 
 dependencyManagement {
     imports {
         // Upgrade to fix vulnerabilities in netty
-        mavenBom('io.netty:netty-bom:4.2.15.Final')
+        mavenBom('io.netty:netty-bom:4.2.16.Final')
     }
     dependencies {
         dependencySet(group: 'io.sentry', version: versions.sentry) {
@@ -244,7 +236,6 @@ pact {
 
     }
 }
-
 
 testlogger {
     theme 'mocha'
