@@ -14,6 +14,8 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -144,6 +146,54 @@ class BulkSubmissionMapperTest {
     assertThat(matterStartPost.getCreatedByUserId()).isEqualTo(EVENT_SERVICE);
     assertThat(matterStartPost.getDeliveryLocation()).isEqualTo("test-loc");
     assertThat(matterStartPost.getProcurementAreaCode()).isEqualTo("PA00136");
+  }
+
+  @Test
+  void shouldMapCompleteInquestDataToClaimCreateRequest() {
+    BulkSubmissionOutcome outcome =
+        new BulkSubmissionOutcome()
+            .deceasedForename("Ada")
+            .deceasedSurname("Lovelace")
+            .deceasedDateOfBirth("10/12/1815")
+            .deceasedDateOfDeath("27/11/1852")
+            .coronersInquestReference("COR-42")
+            .interestedGovernmentDepartments(List.of("MOJ", "HO"))
+            .interestedPublicAuthorities(List.of("Westminster Council", "Metropolitan Police"));
+
+    ClaimPost claim = mapper.mapToClaimPost(outcome, LEGAL_HELP);
+
+    ClaimInquestDataWrite inquest = claim.getInquestData();
+    assertThat(inquest.getDeceasedForename()).isEqualTo("Ada");
+    assertThat(inquest.getDeceasedSurname()).isEqualTo("Lovelace");
+    assertThat(inquest.getDeceasedDateOfBirth()).isEqualTo(LocalDate.of(1815, 12, 10));
+    assertThat(inquest.getDeceasedDateOfDeath()).isEqualTo(LocalDate.of(1852, 11, 27));
+    assertThat(inquest.getCoronersInquestReference()).isEqualTo("COR-42");
+    assertThat(inquest.getInterestedDepartmentCodes()).containsExactlyInAnyOrder("MOJ", "HO");
+    assertThat(inquest.getInterestedPublicAuthorities())
+        .containsExactly("Westminster Council", "Metropolitan Police");
+    assertThat(inquest.getActorUserId()).isEqualTo(EVENT_SERVICE);
+  }
+
+  @Test
+  void shouldNotAddInquestDataToLegacyClaimCreateRequest() {
+    ClaimPost claim = mapper.mapToClaimPost(new BulkSubmissionOutcome(), LEGAL_HELP);
+
+    assertThat(claim.getInquestData()).isNull();
+  }
+
+  @Test
+  void shouldCarryPartialInquestDataForLaterProviderCompletion() {
+    BulkSubmissionOutcome outcome =
+        new BulkSubmissionOutcome()
+            .deceasedSurname("Lovelace")
+            .interestedPublicAuthorities(List.of("Westminster Council"));
+
+    ClaimInquestDataWrite inquest = mapper.mapToClaimPost(outcome, LEGAL_HELP).getInquestData();
+
+    assertThat(inquest.getDeceasedSurname()).isEqualTo("Lovelace");
+    assertThat(inquest.getDeceasedForename()).isNull();
+    assertThat(inquest.getInterestedDepartmentCodes()).isEmpty();
+    assertThat(inquest.getInterestedPublicAuthorities()).containsExactly("Westminster Council");
   }
 
   @Test
