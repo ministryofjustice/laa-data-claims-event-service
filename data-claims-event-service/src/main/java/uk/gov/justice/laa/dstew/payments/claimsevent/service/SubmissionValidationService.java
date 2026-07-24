@@ -91,7 +91,8 @@ public class SubmissionValidationService {
                   .formatted(bulkSubmissionId));
     } else {
       log.debug(
-          "Validation completed for submission {} with no errors. Saving as draft", submissionId);
+          "Validation completed for submission {} with no errors. Ready for provider review",
+          submissionId);
       submissionPatch.status(SubmissionStatus.READY_FOR_SUBMISSION);
       eventServiceMetricService.incrementTotalValidSubmissions();
       bulkSubmissionPatch.status(BulkSubmissionStatus.READY_FOR_SUBMISSION);

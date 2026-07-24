@@ -1,6 +1,7 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
 import static java.util.Collections.singletonList;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -18,10 +19,13 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionPatch;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionClaim;
@@ -118,6 +122,17 @@ class SubmissionValidationServiceTest {
 
         // Then
         verifyCommonInteractions(submission, result);
+        ArgumentCaptor<SubmissionPatch> submissionPatch =
+            ArgumentCaptor.forClass(SubmissionPatch.class);
+        verify(dataClaimsRestClient)
+            .updateSubmission(eq(submissionId.toString()), submissionPatch.capture());
+        assertEquals(SubmissionStatus.READY_FOR_SUBMISSION, submissionPatch.getValue().getStatus());
+
+        ArgumentCaptor<BulkSubmissionPatch> bulkSubmissionPatch =
+            ArgumentCaptor.forClass(BulkSubmissionPatch.class);
+        verify(dataClaimsRestClient).updateBulkSubmission(any(), bulkSubmissionPatch.capture());
+        assertEquals(
+            BulkSubmissionStatus.READY_FOR_SUBMISSION, bulkSubmissionPatch.getValue().getStatus());
       } else {
         // When
         result = submissionValidationService.validateSubmission(submission.getSubmissionId());
