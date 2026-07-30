@@ -45,6 +45,9 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
 
   private static final String OFFICE_CODE = "AQ2B3C";
   private static final AreaOfLaw AREA_OF_LAW = AreaOfLaw.LEGAL_HELP;
+  public static final String SUBMISSION_PERIOD = "submission_period";
+  public static final String SUBMISSIONS_BY_FILTER_NO_CONTENT_JSON =
+      "data-claims/get-submission/get-submissions-by-filter_no_content.json";
 
   @Autowired protected SubmissionValidationService submissionValidationService;
 
@@ -57,6 +60,10 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
   @DisplayName("Submission period tests")
   class SubmissionPeriodTests {
 
+    public static final String OFFICES = "offices";
+    public static final String AREA_OF_LAW1 = "area_of_law";
+    public static final String APR_2025 = "APR-2025";
+
     @Test
     @DisplayName("Should have no errors with submission period in the past")
     void shouldHaveNoErrorsWithSubmissionPeriodInThePast() throws Exception {
@@ -68,10 +75,10 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
 
       getStubForGetSubmissionByCriteria(
           List.of(
-              Parameter.param("offices", OFFICE_CODE),
-              Parameter.param("area_of_law", AREA_OF_LAW.name()),
-              Parameter.param("submission_period", "APR-2025")),
-          "data-claims/get-submission/get-submissions-by-filter_no_content.json");
+              Parameter.param(OFFICES, OFFICE_CODE),
+              Parameter.param(AREA_OF_LAW1, AREA_OF_LAW.name()),
+              Parameter.param(SUBMISSION_PERIOD, APR_2025)),
+          SUBMISSIONS_BY_FILTER_NO_CONTENT_JSON);
 
       // When
       SubmissionValidationContext submissionValidationContext =
@@ -91,10 +98,10 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
 
       getStubForGetSubmissionByCriteria(
           List.of(
-              Parameter.param("offices", OFFICE_CODE),
-              Parameter.param("area_of_law", AREA_OF_LAW.name()),
-              Parameter.param("submission_period", "MAR-2025")),
-          "data-claims/get-submission/get-submissions-by-filter_no_content.json");
+              Parameter.param(OFFICES, OFFICE_CODE),
+              Parameter.param(AREA_OF_LAW1, AREA_OF_LAW.name()),
+              Parameter.param(SUBMISSION_PERIOD, "MAR-2025")),
+          SUBMISSIONS_BY_FILTER_NO_CONTENT_JSON);
 
       // When
       SubmissionValidationContext submissionValidationContext =
@@ -105,8 +112,8 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
       assertContextClaimError(
           submissionValidationContext,
           SubmissionValidationError.SUBMISSION_VALIDATION_MINIMUM_PERIOD,
-          "APR-2025",
-          "APR-2025");
+          APR_2025,
+          APR_2025);
     }
 
     @Test
@@ -119,10 +126,10 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
 
       getStubForGetSubmissionByCriteria(
           List.of(
-              Parameter.param("offices", OFFICE_CODE),
-              Parameter.param("area_of_law", AREA_OF_LAW.name()),
-              Parameter.param("submission_period", "MAY-2025")),
-          "data-claims/get-submission/get-submissions-by-filter_no_content.json");
+              Parameter.param(OFFICES, OFFICE_CODE),
+              Parameter.param(AREA_OF_LAW1, AREA_OF_LAW.name()),
+              Parameter.param(SUBMISSION_PERIOD, "MAY-2025")),
+          SUBMISSIONS_BY_FILTER_NO_CONTENT_JSON);
 
       // When
       SubmissionValidationContext submissionValidationContext =
@@ -146,10 +153,10 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
 
       getStubForGetSubmissionByCriteria(
           List.of(
-              Parameter.param("offices", OFFICE_CODE),
-              Parameter.param("area_of_law", AREA_OF_LAW.name()),
-              Parameter.param("submission_period", "SEP-2025")),
-          "data-claims/get-submission/get-submissions-by-filter_no_content.json");
+              Parameter.param(OFFICES, OFFICE_CODE),
+              Parameter.param(AREA_OF_LAW1, AREA_OF_LAW.name()),
+              Parameter.param(SUBMISSION_PERIOD, "SEP-2025")),
+          SUBMISSIONS_BY_FILTER_NO_CONTENT_JSON);
 
       // When
       SubmissionValidationContext submissionValidationContext =
@@ -176,9 +183,9 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
 
       getStubForGetSubmissionByCriteria(
           List.of(
-              Parameter.param("offices", OFFICE_CODE),
-              Parameter.param("area_of_law", AREA_OF_LAW.name()),
-              Parameter.param("submission_period", "APR-2025")),
+              Parameter.param(OFFICES, OFFICE_CODE),
+              Parameter.param(AREA_OF_LAW1, AREA_OF_LAW.name()),
+              Parameter.param(SUBMISSION_PERIOD, APR_2025)),
           "data-claims/get-submission/get-submissions-by-filter.json");
 
       // When
@@ -192,7 +199,32 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
           SubmissionValidationError.SUBMISSION_ALREADY_EXISTS,
           OFFICE_CODE,
           AREA_OF_LAW,
-          "APR-2025");
+          APR_2025);
+    }
+
+    @DisplayName(
+        "Should have no error when the only matching submission was created after the one under validation")
+    @Test
+    void shouldHaveNoErrorWhenMatchingSubmissionWasCreatedLater() throws Exception {
+      // Given
+      stubForGetSubmission(SUBMISSION_ID, "data-claims/get-submission/get-submission-APR-25.json");
+      stubForUpdateSubmission(SUBMISSION_ID);
+      stubReturnNoClaims();
+      stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
+
+      getStubForGetSubmissionByCriteria(
+          List.of(
+              Parameter.param(OFFICES, OFFICE_CODE),
+              Parameter.param(AREA_OF_LAW1, AREA_OF_LAW.name()),
+              Parameter.param(SUBMISSION_PERIOD, APR_2025)),
+          "data-claims/get-submission/get-submissions-by-filter-later-duplicate.json");
+
+      // When
+      SubmissionValidationContext submissionValidationContext =
+          submissionValidationService.validateSubmission(SUBMISSION_ID);
+
+      // Then
+      assertContextHasNoErrors(submissionValidationContext);
     }
   }
 
@@ -210,8 +242,8 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
           List.of(
               Parameter.param("offices", OFFICE_CODE),
               Parameter.param("area_of_law", AREA_OF_LAW.name()),
-              Parameter.param("submission_period", "APR-2025")),
-          "data-claims/get-submission/get-submissions-by-filter_no_content.json");
+              Parameter.param(SUBMISSION_PERIOD, "APR-2025")),
+          SUBMISSIONS_BY_FILTER_NO_CONTENT_JSON);
       stubForGetClaims(Collections.emptyList(), "data-claims/get-claims/claim-two-claims.json");
 
       stubForGetClaims(Collections.emptyList(), "data-claims/get-claims/no-claims.json");
@@ -277,8 +309,8 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
           List.of(
               Parameter.param("offices", OFFICE_CODE),
               Parameter.param("area_of_law", AreaOfLaw.CRIME_LOWER.name()),
-              Parameter.param("submission_period", "APR-2025")),
-          "data-claims/get-submission/get-submissions-by-filter_no_content.json");
+              Parameter.param(SUBMISSION_PERIOD, "APR-2025")),
+          SUBMISSIONS_BY_FILTER_NO_CONTENT_JSON);
 
       // When
       SubmissionValidationContext context =
