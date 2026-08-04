@@ -19,6 +19,7 @@ spec:
         app: {{ .Release.Name }}-{{ .Chart.Name }}-pod
         app.kubernetes.io/name: {{ .Release.Name }}-{{ .Chart.Name }}
     spec:
+      terminationGracePeriodSeconds: {{ .Values.shutdown.terminationGracePeriodSeconds | default 660 }}
       serviceAccountName: {{ .Values.serviceAccountName }}
       {{- if .Values.securityContext }}
       securityContext:
@@ -138,6 +139,10 @@ spec:
             initialDelaySeconds: 10
             {{- end }}
           {{- end }}
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sleep", "{{ .Values.shutdown.preStopSleepSeconds | default 5 }}"]
           env:
           {{- if .Values.env }}
           {{- range .Values.env }}
