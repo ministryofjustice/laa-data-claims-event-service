@@ -50,12 +50,6 @@ public class SubmissionValidationService {
     Assert.notNull(submission, "Submission not retrievable: " + submissionId.toString());
     SubmissionValidationContext context = initialiseValidationContext(submission);
 
-    var isDraftSubmission =
-        dataClaimsRestClient
-            .getBulkSubmission(submission.getBulkSubmissionId())
-            .getBody()
-            .getSaveAsDraft();
-
     // Currently validating:
     // - Submission Status (Has highest priority to update the submission status if required)
     // - Submission Schema
@@ -95,16 +89,12 @@ public class SubmissionValidationService {
           .errorDescription(
               "Validation completed for bulk submission %s with errors"
                   .formatted(bulkSubmissionId));
-    } else if (Boolean.TRUE.equals(isDraftSubmission)) {
+    } else {
       log.debug(
           "Validation completed for submission {} with no errors. Saving as draft", submissionId);
       submissionPatch.status(SubmissionStatus.READY_FOR_SUBMISSION);
-      bulkSubmissionPatch.status(BulkSubmissionStatus.READY_FOR_SUBMISSION);
-    } else {
-      log.debug("Validation completed for submission {} with no errors", submissionId);
-      submissionPatch.status(SubmissionStatus.VALIDATION_SUCCEEDED);
       eventServiceMetricService.incrementTotalValidSubmissions();
-      bulkSubmissionPatch.status(BulkSubmissionStatus.VALIDATION_SUCCEEDED);
+      bulkSubmissionPatch.status(BulkSubmissionStatus.READY_FOR_SUBMISSION);
     }
 
     // Record what submission errors were found
