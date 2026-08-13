@@ -265,6 +265,80 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
     verifySubmissionRequests();
   }
 
+  @Test
+  void sendMessage_forwardsFeeValidationMessageCodeToDownstreamClaimPatch() throws Exception {
+    stubForGetSubmission(
+        SUBMISSION_ID, "data-claims/get-submission/get-submission-with-claim-crime-lower.json");
+    SubmissionPatch patchBodyInProgress =
+        SubmissionPatch.builder()
+            .submissionId(SUBMISSION_ID)
+            .status(SubmissionStatus.VALIDATION_IN_PROGRESS)
+            .build();
+    stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodyInProgress);
+    SubmissionPatch patchBodySucceeded =
+        SubmissionPatch.builder()
+            .submissionId(SUBMISSION_ID)
+            .status(SubmissionStatus.VALIDATION_SUCCEEDED)
+            .build();
+    stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodySucceeded);
+
+    getStubForGetSubmissionByCriteria(
+        List.of(
+            Parameter.param("offices", OFFICE_CODE),
+            Parameter.param("area_of_law", AreaOfLaw.CRIME_LOWER.name()),
+            Parameter.param("submission_period", "APR-2025")),
+        "data-claims/get-submission/get-submissions-by-filter_no_content.json");
+    stubForGetFeeDetails("CAPA", "fee-scheme/get-fee-details-200.json");
+    stubForGetProviderOffice(
+        OFFICE_CODE,
+        Collections.emptyList(),
+        "provider-details/get-firm-schedules-openapi-200.json");
+
+    stubForGetClaims(Collections.emptyList(), "data-claims/get-claims/claim-valid.json");
+    stubForPostFeeCalculation("fee-scheme/post-fee-calculation-validation-error-200.json");
+
+    sendSubmissionValidationMessage();
+
+    verifyClaimRequestInvocationWithFeeCalculationValidationMessageCode();
+  }
+
+  @Test
+  void sendMessage_forwardsFeeWarningMessageCodeToDownstreamClaimPatch() throws Exception {
+    stubForGetSubmission(
+        SUBMISSION_ID, "data-claims/get-submission/get-submission-with-claim-crime-lower.json");
+    SubmissionPatch patchBodyInProgress =
+        SubmissionPatch.builder()
+            .submissionId(SUBMISSION_ID)
+            .status(SubmissionStatus.VALIDATION_IN_PROGRESS)
+            .build();
+    stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodyInProgress);
+    SubmissionPatch patchBodySucceeded =
+        SubmissionPatch.builder()
+            .submissionId(SUBMISSION_ID)
+            .status(SubmissionStatus.VALIDATION_SUCCEEDED)
+            .build();
+    stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodySucceeded);
+
+    getStubForGetSubmissionByCriteria(
+        List.of(
+            Parameter.param("offices", OFFICE_CODE),
+            Parameter.param("area_of_law", AreaOfLaw.CRIME_LOWER.name()),
+            Parameter.param("submission_period", "APR-2025")),
+        "data-claims/get-submission/get-submissions-by-filter_no_content.json");
+    stubForGetFeeDetails("CAPA", "fee-scheme/get-fee-details-200.json");
+    stubForGetProviderOffice(
+        OFFICE_CODE,
+        Collections.emptyList(),
+        "provider-details/get-firm-schedules-openapi-200.json");
+
+    stubForGetClaims(Collections.emptyList(), "data-claims/get-claims/claim-valid.json");
+    stubForPostFeeCalculation("fee-scheme/post-fee-calculation-validation-warning-200.json");
+
+    sendSubmissionValidationMessage();
+
+    verifyClaimRequestInvocationWithFeeCalculationWarningMessageCode();
+  }
+
   private void sendSubmissionValidationMessage() throws JsonProcessingException {
     String messageBody = objectMapper.writeValueAsString(Map.of("submission_id", SUBMISSION_ID));
     sqsTemplate.send(
@@ -344,5 +418,62 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
             .withPath(API_VERSION_1 + "submissions/" + SUBMISSION_ID + "/claims/" + CLAIM_ID)
             .withBody(json(objectMapper.writeValueAsString(invalidClaimPatch))),
         VerificationTimes.exactly(1));
+  }
+
+  private void verifyClaimRequestInvocationWithFeeCalculationValidationMessageCode()
+      throws JsonProcessingException {
+    ClaimPatch invalidClaimPatch =
+        ClaimPatch.builder()
+            .id(CLAIM_ID.toString())
+            .status(ClaimStatus.INVALID)
+            .validationMessages(
+                List.of(
+                    ValidationMessagePatch.builder()
+                        .displayMessage("A field validation message from FSP")
+                        .messageCode("ERRALL1")
+                        .build()))
+            .build();
+
+    await()
+        .pollInterval(Duration.ofMillis(500))
+        .atMost(Duration.ofSeconds(20))
+        .untilAsserted(
+            () ->
+                mockServerClient.verify(
+                    request()
+                        .withMethod("PATCH")
+                        .withPath(
+                            API_VERSION_1 + "submissions/" + SUBMISSION_ID + "/claims/" + CLAIM_ID)
+                        .withBody(json(objectMapper.writeValueAsString(invalidClaimPatch))),
+                    VerificationTimes.exactly(1)));
+  }
+
+  private void verifyClaimRequestInvocationWithFeeCalculationWarningMessageCode()
+      throws JsonProcessingException {
+    // FSP warnings don't make the claim INVALID — status should still be VALID
+    ClaimPatch expectedClaimPatch =
+        ClaimPatch.builder()
+            .id(CLAIM_ID.toString())
+            .status(ClaimStatus.VALID)
+            .validationMessages(
+                List.of(
+                    ValidationMessagePatch.builder()
+                        .displayMessage("A field warning message from FSP")
+                        .messageCode("WARFAM1")
+                        .build()))
+            .build();
+
+    await()
+        .pollInterval(Duration.ofMillis(500))
+        .atMost(Duration.ofSeconds(20))
+        .untilAsserted(
+            () ->
+                mockServerClient.verify(
+                    request()
+                        .withMethod("PATCH")
+                        .withPath(
+                            API_VERSION_1 + "submissions/" + SUBMISSION_ID + "/claims/" + CLAIM_ID)
+                        .withBody(json(objectMapper.writeValueAsString(expectedClaimPatch))),
+                    VerificationTimes.exactly(1)));
   }
 }
