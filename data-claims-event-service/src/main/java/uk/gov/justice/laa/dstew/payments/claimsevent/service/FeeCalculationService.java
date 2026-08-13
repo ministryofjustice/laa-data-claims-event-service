@@ -13,6 +13,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessageType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.mapper.FeeSchemeMapper;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
@@ -67,10 +68,26 @@ public class FeeCalculationService {
           for (var m : validationMessages) {
             if (ValidationMessagesInner.TypeEnum.ERROR.equals(m.getType())) {
               log.debug("Fee calculation returned validation error: {}", m);
-              context.addClaimError(claim.getId(), m.getMessage(), FEE_SERVICE);
+              context.addClaimMessages(
+                  claim.getId(),
+                  List.of(
+                      new ValidationMessagePatch()
+                          .displayMessage(m.getMessage())
+                          .technicalMessage(m.getMessage())
+                          .source(FEE_SERVICE)
+                          .type(ValidationMessageType.ERROR)
+                          .messageCode(m.getCode())));
             } else if (ValidationMessagesInner.TypeEnum.WARNING.equals(m.getType())) {
               log.debug("Fee calculation returned validation warning: {}", m);
-              context.addClaimWarning(claim.getId(), m.getMessage(), FEE_SERVICE);
+              context.addClaimMessages(
+                  claim.getId(),
+                  List.of(
+                      new ValidationMessagePatch()
+                          .displayMessage(m.getMessage())
+                          .technicalMessage(m.getMessage())
+                          .source(FEE_SERVICE)
+                          .type(ValidationMessageType.WARNING)
+                          .messageCode(m.getCode())));
             }
           }
         }
