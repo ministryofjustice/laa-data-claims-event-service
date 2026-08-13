@@ -244,6 +244,48 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
 
       Assertions.assertFalse(filteredMessagePatch.isEmpty());
     }
+
+    @DisplayName("Should include FSP message code in claim validation messages")
+    @Test
+    void shouldIncludeFspMessageCodeInClaimValidationMessages() throws Exception {
+
+      stubForGetSubmission(
+          SUBMISSION_ID, "data-claims/get-submission/get-submission-with-claim-crime-lower.json");
+      stubForUpdateSubmission(SUBMISSION_ID);
+      getStubForGetSubmissionByCriteria(
+          List.of(
+              Parameter.param("offices", OFFICE_CODE),
+              Parameter.param("area_of_law", AreaOfLaw.CRIME_LOWER.name()),
+              Parameter.param("submission_period", "APR-2025")),
+          "data-claims/get-submission/get-submissions-by-filter_no_content.json");
+      stubForGetClaims(Collections.emptyList(), "data-claims/get-claims/claim-valid.json");
+      stubForUpdateClaim(SUBMISSION_ID, UUID.fromString(CLAIM_ID));
+
+      stubForGetProviderOffice(
+          OFFICE_CODE,
+          Collections.emptyList(),
+          "provider-details/get-firm-schedules-openapi-200.json");
+
+      stubForGetFeeDetails("CAPA", "fee-scheme/get-fee-details-200.json");
+      stubForPostFeeCalculation("fee-scheme/post-fee-calculation-validation-error-200.json");
+      stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
+
+      SubmissionValidationContext submissionValidationContext =
+          submissionValidationService.validateSubmission(SUBMISSION_ID);
+
+      ValidationMessagePatch actualMessagePatch =
+          submissionValidationContext.getClaimReport(CLAIM_ID).get().getMessages().getFirst();
+
+      ValidationMessagePatch expectedMessagePatch =
+          new ValidationMessagePatch()
+              .type(ValidationMessageType.ERROR)
+              .source("Fee-Scheme-Platform")
+              .displayMessage("A field validation message from FSP")
+              .technicalMessage("A field validation message from FSP")
+              .messageCode("ERRALL1");
+
+      assertThat(actualMessagePatch).usingRecursiveComparison().isEqualTo(expectedMessagePatch);
+    }
   }
 
   @Nested
