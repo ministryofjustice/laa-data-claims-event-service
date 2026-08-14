@@ -90,10 +90,11 @@ public class SubmissionValidationService {
               "Validation completed for bulk submission %s with errors"
                   .formatted(bulkSubmissionId));
     } else {
-      log.debug("Validation completed for submission {} with no errors", submissionId);
-      submissionPatch.status(SubmissionStatus.VALIDATION_SUCCEEDED);
+      log.debug(
+          "Validation completed for submission {} with no errors. Saving as draft", submissionId);
+      submissionPatch.status(SubmissionStatus.READY_FOR_SUBMISSION);
       eventServiceMetricService.incrementTotalValidSubmissions();
-      bulkSubmissionPatch.status(BulkSubmissionStatus.VALIDATION_SUCCEEDED);
+      bulkSubmissionPatch.status(BulkSubmissionStatus.READY_FOR_SUBMISSION);
     }
 
     // Record what submission errors were found
