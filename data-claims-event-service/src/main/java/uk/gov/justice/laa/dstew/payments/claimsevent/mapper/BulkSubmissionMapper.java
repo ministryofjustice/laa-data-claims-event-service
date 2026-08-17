@@ -2,7 +2,10 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.mapper;
 
 import static uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationSource.EVENT_SERVICE;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -17,6 +20,7 @@ import org.springframework.util.StringUtils;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionMatterStart;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionOutcome;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimInquestDataWrite;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetBulkSubmission200Response;
@@ -228,6 +232,42 @@ public interface BulkSubmissionMapper {
         // No area-of-law specific adjustments needed
       }
     }
+    if (hasInquestData(outcome)) {
+      claimPost.setInquestData(
+          new ClaimInquestDataWrite()
+              .deceasedForename(outcome.getDeceasedForename())
+              .deceasedSurname(outcome.getDeceasedSurname())
+              .deceasedDateOfBirth(parseInquestDate(outcome.getDeceasedDateOfBirth()))
+              .deceasedDateOfDeath(parseInquestDate(outcome.getDeceasedDateOfDeath()))
+              .coronersInquestReference(outcome.getCoronersInquestReference())
+              .interestedDepartmentCodes(
+                  new LinkedHashSet<>(
+                      Optional.ofNullable(outcome.getInterestedGovernmentDepartments())
+                          .orElse(List.of())))
+              .interestedPublicAuthorities(
+                  Optional.ofNullable(outcome.getInterestedPublicAuthorities()).orElse(List.of()))
+              .actorUserId(EVENT_SERVICE));
+    }
+  }
+
+  private boolean hasInquestData(BulkSubmissionOutcome outcome) {
+    return StringUtils.hasText(outcome.getDeceasedForename())
+        || StringUtils.hasText(outcome.getDeceasedSurname())
+        || StringUtils.hasText(outcome.getDeceasedDateOfBirth())
+        || StringUtils.hasText(outcome.getDeceasedDateOfDeath())
+        || StringUtils.hasText(outcome.getCoronersInquestReference())
+        || !Optional.ofNullable(outcome.getInterestedGovernmentDepartments())
+            .orElse(List.of())
+            .isEmpty()
+        || !Optional.ofNullable(outcome.getInterestedPublicAuthorities())
+            .orElse(List.of())
+            .isEmpty();
+  }
+
+  private LocalDate parseInquestDate(String value) {
+    return StringUtils.hasText(value)
+        ? LocalDate.parse(value.trim(), DateTimeFormatter.ofPattern("[d/M/yyyy][dd/MM/yyyy]"))
+        : null;
   }
 
   List<ClaimPost> mapToClaimPosts(
