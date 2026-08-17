@@ -10,6 +10,12 @@ spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicas | default 1 }}
   {{- end }}
+  minReadySeconds: 15
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ .Release.Name }}-{{ .Chart.Name }}
@@ -19,6 +25,7 @@ spec:
         app: {{ .Release.Name }}-{{ .Chart.Name }}-pod
         app.kubernetes.io/name: {{ .Release.Name }}-{{ .Chart.Name }}
     spec:
+      terminationGracePeriodSeconds: 60
       serviceAccountName: {{ .Values.serviceAccountName }}
       {{- if .Values.securityContext }}
       securityContext:

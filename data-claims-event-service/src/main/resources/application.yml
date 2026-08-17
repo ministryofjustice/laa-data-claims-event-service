@@ -1,6 +1,8 @@
 spring:
   application:
     name: laa-data-claims-event-service
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
 
   threads:
     virtual:
@@ -37,6 +39,7 @@ info:
 
 server:
   port: 8085
+  shutdown: graceful
 
 management:
   server:
