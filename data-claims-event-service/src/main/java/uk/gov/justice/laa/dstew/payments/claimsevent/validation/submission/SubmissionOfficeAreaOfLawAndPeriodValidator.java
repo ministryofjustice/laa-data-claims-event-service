@@ -61,7 +61,7 @@ public class SubmissionOfficeAreaOfLawAndPeriodValidator implements SubmissionVa
             .stream()
             .filter(candidate -> isDifferentSubmission(candidate, submission))
             .filter(this::isLiveSubmission)
-            .filter(candidate -> isCreatedBefore(candidate, submission))
+            .filter(candidate -> isCreatedBeforeOrUndated(candidate, submission))
             .toList();
     log.debug("Found {} duplicates for submission {}", duplicates.size(), submission);
 
@@ -77,18 +77,27 @@ public class SubmissionOfficeAreaOfLawAndPeriodValidator implements SubmissionVa
   }
 
   /**
-   * Determines whether an existing submission was created before the one under validation.
+   * Determines whether an existing submission should block the one under validation based on
+   * creation order.
    *
    * <p>The {@code submitted} timestamp is the value persisted as {@code created_on} on the
-   * submission record. Only submissions created strictly earlier are treated as duplicates, which
-   * lets the earliest of a set of concurrently submitted duplicates proceed while the later ones
-   * are rejected.
+   * submission record. Submissions created strictly earlier are treated as duplicates, which lets
+   * the earliest of a set of concurrently submitted duplicates proceed while the later ones are
+   * rejected.
+   *
+   * <p>If either {@code created_on} is missing the candidate is treated as a blocking duplicate
+   * (fail-safe): we cannot establish that the candidate was created later, and the partial unique
+   * index on the Data Claims API database would reject this submission regardless of ordering.
+   * Accepting on a missing timestamp would only defer the failure to a harder-to-diagnose database
+   * constraint violation.
    */
-  private boolean isCreatedBefore(SubmissionBase candidate, SubmissionResponse submission) {
+  private boolean isCreatedBeforeOrUndated(
+      SubmissionBase candidate, SubmissionResponse submission) {
     OffsetDateTime candidateCreatedOn = candidate.getSubmitted();
     OffsetDateTime submissionCreatedOn = submission.getSubmitted();
-    return candidateCreatedOn != null
-        && submissionCreatedOn != null
-        && candidateCreatedOn.isBefore(submissionCreatedOn);
+    if (candidateCreatedOn == null || submissionCreatedOn == null) {
+      return true;
+    }
+    return candidateCreatedOn.isBefore(submissionCreatedOn);
   }
 }

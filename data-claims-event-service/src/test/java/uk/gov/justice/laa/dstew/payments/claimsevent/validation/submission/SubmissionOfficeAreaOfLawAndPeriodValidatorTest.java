@@ -65,6 +65,16 @@ class SubmissionOfficeAreaOfLawAndPeriodValidatorTest {
         .build();
   }
 
+  private static SubmissionResponse submissionWithoutTimestamp() {
+    return SubmissionResponse.builder()
+        .submissionId(SUBMISSION_ID)
+        .officeAccountNumber(OFFICE_CODE)
+        .areaOfLaw(AREA_OF_LAW)
+        .submissionPeriod(SUBMISSION_PERIOD)
+        .submitted(null)
+        .build();
+  }
+
   private static SubmissionBase existingSubmission(
       UUID submissionId, SubmissionStatus status, OffsetDateTime createdOn) {
     return new SubmissionBase()
@@ -186,6 +196,46 @@ class SubmissionOfficeAreaOfLawAndPeriodValidatorTest {
       validator.validate(submissionUnderValidation(), submissionValidationContext);
 
       assertThat(submissionValidationContext.hasErrors()).isFalse();
+    }
+
+    @DisplayName(
+        "Should reject a submission when an otherwise-matching live candidate has no created-on timestamp")
+    @Test
+    void shouldRejectSubmissionWhenCandidateHasNoTimestamp() {
+      stubExistingSubmissions(
+          existingSubmission(OTHER_SUBMISSION_ID, SubmissionStatus.READY_FOR_VALIDATION, null));
+
+      var submissionValidationContext = new SubmissionValidationContext();
+
+      validator.validate(submissionUnderValidation(), submissionValidationContext);
+
+      assertThat(submissionValidationContext.hasErrors()).isTrue();
+      assertContextClaimError(
+          submissionValidationContext,
+          SubmissionValidationError.SUBMISSION_ALREADY_EXISTS,
+          OFFICE_CODE,
+          AREA_OF_LAW,
+          SUBMISSION_PERIOD);
+    }
+
+    @DisplayName(
+        "Should reject a submission that has no created-on timestamp when an earlier matching candidate exists")
+    @Test
+    void shouldRejectSubmissionWhenItHasNoTimestamp() {
+      stubExistingSubmissions(
+          existingSubmission(OTHER_SUBMISSION_ID, SubmissionStatus.READY_FOR_VALIDATION, EARLIER));
+
+      var submissionValidationContext = new SubmissionValidationContext();
+
+      validator.validate(submissionWithoutTimestamp(), submissionValidationContext);
+
+      assertThat(submissionValidationContext.hasErrors()).isTrue();
+      assertContextClaimError(
+          submissionValidationContext,
+          SubmissionValidationError.SUBMISSION_ALREADY_EXISTS,
+          OFFICE_CODE,
+          AREA_OF_LAW,
+          SUBMISSION_PERIOD);
     }
   }
 }

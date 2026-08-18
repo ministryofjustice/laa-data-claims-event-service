@@ -48,6 +48,8 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
   public static final String SUBMISSION_PERIOD_PARAM = "submission_period";
   public static final String SUBMISSIONS_BY_FILTER_NO_CONTENT_JSON =
       "data-claims/get-submission/get-submissions-by-filter_no_content.json";
+  public static final String GET_SUBMISSION_APR_25_JSON =
+      "data-claims/get-submission/get-submission-APR-25.json";
 
   @Autowired protected SubmissionValidationService submissionValidationService;
 
@@ -55,20 +57,19 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
   private static final UUID BULK_SUBMISSION_ID =
       UUID.fromString("3fa85f64-5717-4562-b3fc-2c963f66afa6");
   private static final String CLAIM_ID = "f6bde766-a0a3-483b-bf13-bef888b4f06e";
+  public static final String OFFICES_PARAM = "offices";
+  public static final String AREA_OF_LAW_PARAM = "area_of_law";
+  public static final String APR_2025 = "APR-2025";
 
   @Nested
   @DisplayName("Submission period tests")
   class SubmissionPeriodTests {
 
-    public static final String OFFICES_PARAM = "offices";
-    public static final String AREA_OF_LAW_PARAM = "area_of_law";
-    public static final String APR_2025 = "APR-2025";
-
     @Test
     @DisplayName("Should have no errors with submission period in the past")
     void shouldHaveNoErrorsWithSubmissionPeriodInThePast() throws Exception {
       // Given
-      stubForGetSubmission(SUBMISSION_ID, "data-claims/get-submission/get-submission-APR-25.json");
+      stubForGetSubmission(SUBMISSION_ID, GET_SUBMISSION_APR_25_JSON);
       stubForUpdateSubmission(SUBMISSION_ID);
       stubReturnNoClaims();
       stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
@@ -176,7 +177,7 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
     void shouldHaveOneErrorWithSubmissionPeriodWithCombinationOfOfficeAreaOfLawSubmissionPeriod()
         throws Exception {
       // Given
-      stubForGetSubmission(SUBMISSION_ID, "data-claims/get-submission/get-submission-APR-25.json");
+      stubForGetSubmission(SUBMISSION_ID, GET_SUBMISSION_APR_25_JSON);
       stubForUpdateSubmission(SUBMISSION_ID);
       stubReturnNoClaims();
       stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
@@ -207,7 +208,7 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
     @Test
     void shouldHaveNoErrorWhenMatchingSubmissionWasCreatedLater() throws Exception {
       // Given
-      stubForGetSubmission(SUBMISSION_ID, "data-claims/get-submission/get-submission-APR-25.json");
+      stubForGetSubmission(SUBMISSION_ID, GET_SUBMISSION_APR_25_JSON);
       stubForUpdateSubmission(SUBMISSION_ID);
       stubReturnNoClaims();
       stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
@@ -240,9 +241,9 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
       stubForUpdateSubmission(SUBMISSION_ID);
       getStubForGetSubmissionByCriteria(
           List.of(
-              Parameter.param("offices", OFFICE_CODE),
-              Parameter.param("area_of_law", LEGAL_HELP.name()),
-              Parameter.param(SUBMISSION_PERIOD_PARAM, "APR-2025")),
+              Parameter.param(OFFICES_PARAM, OFFICE_CODE),
+              Parameter.param(AREA_OF_LAW_PARAM, LEGAL_HELP.name()),
+              Parameter.param(SUBMISSION_PERIOD_PARAM, APR_2025)),
           SUBMISSIONS_BY_FILTER_NO_CONTENT_JSON);
       stubForGetClaims(Collections.emptyList(), "data-claims/get-claims/claim-two-claims.json");
 
@@ -307,8 +308,8 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
 
       getStubForGetSubmissionByCriteria(
           List.of(
-              Parameter.param("offices", OFFICE_CODE),
-              Parameter.param("area_of_law", AreaOfLaw.CRIME_LOWER.name()),
+              Parameter.param(OFFICES_PARAM, OFFICE_CODE),
+              Parameter.param(AREA_OF_LAW_PARAM, AreaOfLaw.CRIME_LOWER.name()),
               Parameter.param(SUBMISSION_PERIOD_PARAM, "APR-2025")),
           SUBMISSIONS_BY_FILTER_NO_CONTENT_JSON);
 
