@@ -67,6 +67,7 @@ public final class MandatoryFieldClaimValidator implements ClaimValidator {
     List<String> disbursementExclusions = exclusionsRegistry.getDisbursementOnlyExclusions();
 
     for (String fieldName : mandatoryFields) {
+
       if (isDisbursementLegalHelpClaim && disbursementExclusions.contains(fieldName)) {
         // Skip validation for excluded fields when disbursement-only
         log.debug("Skipping validation for excluded field: {}", fieldName);

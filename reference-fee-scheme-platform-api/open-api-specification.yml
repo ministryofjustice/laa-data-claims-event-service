@@ -132,6 +132,9 @@ components:
         feeType:
           type: string
           description: "Type of fee, Fixed, Hourly, disbursement only"
+        areaOfLaw:
+          type: string
+          description: "Area of Law stored in the system."
 
     FeeCalculationRequest:
       type: object
