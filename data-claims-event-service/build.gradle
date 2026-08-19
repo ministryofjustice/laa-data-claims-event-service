@@ -1,4 +1,5 @@
 plugins {
+    id 'uk.gov.justice.service.laa.laa-spring-boot-gradle-plugin'
     id 'io.freefair.lombok' version '9.2.0'
     id("com.diffplug.spotless") version "7.2.1"
     id "io.sentry.jvm.gradle" version "5.12.2"
@@ -11,11 +12,6 @@ def versions = [
         jackson : '2.21.5' // bumped to patch release to address Snyk jackson-databind finding
 ]
 
-apply plugin: 'uk.gov.laa.springboot.laa-spring-boot-gradle-plugin'
-
-checkstyle {
-    toolVersion = '11.0.0'
-}
 
 test {
     useJUnitPlatform()
@@ -41,18 +37,12 @@ jacocoTestCoverageVerification {
     }
 }
 
-repositories {
-    // Use Maven Central for resolving dependencies.
-    mavenLocal()
-    mavenCentral()
-}
-
 ext['tomcat.version'] = '11.0.23' // bumped patch release to address Snyk tomcat-embed findings
 
 dependencyManagement {
     imports {
         // Upgrade to fix vulnerabilities in netty
-        mavenBom('io.netty:netty-bom:4.2.16.Final')
+        mavenBom('io.netty:netty-bom:4.2.17.Final')
     }
     dependencies {
         dependencySet(group: 'io.sentry', version: versions.sentry) {
@@ -88,8 +78,8 @@ dependencies {
     //  one currently pulling from reference-fee-scheme-platform-api on validation
     implementation project(':reference-fee-scheme-platform-api')
 
-    implementation 'uk.gov.justice.laa.datastewardship.payments:data-claims-api-models:1.0.41'
-    implementation 'uk.gov.justice.laa.dstew.payments.claims.validation:claims-validation-core:1.3.0'
+    implementation 'uk.gov.justice.laa.dstew.payments.claims.validation:claims-validation-core:1.4.6'
+    implementation 'uk.gov.justice.laa.datastewardship.payments:data-claims-api-models:1.16.7'
     implementation 'uk.gov.justice.laadata.providers:providers-api:1.40.1'
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
@@ -256,7 +246,6 @@ pact {
 
     }
 }
-
 
 testlogger {
     theme 'mocha'

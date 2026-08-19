@@ -6,6 +6,7 @@ import java.time.Clock;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -19,6 +20,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsevent.util.DateUtil;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validator.submission.SubmissionValidationIntegrationTestBase;
 
 /**
@@ -71,7 +73,9 @@ public class SharedSubmissionValidationParityIntegrationTest
       "Parity: valid submission (MAR-2026 past period, READY_FOR_VALIDATION) - both produce no errors")
   void parityValidSubmissionProducesNoErrors() throws Exception {
     var fixture = SUBMISSION_BASE_PATH + "SubmissionPeriodValidator/period-valid-past.json";
-    assertParity(runSubmissionValidation(fixture), parseSubmissionFromFixture(fixture));
+    SubmissionValidationContext ctx = runSubmissionValidation(fixture);
+    assertNoSubmissionErrors(ctx);
+    assertParity(ctx, parseSubmissionFromFixture(fixture));
   }
 
   // ── Schema violation ──────────────────────────────────────────────────────
@@ -83,7 +87,10 @@ public class SharedSubmissionValidationParityIntegrationTest
       "Parity: schema violation (missing is_nil_submission) - both produce the same schema error")
   void paritySchemaViolationMissingIsNilSubmission() throws Exception {
     var fixture = SUBMISSION_BASE_PATH + "SubmissionSchemaValidator/missing-is-nil-submission.json";
-    assertParity(runSubmissionValidation(fixture), parseSubmissionFromFixture(fixture));
+    SubmissionValidationContext ctx = runSubmissionValidation(fixture);
+    // keep disabled until validator text is aligned (NIL vs Nil)
+    // assertSubmissionErrors(ctx, Set.of(SubmissionValidationError.SOME_SCHEMA_ERROR));
+    assertParity(ctx, parseSubmissionFromFixture(fixture));
   }
 
   // ── Period violations ─────────────────────────────────────────────────────
@@ -93,7 +100,9 @@ public class SharedSubmissionValidationParityIntegrationTest
       "Parity: submission period same as current month (MAY-2026) - both produce SUBMISSION_PERIOD_SAME_MONTH")
   void parityPeriodViolationSameMonth() throws Exception {
     var fixture = SUBMISSION_BASE_PATH + "SubmissionPeriodValidator/period-same-month.json";
-    assertParity(runSubmissionValidation(fixture), parseSubmissionFromFixture(fixture));
+    SubmissionValidationContext ctx = runSubmissionValidation(fixture);
+    assertSubmissionErrors(ctx, Set.of(SubmissionValidationError.SUBMISSION_PERIOD_SAME_MONTH));
+    assertParity(ctx, parseSubmissionFromFixture(fixture));
   }
 
   @Test
@@ -101,7 +110,9 @@ public class SharedSubmissionValidationParityIntegrationTest
       "Parity: submission period in the future (JUN-2026) - both produce SUBMISSION_PERIOD_FUTURE_MONTH")
   void parityPeriodViolationFutureMonth() throws Exception {
     var fixture = SUBMISSION_BASE_PATH + "SubmissionPeriodValidator/period-future.json";
-    assertParity(runSubmissionValidation(fixture), parseSubmissionFromFixture(fixture));
+    SubmissionValidationContext ctx = runSubmissionValidation(fixture);
+    assertSubmissionErrors(ctx, Set.of(SubmissionValidationError.SUBMISSION_PERIOD_FUTURE_MONTH));
+    assertParity(ctx, parseSubmissionFromFixture(fixture));
   }
 
   @Test
@@ -109,7 +120,10 @@ public class SharedSubmissionValidationParityIntegrationTest
       "Parity: submission period before minimum (MAR-2025) - both produce SUBMISSION_VALIDATION_MINIMUM_PERIOD")
   void parityPeriodViolationBeforeMinimum() throws Exception {
     var fixture = SUBMISSION_BASE_PATH + "SubmissionPeriodValidator/period-before-minimum.json";
-    assertParity(runSubmissionValidation(fixture), parseSubmissionFromFixture(fixture));
+    SubmissionValidationContext ctx = runSubmissionValidation(fixture);
+    assertSubmissionErrors(
+        ctx, Set.of(SubmissionValidationError.SUBMISSION_VALIDATION_MINIMUM_PERIOD));
+    assertParity(ctx, parseSubmissionFromFixture(fixture));
   }
 
   // ── Nil submission cases ──────────────────────────────────────────────────
@@ -119,7 +133,10 @@ public class SharedSubmissionValidationParityIntegrationTest
       "Parity: nil submission that contains claims - both produce INVALID_NIL_SUBMISSION_CONTAINS_CLAIMS")
   void parityNilSubmissionWithClaims() throws Exception {
     var fixture = SUBMISSION_BASE_PATH + "NilSubmissionValidator/nil-submission-with-claims.json";
-    assertParity(runSubmissionValidation(fixture), parseSubmissionFromFixture(fixture));
+    SubmissionValidationContext ctx = runSubmissionValidation(fixture);
+    assertSubmissionErrors(
+        ctx, Set.of(SubmissionValidationError.INVALID_NIL_SUBMISSION_CONTAINS_CLAIMS));
+    assertParity(ctx, parseSubmissionFromFixture(fixture));
   }
 
   @Test
@@ -127,7 +144,10 @@ public class SharedSubmissionValidationParityIntegrationTest
       "Parity: non-nil submission with no claims - both produce NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS")
   void parityNonNilSubmissionNoClaims() throws Exception {
     var fixture = SUBMISSION_BASE_PATH + "NilSubmissionValidator/non-nil-submission-no-claims.json";
-    assertParity(runSubmissionValidation(fixture), parseSubmissionFromFixture(fixture));
+    SubmissionValidationContext ctx = runSubmissionValidation(fixture);
+    assertSubmissionErrors(
+        ctx, Set.of(SubmissionValidationError.NON_NIL_SUBMISSION_CONTAINS_NO_CLAIMS));
+    assertParity(ctx, parseSubmissionFromFixture(fixture));
   }
 
   // ── Duplicate office / area of law / period ───────────────────────────────
@@ -140,7 +160,9 @@ public class SharedSubmissionValidationParityIntegrationTest
         SUBMISSION_BASE_PATH
             + "SubmissionOfficeAreaOfLawAndPeriodValidator/duplicate-submission.json";
     // stubDuplicateSubmission = true: MockServer returns a VALIDATION_SUCCEEDED match
-    assertParity(runSubmissionValidation(fixture, true), parseSubmissionFromFixture(fixture));
+    SubmissionValidationContext ctx = runSubmissionValidation(fixture, true);
+    assertSubmissionErrors(ctx, Set.of(SubmissionValidationError.SUBMISSION_ALREADY_EXISTS));
+    assertParity(ctx, parseSubmissionFromFixture(fixture));
   }
 
   // ── Incorrect status ──────────────────────────────────────────────────────
@@ -150,7 +172,10 @@ public class SharedSubmissionValidationParityIntegrationTest
       "Parity: incorrect submission status (VALIDATION_SUCCEEDED) - both produce INCORRECT_SUBMISSION_STATUS_FOR_VALIDATION")
   void parityIncorrectStatus() throws Exception {
     var fixture = SUBMISSION_BASE_PATH + "SubmissionStatusValidator/status-incorrect.json";
-    assertParity(runSubmissionValidation(fixture), parseSubmissionFromFixture(fixture));
+    SubmissionValidationContext ctx = runSubmissionValidation(fixture);
+    assertSubmissionErrors(
+        ctx, Set.of(SubmissionValidationError.INCORRECT_SUBMISSION_STATUS_FOR_VALIDATION));
+    assertParity(ctx, parseSubmissionFromFixture(fixture));
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
@@ -164,11 +189,11 @@ public class SharedSubmissionValidationParityIntegrationTest
    *       message and severity / type
    * </ol>
    */
-  private void assertParity(SubmissionValidationContext context, SubmissionResponse submission) {
+  private void assertParity(SubmissionValidationContext legacyContext, SubmissionResponse submission) {
     ValidationResult newResult = validationService.validateSubmission(submission);
     List<ValidationIssue> newIssues =
         (newResult == null || newResult.getIssues() == null) ? List.of() : newResult.getIssues();
-    List<ValidationMessagePatch> oldErrors = context.getSubmissionValidationErrors();
+    List<ValidationMessagePatch> oldErrors = legacyContext.getSubmissionValidationErrors();
 
     assertThat(newIssues)
         .as(

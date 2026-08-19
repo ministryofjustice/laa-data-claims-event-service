@@ -330,6 +330,23 @@ class JsonSchemaValidatorTest {
       assertThat(errors).isEmpty();
     }
 
+    @Test
+    void validateReturnsErrorForClaimWithFieldNotInSchema() {
+      ClaimWithExtraSchemaField claim = new ClaimWithExtraSchemaField();
+      applyMinimumValidClaimFields(claim);
+
+      final List<ValidationMessagePatch> errors =
+          jsonSchemaValidator.validate("claim", claim, AreaOfLaw.LEGAL_HELP);
+
+      assertThat(errors).hasSize(1);
+      assertThat(errors.getFirst().getTechnicalMessage())
+          .contains("nonSchemaField")
+          .contains("is not defined in the schema");
+      assertThat(errors.getFirst().getDisplayMessage())
+          .contains("nonSchemaField")
+          .contains("is not defined in the schema");
+    }
+
     @ParameterizedTest(name = "Missing required field: {0}")
     @CsvSource({
       "status",
@@ -799,6 +816,10 @@ class JsonSchemaValidatorTest {
 
   private static @NotNull ClaimResponse getMinimumValidClaim() {
     ClaimResponse claim = new ClaimResponse();
+    return applyMinimumValidClaimFields(claim);
+  }
+
+  private static ClaimResponse applyMinimumValidClaimFields(ClaimResponse claim) {
     claim
         .lineNumber(1)
         .status(ClaimStatus.READY_TO_PROCESS)
@@ -813,6 +834,12 @@ class JsonSchemaValidatorTest {
         .exemptionCriteriaSatisfied("CM001")
         .meetingsAttendedCode("MTGA24");
     return claim;
+  }
+
+  private static final class ClaimWithExtraSchemaField extends ClaimResponse {
+    public Boolean getNonSchemaField() {
+      return true;
+    }
   }
 
   private void setField(Object target, String fieldName, String rawValue) {
