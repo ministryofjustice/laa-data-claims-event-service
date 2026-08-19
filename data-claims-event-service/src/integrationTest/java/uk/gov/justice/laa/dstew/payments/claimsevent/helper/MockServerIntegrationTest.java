@@ -69,6 +69,14 @@ public abstract class MockServerIntegrationTest {
   private static final String FEE_CALCULATION = API_VERSION_1 + "fee-calculation";
   private static final String CLAIMS_ENDPOINT = "/claims/";
 
+  /**
+   * Submission id of the earlier, in-flight duplicate returned by {@code
+   * get-submissions-by-filter.json}. Shared so tests that assert on the fixture and tests that
+   * exercise the duplicate check stay in sync.
+   */
+  protected static final UUID EXISTING_DUPLICATE_SUBMISSION_ID =
+      UUID.fromString("11111111-1111-1111-1111-111111111111");
+
   protected static final DockerImageName MOCKSERVER_IMAGE =
       DockerImageName.parse("mockserver/mockserver")
           .withTag("mockserver-" + MockServerClient.class.getPackage().getImplementationVersion());
