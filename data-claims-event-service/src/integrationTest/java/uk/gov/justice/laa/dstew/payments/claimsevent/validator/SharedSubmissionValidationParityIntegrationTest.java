@@ -189,7 +189,8 @@ public class SharedSubmissionValidationParityIntegrationTest
    *       message and severity / type
    * </ol>
    */
-  private void assertParity(SubmissionValidationContext legacyContext, SubmissionResponse submission) {
+  private void assertParity(
+      SubmissionValidationContext legacyContext, SubmissionResponse submission) {
     ValidationResult newResult = validationService.validateSubmission(submission);
     List<ValidationIssue> newIssues =
         (newResult == null || newResult.getIssues() == null) ? List.of() : newResult.getIssues();
