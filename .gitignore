@@ -6,7 +6,7 @@ bin/
 !**/src/main/**/build/
 !**/src/test/**/build/
 .DS_Store
-
+META-INF
 
 ### IntelliJ IDEA ###
 .idea

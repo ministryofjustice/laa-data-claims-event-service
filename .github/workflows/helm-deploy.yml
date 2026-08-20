@@ -16,6 +16,21 @@ on:
       image_tag:
         required: true
         type: string
+    secrets:
+      pact_broker_username:
+        required: true
+      pact_broker_password:
+        required: true
+      kube_cert:
+        required: true
+      KUBE_CLUSTER:
+        required: true
+      KUBE_TOKEN:
+        required: true
+      KUBE_NAMESPACE:
+        required: true
+      LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_ROLE_TO_ASSUME:
+        required: true
 
 permissions:
   contents: read
@@ -28,14 +43,14 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set branch name
         run: echo "GIT_BRANCH=${GITHUB_HEAD_REF:-${GITHUB_REF_NAME}}" >> $GITHUB_ENV
 
       - name: Can I deploy?
         id: can-i-deploy
-        uses: ministryofjustice/laa-ccms-common-workflows/.github/actions/pact-can-i-deploy@3eaf64bb987ef0648a2380d4e49927d1693ec195 # v2.2.1
+        uses: ministryofjustice/laa-ccms-common-workflows/.github/actions/pact-can-i-deploy@0c06c747af49e3efb703717e6185cf693494d5a4 # v2.4.2
         with:
           pacticipant: 'laa-data-claims-event-service'
           environment: ${{ inputs.claim_api_environment_name }}
@@ -52,13 +67,13 @@ jobs:
           kubectl config use-context ${{ secrets.KUBE_CLUSTER }}
 
       - name: Configure aws credentials
-        uses: aws-actions/configure-aws-credentials@e7f100cf4c008499ea8adda475de1042d6975c7b # v6.2.0
+        uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # v6.2.3
         with:
           role-to-assume: ${{ secrets.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_ROLE_TO_ASSUME }}
           aws-region: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_REGION }}
 
       - name: Login ecr
-        uses: aws-actions/amazon-ecr-login@fa648b43de3d4d023bcb3f89ed6940096949c419 # v2.1.5
+        uses: aws-actions/amazon-ecr-login@d539f0932e70871a027e9d5a9d8fc38589180a64 # v2.1.6
         id: login-ecr
 
       - name: Set helm chart app version
@@ -91,7 +106,7 @@ jobs:
 
       - name: Record deployment to pact broker
         id: record-deployment-to-pact-broker
-        uses: ministryofjustice/laa-ccms-common-workflows/.github/actions/pact-record-deployment@3eaf64bb987ef0648a2380d4e49927d1693ec195 # v2.2.1
+        uses: ministryofjustice/laa-ccms-common-workflows/.github/actions/pact-record-deployment@0c06c747af49e3efb703717e6185cf693494d5a4 # v2.4.2
         with:
           pacticipant: 'laa-data-claims-event-service'
           environment: ${{ inputs.claim_api_environment_name }}

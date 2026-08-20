@@ -10,7 +10,7 @@ COPY . .
 RUN env
 
 # Run gradle build
-RUN --mount=type=cache,target=/root/.gradle \
+RUN --mount=type=cache,target=/root/.gradle,sharing=locked \
     --mount=type=secret,id=github_actor \
     --mount=type=secret,id=github_token \
     export GITHUB_ACTOR="$(cat /run/secrets/github_actor)" && \

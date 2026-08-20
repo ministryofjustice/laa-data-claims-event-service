@@ -3,7 +3,6 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.client;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import java.util.List;
-import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -56,6 +55,6 @@ public class DataClaimRestClientIntTest extends MockServerIntegrationTest {
 
     assertThat(actualResults.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(actualResults.getBody().getContent().get(0).getSubmissionId())
-        .isEqualTo(UUID.fromString("0561d67b-30ed-412e-8231-f6296a53538d"));
+        .isEqualTo(EXISTING_DUPLICATE_SUBMISSION_ID);
   }
 }
