@@ -306,8 +306,15 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
       SubmissionValidationContext submissionValidationContext =
           submissionValidationService.validateSubmission(SUBMISSION_ID);
 
-      ValidationMessagePatch actualMessagePatch =
-          submissionValidationContext.getClaimReport(CLAIM_ID).get().getMessages().getFirst();
+      var actualMessages = submissionValidationContext.getClaimReport(CLAIM_ID).get().getMessages();
+      var actualMessagePatch =
+          actualMessages.stream()
+              .filter(
+                  msg ->
+                      "A field validation message from FSP".equals(msg.getDisplayMessage())
+                          && "Fee-Scheme-Platform".equals(msg.getSource()))
+              .findFirst()
+              .orElseThrow(() -> new AssertionError("FSP validation message not found"));
 
       ValidationMessagePatch expectedMessagePatch =
           new ValidationMessagePatch()
