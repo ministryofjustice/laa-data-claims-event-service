@@ -333,6 +333,8 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
 
     stubForGetClaims(Collections.emptyList(), "data-claims/get-claims/claim-valid.json");
     stubForPostFeeCalculation("fee-scheme/post-fee-calculation-validation-warning-200.json");
+    stubForUpdateClaim(SUBMISSION_ID, CLAIM_ID);
+    stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
 
     sendSubmissionValidationMessage();
 

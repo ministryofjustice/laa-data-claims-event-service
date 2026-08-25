@@ -105,6 +105,86 @@ class FeeCalculationServiceTest {
     }
 
     @Test
+    @DisplayName("ERROR validation message includes messageCode in context")
+    void errorValidationMessageIncludesMessageCodeInContext() {
+
+      ClaimResponse claim =
+          new ClaimResponse().id("0199a9c0-63ba-7bc2-bf71-0a8acfe1700e").feeCode("feeCode");
+
+      FeeCalculationRequest feeCalculationRequest = new FeeCalculationRequest().feeCode("feeCode");
+
+      ValidationMessagesInner validationMessagesInner =
+          new ValidationMessagesInner()
+              .message("A field validation message from FSP")
+              .code("ERRALL1")
+              .type(ValidationMessagesInner.TypeEnum.ERROR);
+      FeeCalculationResponse feeCalculationResponse =
+          new FeeCalculationResponse()
+              .validationMessages(Collections.singletonList(validationMessagesInner));
+
+      when(feeSchemeMapper.mapToFeeCalculationRequest(claim, LEGAL_HELP))
+          .thenReturn(feeCalculationRequest);
+      when(feeSchemePlatformRestClient.calculateFee(feeCalculationRequest))
+          .thenReturn(ResponseEntity.ok(feeCalculationResponse));
+
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
+
+      feeCalculationService.calculateFee(claim, context, LEGAL_HELP);
+
+      verify(feeSchemePlatformRestClient, times(1)).calculateFee(feeCalculationRequest);
+
+      var actualMessages = context.getClaimReport(claim.getId()).get().getMessages();
+      assertThat(actualMessages)
+          .hasSize(1)
+          .extracting(ValidationMessagePatch::getMessageCode)
+          .contains("ERRALL1");
+      assertThat(actualMessages)
+          .extracting(ValidationMessagePatch::getDisplayMessage)
+          .contains("A field validation message from FSP");
+    }
+
+    @Test
+    @DisplayName("WARNING validation message includes messageCode in context")
+    void warningValidationMessageIncludesMessageCodeInContext() {
+
+      ClaimResponse claim =
+          new ClaimResponse().id("0199a9c0-63ba-7bc2-bf71-0a8acfe1700e").feeCode("feeCode");
+
+      FeeCalculationRequest feeCalculationRequest = new FeeCalculationRequest().feeCode("feeCode");
+
+      ValidationMessagesInner validationMessagesInner =
+          new ValidationMessagesInner()
+              .message("A field warning message from FSP")
+              .code("WARFAM1")
+              .type(ValidationMessagesInner.TypeEnum.WARNING);
+      FeeCalculationResponse feeCalculationResponse =
+          new FeeCalculationResponse()
+              .validationMessages(Collections.singletonList(validationMessagesInner));
+
+      when(feeSchemeMapper.mapToFeeCalculationRequest(claim, LEGAL_HELP))
+          .thenReturn(feeCalculationRequest);
+      when(feeSchemePlatformRestClient.calculateFee(feeCalculationRequest))
+          .thenReturn(ResponseEntity.ok(feeCalculationResponse));
+
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
+
+      feeCalculationService.calculateFee(claim, context, LEGAL_HELP);
+
+      verify(feeSchemePlatformRestClient, times(1)).calculateFee(feeCalculationRequest);
+
+      var actualMessages = context.getClaimReport(claim.getId()).get().getMessages();
+      assertThat(actualMessages)
+          .hasSize(1)
+          .extracting(ValidationMessagePatch::getMessageCode)
+          .contains("WARFAM1");
+      assertThat(actualMessages)
+          .extracting(ValidationMessagePatch::getDisplayMessage)
+          .contains("A field warning message from FSP");
+    }
+
+    @Test
     @DisplayName("404 Not found response results in claims error")
     void notFoundResponseResultsInValidClaim() {
 
