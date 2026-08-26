@@ -3,6 +3,12 @@ plugins {
     id 'uk.gov.justice.service.laa.laa-spring-boot-gradle-plugin'
 }
 
+// Dependency overrides
+// example:
+// Upgrade to fix CVE-xxxx-xxxxx
+// ext['dependency-name.version'] = 'x.x.x'
+
+// **** When adding new overrides please check if any existing overrides are now redundant (by removing them and adding them back only if required)
 
 dependencyManagement {
     dependencies {
@@ -21,15 +27,8 @@ dependencyManagement {
 }
 
 dependencies {
-
-    /**
-     * Upgrades to resolve vulnerabilities
-     */
-
-
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9'
-
 }
 
 sourceSets.main.java.srcDirs += ['generated/src/main/java']
