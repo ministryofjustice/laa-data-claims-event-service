@@ -38,7 +38,11 @@ jacocoTestCoverageVerification {
 }
 
 dependencyManagement {
-
+    dependencies {
+        // Upgrade to fix Snyk high severity finding SNYK-JAVA-ORGSPRINGFRAMEWORKRETRY-17260993
+        // (Allocation of Resources Without Limits or Throttling) in spring-retry:2.0.12
+        dependency 'org.springframework.retry:spring-retry:2.0.13'
+    }
 }
 
 dependencies {
