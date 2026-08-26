@@ -37,43 +37,11 @@ jacocoTestCoverageVerification {
     }
 }
 
-
-ext['tomcat.version'] = '11.0.23' // bumped patch release to address Snyk tomcat-embed findings
-
 dependencyManagement {
-    imports {
-        // Upgrade to fix vulnerabilities in netty
-        mavenBom('io.netty:netty-bom:4.2.17.Final')
-    }
-    dependencies {
-        dependencySet(group: 'io.sentry', version: versions.sentry) {
-            entry 'sentry-spring-boot-starter'
-            entry 'sentry-logback'
-        }
-        // Force jackson-core 2.x to fix Trivy vulnerability (transitive was pulling 2.20.2)
-        dependency "com.fasterxml.jackson.core:jackson-core:$versions.jackson"
-        // Force jackson tools to 3.1.5 to fix Trivy/Snyk vulnerability (AWS SDK pulls tools.jackson 3.0.4)
-        dependency 'tools.jackson.core:jackson-core:3.1.5'
-        dependency 'tools.jackson.core:jackson-databind:3.1.5'
-        // Force patched versions to address Snyk findings
-        dependency 'ch.qos.logback:logback-core:1.5.36'
-        dependency "com.fasterxml.jackson.core:jackson-databind:2.21.5"
-        dependency 'org.apache.tomcat.embed:tomcat-embed-core:11.0.23'
-        dependency 'org.springframework.retry:spring-retry:2.0.13'
-        // Bump Log4j API to resolve Snyk issue (upgrade from 2.25.4 -> 2.25.5)
-        dependency "org.apache.logging.log4j:log4j-api:2.25.5"
-        dependency 'commons-beanutils:commons-beanutils:1.11.0'
-        dependency 'org.apache.httpcomponents.core5:httpcore5-h2:5.4.3'
-        dependency 'org.codehaus.plexus:plexus-utils:4.0.3'
-    }
+
 }
 
 dependencies {
-
-    /**
-     * Upgrades to resolve vulnerabilities
-     */
-
 
     implementation project(':reference-fee-scheme-platform-api')
 
