@@ -19,7 +19,7 @@ public class MessageListenerBase {
 
   @Container
   static LocalStackContainer localStack =
-      new LocalStackContainer(DockerImageName.parse("localstack/localstack:3.4"));
+      new LocalStackContainer(DockerImageName.parse("localstack/localstack:4.14.0"));
 
   @DynamicPropertySource
   static void registerDynamicProperties(DynamicPropertyRegistry registry) {

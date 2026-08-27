@@ -232,7 +232,7 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
   @Nested
   class SubmissionValidation {
     @DisplayName(
-        "Should set the SubmissionValidationContext to valid message  when FSP return 404 for a claim")
+        "Should set the SubmissionValidationContext to valid message when FSP return 404 for a claim")
     @Test
     void shouldSetSubmissionStatusToValidationFailedWhenFspReturn404ForAClaim() throws Exception {
 
@@ -326,6 +326,14 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
           Arguments.of(
               "Should have no errors when the claim has valid values",
               "data-claims/get-claims/claim-valid.json",
+              (Consumer<SubmissionValidationContext>) ContextUtil::assertContextHasNoErrors),
+          Arguments.of(
+              "Should have no errors when the claim has valid values and includes a valid fee calculation response",
+              "data-claims/get-claims/claim-valid-with-fee-calculation.json",
+              (Consumer<SubmissionValidationContext>) ContextUtil::assertContextHasNoErrors),
+          Arguments.of(
+              "Should have no errors when the claim has valid values and includes a null fee calculation response",
+              "data-claims/get-claims/claim-valid-with-fee-calculation-null.json",
               (Consumer<SubmissionValidationContext>) ContextUtil::assertContextHasNoErrors),
           Arguments.of(
               "Should have an error when the crime matter type code is invalid",

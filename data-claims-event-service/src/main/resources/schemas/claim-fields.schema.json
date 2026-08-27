@@ -1029,7 +1029,8 @@
     },
     "has_assessment": {},
     "is_amended": {},
-    "version": {}
+    "version": {},
+    "fee_calculation_response": {}
   },
   "additionalProperties": false,
   "required": [
