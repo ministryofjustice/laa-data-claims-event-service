@@ -336,6 +336,10 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
               "data-claims/get-claims/claim-valid-with-fee-calculation-null.json",
               (Consumer<SubmissionValidationContext>) ContextUtil::assertContextHasNoErrors),
           Arguments.of(
+              "Should have no errors when the claim has valid values and includes a empty fee calculation response",
+              "data-claims/get-claims/claim-valid-with-fee-calculation-empty.json",
+              (Consumer<SubmissionValidationContext>) ContextUtil::assertContextHasNoErrors),
+          Arguments.of(
               "Should have an error when the crime matter type code is invalid",
               "data-claims/get-claims/claim-invalid-crime-matter-type-code.json",
               (Consumer<SubmissionValidationContext>)

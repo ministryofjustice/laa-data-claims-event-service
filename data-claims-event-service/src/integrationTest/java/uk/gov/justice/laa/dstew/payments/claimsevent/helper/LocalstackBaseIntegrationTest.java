@@ -77,8 +77,6 @@ public class LocalstackBaseIntegrationTest {
   private static LocalStackContainer createContainer() {
     LocalStackContainer container = new LocalStackContainer(SQS_IMAGE);
     container.withServices(SQS);
-    container.withEnv("DISABLE_EVENTS", "1");
-    container.withEnv("DNS_NAME_SERVERS", "8.8.8.8");
     container.start();
     // TODO: Add SQS queue to container
     log.info("Started LocalStack container on port: {}", container.getFirstMappedPort());
