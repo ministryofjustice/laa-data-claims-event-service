@@ -12,12 +12,22 @@ public final class ContextUtil {
   public static void assertContextHasNoErrors(SubmissionValidationContext context) {
     SoftAssertions.assertSoftly(
         softly -> {
-          softly.assertThat(context.hasErrors()).isFalse();
+          context
+              .getClaimReports()
+              .forEach(
+                  claimReport -> {
+                    if (claimReport != null) {
+                      for (var error : claimReport.getMessages()) {
+                        softly.fail(error.getDisplayMessage());
+                      }
+                    }
+                  });
           if (context.hasErrors()) {
             for (var error : context.getSubmissionValidationErrors()) {
               softly.fail(error.getDisplayMessage());
             }
           }
+          softly.assertThat(context.hasErrors()).isFalse();
         });
   }
 
