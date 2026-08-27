@@ -49,7 +49,8 @@ dependencies {
 
     implementation project(':reference-fee-scheme-platform-api')
 
-    implementation 'uk.gov.justice.laa.datastewardship.payments:data-claims-api-models:1.13.2'
+    implementation 'uk.gov.justice.laa.dstew.payments.claims.validation:claims-validation-core:1.4.6'
+    implementation 'uk.gov.justice.laa.datastewardship.payments:data-claims-api-models:1.16.7'
     implementation 'uk.gov.justice.laadata.providers:providers-api:1.40.1'
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
@@ -98,6 +99,7 @@ dependencies {
     testImplementation 'org.awaitility:awaitility'
     testImplementation 'org.mock-server:mockserver-client-java:6.0.0'
     testImplementation("io.projectreactor:reactor-test:3.1.0.RELEASE")
+
     // Sentry
     implementation platform("io.sentry:sentry-bom:$versions.sentry")
     implementation "io.sentry:sentry-logback:$versions.sentry"
@@ -107,6 +109,14 @@ dependencies {
 
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     testImplementation 'au.com.dius.pact.consumer:junit5:4.6.19'
+
+    testImplementation('org.springframework.boot:spring-boot-starter-test') {
+        // exclude the repackaged android-json coming in via jsonassert
+        exclude group: 'com.vaadin.external.google', module: 'android-json'
+    }
+
+    // ensure a known org.json implementation is present
+    testImplementation 'org.json:json:20250517'
 }
 
 // To keep pact stuff separate

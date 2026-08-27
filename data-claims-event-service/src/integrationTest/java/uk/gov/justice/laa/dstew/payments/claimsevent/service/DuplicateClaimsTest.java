@@ -63,6 +63,7 @@ public class DuplicateClaimsTest extends MockServerIntegrationTest {
           "provider-details/get-firm-schedules-openapi-200.json");
       // fee-details
       stubForGetFeeDetails(FEE_CODE, "fee-scheme/get-fee-details-200.json");
+      stubForGetFeeDetails("CAPA", "fee-scheme/get-fee-details-disbursement.json");
       // fee-calculation
       stubForPostFeeCalculation("fee-scheme/post-fee-calculation-200.json");
       // Stub patch submission

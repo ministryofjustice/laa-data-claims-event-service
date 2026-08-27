@@ -1,0 +1,19 @@
+{
+  "submission_id": "aa000001-0000-4000-8000-000000000001",
+  "bulk_submission_id": "bb000001-0000-4000-8000-000000000001",
+  "office_account_number": "AQ2B3C",
+  "submission_period": "APR-2025",
+  "area_of_law": "LEGAL HELP",
+  "status": "READY_FOR_VALIDATION",
+  "legal_help_submission_reference": "0P322F/SCH",
+  "previous_submission_id": "cc000001-0000-4000-8000-000000000001",
+  "is_nil_submission": false,
+  "number_of_claims": 1,
+  "submitted": "2025-05-01T12:32:00Z",
+  "claims": [
+    {
+      "claim_id": "dd000001-0000-4000-8000-000000000001",
+      "status": "READY_TO_PROCESS"
+    }
+  ]
+}
