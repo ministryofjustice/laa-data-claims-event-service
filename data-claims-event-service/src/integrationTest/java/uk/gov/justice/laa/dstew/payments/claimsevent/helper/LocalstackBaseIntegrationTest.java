@@ -30,7 +30,7 @@ public class LocalstackBaseIntegrationTest {
   protected String queueName;
 
   protected static final DockerImageName SQS_IMAGE =
-      DockerImageName.parse("localstack/localstack:3.4");
+      DockerImageName.parse("localstack/localstack:4.14.0");
 
   private static final LocalStackContainer INSTANCE = createContainer();
 
