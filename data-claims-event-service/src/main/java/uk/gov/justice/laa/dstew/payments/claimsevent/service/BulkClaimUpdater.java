@@ -18,7 +18,8 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.mapper.FeeCalculationPatchMapper;
-import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
+import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.MetricNames;
+import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.MetricPublisher;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.fee.scheme.model.FeeCalculationResponse;
@@ -35,7 +36,7 @@ public class BulkClaimUpdater {
 
   private final DataClaimsRestClient dataClaimsRestClient;
   private final FeeCalculationService feeCalculationService;
-  private final EventServiceMetricService eventServiceMetricService;
+  private final MetricPublisher metricPublisher;
   private final FeeCalculationPatchMapper feeCalculationPatchMapper;
 
   /**
@@ -124,13 +125,10 @@ public class BulkClaimUpdater {
       final AreaOfLaw areaOfLaw,
       final SubmissionValidationContext context,
       final ClaimResponse claim) {
-    eventServiceMetricService.startFspValidationTimer(UUID.fromString(claim.getId()));
-
-    Optional<FeeCalculationResponse> feeCalculationResponse =
-        feeCalculationService.calculateFee(claim, context, areaOfLaw);
-
-    eventServiceMetricService.stopFspValidationTimer(UUID.fromString(claim.getId()));
-    return feeCalculationResponse;
+    try (var ignored =
+        metricPublisher.timer(MetricNames.FSP_VALIDATION_TIME, UUID.fromString(claim.getId()))) {
+      return feeCalculationService.calculateFee(claim, context, areaOfLaw);
+    }
   }
 
   private ClaimPatch buildClaimPatch(

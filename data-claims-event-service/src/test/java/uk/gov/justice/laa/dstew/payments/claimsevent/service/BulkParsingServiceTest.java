@@ -40,7 +40,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.*;
 import uk.gov.justice.laa.dstew.payments.claimsevent.mapper.BulkSubmissionMapper;
-import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
+import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.MetricPublisher;
 
 @ExtendWith(MockitoExtension.class)
 class BulkParsingServiceTest {
@@ -51,7 +51,7 @@ class BulkParsingServiceTest {
 
   @Mock private DataClaimsRestClient dataClaimsRestClient;
   @Mock private BulkSubmissionMapper bulkSubmissionMapper;
-  @Mock private EventServiceMetricService eventServiceMetricService;
+  @Mock private MetricPublisher metricPublisher;
   @Mock private SubmissionDataNormaliser submissionDataNormaliser;
 
   @InjectMocks private BulkParsingService service;
