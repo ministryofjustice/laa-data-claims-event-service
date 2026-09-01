@@ -134,7 +134,12 @@ public class ProviderDetailsService {
           cacheKey,
           effectiveDate);
       scheduleCache.put(cacheKey, cached.refresh(POSITIVE_CACHE_TIME_TO_LIVE));
-      return Optional.of(Mono.just(cached.value()));
+      // The cached value may be merged from multiple prior calls for different effective dates
+      // (see cacheWindows). Filter to only the schedule lines actually effective on the date
+      // being requested now, so a cache hit returns exactly what a fresh, date-correct lookup
+      // would return - this is what makes the cache safe to reuse across claims with different
+      // effective dates in the same submission.
+      return Optional.of(Mono.just(filterToEffectiveDate(cached.value(), effectiveDate)));
     }
     log.debug(
         "ProviderDetails cache miss for key {}: date {} not covered", cacheKey, effectiveDate);
@@ -160,7 +165,10 @@ public class ProviderDetailsService {
                     .map(
                         dto -> {
                           cacheWindows(cacheKey, dto);
-                          return dto;
+                          // Cache the raw response for future coverage-window merging, but return
+                          // only the schedule lines effective on the requested date - keeps the
+                          // fresh-fetch path and the cache-hit path date-correct in the same way.
+                          return filterToEffectiveDate(dto, effectiveDate);
                         })
                     .switchIfEmpty(Mono.defer(() -> cacheNegative(negativeKey)))
                     .transformDeferred(RetryOperator.of(retry))
@@ -239,6 +247,63 @@ public class ProviderDetailsService {
   /** Returns the max of two dates. */
   private LocalDate max(LocalDate left, LocalDate right) {
     return left.isAfter(right) ? left : right;
+  }
+
+  /**
+   * Returns a copy of the given DTO containing only the schedule entries that are effective on
+   * {@code effectiveDate}, using the same schedule-level date semantics as {@link
+   * #toWindow(FirmOfficeContractAndScheduleDetails)} (null start = unbounded past, null end =
+   * unbounded future).
+   *
+   * <p>This is what guarantees a cache hit (which may be merged from responses fetched for
+   * several different effective dates) returns exactly what a fresh, date-correct lookup for
+   * {@code effectiveDate} would return - regardless of what other dates have previously been
+   * queried for this office.
+   *
+   * @param dto the source DTO; if {@code null} an empty result is returned
+   * @param effectiveDate the date to filter schedules against; if {@code null} no schedules match
+   * @return a new DTO with the same firm/office/pds metadata and only the effective schedules
+   */
+  private ProviderFirmOfficeContractAndScheduleDto filterToEffectiveDate(
+      ProviderFirmOfficeContractAndScheduleDto dto, LocalDate effectiveDate) {
+    ProviderFirmOfficeContractAndScheduleDto filtered = new ProviderFirmOfficeContractAndScheduleDto();
+    if (dto == null) {
+      filtered.setSchedules(List.of());
+      return filtered;
+    }
+    filtered.setFirm(dto.getFirm());
+    filtered.setOffice(dto.getOffice());
+    filtered.setPds(dto.getPds());
+    List<FirmOfficeContractAndScheduleDetails> schedules = dto.getSchedules();
+    List<FirmOfficeContractAndScheduleDetails> effectiveSchedules =
+        schedules == null
+            ? List.of()
+            : schedules.stream()
+                .filter(schedule -> isScheduleEffectiveOn(schedule, effectiveDate))
+                .toList();
+    filtered.setSchedules(effectiveSchedules);
+    return filtered;
+  }
+
+  /**
+   * Determines whether a schedule's own start/end dates cover the given effective date.
+   *
+   * @param schedule the schedule to test; {@code null} is never effective
+   * @param effectiveDate the date to test; {@code null} never matches
+   * @return true if {@code effectiveDate} falls within [scheduleStartDate, scheduleEndDate]
+   *     inclusive, treating a null bound as unbounded on that side
+   */
+  private boolean isScheduleEffectiveOn(
+      FirmOfficeContractAndScheduleDetails schedule, LocalDate effectiveDate) {
+    if (schedule == null || effectiveDate == null) {
+      return false;
+    }
+    LocalDate start = schedule.getScheduleStartDate();
+    LocalDate end = schedule.getScheduleEndDate();
+    if (start != null && effectiveDate.isBefore(start)) {
+      return false;
+    }
+    return end == null || !effectiveDate.isAfter(end);
   }
 
   /** Creates a cache key for positive cache lookups. */

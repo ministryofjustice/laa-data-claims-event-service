@@ -185,26 +185,29 @@ class ProviderDetailsServiceTest {
     LocalDate firstDate = LocalDate.of(2024, 2, 1);
     LocalDate gapDate = LocalDate.of(2024, 4, 15); // Between two windows
 
+    FirmOfficeContractAndScheduleDetails febWindowSchedule =
+        FirmOfficeContractAndScheduleDetails.builder()
+            .scheduleStartDate(LocalDate.of(2024, 1, 1))
+            .scheduleEndDate(LocalDate.of(2024, 3, 31))
+            .build();
+    FirmOfficeContractAndScheduleDetails novWindowSchedule =
+        FirmOfficeContractAndScheduleDetails.builder()
+            .scheduleStartDate(LocalDate.of(2024, 5, 1))
+            .scheduleEndDate(LocalDate.of(2024, 12, 31))
+            .build();
     ProviderFirmOfficeContractAndScheduleDto firstDto =
         ProviderFirmOfficeContractAndScheduleDto.builder()
             .office(ProviderFirmOfficeSummary.builder().firmOfficeCode(officeCode).build())
-            .schedules(
-                List.of(
-                    FirmOfficeContractAndScheduleDetails.builder()
-                        .scheduleStartDate(LocalDate.of(2024, 1, 1))
-                        .scheduleEndDate(LocalDate.of(2024, 3, 31))
-                        .build(),
-                    FirmOfficeContractAndScheduleDetails.builder()
-                        .scheduleStartDate(LocalDate.of(2024, 5, 1))
-                        .scheduleEndDate(LocalDate.of(2024, 12, 31))
-                        .build()))
+            .schedules(List.of(febWindowSchedule, novWindowSchedule))
             .build();
 
     when(client.getProviderFirmSchedules(officeCode, firstDate)).thenReturn(Mono.just(firstDto));
     when(client.getProviderFirmSchedules(officeCode, gapDate)).thenReturn(Mono.empty());
 
+    // Read-time filtering means only the schedule actually effective on firstDate is returned,
+    // even though both schedules are cached/merged internally for coverage-window purposes.
     StepVerifier.create(service.getProviderFirmSchedules(officeCode, firstDate))
-        .expectNext(firstDto)
+        .expectNextMatches(dto -> dto.getSchedules().equals(List.of(febWindowSchedule)))
         .verifyComplete();
 
     StepVerifier.create(service.getProviderFirmSchedules(officeCode, gapDate)).verifyComplete();
@@ -274,7 +277,14 @@ class ProviderDetailsServiceTest {
     cachedDates.forEach(
         date ->
             StepVerifier.create(service.getProviderFirmSchedules(officeCode, date))
-                .expectNextMatches(dto -> dto.getSchedules().size() == 4 && covers(dto, date))
+                // Read-time filtering: the merged/cached entry may contain schedules from
+                // several different fetches, but only those individually effective on `date`
+                // should ever be returned - never the full merged set regardless of date.
+                .expectNextMatches(
+                    dto ->
+                        !dto.getSchedules().isEmpty()
+                            && dto.getSchedules().stream()
+                                .allMatch(schedule -> scheduleCovers(schedule, date)))
                 .verifyComplete());
 
     verify(client, times(1)).getProviderFirmSchedules(officeCode, initial);
@@ -282,6 +292,67 @@ class ProviderDetailsServiceTest {
     verify(client, times(1)).getProviderFirmSchedules(officeCode, extendStart);
     verify(client, times(1)).getProviderFirmSchedules(officeCode, gapFill);
     verifyNoMoreInteractions(client);
+  }
+
+  /**
+   * Regression test for the false-failure/false-pass incident: a response cached for one
+   * effective date must not leak its categories/schedules into a later claim whose own
+   * effective date is only covered by a *different* underlying schedule window.
+   */
+  @Test
+  void cacheHitDoesNotLeakSchedulesFromAnUnrelatedEffectiveDate() {
+    String officeCode = "2Q949Z";
+    LocalDate civilDate = LocalDate.of(2025, 6, 1);
+    LocalDate crimeDate = LocalDate.of(2026, 7, 1);
+
+    FirmOfficeContractAndScheduleDetails civilSchedule =
+        FirmOfficeContractAndScheduleDetails.builder()
+            .scheduleStartDate(LocalDate.of(2025, 1, 1))
+            .scheduleEndDate(LocalDate.of(2025, 12, 31))
+            .areaOfLaw("CIVIL")
+            .build();
+    FirmOfficeContractAndScheduleDetails crimeSchedule =
+        FirmOfficeContractAndScheduleDetails.builder()
+            .scheduleStartDate(LocalDate.of(2025, 10, 1))
+            // open-ended - this is exactly the shape that caused the incident
+            .scheduleEndDate(null)
+            .areaOfLaw("CRIME LOWER")
+            .build();
+
+    ProviderFirmOfficeContractAndScheduleDto civilOnlyResponse =
+        ProviderFirmOfficeContractAndScheduleDto.builder()
+            .office(ProviderFirmOfficeSummary.builder().firmOfficeCode(officeCode).build())
+            .schedules(List.of(civilSchedule))
+            .build();
+    ProviderFirmOfficeContractAndScheduleDto crimeResponse =
+        ProviderFirmOfficeContractAndScheduleDto.builder()
+            .office(ProviderFirmOfficeSummary.builder().firmOfficeCode(officeCode).build())
+            .schedules(List.of(crimeSchedule))
+            .build();
+
+    when(client.getProviderFirmSchedules(officeCode, civilDate))
+        .thenReturn(Mono.just(civilOnlyResponse));
+    when(client.getProviderFirmSchedules(officeCode, crimeDate))
+        .thenReturn(Mono.just(crimeResponse));
+
+    // First claim: 2025 Civil claim populates the office-level cache with an open-ended window.
+    StepVerifier.create(service.getProviderFirmSchedules(officeCode, civilDate))
+        .expectNextMatches(dto -> dto.getSchedules().equals(List.of(civilSchedule)))
+        .verifyComplete();
+
+    // Second claim: 2026 Crime claim must NOT be served the cached Civil schedule just because
+    // its open-ended window happens to cover 2026 - it must reflect the Crime schedule.
+    StepVerifier.create(service.getProviderFirmSchedules(officeCode, crimeDate))
+        .expectNextMatches(
+            dto ->
+                dto.getSchedules().size() == 1
+                    && "CRIME LOWER".equals(dto.getSchedules().get(0).getAreaOfLaw()))
+        .verifyComplete();
+
+    // Re-checking the original Civil date afterwards must still only yield the Civil schedule.
+    StepVerifier.create(service.getProviderFirmSchedules(officeCode, civilDate))
+        .expectNextMatches(dto -> dto.getSchedules().equals(List.of(civilSchedule)))
+        .verifyComplete();
   }
 
   @Test
@@ -322,11 +393,13 @@ class ProviderDetailsServiceTest {
         .build();
   }
 
-  private boolean covers(ProviderFirmOfficeContractAndScheduleDto dto, LocalDate effectiveDate) {
-    return dto.getSchedules().stream()
-        .anyMatch(
-            schedule ->
-                !effectiveDate.isBefore(schedule.getScheduleStartDate())
-                    && !effectiveDate.isAfter(schedule.getScheduleEndDate()));
+  private boolean scheduleCovers(
+      FirmOfficeContractAndScheduleDetails schedule, LocalDate effectiveDate) {
+    LocalDate start = schedule.getScheduleStartDate();
+    LocalDate end = schedule.getScheduleEndDate();
+    if (start != null && effectiveDate.isBefore(start)) {
+      return false;
+    }
+    return end == null || !effectiveDate.isAfter(end);
   }
 }

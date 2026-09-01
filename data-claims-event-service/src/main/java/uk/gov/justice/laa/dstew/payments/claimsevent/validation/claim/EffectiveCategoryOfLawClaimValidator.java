@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
@@ -41,7 +40,7 @@ public final class EffectiveCategoryOfLawClaimValidator implements ClaimValidato
    * Constructs an instance of {@link EffectiveCategoryOfLawClaimValidator}.
    *
    * @param categoryOfLawValidationService the category of law validation service
-   * @param providerDetailsService the provider details rest client
+   * @param providerDetailsService the provider details service (owns caching/retry for PDA calls)
    */
   public EffectiveCategoryOfLawClaimValidator(
       CategoryOfLawValidationService categoryOfLawValidationService,
@@ -102,107 +101,40 @@ public final class EffectiveCategoryOfLawClaimValidator implements ClaimValidato
     }
   }
 
+  /**
+   * Retrieves the category-of-law codes effective for the given office and date.
+   *
+   * <p>The PDA API requires an explicit {@code effectiveDate} (omitting it defaults server-side
+   * to "today"), so it is always passed through to {@link ProviderDetailsService}, which owns
+   * caching and retry behaviour for this call.
+   *
+   * @param officeCode the office code
+   * @param effectiveDate the claim's effective date; must not be {@code null}
+   * @return distinct category-of-law codes for the office/date; throws if none are found
+   */
   private List<String> getEffectiveCategoriesOfLaw(String officeCode, LocalDate effectiveDate) {
-    return providerDetailsService
-        .getProviderFirmSchedules(officeCode, effectiveDate)
-        .blockOptional()
-        .map(this::extractCategoriesFromSchedules)
-        .orElse(Collections.emptyList());
-  }
+    List<FirmOfficeContractAndScheduleDetails> schedules =
+        providerDetailsService
+            .getProviderFirmSchedules(officeCode, effectiveDate)
+            .blockOptional()
+            .map(ProviderFirmOfficeContractAndScheduleDto::getSchedules)
+            .orElse(Collections.emptyList());
 
-  private List<String> extractCategoriesFromSchedules(
-      ProviderFirmOfficeContractAndScheduleDto schedulesDto) {
-    return schedulesDto.getSchedules().stream()
-        .map(FirmOfficeContractAndScheduleDetails::getScheduleLines)
-        .flatMap(List::stream)
-        .map(FirmOfficeContractAndScheduleLine::getCategoryOfLaw)
-        .toList();
+    List<String> categoriesOfLaw = getEffectiveCategoriesOfLawForSchedules(schedules);
+
+    if (categoriesOfLaw.isEmpty()) {
+      throw new EventServiceIllegalArgumentException(
+          "No category of law schedules found for effective date "
+              + effectiveDate
+              + " and office code "
+              + officeCode);
+    }
+
+    return categoriesOfLaw;
   }
 
   private void handleProviderDetailsApiError(SubmissionValidationContext context, String claimId) {
     context.addClaimError(claimId, ClaimValidationError.TECHNICAL_ERROR_PROVIDER_DETAILS_API);
-  }
-
-  private List<String> getEffectiveCategoriesOfLawForOfficeByEffectiveDate(String officeCode, LocalDate effectiveDate) {
-    // Load in ALL the provider schedules for the office code from the API handle any errors that may occur
-    Optional<ProviderFirmOfficeContractAndScheduleDto> officeSchedules =  providerDetailsService
-            .getProviderFirmSchedules(officeCode, null).blockOptional();
-
-    // iterate the schedules and return all schedules where the effective date is between the start and end date of the schedule
-    List<FirmOfficeContractAndScheduleDetails> filteredEffectiveSchedulesByEffectiveDate = filterEffectiveSchedulesByEffectiveDate(officeSchedules.orElse(null), effectiveDate);
-
-    // no schedules then throw an error
-    if (filteredEffectiveSchedulesByEffectiveDate.isEmpty()) {
-      throw new EventServiceIllegalArgumentException("Effective date " + effectiveDate + " is not within any of the schedules for office code "+ officeCode);
-    }
-
-    // iterate the filtered schedules and return all the category of law codes for the schedules
-    return getEffectiveCategoriesOfLawForSchedules(filteredEffectiveSchedulesByEffectiveDate);
-  }
-
-  /**
-   * Filters the schedules in the supplied DTO to those that are effective for the supplied
-   * effectiveDate. A schedule is considered effective if the effectiveDate is within the
-   * inclusive interval [contractStartDate, contractEndDate], using the same semantics as
-   * {@link #isEffectiveDateWithinSchedule(FirmOfficeContractAndScheduleDetails, java.time.LocalDate)}.
-   * <p>
-   * Business purpose: determine which provider schedules apply for a claim's effective date so
-   * callers can extract category-of-law codes for validation.
-   *
-   * @param schedulesDto DTO containing the list of schedules to be filtered; if {@code null}
-   *                     this method returns an empty list.
-   * @param effectiveDate the date to test for schedule effectiveness; if {@code null} this
-   *                      method treats it as not contained in any schedule and returns an empty list.
-   * @return a non-null, possibly empty, unmodifiable list of schedules from {@code schedulesDto.getSchedules()}
-   *         that are effective on {@code effectiveDate}. The returned list preserves the iteration
-   *         order of {@code schedulesDto.getSchedules()}.
-   * <p>
-   * Important assumptions/constraints:
-   * - Null or empty input schedules are treated as no matches and result in an empty list.
-   * - Individual null schedule elements are ignored.
-   * - The returned list is unmodifiable;
-   */
-  private List<FirmOfficeContractAndScheduleDetails> filterEffectiveSchedulesByEffectiveDate(
-      ProviderFirmOfficeContractAndScheduleDto schedulesDto, LocalDate effectiveDate) {
-    if (schedulesDto == null || ObjectUtils.isEmpty(schedulesDto.getSchedules()) || effectiveDate == null) {
-      return Collections.emptyList();
-    }
-
-    return schedulesDto.getSchedules().stream()
-        .filter(schedule -> isEffectiveDateWithinSchedule(schedule, effectiveDate))
-        .toList();
-  }
-
-  /**
-   * Determine whether the provided effectiveDate falls within the inclusive contract period
-   * defined by the schedule's contractStartDate and contractEndDate.
-   * <p>
-   * Business purpose: used when filtering schedules to those that are effective for a given
-   * claim effective date so that category-of-law codes can be derived.
-   * <p>
-   * Semantics/assumptions:
-   * - contractStartDate and contractEndDate are inclusive bounds.
-   * - a null contractStartDate is treated as unbounded on the lower side.
-   * - a null contractEndDate is treated as unbounded on the upper side.
-   * - a null effectiveDate is considered not within the schedule (returns false).
-   * - a null schedule is considered not containing the date (returns false).
-   *
-   * @param schedule the schedule whose contract start/end define the inclusive interval; may be null
-   * @param effectiveDate the date to test; if null the method returns false
-   * @return true if effectiveDate is within [contractStartDate or -infty, contractEndDate or +infty], false otherwise
-   */
-  private boolean isEffectiveDateWithinSchedule(FirmOfficeContractAndScheduleDetails schedule, LocalDate effectiveDate) {
-    if (effectiveDate == null || schedule == null) {
-      return false;
-    }
-
-    LocalDate start = schedule.getContractStartDate();
-    LocalDate end = schedule.getContractEndDate();
-
-    if (start != null && effectiveDate.isBefore(start)) {
-      return false;
-    }
-    return end == null || !effectiveDate.isAfter(end);
   }
 
   /**

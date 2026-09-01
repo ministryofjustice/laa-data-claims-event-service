@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Stream;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -48,7 +49,8 @@ class EffectiveCategoryOfLawClaimValidatorTest {
   void beforeEach() {
     validator =
         new EffectiveCategoryOfLawClaimValidator(
-            categoryOfLawValidationService, providerDetailsService);
+            categoryOfLawValidationService,
+            providerDetailsService);
   }
 
   @Test
