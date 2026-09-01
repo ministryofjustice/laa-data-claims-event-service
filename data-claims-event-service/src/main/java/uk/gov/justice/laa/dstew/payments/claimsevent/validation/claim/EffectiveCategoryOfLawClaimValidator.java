@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.stereotype.Component;
@@ -104,9 +103,9 @@ public final class EffectiveCategoryOfLawClaimValidator implements ClaimValidato
   /**
    * Retrieves the category-of-law codes effective for the given office and date.
    *
-   * <p>The PDA API requires an explicit {@code effectiveDate} (omitting it defaults server-side
-   * to "today"), so it is always passed through to {@link ProviderDetailsService}, which owns
-   * caching and retry behaviour for this call.
+   * <p>The PDA API requires an explicit {@code effectiveDate} (omitting it defaults server-side to
+   * "today"), so it is always passed through to {@link ProviderDetailsService}, which owns caching
+   * and retry behaviour for this call.
    *
    * @param officeCode the office code
    * @param effectiveDate the claim's effective date; must not be {@code null}
@@ -140,11 +139,12 @@ public final class EffectiveCategoryOfLawClaimValidator implements ClaimValidato
   /**
    * Extracts distinct category-of-law codes from the provided schedule details.
    *
-   * <p>Business purpose: used to determine which category-of-law codes apply for a set of
-   * schedules (typically schedules that are effective for a given date/office) so callers can
-   * validate a claim's category of law.
+   * <p>Business purpose: used to determine which category-of-law codes apply for a set of schedules
+   * (typically schedules that are effective for a given date/office) so callers can validate a
+   * claim's category of law.
    *
    * <p>Behaviour and assumptions:
+   *
    * <ul>
    *   <li>Null or empty input returns an empty list (no exception).
    *   <li>Null scheduleLines are ignored.
@@ -153,9 +153,11 @@ public final class EffectiveCategoryOfLawClaimValidator implements ClaimValidato
    * </ul>
    *
    * @param officeContractAndScheduleDetails list of schedule details, may be null
-   * @return non-null (possibly empty) list of distinct category-of-law codes preserving first-seen order
+   * @return non-null (possibly empty) list of distinct category-of-law codes preserving first-seen
+   *     order
    */
-  private List<String> getEffectiveCategoriesOfLawForSchedules(List<FirmOfficeContractAndScheduleDetails> officeContractAndScheduleDetails) {
+  private List<String> getEffectiveCategoriesOfLawForSchedules(
+      List<FirmOfficeContractAndScheduleDetails> officeContractAndScheduleDetails) {
     if (ObjectUtils.isEmpty(officeContractAndScheduleDetails)) {
       return Collections.emptyList();
     }

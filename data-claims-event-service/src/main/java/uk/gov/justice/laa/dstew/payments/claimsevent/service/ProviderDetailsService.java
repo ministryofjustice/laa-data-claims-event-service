@@ -255,10 +255,10 @@ public class ProviderDetailsService {
    * #toWindow(FirmOfficeContractAndScheduleDetails)} (null start = unbounded past, null end =
    * unbounded future).
    *
-   * <p>This is what guarantees a cache hit (which may be merged from responses fetched for
-   * several different effective dates) returns exactly what a fresh, date-correct lookup for
-   * {@code effectiveDate} would return - regardless of what other dates have previously been
-   * queried for this office.
+   * <p>This is what guarantees a cache hit (which may be merged from responses fetched for several
+   * different effective dates) returns exactly what a fresh, date-correct lookup for {@code
+   * effectiveDate} would return - regardless of what other dates have previously been queried for
+   * this office.
    *
    * @param dto the source DTO; if {@code null} an empty result is returned
    * @param effectiveDate the date to filter schedules against; if {@code null} no schedules match
@@ -266,7 +266,8 @@ public class ProviderDetailsService {
    */
   private ProviderFirmOfficeContractAndScheduleDto filterToEffectiveDate(
       ProviderFirmOfficeContractAndScheduleDto dto, LocalDate effectiveDate) {
-    ProviderFirmOfficeContractAndScheduleDto filtered = new ProviderFirmOfficeContractAndScheduleDto();
+    ProviderFirmOfficeContractAndScheduleDto filtered =
+        new ProviderFirmOfficeContractAndScheduleDto();
     if (dto == null) {
       filtered.setSchedules(List.of());
       return filtered;

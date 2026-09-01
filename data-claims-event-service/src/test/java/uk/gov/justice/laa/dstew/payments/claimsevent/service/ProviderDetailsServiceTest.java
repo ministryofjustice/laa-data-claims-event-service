@@ -295,9 +295,9 @@ class ProviderDetailsServiceTest {
   }
 
   /**
-   * Regression test for the false-failure/false-pass incident: a response cached for one
-   * effective date must not leak its categories/schedules into a later claim whose own
-   * effective date is only covered by a *different* underlying schedule window.
+   * Regression test for the false-failure/false-pass incident: a response cached for one effective
+   * date must not leak its categories/schedules into a later claim whose own effective date is only
+   * covered by a *different* underlying schedule window.
    */
   @Test
   void cacheHitDoesNotLeakSchedulesFromAnUnrelatedEffectiveDate() {
