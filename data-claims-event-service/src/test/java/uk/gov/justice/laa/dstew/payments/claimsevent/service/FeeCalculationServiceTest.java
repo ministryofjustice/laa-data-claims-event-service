@@ -318,5 +318,75 @@ class FeeCalculationServiceTest {
       verifyNoInteractions(feeSchemePlatformRestClient);
       assertThat(context.isFlaggedForRetry(claim.getId())).isTrue();
     }
+
+    @Test
+    @DisplayName("Non error/warning validation messages are ignored")
+    void nonErrorOrWarningValidationMessagesAreIgnored() {
+
+      ClaimResponse claim = new ClaimResponse().id("claimId").feeCode("feeCode");
+
+      FeeCalculationRequest feeCalculationRequest = new FeeCalculationRequest().feeCode("feeCode");
+
+      ValidationMessagesInner validationMessagesInner =
+          new ValidationMessagesInner().message("Unclassified message").code("INFO1").type(null);
+      FeeCalculationResponse feeCalculationResponse =
+          new FeeCalculationResponse()
+              .validationMessages(Collections.singletonList(validationMessagesInner));
+
+      when(feeSchemeMapper.mapToFeeCalculationRequest(claim, LEGAL_HELP))
+          .thenReturn(feeCalculationRequest);
+      when(feeSchemePlatformRestClient.calculateFee(feeCalculationRequest))
+          .thenReturn(ResponseEntity.ok(feeCalculationResponse));
+
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
+
+      var actualResponse = feeCalculationService.calculateFee(claim, context, LEGAL_HELP);
+
+      verify(feeSchemePlatformRestClient, times(1)).calculateFee(feeCalculationRequest);
+      assertThat(actualResponse).contains(feeCalculationResponse);
+      assertThat(context.hasErrors(claim.getId())).isFalse();
+      assertThat(context.getClaimReport(claim.getId()).get().getMessages()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Empty response body flags claim for retry and returns empty")
+    void emptyResponseBodyFlagsClaimForRetryAndReturnsEmpty() {
+
+      ClaimResponse claim = new ClaimResponse().id("claimId").feeCode("feeCode");
+
+      FeeCalculationRequest feeCalculationRequest = new FeeCalculationRequest().feeCode("feeCode");
+
+      when(feeSchemeMapper.mapToFeeCalculationRequest(claim, LEGAL_HELP))
+          .thenReturn(feeCalculationRequest);
+      when(feeSchemePlatformRestClient.calculateFee(feeCalculationRequest))
+          .thenReturn(ResponseEntity.ok(null));
+
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
+
+      var actualResponse = feeCalculationService.calculateFee(claim, context, LEGAL_HELP);
+
+      verify(feeSchemePlatformRestClient, times(1)).calculateFee(feeCalculationRequest);
+      assertThat(actualResponse).isEmpty();
+      assertThat(context.isFlaggedForRetry(claim.getId())).isTrue();
+    }
+
+    @Test
+    @DisplayName("Skips validation if fee code is blank")
+    void skipsValidationIfFeeCodeIsBlank() {
+
+      ClaimResponse claim = new ClaimResponse().id("claimId").feeCode("   ");
+
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
+
+      var actualResponse = feeCalculationService.calculateFee(claim, context, LEGAL_HELP);
+
+      assertThat(actualResponse).isEmpty();
+      verifyNoInteractions(feeSchemeMapper);
+      verifyNoInteractions(feeSchemePlatformRestClient);
+      assertThat(context.isFlaggedForRetry(claim.getId())).isFalse();
+    }
   }
 }

@@ -53,7 +53,7 @@ dependencyManagement {
         // resolution) to fix:
         //  - SNYK-JAVA-COMFASTERXMLJACKSONCORE-19477042 / 19496766 (jackson-databind 2.21.5)
         //  - SNYK-JAVA-TOOLSJACKSONCORE-19477043 / 19496767 (jackson-databind 3.1.5)
-        dependency 'com.fasterxml.jackson.core:jackson-databind:2.21.6'
+        dependency "com.fasterxml.jackson.core:jackson-databind:$versions.jackson"
         dependency 'tools.jackson.core:jackson-databind:3.1.6'
         dependency 'tools.jackson.core:jackson-core:3.1.6'
         dependency 'tools.jackson.core:jackson-annotations:3.1.6'
