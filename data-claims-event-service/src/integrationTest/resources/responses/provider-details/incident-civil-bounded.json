@@ -1,0 +1,20 @@
+{
+  "firm": {},
+  "office": {
+    "firmOfficeCode": "AQ2B3C"
+  },
+  "pds": true,
+  "schedules": [
+    {
+      "scheduleStartDate": "2025-01-01",
+      "scheduleEndDate": "2026-06-30",
+      "scheduleLines": [
+        {
+          "areaOfLaw": "CIVIL",
+          "categoryOfLaw": "CIV"
+        }
+      ]
+    }
+  ]
+}
+

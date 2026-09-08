@@ -49,6 +49,22 @@ public class ProviderDetailsService {
   private static final Duration POSITIVE_CACHE_TIME_TO_LIVE = Duration.ofMinutes(10);
 
   /**
+   * Clears all cached provider schedule data (positive and negative caches, and in-flight call
+   * tracking).
+   *
+   * <p>Intended for test isolation: because this service is a Spring singleton whose caches
+   * merge/accumulate schedule data per office code across calls, reusing the same office code in
+   * multiple tests within the same Spring context can leak schedule data cached by an earlier test
+   * into a later one. Call this between tests that reuse the same office code with different
+   * expected provider schedules.
+   */
+  public void clearCaches() {
+    scheduleCache.clear();
+    negativeCache.clear();
+    inFlightCalls.clear();
+  }
+
+  /**
    * Retrieves the provider firm office contract and schedule information for a given office and
    * effective date.
    *
@@ -229,7 +245,16 @@ public class ProviderDetailsService {
       return;
     }
     ProviderDetailsCoverageWindow last = windows.getLast();
-    if (!next.start().isAfter(last.end().plusDays(1))) {
+    // Avoid overflowing when last.end() is LocalDate.MAX. Treat a MAX end as unbounded so any
+    // subsequent window should be merged.
+    boolean adjacentOrOverlapping;
+    if (last.end().equals(LocalDate.MAX)) {
+      adjacentOrOverlapping = true;
+    } else {
+      adjacentOrOverlapping = !next.start().isAfter(last.end().plusDays(1));
+    }
+
+    if (adjacentOrOverlapping) {
       windows.set(
           windows.size() - 1,
           new ProviderDetailsCoverageWindow(last.start(), max(last.end(), next.end())));
