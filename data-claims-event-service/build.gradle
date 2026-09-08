@@ -49,8 +49,8 @@ dependencies {
 
     implementation project(':reference-fee-scheme-platform-api')
 
-    implementation 'uk.gov.justice.laa.dstew.payments.claims.validation:claims-validation-core:1.4.6'
-    implementation 'uk.gov.justice.laa.datastewardship.payments:data-claims-api-models:1.16.7'
+    implementation 'uk.gov.justice.laa.dstew.payments.claims.validation:claims-validation-core:1.4.10'
+    implementation 'uk.gov.justice.laa.datastewardship.payments:data-claims-api-models:1.21.0'
     implementation 'uk.gov.justice.laadata.providers:providers-api:1.40.1'
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
