@@ -7,11 +7,10 @@ plugins {
 }
 
 def versions = [
-        sentry : '8.31.0',
-        testcontainers : '1.20.1',
-        jackson : '2.21.5' // bumped to patch release to address Snyk jackson-databind finding
+    sentry : '8.31.0',
+    testcontainers : '1.20.1',
+    jackson : '2.21.6' // bumped to patch release to address Snyk jackson-databind finding
 ]
-
 
 test {
     useJUnitPlatform()
@@ -42,6 +41,22 @@ dependencyManagement {
         // Upgrade to fix Snyk high severity finding SNYK-JAVA-ORGSPRINGFRAMEWORKRETRY-17260993
         // (Allocation of Resources Without Limits or Throttling) in spring-retry:2.0.12
         dependency 'org.springframework.retry:spring-retry:2.0.13'
+
+        // Spring Boot's own dependency management pins jackson-databind (both the
+        // com.fasterxml.jackson.core "2.x" and tools.jackson.core "3.x" artifacts) to versions
+        // that are older than the ones declared via the jackson-bom platforms below. Because
+        // Spring Boot's BOM constraints win over an ordinary/enforced platform for the same
+        // module, the vulnerable 2.21.5 / 3.1.5 releases were still being resolved on the
+        // classpath even though the BOM versions above had been bumped.
+        //
+        // Explicitly pin the individual artifacts here (highest precedence in dependency
+        // resolution) to fix:
+        //  - SNYK-JAVA-COMFASTERXMLJACKSONCORE-19477042 / 19496766 (jackson-databind 2.21.5)
+        //  - SNYK-JAVA-TOOLSJACKSONCORE-19477043 / 19496767 (jackson-databind 3.1.5)
+        dependency 'com.fasterxml.jackson.core:jackson-databind:2.21.6'
+        dependency 'tools.jackson.core:jackson-databind:3.1.6'
+        dependency 'tools.jackson.core:jackson-core:3.1.6'
+        dependency 'tools.jackson.core:jackson-annotations:3.1.6'
     }
 }
 
@@ -86,6 +101,8 @@ dependencies {
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml'
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+    // Ensure Jackson 3.x (tools.jackson) BOM is bumped to a patched release to remediate Snyk findings
+    implementation enforcedPlatform('tools.jackson:jackson-bom:3.1.6')
     implementation 'com.networknt:json-schema-validator:1.5.8'
     implementation 'io.github.resilience4j:resilience4j-spring-boot3:2.1.0'
     implementation 'io.github.resilience4j:resilience4j-reactor:2.1.0'
