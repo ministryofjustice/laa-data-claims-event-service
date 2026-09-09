@@ -7,11 +7,10 @@ plugins {
 }
 
 def versions = [
-        sentry : '8.31.0',
-        testcontainers : '1.20.1',
-        jackson : '2.21.6' // bumped to patch release to address Snyk jackson-databind finding
+    sentry : '8.31.0',
+    testcontainers : '1.20.1',
+    jackson : '2.21.6' // bumped to patch release to address Snyk jackson-databind finding
 ]
-
 
 test {
     useJUnitPlatform()
