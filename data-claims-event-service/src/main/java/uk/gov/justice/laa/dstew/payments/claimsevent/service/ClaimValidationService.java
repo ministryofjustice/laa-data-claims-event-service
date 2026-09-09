@@ -131,6 +131,8 @@ public class ClaimValidationService {
           categoryOfLawValidationService.getFeeDetailsResponseForAllFeeCodesInClaims(
               submissionClaims);
 
+      List<Claim> relatedClaims = buildRelatedClaims(submissionClaims, submission);
+
       // Submit validation tasks for each claim
       for (ClaimResponse claim : submissionClaims) {
         validateClaim(
@@ -141,7 +143,7 @@ public class ClaimValidationService {
             submission.getOfficeAccountNumber(),
             context);
 
-        compareClaimValidationResults(claim, submission, context, submissionClaims);
+        compareClaimValidationResults(claim, submission, context, relatedClaims);
       }
 
       // Increment page number
@@ -160,6 +162,28 @@ public class ClaimValidationService {
           context,
           feeDetailsResponseMap);
     }
+  }
+
+  /**
+   * Maps the given claims to the validation {@link Claim} model and enriches each with the area of
+   * law and office account number of their parent submission. Extracted so it can be computed once
+   * per page (rather than once per claim) and unit tested independently of the outer claim
+   * processing loop.
+   *
+   * @param submissionClaims the claims belonging to the current page of the submission
+   * @param submission the parent submission, used to enrich each mapped claim
+   * @return the mapped and enriched claims
+   */
+  private List<Claim> buildRelatedClaims(
+      List<ClaimResponse> submissionClaims, SubmissionResponse submission) {
+    List<Claim> relatedClaims =
+        submissionClaims.stream().map(ClaimMapper::fromClaimResponse).toList();
+    relatedClaims.forEach(
+        c -> {
+          c.setAreaOfLaw(submission.getAreaOfLaw());
+          c.setOfficeAccountNumber(submission.getOfficeAccountNumber());
+        });
+    return relatedClaims;
   }
 
   /**
@@ -289,30 +313,35 @@ public class ClaimValidationService {
   }
 
   /**
-   * Maps a ClaimResponse to the internal validation Claim model, runs the new validation service,
-   * and compares the results against the existing report. Differences are logged as WARN via {@link
-   * ValidationResultComparator}. Any unexpected error is caught and logged to prevent disruption to
-   * the existing validation flow.
+   * Runs the new validation service against the current claim and compares the results against the
+   * existing report. Differences are logged as WARN via {@link ValidationResultComparator}. Any
+   * unexpected error is caught and logged to prevent disruption to the existing validation flow.
+   *
+   * @param claimResponse the claim currently being validated
+   * @param submissionResponse the parent submission of the claim
+   * @param context the submission validation context
+   * @param relatedClaims all claims in the current page, already mapped to the validation {@link
+   *     Claim} model and enriched with area of law/office account number (computed once per page to
+   *     avoid redundant mapping per claim)
    */
   private void compareClaimValidationResults(
       ClaimResponse claimResponse,
       SubmissionResponse submissionResponse,
       SubmissionValidationContext context,
-      List<ClaimResponse> submissionClaims) {
+      List<Claim> relatedClaims) {
 
     try {
-      Claim mappedClaim = ClaimMapper.fromClaimResponse(claimResponse);
-      mappedClaim.setAreaOfLaw(submissionResponse.getAreaOfLaw());
-      mappedClaim.setOfficeAccountNumber(submissionResponse.getOfficeAccountNumber());
-
-      List<Claim> relatedClaims =
-          submissionClaims.stream().map(ClaimMapper::fromClaimResponse).toList();
-
-      relatedClaims.forEach(
-          c -> {
-            c.setAreaOfLaw(submissionResponse.getAreaOfLaw());
-            c.setOfficeAccountNumber(submissionResponse.getOfficeAccountNumber());
-          });
+      Claim mappedClaim =
+          relatedClaims.stream()
+              .filter(c -> claimResponse.getId().equals(String.valueOf(c.getId())))
+              .findFirst()
+              .orElseGet(
+                  () -> {
+                    Claim claim = ClaimMapper.fromClaimResponse(claimResponse);
+                    claim.setAreaOfLaw(submissionResponse.getAreaOfLaw());
+                    claim.setOfficeAccountNumber(submissionResponse.getOfficeAccountNumber());
+                    return claim;
+                  });
 
       ValidationResult validationResult =
           validationService.validateClaim(mappedClaim, null, relatedClaims);
