@@ -9,7 +9,7 @@ plugins {
 def versions = [
         sentry : '8.31.0',
         testcontainers : '1.20.1',
-        jackson : '2.21.5' // bumped to patch release to address Snyk jackson-databind finding
+        jackson : '2.21.6' // bumped to patch release to address Snyk jackson-databind finding
 ]
 
 
@@ -85,6 +85,8 @@ dependencies {
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml'
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+    // Ensure Jackson 3.x (tools.jackson) BOM is bumped to a patched release to remediate Snyk findings
+    implementation enforcedPlatform('tools.jackson:jackson-bom:3.1.6')
     implementation 'com.networknt:json-schema-validator:1.5.8'
     implementation 'io.github.resilience4j:resilience4j-spring-boot3:2.1.0'
     implementation 'io.github.resilience4j:resilience4j-reactor:2.1.0'
