@@ -19,7 +19,9 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessageType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.EventServiceIllegalArgumentException;
-import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
+import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.MetricNames;
+import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.MetricPublisher;
+import uk.gov.justice.laa.dstew.payments.claimsevent.util.ValidationMessageMetricUtil;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
@@ -42,7 +44,7 @@ public class ClaimValidationService {
 
   private final CategoryOfLawValidationService categoryOfLawValidationService;
   private final DataClaimsRestClient dataClaimsRestClient;
-  private final EventServiceMetricService eventServiceMetricService;
+  private final MetricPublisher metricPublisher;
   private final BulkClaimUpdater bulkClaimUpdater;
   private final List<ClaimValidator> claimValidator;
   private final int claimValidationBatchSize;
@@ -60,13 +62,13 @@ public class ClaimValidationService {
   public ClaimValidationService(
       CategoryOfLawValidationService categoryOfLawValidationService,
       DataClaimsRestClient dataClaimsRestClient,
-      EventServiceMetricService eventServiceMetricService,
+      MetricPublisher eventServiceMetricService,
       BulkClaimUpdater bulkClaimUpdater,
       List<ClaimValidator> claimValidator,
       @Value("${claim.validation.claim-validation-batch-size}") int claimValidationBatchSize) {
     this.categoryOfLawValidationService = categoryOfLawValidationService;
     this.dataClaimsRestClient = dataClaimsRestClient;
-    this.eventServiceMetricService = eventServiceMetricService;
+    this.metricPublisher = eventServiceMetricService;
     this.bulkClaimUpdater = bulkClaimUpdater;
     this.claimValidator = claimValidator;
     this.claimValidationBatchSize = claimValidationBatchSize;
@@ -171,60 +173,61 @@ public class ClaimValidationService {
       SubmissionValidationContext context) {
 
     Assert.notNull(claim.getId(), "Claim ID must not be null");
-    eventServiceMetricService.startClaimValidationTimer(UUID.fromString(claim.getId()));
 
-    FeeDetailsResponseWrapper feeDetailsResponseWrapper =
-        feeDetailsResponseMap.get(claim.getFeeCode());
-    handleFeeDetailsError(claim, feeDetailsResponseWrapper, context);
+    try (var ignored =
+        metricPublisher.timer(MetricNames.CLAIM_VALIDATION_TIME, UUID.fromString(claim.getId()))) {
 
-    // Includes:
-    // - JSON scheme validation
-    // - Mandatory field validations
-    // - UFN
-    // - Stage reached validation
-    // - Schedule Reference Claim
-    // - Disbursements VAT amount
-    // - Claim dates:
-    // -- Case start date
-    // -- Case concluded date
-    // -- Transfer date
-    // -- Representation order date
-    // - Client dates
-    // -- Client date of birth
-    // - Matter Type Code
-    // - Effective category of law
-    String feeCalculationType =
-        feeDetailsResponseWrapper.getFeeDetailsResponse() != null
-            ? feeDetailsResponseWrapper.getFeeDetailsResponse().getFeeType()
-            : null;
-    claimValidator.stream()
-        .sorted(
-            Comparator.comparingInt(ClaimValidator::priority)) // Ensure validators are run in order
-        .forEach(
-            x -> {
-              switch (x) {
-                case BasicClaimValidator validator -> validator.validate(claim, context);
-                case ClaimWithAreaOfLawValidator validator ->
-                    validator.validate(claim, context, areaOfLaw);
-                case EffectiveCategoryOfLawClaimValidator validator ->
-                    validator.validate(claim, context, officeCode, feeDetailsResponseMap);
-                case DisbursementClaimStartDateValidator validator ->
-                    validator.validate(claim, context, feeCalculationType);
-                case MandatoryFieldClaimValidator validator ->
-                    validator.validate(claim, context, areaOfLaw, feeCalculationType);
-                case DuplicateClaimValidator validator ->
-                    validator.validate(
-                        claim,
-                        context,
-                        areaOfLaw,
-                        officeCode,
-                        submissionClaims,
-                        feeCalculationType);
-                default -> throw new EventServiceIllegalArgumentException("Unknown validator used");
-              }
-            });
+      FeeDetailsResponseWrapper feeDetailsResponseWrapper =
+          feeDetailsResponseMap.get(claim.getFeeCode());
+      handleFeeDetailsError(claim, feeDetailsResponseWrapper, context);
 
-    eventServiceMetricService.stopClaimValidationTimer(UUID.fromString(claim.getId()));
+      // Includes:
+      // - JSON scheme validation
+      // - Mandatory field validations
+      // - UFN
+      // - Stage reached validation
+      // - Schedule Reference Claim
+      // - Disbursements VAT amount
+      // - Claim dates:
+      // -- Case start date
+      // -- Case concluded date
+      // -- Transfer date
+      // -- Representation order date
+      // - Client dates
+      // -- Client date of birth
+      // - Matter Type Code
+      // - Effective category of law
+      String feeCalculationType =
+          feeDetailsResponseWrapper.getFeeDetailsResponse() != null
+              ? feeDetailsResponseWrapper.getFeeDetailsResponse().getFeeType()
+              : null;
+      claimValidator.stream()
+          .sorted(Comparator.comparingInt(ClaimValidator::priority))
+          .forEach(
+              x -> {
+                switch (x) {
+                  case BasicClaimValidator validator -> validator.validate(claim, context);
+                  case ClaimWithAreaOfLawValidator validator ->
+                      validator.validate(claim, context, areaOfLaw);
+                  case EffectiveCategoryOfLawClaimValidator validator ->
+                      validator.validate(claim, context, officeCode, feeDetailsResponseMap);
+                  case DisbursementClaimStartDateValidator validator ->
+                      validator.validate(claim, context, feeCalculationType);
+                  case MandatoryFieldClaimValidator validator ->
+                      validator.validate(claim, context, areaOfLaw, feeCalculationType);
+                  case DuplicateClaimValidator validator ->
+                      validator.validate(
+                          claim,
+                          context,
+                          areaOfLaw,
+                          officeCode,
+                          submissionClaims,
+                          feeCalculationType);
+                  default ->
+                      throw new EventServiceIllegalArgumentException("Unknown validator used");
+                }
+              });
+    }
 
     // Check claim status and record metric
     recordClaimMetrics(claim, context);
@@ -256,22 +259,23 @@ public class ClaimValidationService {
   private void recordClaimMetrics(ClaimResponse claim, SubmissionValidationContext context) {
     Optional<ClaimValidationReport> claimReportOptional = context.getClaimReport(claim.getId());
     if (claimReportOptional.isEmpty()) {
-      eventServiceMetricService.incrementTotalClaimsValidatedAndValid();
+      metricPublisher.increment(MetricNames.CLAIMS_VALIDATED_VALID);
       return;
     }
 
     List<ValidationMessagePatch> messages = claimReportOptional.get().getMessages();
 
-    // Record all messages (Helps track most common errors found)
-    messages.forEach(x -> eventServiceMetricService.recordValidationMessage(x, true));
+    // Record each validation message as a labelled counter so the most common errors are visible
+    ValidationMessageMetricUtil.incrementValidationMessageMetrics(
+        metricPublisher, messages, "Claim");
 
     // Claim could have either errors or warnings so record both
     if (messages.stream().anyMatch(x -> x.getType().equals(ValidationMessageType.ERROR))) {
-      eventServiceMetricService.incrementTotalClaimsValidatedAndErrorsFound();
+      metricPublisher.increment(MetricNames.CLAIMS_VALIDATED_INVALID);
     }
 
     if (messages.stream().anyMatch(x -> x.getType().equals(ValidationMessageType.WARNING))) {
-      eventServiceMetricService.incrementTotalClaimsValidatedAndWarningsFound();
+      metricPublisher.increment(MetricNames.CLAIMS_VALIDATED_WARNINGS);
     }
   }
 }

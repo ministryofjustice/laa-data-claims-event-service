@@ -3,11 +3,21 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.http.HttpHeaders;
 
-/** Configuration properties specific to the Fee Scheme Platform API. */
-@ConfigurationProperties(prefix = "laa.fee-scheme-platform-api")
+/**
+ * Configuration properties for the Fee Scheme Platform API client.
+ *
+ * <p>Bound from the {@code laa.fee-scheme-platform-api} prefix. All timeout, pool, and buffer
+ * values are sourced from {@code application.yml} (or environment-variable overrides) and default
+ * to values appropriate for this API — see the YAML for documented defaults.
+ */
+@ConfigurationProperties(prefix = FeeSchemePlatformApiProperties.PREFIX)
 public class FeeSchemePlatformApiProperties extends ApiProperties {
 
-  public FeeSchemePlatformApiProperties(String url, String accessToken) {
-    super(url, accessToken, HttpHeaders.AUTHORIZATION);
+  /** The configuration prefix and logical name for this API client. */
+  public static final String PREFIX = "laa.fee-scheme-platform-api";
+
+  public FeeSchemePlatformApiProperties() {
+    setAuthHeader(HttpHeaders.AUTHORIZATION);
+    setName(PREFIX);
   }
 }
