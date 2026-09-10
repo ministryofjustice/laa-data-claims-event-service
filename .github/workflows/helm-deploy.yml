@@ -93,7 +93,7 @@ jobs:
           REPOSITORY: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_REPOSITORY }}
         run: |
           echo "Deploying Helm release '$DEPLOYMENT_NAME'..."
-          helm upgrade --install --wait --timeout 5m \
+          helm upgrade --install --wait --timeout 15m \
             -f "$ENV_VALUES_FILE" \
             "$DEPLOYMENT_NAME" helm-chart \
             --set image.repository="$REGISTRY/$REPOSITORY"
