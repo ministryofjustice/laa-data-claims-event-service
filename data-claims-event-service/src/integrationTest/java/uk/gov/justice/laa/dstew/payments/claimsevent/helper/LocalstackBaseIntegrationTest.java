@@ -78,8 +78,17 @@ public class LocalstackBaseIntegrationTest {
     LocalStackContainer container = new LocalStackContainer(SQS_IMAGE);
     container.withServices(SQS);
     container.withEnv("DISABLE_EVENTS", "1");
-    container.withEnv("DNS_NAME_SERVERS", "8.8.8.8");
-    container.start();
+    // Disable LocalStack's built-in DNS server. When enabled it can hijack DNS resolution for
+    // the whole docker test network (rewriting other containers' resolver config so hostname
+    // lookups route through LocalStack). On Docker Desktop this can intermittently break/stall
+    // name resolution for unrelated containers (e.g. the fixed-port MockServer container used
+    // in DataClaimRestClientIntTest), causing flaky socket resets. We don't rely on LocalStack's
+    // DNS features (only SQS is used), so disabling it avoids the issue without depending on an
+    // external DNS.
+    container.withEnv("DNS_ADDRESS", "0");
+
+    container.start(); // start it before the SqsClient bean is created
+
     // TODO: Add SQS queue to container
     log.info("Started LocalStack container on port: {}", container.getFirstMappedPort());
     return container;
