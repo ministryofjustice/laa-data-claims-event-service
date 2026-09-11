@@ -15,11 +15,6 @@ public class MandatoryFieldClaimValidatorITest extends ClaimValidationIntegratio
   private static final Set<String> MISSING = Set.of("MISSING_MANDATORY_FIELD");
   private static final Set<String> NONE = Set.of();
 
-  static List<Arguments> claimsResponse2() {
-    return List.of(
-        Arguments.of(SUBMISSION_LEGAL_HELP, "lh-disbursement-excluded-fields-valid.json", NONE));
-  }
-
   static List<Arguments> claimsResponse() {
     return List.of(
         // ── Legal Help: valid ─────────────────────────────────────────────

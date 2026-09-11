@@ -24,6 +24,9 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import uk.gov.justice.laa.dstew.payments.claims.validation.core.model.Claim;
 import uk.gov.justice.laa.dstew.payments.claims.validation.core.model.ValidationIssue;
+import uk.gov.justice.laa.dstew.payments.claims.validation.core.provider.FeeSchemeProvider;
+import uk.gov.justice.laa.dstew.payments.claims.validation.core.provider.ProviderDetailsProvider;
+import uk.gov.justice.laa.dstew.payments.claims.validation.core.provider.impl.AbstractHttpCachingProvider;
 import uk.gov.justice.laa.dstew.payments.claims.validation.core.service.ValidationService;
 import uk.gov.justice.laa.dstew.payments.claims.validation.core.util.ClaimMapper;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
@@ -59,6 +62,18 @@ public abstract class ClaimValidationIntegrationTestBase extends MockServerInteg
 
   @Autowired protected SubmissionValidationService submissionValidationService;
 
+  // The new validation engine's fee-scheme/provider-details providers cache responses in-memory
+  // (10 min positive / 10 sec negative TTL) inside singleton beans. mockServerClient.reset() only
+  // clears MockServer expectations, not these caches, so a fee/provider code used by an earlier
+  // test in the same Spring context (which is cached and reused across test classes) can leak a
+  // stale cached value into a later test. Evict both caches before every test to keep tests
+  // isolated regardless of execution order.
+  @Autowired(required = false)
+  protected FeeSchemeProvider feeSchemeProvider;
+
+  @Autowired(required = false)
+  protected ProviderDetailsProvider providerDetailsProvider;
+
   protected final ObjectMapper mapper = objectMapper;
 
   protected AreaOfLaw testAreaOfLaw;
@@ -67,6 +82,12 @@ public abstract class ClaimValidationIntegrationTestBase extends MockServerInteg
   @BeforeAll
   void beforeAllBase() {
     // parent MockServerIntegrationTest.beforeAll will have run
+    if (feeSchemeProvider instanceof AbstractHttpCachingProvider<?> cachingProvider) {
+      cachingProvider.clear();
+    }
+    if (providerDetailsProvider instanceof AbstractHttpCachingProvider<?> cachingProvider) {
+      cachingProvider.clear();
+    }
   }
 
   @BeforeEach
