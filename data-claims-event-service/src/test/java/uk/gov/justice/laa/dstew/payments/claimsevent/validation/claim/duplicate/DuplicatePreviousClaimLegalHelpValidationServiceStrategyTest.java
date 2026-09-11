@@ -1,8 +1,11 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -10,6 +13,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.ResponseEntity;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResultSet;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationType;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
@@ -25,13 +30,14 @@ class DuplicatePreviousClaimLegalHelpValidationServiceStrategyTest
 
   @Mock private DataClaimsRestClient mockDataClaimsRestClient;
 
-  private DuplicatePreviousClaimLegalHelpValidationServiceStrategy
+  private DuplicateClaimLegalHelpCurrentSubmissionValidationServiceStrategy
       duplicateClaimLegalHelpValidation;
 
   @BeforeEach
   void beforeEach() {
     duplicateClaimLegalHelpValidation =
-        new DuplicatePreviousClaimLegalHelpValidationServiceStrategy(mockDataClaimsRestClient);
+        new DuplicateClaimLegalHelpCurrentSubmissionValidationServiceStrategy(
+            mockDataClaimsRestClient);
   }
 
   @Nested
@@ -58,6 +64,11 @@ class DuplicatePreviousClaimLegalHelpValidationServiceStrategyTest
               ClaimStatus.READY_TO_PROCESS);
       var submissionClaims = List.of(claimTobeProcessed, otherClaim);
       var context = new SubmissionValidationContext();
+
+      when(mockDataClaimsRestClient.getClaims(
+              any(), any(), any(), any(), any(), any(), any(), any(), any()))
+          .thenReturn(
+              ResponseEntity.of(Optional.of(new ClaimResultSet().content(submissionClaims))));
 
       duplicateClaimLegalHelpValidation.validateDuplicateClaims(
           claimTobeProcessed,
@@ -111,6 +122,11 @@ class DuplicatePreviousClaimLegalHelpValidationServiceStrategyTest
               "claimId3", "submissionId1", "CIV123", "070722/001", "CLI001", ClaimStatus.VALID);
       var submissionClaims = List.of(claimTobeProcessed, otherClaim, otherClaim1);
       var context = new SubmissionValidationContext();
+
+      when(mockDataClaimsRestClient.getClaims(
+              any(), any(), any(), any(), any(), any(), any(), any(), any()))
+          .thenReturn(
+              ResponseEntity.of(Optional.of(new ClaimResultSet().content(submissionClaims))));
 
       duplicateClaimLegalHelpValidation.validateDuplicateClaims(
           claimTobeProcessed,

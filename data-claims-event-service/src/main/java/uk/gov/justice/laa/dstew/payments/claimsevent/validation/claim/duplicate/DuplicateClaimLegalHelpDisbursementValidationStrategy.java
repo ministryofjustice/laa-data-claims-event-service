@@ -14,6 +14,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
@@ -22,8 +23,8 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 /** Duplicate-claim validation strategy for Legal Help disbursement claims. */
 @Slf4j
 @Component
-public class DuplicateClaimLegalHelpDisbursementValidationStrategy extends DuplicateClaimValidation
-    implements LegalHelpDuplicateClaimValidationStrategy {
+public class DuplicateClaimLegalHelpDisbursementValidationStrategy
+    extends DuplicateClaimValidation {
 
   /**
    * Returns a {@link Comparator} used to select the anchor claim during Rule B evaluation.
@@ -102,7 +103,7 @@ public class DuplicateClaimLegalHelpDisbursementValidationStrategy extends Dupli
    *       comparison impossible.
    * </ul>
    *
-   * @param incomingClaim the claim currently being validated
+   * @param currentClaim the claim currently being validated
    * @param submissionClaims all claims belonging to the current submission
    * @param officeCode the office code associated with the submission
    * @param context the validation context to which errors are reported
@@ -110,40 +111,51 @@ public class DuplicateClaimLegalHelpDisbursementValidationStrategy extends Dupli
    */
   @Override
   public void validateDuplicateClaims(
-      final ClaimResponse incomingClaim,
+      final ClaimResponse currentClaim,
       final List<ClaimResponse> submissionClaims,
       final String officeCode,
       final SubmissionValidationContext context,
       final String feeType) {
 
+    log.debug(
+        "[{}] Validating duplicates for claim {}",
+        getClass().getSimpleName(),
+        currentClaim.getId());
+
     if (!isDisbursementClaim(feeType)) {
+      log.debug("Is not disbursement, skipping duplicate check for claim {}", currentClaim.getId());
       return;
     }
 
     List<ClaimResponse> candidateDuplicateClaim =
-        findEligibleDuplicateClaims(incomingClaim, submissionClaims, officeCode);
+        findEligibleDuplicateClaims(currentClaim, officeCode);
     if (candidateDuplicateClaim.isEmpty()) {
       return;
     }
 
-    LocalDate incomingConcludedDate = parseConcludedDate(incomingClaim);
+    LocalDate incomingConcludedDate = parseConcludedDate(currentClaim);
     if (incomingConcludedDate == null) {
       // The incoming claim has no valid Case Concluded Date; Rule B cannot be applied.
       // No duplicate error is raised as this will be handled by upstream date validation.
       return;
     }
 
-    // candidates is guaranteed non-empty at this point, so selectComparativeClaim will always
+    // candidates are guaranteed non-empty at this point, so selectComparativeClaim will always
     // return a value.
     ClaimResponse duplicateClaim =
         selectComparativeClaim(candidateDuplicateClaim, incomingConcludedDate);
 
-    if (isDuplicateClaim(incomingClaim, duplicateClaim)) {
-      logDuplicates(incomingClaim, List.of(duplicateClaim));
+    if (isDuplicateClaim(currentClaim, duplicateClaim)) {
+      logDuplicates(currentClaim, List.of(duplicateClaim));
       context.addClaimError(
-          incomingClaim.getId(),
+          currentClaim.getId(),
           ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_ANOTHER_SUBMISSION);
     }
+
+    log.debug(
+        "[{}] Duplicate validation completed for claim {}",
+        getClass().getSimpleName(),
+        currentClaim.getId());
   }
 
   /**
@@ -151,21 +163,24 @@ public class DuplicateClaimLegalHelpDisbursementValidationStrategy extends Dupli
    * unique file number, and unique client number as the incoming claim, and that carry a valid Case
    * Concluded Date eligible for Rule B evaluation.
    *
-   * @param incomingClaim the claim currently being validated
-   * @param submissionClaims all claims belonging to the current submission
+   * @param currentClaim the claim currently being validated
    * @param officeCode the office code associated with the submission
    * @return a list of eligible candidate claims; empty if none are found
    */
   protected List<ClaimResponse> findEligibleDuplicateClaims(
-      ClaimResponse incomingClaim, List<ClaimResponse> submissionClaims, String officeCode) {
-    return getDuplicateClaimsInPreviousSubmission(
+      ClaimResponse currentClaim, String officeCode) {
+
+    // Get all claims from the API by officeCode, feeCode, uniqueFileNumber and uniqueClientNumber.
+    List<ClaimResponse> duplicateClaims =
+        getDuplicateClaims(
             officeCode,
-            incomingClaim.getFeeCode(),
-            incomingClaim.getUniqueFileNumber(),
-            incomingClaim.getUniqueClientNumber(),
-            null,
-            submissionClaims)
-        .stream()
+            currentClaim.getFeeCode(),
+            currentClaim.getUniqueFileNumber(),
+            currentClaim.getUniqueClientNumber());
+
+    // Filter the claims to find duplicates in previous submissions and with a valid Case Concluded
+    // Date for Rule B evaluation.
+    return filterDuplicateClaimsInPreviousSubmission(currentClaim, duplicateClaims).stream()
         .filter(c -> parseConcludedDate(c) != null)
         .toList();
   }
@@ -279,5 +294,10 @@ public class DuplicateClaimLegalHelpDisbursementValidationStrategy extends Dupli
           "Could not parse caseConcludedDate '{}' for claim {}", concludedCaseDate, claim.getId());
       return null;
     }
+  }
+
+  @Override
+  public List<String> compatibleStrategies() {
+    return List.of(AreaOfLaw.LEGAL_HELP.getValue());
   }
 }

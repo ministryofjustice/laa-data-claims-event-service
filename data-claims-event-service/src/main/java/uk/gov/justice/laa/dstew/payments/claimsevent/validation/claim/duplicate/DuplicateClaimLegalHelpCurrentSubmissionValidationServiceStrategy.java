@@ -4,24 +4,21 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import uk.gov.justice.laa.dstew.payments.claims.validation.core.util.FeeTypeUtils;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
-import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
-/** Validation service for legal help duplicate claims. */
+/** Validation service for legal help duplicate claims in the current submission. */
 @Slf4j
 @Service
-public final class DuplicateClaimLegalHelpValidationServiceStrategy
+public final class DuplicateClaimLegalHelpCurrentSubmissionValidationServiceStrategy
     extends DuplicateClaimValidation {
 
   @Autowired
-  public DuplicateClaimLegalHelpValidationServiceStrategy(
-      final DataClaimsRestClient dataClaimsRestClient,
-      final FeeSchemePlatformRestClient feeSchemePlatformRestClient) {
+  public DuplicateClaimLegalHelpCurrentSubmissionValidationServiceStrategy(
+      final DataClaimsRestClient dataClaimsRestClient) {
     super(dataClaimsRestClient);
   }
 
@@ -30,20 +27,12 @@ public final class DuplicateClaimLegalHelpValidationServiceStrategy
       final ClaimResponse currentClaim,
       final List<ClaimResponse> submissionClaims,
       final String officeCode,
-      final SubmissionValidationContext context,
-      final String feeType) {
+      final SubmissionValidationContext context) {
 
     log.debug(
         "[{}] Validating duplicates for claim {}",
         getClass().getSimpleName(),
         currentClaim.getId());
-
-    // Disbursement claims are handled exclusively by
-    // DuplicateClaimLegalHelpDisbursementValidationStrategy
-    if (FeeTypeUtils.isDisbursementClaim(feeType)) {
-      log.debug("Is disbursement, skipping duplicate check for claim {}", currentClaim.getId());
-      return;
-    }
 
     // Get all claims from the API by officeCode, feeCode, uniqueFileNumber and uniqueClientNumber.
     List<ClaimResponse> duplicateClaims =
@@ -53,13 +42,13 @@ public final class DuplicateClaimLegalHelpValidationServiceStrategy
             currentClaim.getUniqueFileNumber(),
             currentClaim.getUniqueClientNumber());
 
-    // Filter the claims to find duplicates in previous submissions.
-    List<ClaimResponse> officeDuplicateClaims =
-        filterDuplicateClaimsInPreviousSubmission(currentClaim, duplicateClaims);
+    // Filter the claims to find duplicates in the current submission.
+    List<ClaimResponse> submissionDuplicateClaims =
+        filterDuplicateClaimsInSameSubmission(currentClaim, duplicateClaims);
     findDuplicateClaims(
         currentClaim,
-        officeDuplicateClaims,
-        ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_ANOTHER_SUBMISSION,
+        submissionDuplicateClaims,
+        ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_EXISTING_SUBMISSION,
         context);
 
     log.debug(

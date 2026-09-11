@@ -1165,9 +1165,7 @@ class DuplicateClaimLegalHelpDisbursementValidationStrategyTest
               any(), any(), any(), any(), any(), any(), any(), any(), any()))
           .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet().content(emptyList()))));
 
-      assertThat(
-              duplicateClaimValidationService.findEligibleDuplicateClaims(
-                  incoming, List.of(incoming), OFFICE_CODE))
+      assertThat(duplicateClaimValidationService.findEligibleDuplicateClaims(incoming, OFFICE_CODE))
           .isEmpty();
     }
 
@@ -1201,9 +1199,7 @@ class DuplicateClaimLegalHelpDisbursementValidationStrategyTest
           .thenReturn(
               ResponseEntity.of(Optional.of(new ClaimResultSet().content(singletonList(matched)))));
 
-      assertThat(
-              duplicateClaimValidationService.findEligibleDuplicateClaims(
-                  incoming, List.of(incoming), OFFICE_CODE))
+      assertThat(duplicateClaimValidationService.findEligibleDuplicateClaims(incoming, OFFICE_CODE))
           .containsExactly(matched);
     }
 
@@ -1248,9 +1244,7 @@ class DuplicateClaimLegalHelpDisbursementValidationStrategyTest
               ResponseEntity.of(
                   Optional.of(new ClaimResultSet().content(singletonList(ineligible)))));
 
-      assertThat(
-              duplicateClaimValidationService.findEligibleDuplicateClaims(
-                  incoming, List.of(incoming), OFFICE_CODE))
+      assertThat(duplicateClaimValidationService.findEligibleDuplicateClaims(incoming, OFFICE_CODE))
           .isEmpty();
     }
 
@@ -1299,9 +1293,7 @@ class DuplicateClaimLegalHelpDisbursementValidationStrategyTest
               ResponseEntity.of(
                   Optional.of(new ClaimResultSet().content(List.of(valid, noDate, badDate)))));
 
-      assertThat(
-              duplicateClaimValidationService.findEligibleDuplicateClaims(
-                  incoming, List.of(incoming), OFFICE_CODE))
+      assertThat(duplicateClaimValidationService.findEligibleDuplicateClaims(incoming, OFFICE_CODE))
           .containsExactly(valid);
     }
   }

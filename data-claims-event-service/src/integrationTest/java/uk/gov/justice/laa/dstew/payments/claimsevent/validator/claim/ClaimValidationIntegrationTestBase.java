@@ -2,6 +2,8 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.validator.claim;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -22,9 +24,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import uk.gov.justice.laa.dstew.payments.claims.validation.core.model.Claim;
 import uk.gov.justice.laa.dstew.payments.claims.validation.core.model.ValidationIssue;
-import uk.gov.justice.laa.dstew.payments.claims.validation.core.provider.FeeSchemeProvider;
-import uk.gov.justice.laa.dstew.payments.claims.validation.core.provider.ProviderDetailsProvider;
-import uk.gov.justice.laa.dstew.payments.claims.validation.core.provider.impl.AbstractHttpCachingProvider;
 import uk.gov.justice.laa.dstew.payments.claims.validation.core.service.ValidationService;
 import uk.gov.justice.laa.dstew.payments.claims.validation.core.util.ClaimMapper;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
@@ -60,18 +59,6 @@ public abstract class ClaimValidationIntegrationTestBase extends MockServerInteg
 
   @Autowired protected SubmissionValidationService submissionValidationService;
 
-  // The new validation engine's fee-scheme/provider-details providers cache responses in-memory
-  // (10 min positive / 10 sec negative TTL) inside singleton beans. mockServerClient.reset() only
-  // clears MockServer expectations, not these caches, so a fee/provider code used by an earlier
-  // test in the same Spring context (which is cached and reused across test classes) can leak a
-  // stale cached value into a later test. Evict both caches before every test to keep tests
-  // isolated regardless of execution order.
-  @Autowired(required = false)
-  protected FeeSchemeProvider feeSchemeProvider;
-
-  @Autowired(required = false)
-  protected ProviderDetailsProvider providerDetailsProvider;
-
   protected final ObjectMapper mapper = objectMapper;
 
   protected AreaOfLaw testAreaOfLaw;
@@ -85,12 +72,6 @@ public abstract class ClaimValidationIntegrationTestBase extends MockServerInteg
   @BeforeEach
   void resetMockServerBeforeEach() {
     mockServerClient.reset();
-    if (feeSchemeProvider instanceof AbstractHttpCachingProvider<?> cachingProvider) {
-      cachingProvider.clear();
-    }
-    if (providerDetailsProvider instanceof AbstractHttpCachingProvider<?> cachingProvider) {
-      cachingProvider.clear();
-    }
   }
 
   /**
@@ -121,7 +102,22 @@ public abstract class ClaimValidationIntegrationTestBase extends MockServerInteg
     }
 
     stubForGetSubmission(submissionId, submissionFixture);
-    stubForGetClaims(Collections.emptyList(), claimsFixture);
+
+    // Stubs ClaimValidationService.validateAndUpdateClaims' paged "fetch all claims for this
+    // submission" call (office_code + submission_id + paging, no fee_code/UFN/UCN). MockServer's
+    // default query-param matching is a "contains" match (a stub's specified params must be
+    // present, but the request may have extra params not specified in the stub) — so an
+    // unconstrained stub here would also match the differently-parameterised duplicate-check
+    // calls below (which never include submission_id) and, depending on match order, shadow them
+    // with the wrong (unfiltered) response. Requiring submission_id here keeps this stub scoped to
+    // its actual caller.
+    stubForGetClaims(
+        List.of(
+            Parameter.param(
+                "office_code",
+                testOfficeAccountNumber != null ? testOfficeAccountNumber : "AQ2B3C"),
+            Parameter.param("submission_id", submissionId.toString())),
+        claimsFixture);
 
     String claimsJson = readJsonFromFile(claimsFixture);
     JsonNode root = mapper.readTree(claimsJson);
@@ -140,8 +136,90 @@ public abstract class ClaimValidationIntegrationTestBase extends MockServerInteg
             }
           }
         }
+
+        // Also stub the parameterised GET /claims requests the duplicate-checker will issue.
+        //
+        // The real Data Claims API filters server-side by office_code/fee_code/
+        // unique_file_number/unique_client_number (see DataClaimsRestClient.getClaims). The
+        // production DuplicateClaimValidation strategies now trust that server-side filtering
+        // and only re-check submission scope client-side (see
+        // DuplicateClaimValidation.filterDuplicateClaimsInSameSubmission /
+        // filterDuplicateClaimsInPreviousSubmission). So the mocked response here must only
+        // contain the claims that would actually match this specific claim's fee_code/UFN/UCN —
+        // returning the whole, unfiltered claimsFixture would make every claim in a
+        // multi-claim, same-submission fixture look like a duplicate of every other claim,
+        // regardless of whether their UFN/UCN genuinely match.
+        if (claimNode.has("unique_file_number") && claimNode.has("unique_client_number")) {
+          String ufn = claimNode.get("unique_file_number").asText();
+          String ucn = claimNode.get("unique_client_number").asText();
+          String feeCodeForClaim =
+              claimNode.has("fee_code") && !claimNode.get("fee_code").isNull()
+                  ? claimNode.get("fee_code").asText()
+                  : null;
+
+          List<Parameter> baseParams = new ArrayList<>();
+          baseParams.add(
+              Parameter.param(
+                  "office_code",
+                  testOfficeAccountNumber != null ? testOfficeAccountNumber : "AQ2B3C"));
+
+          // submission_statuses the validator uses
+          baseParams.add(Parameter.param("submission_statuses", "CREATED"));
+          baseParams.add(Parameter.param("submission_statuses", "VALIDATION_IN_PROGRESS"));
+          baseParams.add(Parameter.param("submission_statuses", "READY_FOR_VALIDATION"));
+          baseParams.add(Parameter.param("submission_statuses", "VALIDATION_SUCCEEDED"));
+
+          if (feeCodeForClaim != null && !feeCodeForClaim.isBlank()) {
+            baseParams.add(Parameter.param("fee_code", feeCodeForClaim));
+          }
+
+          baseParams.add(Parameter.param("unique_file_number", ufn));
+
+          // claim_statuses the validator uses
+          baseParams.add(Parameter.param("claim_statuses", "READY_TO_PROCESS"));
+          baseParams.add(Parameter.param("claim_statuses", "VALID"));
+
+          // Register stub so duplicate-check GET /claims returns only claims genuinely matching
+          // this claim's fee_code/UFN/UCN (emulating real server-side filtering), rather than
+          // the entire, unfiltered claimsFixture.
+          //
+          // Two variants are needed: most strategies (Legal Help/disbursement) key on fee code +
+          // UFN + UCN and always send unique_client_number, but the Crime Lower strategy keys on
+          // fee code + UFN only and deliberately omits unique_client_number from its request (see
+          // DuplicateClaimCrimeLowerValidationServiceStrategy). MockServer's query-param matching
+          // requires every parameter named in a stub to be present in the request, so a stub that
+          // requires unique_client_number would never match Crime Lower's request and would 502.
+          List<Parameter> withUcnParams = new ArrayList<>(baseParams);
+          withUcnParams.add(Parameter.param("unique_client_number", ucn));
+          stubForGetClaims(withUcnParams, filterClaimsMatching(root, feeCodeForClaim, ufn, ucn));
+
+          // Registered after the UCN-specific stub above: MockServer checks expectations in
+          // registration order and uses the first match, so real requests that do include
+          // unique_client_number (Legal Help etc.) still hit the more specific stub above; only
+          // requests that omit it entirely (Crime Lower) fall through to this one.
+          stubForGetClaims(baseParams, filterClaimsMatching(root, feeCodeForClaim, ufn, null));
+        }
       }
     }
+
+    // Fallback stub for duplicate-check GET /claims requests that don't match any of the
+    // fee_code/UFN/UCN-specific stubs registered above — e.g. a claim whose unique_file_number or
+    // unique_client_number is null/blank, which never enters the per-claim stubbing block. Without
+    // this, such a request would 502 (no MockServer expectation matches) and fail the whole
+    // validation run rather than being handled as "no duplicates found". Registered last so it
+    // only takes effect when none of the more specific stubs above match.
+    stubForGetClaims(
+        List.of(
+            Parameter.param(
+                "office_code",
+                testOfficeAccountNumber != null ? testOfficeAccountNumber : "AQ2B3C"),
+            Parameter.param("submission_statuses", "CREATED"),
+            Parameter.param("submission_statuses", "VALIDATION_IN_PROGRESS"),
+            Parameter.param("submission_statuses", "READY_FOR_VALIDATION"),
+            Parameter.param("submission_statuses", "VALIDATION_SUCCEEDED"),
+            Parameter.param("claim_statuses", "READY_TO_PROCESS"),
+            Parameter.param("claim_statuses", "VALID")),
+        mapper.createObjectNode().set("content", mapper.createArrayNode()));
 
     stubForPostFeeCalculation("fee-scheme/post-fee-calculation-200.json");
 
@@ -165,6 +243,74 @@ public abstract class ClaimValidationIntegrationTestBase extends MockServerInteg
         "data-claims/get-submission/get-submissions-by-filter_no_content.json");
 
     return submissionValidationService.validateSubmission(submissionId);
+  }
+
+  /**
+   * Builds a filtered {@code ClaimResultSet}-shaped JSON body containing only the claims from
+   * {@code root} whose {@code fee_code}, {@code unique_file_number}, and {@code
+   * unique_client_number} all match the given values.
+   *
+   * <p>This emulates the server-side filtering the real Data Claims API performs for {@code GET
+   * /claims?fee_code=...&unique_file_number=...&unique_client_number=...}, which the production
+   * {@code DuplicateClaimValidation} strategies rely on (they no longer re-check fee code/UFN/UCN
+   * client-side — only submission scope). Without this filtering, stubbing the whole, unfiltered
+   * fixture for every claim's query would make every claim in a multi-claim, same-submission
+   * fixture look like a duplicate of every other claim in that submission, regardless of whether
+   * their UFN/UCN genuinely match.
+   *
+   * @param root the parsed root of the claims fixture (must have a {@code content} array)
+   * @param feeCode the fee code to match, or {@code null} if the claim being queried for has none
+   * @param uniqueFileNumber the unique file number to match
+   * @param uniqueClientNumber the unique client number to match
+   * @return a {@code ClaimResultSet}-shaped {@link JsonNode} containing only the matching claims
+   */
+  protected JsonNode filterClaimsMatching(
+      JsonNode root, String feeCode, String uniqueFileNumber, String uniqueClientNumber) {
+    ArrayNode filteredContent = mapper.createArrayNode();
+
+    if (root.has("content") && root.get("content").isArray()) {
+      for (JsonNode candidate : root.get("content")) {
+        if (claimMatches(candidate, feeCode, uniqueFileNumber, uniqueClientNumber)) {
+          filteredContent.add(candidate);
+        }
+      }
+    }
+
+    ObjectNode filteredResponse = mapper.createObjectNode();
+    filteredResponse.set("content", filteredContent);
+    filteredResponse.put("total_pages", 1);
+    filteredResponse.put("total_elements", filteredContent.size());
+    filteredResponse.put("number", 0);
+    filteredResponse.put("size", filteredContent.size());
+    return filteredResponse;
+  }
+
+  /**
+   * @param uniqueClientNumber the UCN to match, or {@code null} to skip UCN filtering entirely
+   *     (mirrors strategies like Crime Lower that key on fee code + UFN only and never send a
+   *     unique_client_number query param)
+   */
+  private boolean claimMatches(
+      JsonNode candidate, String feeCode, String uniqueFileNumber, String uniqueClientNumber) {
+    String candidateFeeCode =
+        candidate.has("fee_code") && !candidate.get("fee_code").isNull()
+            ? candidate.get("fee_code").asText()
+            : null;
+    boolean feeCodeMatches = Objects.equals(feeCode, candidateFeeCode);
+
+    boolean ufnMatches =
+        candidate.has("unique_file_number")
+            && !candidate.get("unique_file_number").isNull()
+            && Objects.equals(uniqueFileNumber, candidate.get("unique_file_number").asText());
+
+    boolean ucnMatches =
+        uniqueClientNumber == null
+            || (candidate.has("unique_client_number")
+                && !candidate.get("unique_client_number").isNull()
+                && Objects.equals(
+                    uniqueClientNumber, candidate.get("unique_client_number").asText()));
+
+    return feeCodeMatches && ufnMatches && ucnMatches;
   }
 
   /**

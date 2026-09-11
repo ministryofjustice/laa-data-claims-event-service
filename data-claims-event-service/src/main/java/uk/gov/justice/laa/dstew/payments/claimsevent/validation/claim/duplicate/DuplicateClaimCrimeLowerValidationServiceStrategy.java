@@ -1,10 +1,10 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate;
 
 import java.util.List;
-import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
@@ -14,7 +14,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 @Slf4j
 @Service
 public final class DuplicateClaimCrimeLowerValidationServiceStrategy
-    extends DuplicateClaimValidation implements CrimeLowerDuplicateClaimValidationStrategy {
+    extends DuplicateClaimValidation {
 
   @Autowired
   public DuplicateClaimCrimeLowerValidationServiceStrategy(
@@ -24,55 +24,57 @@ public final class DuplicateClaimCrimeLowerValidationServiceStrategy
 
   @Override
   public void validateDuplicateClaims(
-      ClaimResponse claim,
+      ClaimResponse currentClaim,
       List<ClaimResponse> submissionClaims,
       String officeCode,
       SubmissionValidationContext context) {
-    log.debug("Validating duplicates for claim {}", claim.getId());
-    if (!context.isFlaggedForRetry(claim.getId())) {
-      List<ClaimResponse> claimsToCompare =
-          filterCurrentClaimWithValidStatusAndWithinPeriod(claim, submissionClaims);
 
-      String feeCode = claim.getFeeCode();
+    log.debug(
+        "[{}] Validating duplicates for claim {}",
+        getClass().getSimpleName(),
+        currentClaim.getId());
 
-      List<ClaimResponse> submissionDuplicateClaims;
-      List<ClaimResponse> officeDuplicateClaims;
-
-      if (!"PROD".equals(feeCode)) {
-        String uniqueFileNumber = claim.getUniqueFileNumber();
-        submissionDuplicateClaims =
-            getDuplicateClaimsInCurrentSubmission(
-                claimsToCompare,
-                claimToCompare ->
-                    Objects.equals(feeCode, claimToCompare.getFeeCode())
-                        && Objects.equals(uniqueFileNumber, claimToCompare.getUniqueFileNumber()));
-        officeDuplicateClaims =
-            getDuplicateClaimsInPreviousSubmission(
-                officeCode, feeCode, uniqueFileNumber, null, null, submissionClaims);
-      } else {
-        // Skipping PRD duplicate check. This is because PROD fee code do not have a unique
-        // identifier and client details are not mandatory for this fee code. This was originally
-        // implemented but then removed as part of BC-418. Please check
-        // https://github.com/ministryofjustice/laa-data-claims-event-service/releases/tag/0.0.121
-        // for the previous implementation of this check.
-        log.debug("Fee code is PROD, skipping duplicate check for claim {}", claim.getId());
-        // Escape early
-        return;
-      }
-
-      if (!submissionDuplicateClaims.isEmpty()) {
-        log.debug("Duplicate claims found in submission");
-        logDuplicates(claim, submissionDuplicateClaims);
-        context.addClaimError(
-            claim.getId(), ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_EXISTING_SUBMISSION);
-      }
-      if (officeDuplicateClaims != null && !officeDuplicateClaims.isEmpty()) {
-        log.debug("Duplicate claims found in another submission for this office");
-        logDuplicates(claim, officeDuplicateClaims);
-        context.addClaimError(
-            claim.getId(), ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_ANOTHER_SUBMISSION);
-      }
+    if ("PROD".equals(currentClaim.getFeeCode())) {
+      // Skipping PRD duplicate check. This is because PROD fee code do not have a unique
+      // identifier and client details are not mandatory for this fee code. This was originally
+      // implemented but then removed as part of BC-418. Please check
+      // https://github.com/ministryofjustice/laa-data-claims-event-service/releases/tag/0.0.121
+      // for the previous implementation of this check.
+      log.debug("Fee code is PROD, skipping duplicate check for claim {}", currentClaim.getId());
+      return;
     }
-    log.debug("Duplicate validation completed for claim {}", claim.getId());
+
+    // Get all claims from the API by officeCode, feeCode and uniqueFileNumber.
+    List<ClaimResponse> duplicateClaims =
+        getDuplicateClaims(
+            officeCode, currentClaim.getFeeCode(), currentClaim.getUniqueFileNumber(), null);
+
+    // Filter the claims to find duplicates in the current submission.
+    List<ClaimResponse> submissionDuplicateClaims =
+        filterDuplicateClaimsInSameSubmission(currentClaim, duplicateClaims);
+    findDuplicateClaims(
+        currentClaim,
+        submissionDuplicateClaims,
+        ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_EXISTING_SUBMISSION,
+        context);
+
+    // Filter the claims to find duplicates in previous submissions.
+    List<ClaimResponse> officeDuplicateClaims =
+        filterDuplicateClaimsInPreviousSubmission(currentClaim, duplicateClaims);
+    findDuplicateClaims(
+        currentClaim,
+        officeDuplicateClaims,
+        ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_ANOTHER_SUBMISSION,
+        context);
+
+    log.debug(
+        "[{}] Duplicate validation completed for claim {}",
+        getClass().getSimpleName(),
+        currentClaim.getId());
+  }
+
+  @Override
+  public List<String> compatibleStrategies() {
+    return List.of(AreaOfLaw.CRIME_LOWER.getValue());
   }
 }

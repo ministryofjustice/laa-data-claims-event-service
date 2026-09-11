@@ -2,6 +2,7 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.service.strategy;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -21,6 +22,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResultSet;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationType;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
@@ -37,6 +39,25 @@ class DuplicateClaimCrimeLowerValidationServiceStrategyTest {
   @Nested
   @DisplayName("validateDuplicateClaims")
   class ValidateDuplicateClaimsTests {
+
+    private void verifyGetClaimsCalledWith(ClaimResponse claim, String officeCode) {
+      verify(dataClaimsRestClient)
+          .getClaims(
+              eq(officeCode),
+              eq(null),
+              eq(
+                  List.of(
+                      SubmissionStatus.CREATED,
+                      SubmissionStatus.VALIDATION_IN_PROGRESS,
+                      SubmissionStatus.READY_FOR_VALIDATION,
+                      SubmissionStatus.VALIDATION_SUCCEEDED)),
+              eq(claim.getFeeCode()),
+              eq(claim.getUniqueFileNumber()),
+              eq(null),
+              eq(null),
+              eq(List.of(ClaimStatus.READY_TO_PROCESS, ClaimStatus.VALID)),
+              eq(null));
+    }
 
     @Test
     @DisplayName("Crime Lower claims - successful validation does not update context")
@@ -74,6 +95,7 @@ class DuplicateClaimCrimeLowerValidationServiceStrategyTest {
 
       // Then
       assertThat(context.hasErrors()).isFalse();
+      verifyGetClaimsCalledWith(claim1, "officeCode");
     }
 
     @Test
@@ -113,6 +135,7 @@ class DuplicateClaimCrimeLowerValidationServiceStrategyTest {
 
       // Then
       assertThat(context.hasErrors()).isFalse();
+      verifyGetClaimsCalledWith(claim1, "officeCode");
     }
 
     @Test
@@ -152,6 +175,7 @@ class DuplicateClaimCrimeLowerValidationServiceStrategyTest {
 
       // Then
       assertThat(context.hasErrors()).isFalse();
+      verifyGetClaimsCalledWith(claim1, "officeCode");
     }
 
     @Test
@@ -177,11 +201,12 @@ class DuplicateClaimCrimeLowerValidationServiceStrategyTest {
       List<ClaimResponse> submissionClaims = List.of(claim1, claim2);
 
       ClaimResultSet claimResultSet = new ClaimResultSet();
+      // The API is expected to filter out invalid claims; return only non-invalid claims
       claimResultSet.content(submissionClaims);
 
       when(dataClaimsRestClient.getClaims(
               any(), any(), any(), any(), any(), any(), any(), any(), any()))
-          .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
+          .thenReturn(ResponseEntity.of(Optional.of(claimResultSet)));
 
       SubmissionValidationContext context = new SubmissionValidationContext();
       context.addClaimReports(
@@ -200,6 +225,7 @@ class DuplicateClaimCrimeLowerValidationServiceStrategyTest {
           context,
           claim1.getId(),
           ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_EXISTING_SUBMISSION);
+      verifyGetClaimsCalledWith(claim1, "officeCode");
     }
 
     @Test
@@ -224,7 +250,8 @@ class DuplicateClaimCrimeLowerValidationServiceStrategyTest {
       List<ClaimResponse> submissionClaims = List.of(claim1, claim2);
 
       ClaimResultSet claimResultSet = new ClaimResultSet();
-      claimResultSet.content(submissionClaims);
+      // API is expected to filter out invalid claims; return only non-invalid claims
+      claimResultSet.content(List.of(claim1));
 
       when(dataClaimsRestClient.getClaims(
               any(), any(), any(), any(), any(), any(), any(), any(), any()))
@@ -293,6 +320,7 @@ class DuplicateClaimCrimeLowerValidationServiceStrategyTest {
           context,
           claim1.getId(),
           ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_ANOTHER_SUBMISSION);
+      verifyGetClaimsCalledWith(claim1, "officeCode");
     }
 
     @Test
@@ -346,6 +374,7 @@ class DuplicateClaimCrimeLowerValidationServiceStrategyTest {
           claim1.getId(),
           ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_EXISTING_SUBMISSION);
       assertThat(context.hasErrors(claim2.getId())).isFalse();
+      verifyGetClaimsCalledWith(claim1, "officeCode");
     }
 
     @Nested

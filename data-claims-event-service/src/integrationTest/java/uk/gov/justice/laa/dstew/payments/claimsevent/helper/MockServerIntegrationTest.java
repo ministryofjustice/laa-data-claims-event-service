@@ -4,6 +4,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockserver.model.JsonBody.json;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -90,14 +91,20 @@ public abstract class MockServerIntegrationTest {
   protected ObjectMapper objectMapper = new ObjectMapper();
 
   private static MockServerContainer createContainer() {
-    List<String> portBinding = List.of("30000:1080");
+    // Let Docker/Testcontainers allocate a free host port rather than hardcoding one. A fixed
+    // port (e.g. 30000) can collide with unrelated local processes (for example IntelliJ's JCEF
+    // embedded browser helper), causing intermittent connection-reset errors in tests.
     MockServerContainer container =
         new MockServerContainer(MOCKSERVER_IMAGE)
             .waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofSeconds(30)));
-    container.setPortBindings(portBinding);
     container.start();
-    log.info("Started MockServer container on port: {}", container.getFirstMappedPort());
+    log.info("Started MockServer container on mapped port: {}", container.getServerPort());
     return container;
+  }
+
+  /** Returns the dynamically allocated base URL of the shared MockServer container. */
+  protected static String mockServerBaseUrl() {
+    return MOCK_SERVER_CONTAINER.getEndpoint();
   }
 
   @MockitoBean PrometheusRegistry prometheusRegistry;
@@ -296,6 +303,26 @@ public abstract class MockServerIntegrationTest {
                 .withBody(json(readJsonFromFile(expectedResponse))));
   }
 
+  /**
+   * As {@link #stubForGetClaims(List, String)} but takes the response body directly as a {@link
+   * JsonNode} rather than reading it from a fixture file. Use this when the response needs to be
+   * derived/filtered in-memory (e.g. to emulate server-side query-param filtering that the real
+   * Data Claims API performs) rather than replayed verbatim from disk.
+   */
+  protected void stubForGetClaims(final List<Parameter> parameters, final JsonNode responseBody) {
+    mockServerClient
+        .when(
+            HttpRequest.request()
+                .withMethod(HttpMethod.GET.toString())
+                .withPath(DATA_CLAIMS_API_PATH)
+                .withQueryStringParameters(parameters))
+        .respond(
+            HttpResponse.response()
+                .withStatusCode(HttpStatusCode.OK)
+                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
+                .withBody(json(responseBody.toString())));
+  }
+
   protected void stubForGetClaimsFromPreviousSubmission(
       final String officeCode,
       final String feeCode,
@@ -418,21 +445,21 @@ public abstract class MockServerIntegrationTest {
     @Primary
     DataClaimsApiProperties dataClaimsApiProperties() {
       // Set using host and port running the mock server
-      return new DataClaimsApiProperties("http://localhost:30000", "");
+      return new DataClaimsApiProperties(mockServerBaseUrl(), "");
     }
 
     @Bean
     @Primary
     FeeSchemePlatformApiProperties feeSchemePlatformApiProperties() {
       // Set using host and port running the mock server
-      return new FeeSchemePlatformApiProperties("http://localhost:30000", "");
+      return new FeeSchemePlatformApiProperties(mockServerBaseUrl(), "");
     }
 
     @Bean
     @Primary
     ProviderDetailsApiProperties providerDetailsApiProperties() {
       // Set using host and port running the mock server
-      return new ProviderDetailsApiProperties("http://localhost:30000", "");
+      return new ProviderDetailsApiProperties(mockServerBaseUrl(), "");
     }
 
     @Bean
@@ -451,7 +478,7 @@ public abstract class MockServerIntegrationTest {
     @Primary
     public DataClaimsApiConfig coreDataClaimsApiConfig() {
       DataClaimsApiConfig cfg = new DataClaimsApiConfig();
-      cfg.setUrl("http://localhost:30000");
+      cfg.setUrl(mockServerBaseUrl());
       cfg.setAccessToken("");
       return cfg;
     }
@@ -460,7 +487,7 @@ public abstract class MockServerIntegrationTest {
     @Primary
     public FeeSchemeApiConfig coreFeeSchemeApiConfig() {
       FeeSchemeApiConfig cfg = new FeeSchemeApiConfig();
-      cfg.setUrl("http://localhost:30000");
+      cfg.setUrl(mockServerBaseUrl());
       cfg.setAccessToken("");
       return cfg;
     }
@@ -469,7 +496,7 @@ public abstract class MockServerIntegrationTest {
     @Primary
     public ProviderDetailsApiConfig coreProviderDetailsApiConfig() {
       ProviderDetailsApiConfig cfg = new ProviderDetailsApiConfig();
-      cfg.setUrl("http://localhost:30000");
+      cfg.setUrl(mockServerBaseUrl());
       cfg.setAccessToken("");
       return cfg;
     }
