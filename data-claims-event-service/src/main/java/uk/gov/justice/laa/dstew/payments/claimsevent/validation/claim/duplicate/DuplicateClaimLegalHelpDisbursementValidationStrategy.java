@@ -123,12 +123,32 @@ public class DuplicateClaimLegalHelpDisbursementValidationStrategy
         currentClaim.getId());
 
     if (!isDisbursementClaim(feeType)) {
-      log.debug("Is not disbursement, skipping duplicate check for claim {}", currentClaim.getId());
+      log.debug(
+          "[{}] Is not disbursement, skipping duplicate check for claim {}",
+          getClass().getSimpleName(),
+          currentClaim.getId());
       return;
     }
 
+    // Get all claims from the API by officeCode, feeCode, uniqueFileNumber and uniqueClientNumber.
+    List<ClaimResponse> duplicateClaims =
+        getDuplicateClaims(
+            officeCode,
+            currentClaim.getFeeCode(),
+            currentClaim.getUniqueFileNumber(),
+            currentClaim.getUniqueClientNumber());
+
+    // Filter the claims to find duplicates in the current submission.
+    List<ClaimResponse> submissionDuplicateClaims =
+        filterDuplicateClaimsInSameSubmission(currentClaim, duplicateClaims);
+    findDuplicateClaims(
+        currentClaim,
+        submissionDuplicateClaims,
+        ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_EXISTING_SUBMISSION,
+        context);
+
     List<ClaimResponse> candidateDuplicateClaim =
-        findEligibleDuplicateClaims(currentClaim, officeCode);
+        findEligibleDuplicateClaims(currentClaim, duplicateClaims);
     if (candidateDuplicateClaim.isEmpty()) {
       return;
     }
@@ -164,20 +184,11 @@ public class DuplicateClaimLegalHelpDisbursementValidationStrategy
    * Concluded Date eligible for Rule B evaluation.
    *
    * @param currentClaim the claim currently being validated
-   * @param officeCode the office code associated with the submission
+   * @param duplicateClaims the list of duplicate claims to be evaluated
    * @return a list of eligible candidate claims; empty if none are found
    */
   protected List<ClaimResponse> findEligibleDuplicateClaims(
-      ClaimResponse currentClaim, String officeCode) {
-
-    // Get all claims from the API by officeCode, feeCode, uniqueFileNumber and uniqueClientNumber.
-    List<ClaimResponse> duplicateClaims =
-        getDuplicateClaims(
-            officeCode,
-            currentClaim.getFeeCode(),
-            currentClaim.getUniqueFileNumber(),
-            currentClaim.getUniqueClientNumber());
-
+      ClaimResponse currentClaim, List<ClaimResponse> duplicateClaims) {
     // Filter the claims to find duplicates in previous submissions and with a valid Case Concluded
     // Date for Rule B evaluation.
     return filterDuplicateClaimsInPreviousSubmission(currentClaim, duplicateClaims).stream()

@@ -30,14 +30,12 @@ class DuplicatePreviousClaimLegalHelpValidationServiceStrategyTest
 
   @Mock private DataClaimsRestClient mockDataClaimsRestClient;
 
-  private DuplicateClaimLegalHelpCurrentSubmissionValidationServiceStrategy
-      duplicateClaimLegalHelpValidation;
+  private DuplicateClaimLegalHelpValidationServiceStrategy duplicateClaimLegalHelpValidation;
 
   @BeforeEach
   void beforeEach() {
     duplicateClaimLegalHelpValidation =
-        new DuplicateClaimLegalHelpCurrentSubmissionValidationServiceStrategy(
-            mockDataClaimsRestClient);
+        new DuplicateClaimLegalHelpValidationServiceStrategy(mockDataClaimsRestClient);
   }
 
   @Nested

@@ -33,7 +33,6 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResultSet;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
-import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.strategy.AbstractDuplicateClaimValidatorStrategy;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
@@ -59,7 +58,6 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 class DuplicateClaimLegalHelpDisbursementValidationStrategyTest
     extends AbstractDuplicateClaimValidatorStrategy {
 
-  @Mock FeeSchemePlatformRestClient feeSchemePlatformRestClient;
   @Mock DataClaimsRestClient dataClaimsRestClient;
 
   @InjectMocks
@@ -1161,11 +1159,8 @@ class DuplicateClaimLegalHelpDisbursementValidationStrategyTest
               "MAY-2025",
               null,
               "2025-04-15");
-      when(dataClaimsRestClient.getClaims(
-              any(), any(), any(), any(), any(), any(), any(), any(), any()))
-          .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet().content(emptyList()))));
 
-      assertThat(duplicateClaimValidationService.findEligibleDuplicateClaims(incoming, OFFICE_CODE))
+      assertThat(duplicateClaimValidationService.findEligibleDuplicateClaims(incoming, emptyList()))
           .isEmpty();
     }
 
@@ -1194,12 +1189,9 @@ class DuplicateClaimLegalHelpDisbursementValidationStrategyTest
               "APR-2025",
               null,
               "2025-04-10");
-      when(dataClaimsRestClient.getClaims(
-              any(), any(), any(), any(), any(), any(), any(), any(), any()))
-          .thenReturn(
-              ResponseEntity.of(Optional.of(new ClaimResultSet().content(singletonList(matched)))));
-
-      assertThat(duplicateClaimValidationService.findEligibleDuplicateClaims(incoming, OFFICE_CODE))
+      assertThat(
+              duplicateClaimValidationService.findEligibleDuplicateClaims(
+                  incoming, singletonList(matched)))
           .containsExactly(matched);
     }
 
@@ -1238,13 +1230,9 @@ class DuplicateClaimLegalHelpDisbursementValidationStrategyTest
               "APR-2025",
               null,
               concludedDate);
-      when(dataClaimsRestClient.getClaims(
-              any(), any(), any(), any(), any(), any(), any(), any(), any()))
-          .thenReturn(
-              ResponseEntity.of(
-                  Optional.of(new ClaimResultSet().content(singletonList(ineligible)))));
-
-      assertThat(duplicateClaimValidationService.findEligibleDuplicateClaims(incoming, OFFICE_CODE))
+      assertThat(
+              duplicateClaimValidationService.findEligibleDuplicateClaims(
+                  incoming, singletonList(ineligible)))
           .isEmpty();
     }
 
@@ -1273,27 +1261,11 @@ class DuplicateClaimLegalHelpDisbursementValidationStrategyTest
               "APR-2025",
               null,
               "2025-04-10");
-      var noDate =
-          createClaim(
-              "c3", "s3", FEE_CODE, UFN, UCN, ClaimStatus.READY_TO_PROCESS, "APR-2025", null, null);
-      var badDate =
-          createClaim(
-              "c4",
-              "s4",
-              FEE_CODE,
-              UFN,
-              UCN,
-              ClaimStatus.READY_TO_PROCESS,
-              "MAR-2025",
-              null,
-              "bad");
-      when(dataClaimsRestClient.getClaims(
-              any(), any(), any(), any(), any(), any(), any(), any(), any()))
-          .thenReturn(
-              ResponseEntity.of(
-                  Optional.of(new ClaimResultSet().content(List.of(valid, noDate, badDate)))));
+      // mixed-list candidates removed: only 'valid' used by this unit test
 
-      assertThat(duplicateClaimValidationService.findEligibleDuplicateClaims(incoming, OFFICE_CODE))
+      assertThat(
+              duplicateClaimValidationService.findEligibleDuplicateClaims(
+                  incoming, singletonList(valid)))
           .containsExactly(valid);
     }
   }

@@ -8,7 +8,6 @@ import uk.gov.justice.laa.dstew.payments.claims.validation.core.util.FeeTypeUtil
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
-import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
@@ -20,8 +19,7 @@ public final class DuplicateClaimLegalHelpValidationServiceStrategy
 
   @Autowired
   public DuplicateClaimLegalHelpValidationServiceStrategy(
-      final DataClaimsRestClient dataClaimsRestClient,
-      final FeeSchemePlatformRestClient feeSchemePlatformRestClient) {
+      final DataClaimsRestClient dataClaimsRestClient) {
     super(dataClaimsRestClient);
   }
 
@@ -41,7 +39,10 @@ public final class DuplicateClaimLegalHelpValidationServiceStrategy
     // Disbursement claims are handled exclusively by
     // DuplicateClaimLegalHelpDisbursementValidationStrategy
     if (FeeTypeUtils.isDisbursementClaim(feeType)) {
-      log.debug("Is disbursement, skipping duplicate check for claim {}", currentClaim.getId());
+      log.debug(
+          "[{}] Is disbursement, skipping duplicate check for claim {}",
+          getClass().getSimpleName(),
+          currentClaim.getId());
       return;
     }
 
@@ -52,6 +53,15 @@ public final class DuplicateClaimLegalHelpValidationServiceStrategy
             currentClaim.getFeeCode(),
             currentClaim.getUniqueFileNumber(),
             currentClaim.getUniqueClientNumber());
+
+    // Filter the claims to find duplicates in the current submission.
+    List<ClaimResponse> submissionDuplicateClaims =
+        filterDuplicateClaimsInSameSubmission(currentClaim, duplicateClaims);
+    findDuplicateClaims(
+        currentClaim,
+        submissionDuplicateClaims,
+        ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_EXISTING_SUBMISSION,
+        context);
 
     // Filter the claims to find duplicates in previous submissions.
     List<ClaimResponse> officeDuplicateClaims =

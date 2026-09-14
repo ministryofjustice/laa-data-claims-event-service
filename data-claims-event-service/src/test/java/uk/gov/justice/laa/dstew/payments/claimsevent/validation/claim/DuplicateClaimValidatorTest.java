@@ -20,7 +20,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.DuplicateClaimCrimeLowerValidationServiceStrategy;
-import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.DuplicateClaimLegalHelpCurrentSubmissionValidationServiceStrategy;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.claim.duplicate.DuplicateClaimLegalHelpValidationServiceStrategy;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Duplicate claim validator test")
@@ -28,9 +28,7 @@ class DuplicateClaimValidatorTest {
 
   DuplicateClaimValidator validator;
 
-  @Mock
-  private DuplicateClaimLegalHelpCurrentSubmissionValidationServiceStrategy
-      mockLegalHelpValidationStrategy;
+  @Mock private DuplicateClaimLegalHelpValidationServiceStrategy mockLegalHelpValidationStrategy;
 
   @Mock private DuplicateClaimCrimeLowerValidationServiceStrategy mockCrimeLowerValidationStrategy;
 

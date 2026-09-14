@@ -58,7 +58,7 @@ public final class DuplicateClaimCrimeLowerValidationServiceStrategy
         ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_EXISTING_SUBMISSION,
         context);
 
-    // Filter the claims to find duplicates in previous submissions.
+    // Filter the claims to find duplicates in any previous submissions.
     List<ClaimResponse> officeDuplicateClaims =
         filterDuplicateClaimsInPreviousSubmission(currentClaim, duplicateClaims);
     findDuplicateClaims(

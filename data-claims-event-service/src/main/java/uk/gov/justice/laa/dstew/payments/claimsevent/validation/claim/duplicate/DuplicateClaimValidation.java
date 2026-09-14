@@ -77,20 +77,6 @@ public abstract class DuplicateClaimValidation implements DuplicateClaimValidati
         getClass().getSimpleName(),
         body.getContent().size());
 
-    // Log basic details for each returned claim to help debug filtering behaviour
-    // Promote candidate-level logs to INFO so they appear in test output
-    body.getContent()
-        .forEach(
-            c ->
-                log.info(
-                    "[{}] -> candidate id={} submissionId={} feeCode={} ufn={} ucn={}",
-                    getClass().getSimpleName(),
-                    c.getId(),
-                    c.getSubmissionId(),
-                    c.getFeeCode(),
-                    c.getUniqueFileNumber(),
-                    c.getUniqueClientNumber()));
-
     return body.getContent().stream().toList();
   }
 
@@ -131,7 +117,8 @@ public abstract class DuplicateClaimValidation implements DuplicateClaimValidati
     String csvDuplicateClaimIds =
         duplicateClaims.stream().map(ClaimResponse::getId).collect(Collectors.joining(","));
     log.debug(
-        "{} duplicate claims found matching claim {}. Duplicates: {}",
+        "[{}] {} duplicate claims found matching claim {}. Duplicates: {}",
+        getClass().getSimpleName(),
         duplicateClaims.size(),
         claim.getId(),
         csvDuplicateClaimIds);
@@ -159,9 +146,11 @@ public abstract class DuplicateClaimValidation implements DuplicateClaimValidati
       ClaimResponse currentClaim,
       List<ClaimResponse> submissionClaims,
       Predicate<ClaimResponse> duplicatePredicate) {
+
     // Detailed debug: show initial candidates and reasons for inclusion/exclusion
     log.debug(
-        "Filtering duplicates for claim {} (submissionId={}): initial candidate count={}",
+        "[{}] Filtering duplicates for claim {} (submissionId={}): initial candidate count={}",
+        getClass().getSimpleName(),
         currentClaim.getId(),
         currentClaim.getSubmissionId(),
         submissionClaims == null ? 0 : submissionClaims.size());
@@ -178,44 +167,11 @@ public abstract class DuplicateClaimValidation implements DuplicateClaimValidati
             .toList();
 
     // Log which candidates remain after filtering
-    log.debug("Claim {}: filtered duplicates count={}", currentClaim.getId(), filtered.size());
-    // Promote kept-candidate logs to INFO so they are visible in CI/test runs
-    filtered.forEach(
-        c ->
-            log.info(
-                "Claim {} -> kept candidate id={} submissionId={} feeCode={} ufn={} ucn={}",
-                currentClaim.getId(),
-                c.getId(),
-                c.getSubmissionId(),
-                c.getFeeCode(),
-                c.getUniqueFileNumber(),
-                c.getUniqueClientNumber()));
-
-    // For visibility, also log which ones were removed due to having the same id or predicate
-    // failing
-    submissionClaims.stream()
-        .filter(submissionClaim -> Objects.equals(submissionClaim.getId(), currentClaim.getId()))
-        .forEach(
-            c ->
-                log.debug(
-                    "Claim {} -> excluded (same id) id={} submissionId={}",
-                    currentClaim.getId(),
-                    c.getId(),
-                    c.getSubmissionId()));
-
-    submissionClaims.stream()
-        .filter(submissionClaim -> !Objects.equals(submissionClaim.getId(), currentClaim.getId()))
-        .filter(duplicatePredicate.negate())
-        .forEach(
-            c ->
-                log.debug(
-                    "Claim {} -> excluded (predicate false) id={} submissionId={} feeCode={} ufn={} ucn={}",
-                    currentClaim.getId(),
-                    c.getId(),
-                    c.getSubmissionId(),
-                    c.getFeeCode(),
-                    c.getUniqueFileNumber(),
-                    c.getUniqueClientNumber()));
+    log.debug(
+        "[{}] Claim {}: filtered duplicates count={}",
+        getClass().getSimpleName(),
+        currentClaim.getId(),
+        filtered.size());
 
     return filtered;
   }
