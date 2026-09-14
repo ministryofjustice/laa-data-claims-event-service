@@ -229,9 +229,9 @@ class JsonSchemaValidatorTest {
       // integer fields
       "status, '\"SNAFU\"', 'status: does not have a value in the enumeration [\"CREATED\", "
           + "\"READY_FOR_VALIDATION\", \"VALIDATION_IN_PROGRESS\", \"VALIDATION_SUCCEEDED\", "
-          + "\"VALIDATION_FAILED\", \"REPLACED\"] (provided value: SNAFU)',"
+          + "\"VALIDATION_FAILED\", \"REPLACED\", \"READY_FOR_SUBMISSION\"] (provided value: SNAFU)',"
           + "'Status must be one of: CREATED, READY_FOR_VALIDATION, VALIDATION_IN_PROGRESS, "
-          + "VALIDATION_SUCCEEDED, VALIDATION_FAILED, or REPLACED'",
+          + "VALIDATION_SUCCEEDED, VALIDATION_FAILED, REPLACED, or READY_FOR_SUBMISSION'",
     })
     void validateSubmissionForInvalidDataTypes(
         String fieldName, String badJsonValue, String technicalMessage, String displayMessage)

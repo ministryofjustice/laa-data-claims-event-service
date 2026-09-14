@@ -29,4 +29,15 @@ public class SubmissionOfficeAreaOfLawAndPeriodValidatorITest
     var ctx = runSubmissionValidation(P + "duplicate-submission.json", true);
     assertSubmissionErrors(ctx, Set.of(SubmissionValidationError.SUBMISSION_ALREADY_EXISTS));
   }
+
+  @Test
+  @DisplayName(
+      "Prior READY_FOR_SUBMISSION submission exists for same office/area/period - should produce SUBMISSION_AWAITING_FINAL_SUBMIT")
+  void duplicateAwaitingFinalSubmitSubmissionIsInvalid() throws Exception {
+    var ctx =
+        runSubmissionValidationWithDuplicateFixture(
+            P + "duplicate-submission.json",
+            SUBMISSION_BASE_PATH + "get-submissions-by-filter_ready-for-submission.json");
+    assertSubmissionErrors(ctx, Set.of(SubmissionValidationError.SUBMISSION_AWAITING_FINAL_SUBMIT));
+  }
 }

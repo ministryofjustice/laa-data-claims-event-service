@@ -136,6 +136,58 @@ public abstract class SubmissionValidationIntegrationTestBase extends MockServer
   }
 
   /**
+   * Runs submission validation while stubbing the office/area/period criteria call to return the
+   * supplied duplicate fixture. Lets tests exercise duplicate outcomes that depend on the blocking
+   * submission's status (e.g. a READY_FOR_SUBMISSION duplicate awaiting Final Submit).
+   *
+   * @param submissionFixture the fixture describing the submission under validation
+   * @param duplicateCriteriaFixture the fixture returned for the getSubmissions criteria call
+   */
+  protected SubmissionValidationContext runSubmissionValidationWithDuplicateFixture(
+      String submissionFixture, String duplicateCriteriaFixture) throws Exception {
+
+    String submissionJson = readJsonFromFile(submissionFixture);
+    JsonNode node = mapper.readTree(submissionJson);
+
+    UUID submissionId = UUID.fromString(node.get("submission_id").asText());
+    UUID bulkSubmissionId = UUID.fromString(node.get("bulk_submission_id").asText());
+
+    String officeAccountNumber =
+        node.has("office_account_number") && !node.get("office_account_number").isNull()
+            ? node.get("office_account_number").asText()
+            : "AQ2B3C";
+
+    AreaOfLaw areaOfLaw = AreaOfLaw.LEGAL_HELP;
+    if (node.has("area_of_law") && !node.get("area_of_law").isNull()) {
+      try {
+        areaOfLaw =
+            AreaOfLaw.valueOf(node.get("area_of_law").asText().replace(' ', '_').toUpperCase());
+      } catch (Exception ignored) {
+        // keep default
+      }
+    }
+
+    String submissionPeriod =
+        node.has("submission_period") && !node.get("submission_period").isNull()
+            ? node.get("submission_period").asText()
+            : "APR-2025";
+
+    stubForGetSubmission(submissionId, submissionFixture);
+    stubForUpdateSubmission(submissionId);
+    stubForUpdateBulkSubmission(bulkSubmissionId);
+    stubReturnNoClaims();
+
+    getStubForGetSubmissionByCriteria(
+        List.of(
+            Parameter.param("offices", officeAccountNumber),
+            Parameter.param("area_of_law", areaOfLaw.name()),
+            Parameter.param("submission_period", submissionPeriod)),
+        duplicateCriteriaFixture);
+
+    return submissionValidationService.validateSubmission(submissionId);
+  }
+
+  /**
    * Returns the submission-level errors as a list of {@link ValidationMessagePatch} for direct
    * inspection in tests.
    */

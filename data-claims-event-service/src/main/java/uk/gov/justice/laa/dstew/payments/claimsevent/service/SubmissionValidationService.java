@@ -53,6 +53,20 @@ public class SubmissionValidationService {
 
     SubmissionResponse submission = dataClaimsRestClient.getSubmission(submissionId).getBody();
     Assert.notNull(submission, "Submission not retrievable: " + submissionId.toString());
+
+    // Idempotency guard: a submission that has already passed INITIAL validation is held in
+    // READY_FOR_SUBMISSION for the provider's Final Submit. A redelivery of the validation message
+    // for such a submission must be a no-op: re-running validation would otherwise trip the status
+    // gate (SubmissionStatusValidator) and incorrectly flip the submission to VALIDATION_FAILED,
+    // as well as re-publish the initial-validation-succeeded event for the same transition.
+    if (submission.getStatus() == SubmissionStatus.READY_FOR_SUBMISSION) {
+      log.debug(
+          "Submission {} already in READY_FOR_SUBMISSION; skipping re-validation (no-op).",
+          submissionId);
+      eventServiceMetricService.stopSubmissionValidationTimer(submissionId);
+      return new SubmissionValidationContext();
+    }
+
     SubmissionValidationContext context = initialiseValidationContext(submission);
 
     // Currently validating:
@@ -98,9 +112,13 @@ public class SubmissionValidationService {
                   .formatted(bulkSubmissionId));
     } else {
       log.debug("Validation completed for submission {} with no errors", submissionId);
-      submissionPatch.status(SubmissionStatus.VALIDATION_SUCCEEDED);
+      // INITIAL validation passed: hold the submission (and its bulk submission) in
+      // READY_FOR_SUBMISSION for the provider's Final Submit rather than accepting it outright.
+      // Acceptance (VALIDATION_SUCCEEDED) and post-acceptance processing only happen at Final
+      // Submit, which is out of scope here.
+      submissionPatch.status(SubmissionStatus.READY_FOR_SUBMISSION);
       eventServiceMetricService.incrementTotalValidSubmissions();
-      bulkSubmissionPatch.status(BulkSubmissionStatus.VALIDATION_SUCCEEDED);
+      bulkSubmissionPatch.status(BulkSubmissionStatus.READY_FOR_SUBMISSION);
     }
 
     // Record what submission errors were found

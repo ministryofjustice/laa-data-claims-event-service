@@ -127,6 +127,27 @@ class SubmissionOfficeAreaOfLawAndPeriodValidatorTest {
     }
 
     @DisplayName(
+        "Should reject with SUBMISSION_AWAITING_FINAL_SUBMIT when the earlier live duplicate has"
+            + " passed validation and is awaiting final submission")
+    @Test
+    void shouldRejectWithAwaitingFinalSubmitWhenDuplicateIsReadyForSubmission() {
+      stubExistingSubmissions(
+          existingSubmission(OTHER_SUBMISSION_ID, SubmissionStatus.READY_FOR_SUBMISSION, EARLIER));
+
+      var submissionValidationContext = new SubmissionValidationContext();
+
+      validator.validate(submissionUnderValidation(), submissionValidationContext);
+
+      assertThat(submissionValidationContext.hasErrors()).isTrue();
+      assertContextClaimError(
+          submissionValidationContext,
+          SubmissionValidationError.SUBMISSION_AWAITING_FINAL_SUBMIT,
+          OFFICE_CODE,
+          AREA_OF_LAW,
+          SUBMISSION_PERIOD);
+    }
+
+    @DisplayName(
         "Should reject a submission when an earlier submission in a non-terminal status shares the same Office, Area of law and Submission period")
     @ParameterizedTest(name = "earlier submission in status {0} is a duplicate")
     @EnumSource(

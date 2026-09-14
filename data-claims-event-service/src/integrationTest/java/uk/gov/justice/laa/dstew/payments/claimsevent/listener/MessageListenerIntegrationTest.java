@@ -63,7 +63,7 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
     SubmissionPatch patchBodySucceeded =
         SubmissionPatch.builder()
             .submissionId(SUBMISSION_ID)
-            .status(SubmissionStatus.VALIDATION_SUCCEEDED)
+            .status(SubmissionStatus.READY_FOR_SUBMISSION)
             .build();
     stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodySucceeded);
     stubReturnNoClaims();
@@ -96,7 +96,7 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
     SubmissionPatch patchBodySucceeded =
         SubmissionPatch.builder()
             .submissionId(SUBMISSION_ID)
-            .status(SubmissionStatus.VALIDATION_SUCCEEDED)
+            .status(SubmissionStatus.READY_FOR_SUBMISSION)
             .build();
     stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodySucceeded);
 
@@ -144,7 +144,7 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
     SubmissionPatch patchBodySucceeded =
         SubmissionPatch.builder()
             .submissionId(SUBMISSION_ID)
-            .status(SubmissionStatus.VALIDATION_SUCCEEDED)
+            .status(SubmissionStatus.READY_FOR_SUBMISSION)
             .build();
     stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodySucceeded);
 
@@ -195,7 +195,7 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
     SubmissionPatch patchBodySucceeded =
         SubmissionPatch.builder()
             .submissionId(SUBMISSION_ID)
-            .status(SubmissionStatus.VALIDATION_SUCCEEDED)
+            .status(SubmissionStatus.READY_FOR_SUBMISSION)
             .build();
     stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodySucceeded);
 
@@ -304,7 +304,10 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
 
   private void verifyClaimRequestInvocation() throws JsonProcessingException {
     ClaimPatch validClaimPatch =
-        ClaimPatch.builder().id(CLAIM_ID.toString()).status(ClaimStatus.VALID).build();
+        ClaimPatch.builder()
+            .id(CLAIM_ID.toString())
+            .status(ClaimStatus.READY_FOR_SUBMISSION)
+            .build();
     ClaimPatch feeCalculationPatch =
         ClaimPatch.builder()
             .id(CLAIM_ID.toString())

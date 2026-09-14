@@ -1,10 +1,12 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
 import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -18,12 +20,15 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import uk.gov.justice.laa.dstew.payments.claims.validation.core.model.ValidationResult;
 import uk.gov.justice.laa.dstew.payments.claims.validation.core.service.ValidationService;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionPatch;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionClaim;
@@ -65,7 +70,9 @@ class SubmissionValidationServiceTest {
             eventServiceMetricService);
     // Ensure ValidationService.validateSubmission returns a non-null ValidationResult so
     // SubmissionValidationService can proceed without NullPointerException during tests.
-    when(validationService.validateSubmission(any()))
+    // Lenient because the READY_FOR_SUBMISSION idempotency no-op path returns before this is used.
+    org.mockito.Mockito.lenient()
+        .when(validationService.validateSubmission(any()))
         .thenReturn(ValidationResult.builder().isValid(true).issues(List.of()).build());
   }
 
@@ -127,10 +134,55 @@ class SubmissionValidationServiceTest {
 
         // Then
         verifyCommonInteractions(submission, result);
+
+        // Passing INITIAL validation holds the submission and its bulk submission in
+        // READY_FOR_SUBMISSION (awaiting the provider's Final Submit) rather than accepting them.
+        ArgumentCaptor<SubmissionPatch> submissionPatchCaptor =
+            ArgumentCaptor.forClass(SubmissionPatch.class);
+        verify(dataClaimsRestClient)
+            .updateSubmission(eq(submissionId.toString()), submissionPatchCaptor.capture());
+        assertThat(submissionPatchCaptor.getValue().getStatus())
+            .isEqualTo(SubmissionStatus.READY_FOR_SUBMISSION);
+
+        ArgumentCaptor<BulkSubmissionPatch> bulkSubmissionPatchCaptor =
+            ArgumentCaptor.forClass(BulkSubmissionPatch.class);
+        verify(dataClaimsRestClient)
+            .updateBulkSubmission(any(), bulkSubmissionPatchCaptor.capture());
+        assertThat(bulkSubmissionPatchCaptor.getValue().getStatus())
+            .isEqualTo(BulkSubmissionStatus.READY_FOR_SUBMISSION);
       } else {
         // When
         result = submissionValidationService.validateSubmission(submission.getSubmissionId());
       }
+    }
+
+    @Test
+    @DisplayName(
+        "Should be a no-op when the submission is already held in READY_FOR_SUBMISSION (retry)")
+    void shouldNotReprocessSubmissionAlreadyReadyForSubmission() {
+      // Given a redelivered validation message for a submission already awaiting Final Submit
+      UUID submissionId = new UUID(0, 0);
+      SubmissionResponse submission =
+          getSubmission(
+              SubmissionStatus.READY_FOR_SUBMISSION,
+              submissionId,
+              AreaOfLaw.LEGAL_HELP,
+              "officeAccountNumber",
+              false,
+              List.of());
+      when(dataClaimsRestClient.getSubmission(submissionId))
+          .thenReturn(ResponseEntity.of(Optional.of(submission)));
+
+      // When
+      SubmissionValidationContext result =
+          submissionValidationService.validateSubmission(submissionId);
+
+      // Then no re-validation, no status change and no further event/patch is produced.
+      assertThat(result.hasErrors()).isFalse();
+      verify(claimValidationService, never()).validateAndUpdateClaims(any(), any());
+      verify(submissionValidator, never()).validate(any(), any());
+      verify(dataClaimsRestClient, never()).updateSubmission(any(), any());
+      verify(dataClaimsRestClient, never()).updateBulkSubmission(any(), any());
     }
 
     private SubmissionResponse buildSubmission(

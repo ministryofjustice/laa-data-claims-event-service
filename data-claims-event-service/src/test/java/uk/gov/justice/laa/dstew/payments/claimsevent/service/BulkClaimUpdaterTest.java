@@ -115,7 +115,7 @@ class BulkClaimUpdaterTest {
     assertThat(capturedPatch.getFeeCalculationResponse()).isEqualTo(feeCalculationPatch);
     assertThat(capturedPatch.getValidationMessages().isEmpty()).isTrue();
     assertThat(capturedPatch.getCreatedByUserId()).isEqualTo(ClaimValidationSource.EVENT_SERVICE);
-    assertThat(capturedPatch.getStatus()).isEqualTo(ClaimStatus.VALID);
+    assertThat(capturedPatch.getStatus()).isEqualTo(ClaimStatus.READY_FOR_SUBMISSION);
   }
 
   @Test
@@ -151,7 +151,7 @@ class BulkClaimUpdaterTest {
     assertThat(capturedPatch.getId()).isEqualTo(claimResponse.getId());
     assertThat(capturedPatch.getFeeCalculationResponse()).isEqualTo(null);
     assertThat(capturedPatch.getValidationMessages().isEmpty()).isTrue();
-    assertThat(capturedPatch.getStatus()).isEqualTo(ClaimStatus.VALID);
+    assertThat(capturedPatch.getStatus()).isEqualTo(ClaimStatus.READY_FOR_SUBMISSION);
   }
 
   @Test
@@ -235,7 +235,7 @@ class BulkClaimUpdaterTest {
     verify(dataClaimsRestClient, times(2)).updateClaim(any(), any(), claimPatchCaptor.capture());
     ClaimPatch capturedPatch = claimPatchCaptor.getAllValues().getFirst();
     assertThat(capturedPatch.getId()).isEqualTo(validClaimResponse.getId());
-    assertThat(capturedPatch.getStatus()).isEqualTo(ClaimStatus.VALID);
+    assertThat(capturedPatch.getStatus()).isEqualTo(ClaimStatus.READY_FOR_SUBMISSION);
     ClaimPatch capturedPatchTwo = claimPatchCaptor.getAllValues().get(1);
     assertThat(capturedPatchTwo.getId()).isEqualTo(invalidClaimResponse.getId());
     assertThat(capturedPatchTwo.getStatus()).isEqualTo(ClaimStatus.INVALID);
