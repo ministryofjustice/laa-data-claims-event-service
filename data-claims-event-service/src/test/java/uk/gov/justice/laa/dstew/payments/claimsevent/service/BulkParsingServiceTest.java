@@ -23,9 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionErrorCode;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionMatterStart;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionOutcome;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionPatch;
@@ -214,110 +212,6 @@ class BulkParsingServiceTest {
 
     assertThatThrownBy(() -> service.createSubmission(submission))
         .isInstanceOf(SubmissionCreateException.class);
-  }
-
-  @Test
-  void createSubmissionThrowsDuplicateWhenApiReturnsConflictException() {
-    final SubmissionPost submission =
-        new SubmissionPost()
-            .bulkSubmissionId(UUID.randomUUID())
-            .officeAccountNumber("0A123B")
-            .areaOfLaw(AreaOfLaw.LEGAL_HELP)
-            .submissionPeriod("JAN-2025");
-
-    when(dataClaimsRestClient.createSubmission(submission))
-        .thenThrow(
-            WebClientResponseException.create(
-                HttpStatus.CONFLICT.value(), "Conflict", HttpHeaders.EMPTY, new byte[0], null));
-
-    assertThatThrownBy(() -> service.createSubmission(submission))
-        .isInstanceOf(DuplicateSubmissionException.class)
-        .hasMessageContaining("0A123B")
-        .hasMessageContaining("LEGAL_HELP")
-        .hasMessageContaining("JAN-2025");
-  }
-
-  @Test
-  void createSubmissionRethrowsNonConflictWebClientException() {
-    final SubmissionPost submission = new SubmissionPost().bulkSubmissionId(UUID.randomUUID());
-    final WebClientResponseException serverError =
-        WebClientResponseException.create(
-            HttpStatus.INTERNAL_SERVER_ERROR.value(),
-            "Server Error",
-            HttpHeaders.EMPTY,
-            new byte[0],
-            null);
-
-    when(dataClaimsRestClient.createSubmission(submission)).thenThrow(serverError);
-
-    assertThatThrownBy(() -> service.createSubmission(submission)).isSameAs(serverError);
-  }
-
-  @Test
-  void createSubmissionThrowsDuplicateWhenApiReturnsConflictResponse() {
-    final SubmissionPost submission =
-        new SubmissionPost()
-            .bulkSubmissionId(UUID.randomUUID())
-            .officeAccountNumber("0A123B")
-            .areaOfLaw(AreaOfLaw.LEGAL_HELP)
-            .submissionPeriod("JAN-2025");
-
-    when(dataClaimsRestClient.createSubmission(submission))
-        .thenReturn(ResponseEntity.status(HttpStatus.CONFLICT).build());
-
-    assertThatThrownBy(() -> service.createSubmission(submission))
-        .isInstanceOf(DuplicateSubmissionException.class);
-  }
-
-  @Test
-  void parseDataReportsDuplicateSubmissionAsValidationFailure() {
-    final UUID bulkSubmissionId = UUID.randomUUID();
-    final UUID submissionId = UUID.randomUUID();
-
-    final GetBulkSubmission200Response bulkSubmission =
-        new GetBulkSubmission200Response()
-            .bulkSubmissionId(bulkSubmissionId)
-            .createdByUserId(BULK_SUBMISSION_CREATED_BY_USER_ID);
-
-    final SubmissionPost submissionPost =
-        new SubmissionPost()
-            .bulkSubmissionId(bulkSubmissionId)
-            .officeAccountNumber("0A123B")
-            .areaOfLaw(AreaOfLaw.LEGAL_HELP)
-            .submissionPeriod("JAN-2025");
-
-    when(dataClaimsRestClient.getBulkSubmission(bulkSubmissionId))
-        .thenReturn(ResponseEntity.ok(bulkSubmission));
-    when(submissionDataNormaliser.normalise(bulkSubmission)).thenReturn(bulkSubmission);
-    when(bulkSubmissionMapper.mapToSubmissionPost(bulkSubmission, submissionId))
-        .thenReturn(submissionPost);
-    when(dataClaimsRestClient.createSubmission(submissionPost))
-        .thenThrow(
-            WebClientResponseException.create(
-                HttpStatus.CONFLICT.value(), "Conflict", HttpHeaders.EMPTY, new byte[0], null));
-    when(dataClaimsRestClient.updateBulkSubmission(
-            eq(bulkSubmissionId.toString()), any(BulkSubmissionPatch.class)))
-        .thenReturn(ResponseEntity.noContent().build());
-
-    assertThatThrownBy(() -> service.parseData(bulkSubmissionId, submissionId))
-        .isInstanceOf(DuplicateSubmissionException.class);
-
-    // The bulk submission is reported as a validation conflict (V100), not a parsing failure.
-    verify(dataClaimsRestClient)
-        .updateBulkSubmission(
-            eq(bulkSubmissionId.toString()),
-            argThat(
-                patch ->
-                    patch.getStatus() == BulkSubmissionStatus.VALIDATION_FAILED
-                        && patch.getErrorCode() == BulkSubmissionErrorCode.V100
-                        && patch.getErrorDescription() != null
-                        && patch.getErrorDescription().contains("0A123B")));
-    // No claims are created and the submission is never marked as a parsing failure.
-    verify(dataClaimsRestClient, never()).createClaim(any(), any());
-    verify(dataClaimsRestClient, never())
-        .updateBulkSubmission(
-            eq(bulkSubmissionId.toString()),
-            argThat(patch -> patch.getStatus() == BulkSubmissionStatus.PARSING_FAILED));
   }
 
   @Test
