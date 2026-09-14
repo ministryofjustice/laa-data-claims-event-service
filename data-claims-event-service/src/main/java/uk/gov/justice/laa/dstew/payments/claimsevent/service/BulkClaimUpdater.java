@@ -115,9 +115,11 @@ public class BulkClaimUpdater {
 
   private ClaimStatus getClaimStatus(
       final String claimId, final SubmissionValidationContext context) {
+    // On successful INITIAL validation a claim is held in READY_FOR_SUBMISSION alongside its
+    // submission (awaiting the provider's Final Submit) rather than being accepted (VALID).
     return (context.hasSubmissionLevelErrors() || context.hasErrors(claimId))
         ? ClaimStatus.INVALID
-        : ClaimStatus.VALID;
+        : ClaimStatus.READY_FOR_SUBMISSION;
   }
 
   private Optional<FeeCalculationResponse> getFeeCalculationResponse(

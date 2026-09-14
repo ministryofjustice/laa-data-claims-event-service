@@ -107,14 +107,16 @@ class DuplicateClaimLegalHelpValidationServiceStrategyTest
       Assertions.assertEquals("070722/001", uniqueFileNumberArgumentCaptor.getValue());
       Assertions.assertEquals("CLI001", uniqueClientNumberArgumentCaptor.getValue());
       Assertions.assertEquals(
-          List.of(ClaimStatus.READY_TO_PROCESS, ClaimStatus.VALID),
+          List.of(
+              ClaimStatus.READY_TO_PROCESS, ClaimStatus.VALID, ClaimStatus.READY_FOR_SUBMISSION),
           claimStatusArgumentCaptor.getValue());
       Assertions.assertEquals(
           List.of(
               SubmissionStatus.CREATED,
               SubmissionStatus.VALIDATION_IN_PROGRESS,
               SubmissionStatus.READY_FOR_VALIDATION,
-              SubmissionStatus.VALIDATION_SUCCEEDED),
+              SubmissionStatus.VALIDATION_SUCCEEDED,
+              SubmissionStatus.READY_FOR_SUBMISSION),
           submissionStatusArgumentCaptor.getValue());
 
       assertThat(context.hasErrors()).isFalse();

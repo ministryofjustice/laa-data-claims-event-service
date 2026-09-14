@@ -13,11 +13,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionErrorCode;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionMatterStart;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionOutcome;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionPatch;
@@ -34,6 +37,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.BulkSubmissionRetrievalException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.BulkSubmissionUpdateException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.ClaimCreateException;
+import uk.gov.justice.laa.dstew.payments.claimsevent.exception.DuplicateSubmissionException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.MatterStartCreateException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.SubmissionCreateException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.mapper.BulkSubmissionMapper;
@@ -79,6 +83,17 @@ public class BulkParsingService {
 
       updateSubmission(createdSubmissionId, claimIds.size(), SubmissionStatus.READY_FOR_VALIDATION);
       updateBulkSubmissionStatus(bulkSubmissionId, BulkSubmissionStatus.PARSING_COMPLETED);
+    } catch (DuplicateSubmissionException ex) {
+      // A duplicate live submission is a business-rule conflict detected when creating the
+      // submission, not a parsing failure. Report it as such so the user sees a meaningful message
+      // instead of a misleading XML/CSV parsing error.
+      log.warn(
+          "Rejected bulk submission [{}] for submission [{}]: {}",
+          bulkSubmissionId,
+          submissionId,
+          ex.getMessage());
+      reportDuplicateLiveSubmission(bulkSubmissionId, ex);
+      throw ex;
     } catch (Exception ex) {
       log.error(
           "Failed to parse bulk submission [{}] for submission [{}]: {}",
@@ -112,6 +127,59 @@ public class BulkParsingService {
     List<MatterStartPost> matterStartRequests =
         bulkSubmissionMapper.mapToMatterStartRequests(matterStarts);
     createMatterStarts(createdSubmissionId, matterStartRequests);
+  }
+
+  private DuplicateSubmissionException duplicateSubmissionException(
+      SubmissionPost submission, Throwable cause) {
+    String message =
+        "A submission already exists for office %s, area of law %s and period %s. "
+                .formatted(
+                    submission.getOfficeAccountNumber(),
+                    submission.getAreaOfLaw(),
+                    submission.getSubmissionPeriod())
+            + "Duplicate submissions are not allowed.";
+    return cause == null
+        ? new DuplicateSubmissionException(message)
+        : new DuplicateSubmissionException(message, cause);
+  }
+
+  /**
+   * Reports a duplicate live submission on the bulk submission record as a validation conflict
+   * ({@link BulkSubmissionStatus#VALIDATION_FAILED} / {@link BulkSubmissionErrorCode#V100}) with a
+   * user-facing description, so the user is not shown a misleading parsing failure. No submission
+   * record exists to update because the create was rejected before any submission was persisted.
+   *
+   * @param bulkSubmissionId identifier of the bulk submission to update
+   * @param ex the duplicate submission exception carrying the user-facing message
+   */
+  private void reportDuplicateLiveSubmission(
+      UUID bulkSubmissionId, DuplicateSubmissionException ex) {
+    try {
+      BulkSubmissionPatch patch = new BulkSubmissionPatch();
+      patch.setStatus(BulkSubmissionStatus.VALIDATION_FAILED);
+      patch.setErrorCode(BulkSubmissionErrorCode.V100);
+      patch.setErrorDescription(ex.getMessage());
+
+      ResponseEntity<Void> response =
+          dataClaimsRestClient.updateBulkSubmission(bulkSubmissionId.toString(), patch);
+
+      if (response == null || !response.getStatusCode().is2xxSuccessful()) {
+        throw new BulkSubmissionUpdateException(
+            "Failed to update bulk submission status for bulk submission "
+                + bulkSubmissionId
+                + ". HTTP status: "
+                + getResponseStatus(response));
+      }
+      log.info(
+          "Bulk submission [{}] marked as [{}] due to duplicate submission",
+          bulkSubmissionId,
+          BulkSubmissionStatus.VALIDATION_FAILED.name());
+    } catch (Exception statusEx) {
+      log.error(
+          "Failed to update bulk submission [{}] status to VALIDATION_FAILED: {}",
+          bulkSubmissionId,
+          statusEx.getMessage());
+    }
   }
 
   private void updateBulkSubmissionStatusOnError(UUID bulkSubmissionId, String submissionId) {
@@ -175,8 +243,24 @@ public class BulkParsingService {
         submission.getSubmissionPeriod(),
         submission.getOfficeAccountNumber());
 
-    ResponseEntity<CreateSubmission201Response> response =
-        dataClaimsRestClient.createSubmission(submission);
+    ResponseEntity<CreateSubmission201Response> response;
+    try {
+      response = dataClaimsRestClient.createSubmission(submission);
+    } catch (WebClientResponseException ex) {
+      // The Claims Data API returns 409 Conflict when a live submission already exists for the same
+      // office, area of law and period (enforced by the uq_submission_live_office_aol_period index
+      // and its in-process pre-check). Translate it into a dedicated duplicate condition here, at
+      // the point the conflict is actually detected, rather than letting it fall through to the
+      // generic parsing-failure handling.
+      if (ex.getStatusCode().value() == HttpStatus.CONFLICT.value()) {
+        throw duplicateSubmissionException(submission, ex);
+      }
+      throw ex;
+    }
+
+    if (response != null && response.getStatusCode().value() == HttpStatus.CONFLICT.value()) {
+      throw duplicateSubmissionException(submission, null);
+    }
 
     if (response == null || response.getStatusCode().value() != 201) {
       var bulkSubmissionId = submission.getBulkSubmissionId().toString();
