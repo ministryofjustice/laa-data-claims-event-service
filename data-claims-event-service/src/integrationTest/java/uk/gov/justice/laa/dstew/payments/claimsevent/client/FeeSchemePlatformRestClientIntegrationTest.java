@@ -97,7 +97,7 @@ class FeeSchemePlatformRestClientIntegrationTest extends MockServerIntegrationTe
                   .formatted(
                       httpStatusCode.code(),
                       httpStatusCode.reasonPhrase(),
-                      mockServerContainer.getEndpoint(),
+                      MOCK_SERVER.getEndpoint(),
                       feeCode));
     }
   }
@@ -155,7 +155,7 @@ class FeeSchemePlatformRestClientIntegrationTest extends MockServerIntegrationTe
                   .formatted(
                       httpStatusCode.code(),
                       httpStatusCode.reasonPhrase(),
-                      mockServerContainer.getEndpoint()));
+                      MOCK_SERVER.getEndpoint()));
     }
   }
 }
