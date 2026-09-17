@@ -13,6 +13,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessageType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.mapper.FeeSchemeMapper;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
@@ -65,12 +66,16 @@ public class FeeCalculationService {
 
         if (validationMessages != null && !validationMessages.isEmpty()) {
           for (var m : validationMessages) {
-            if (ValidationMessagesInner.TypeEnum.ERROR.equals(m.getType())) {
-              log.debug("Fee calculation returned validation error: {}", m);
-              context.addClaimError(claim.getId(), m.getMessage(), FEE_SERVICE);
-            } else if (ValidationMessagesInner.TypeEnum.WARNING.equals(m.getType())) {
-              log.debug("Fee calculation returned validation warning: {}", m);
-              context.addClaimWarning(claim.getId(), m.getMessage(), FEE_SERVICE);
+            if (ValidationMessagesInner.TypeEnum.ERROR.equals(m.getType())
+                || ValidationMessagesInner.TypeEnum.WARNING.equals(m.getType())) {
+              log.debug("Fee calculation returned validation message: {}", m);
+              addFeeCalculationMessage(
+                  context,
+                  claim,
+                  m,
+                  ValidationMessagesInner.TypeEnum.ERROR.equals(m.getType())
+                      ? ValidationMessageType.ERROR
+                      : ValidationMessageType.WARNING);
             }
           }
         }
@@ -81,6 +86,22 @@ public class FeeCalculationService {
     }
     log.debug("Fee calculation validation completed for claim {}", claim.getId());
     return Optional.ofNullable(feeCalculationResponse);
+  }
+
+  private void addFeeCalculationMessage(
+      SubmissionValidationContext context,
+      ClaimResponse claim,
+      ValidationMessagesInner message,
+      ValidationMessageType type) {
+    context.addClaimMessages(
+        claim.getId(),
+        List.of(
+            new ValidationMessagePatch()
+                .displayMessage(message.getMessage())
+                .technicalMessage(message.getMessage())
+                .source(FEE_SERVICE)
+                .type(type)
+                .messageCode(message.getCode())));
   }
 
   private void handleWebClientError(
