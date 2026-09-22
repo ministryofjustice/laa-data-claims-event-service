@@ -36,7 +36,6 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.support.WebClientAdapter;
@@ -84,7 +83,10 @@ public abstract class MockServerIntegrationTest {
 
   protected MockServerClient mockServerClient;
 
-  /** One container per JVM; started eagerly so {@link DynamicPropertySource} can read its URL. */
+  /**
+   * One container per JVM; started eagerly so tests and configuration beans can read its endpoint
+   * via MOCK_SERVER.getEndpoint().
+   */
   protected static final MockServerContainer MOCK_SERVER =
       new MockServerContainer(MOCKSERVER_IMAGE)
           .waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofSeconds(60)));

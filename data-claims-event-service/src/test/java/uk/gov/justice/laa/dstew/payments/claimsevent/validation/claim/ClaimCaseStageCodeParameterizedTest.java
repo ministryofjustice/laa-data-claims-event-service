@@ -43,7 +43,11 @@ class ClaimCaseStageCodeParameterizedTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"FPL01", "FPL10", "FPL20", "FPL21", "FPC01", "MHL01", "MHL16"})
+  @ValueSource(
+      strings = {
+        "FPL01", "FPL10", "FPL20", "FPL21", "FPC01", "MHL01", "MHL11", "MHL12", "MHL13", "MHL14",
+        "MHL15", "MHL16"
+      })
   void shouldAcceptValidCaseStageCodes(String caseStageCode) throws Exception {
     ClaimSchemaValidator validator = realValidator();
 
