@@ -2,14 +2,6 @@
 version: v1.25.1
 # ignores vulnerabilities until expiry date; change duration by modifying expiry date
 ignore:
-  SNYK-JAVA-ORGHDRHISTOGRAM-17821182:
-    - '*':
-        reason: Transitive via micrometer-core/actuator; low severity, no fix available yet
-        expires: 2026-07-28T00:00:00.000Z
-  SNYK-JAVA-ORGHDRHISTOGRAM-17821183:
-    - '*':
-        reason: Transitive via micrometer-core/actuator; low severity, no fix available yet
-        expires: 2026-07-28T00:00:00.000Z
   'snyk:lic:maven:com.puppycrawl.tools:checkstyle:LGPL-2.1':
     - '*':
         reason: Build-time tool only
@@ -45,4 +37,26 @@ ignore:
           Dockerfiles. Fixed upstream in 3.0.13-0ubuntu3.15; resolved once that base image
           is rebuilt. No application-code or local-Dockerfile remediation available.
         expires: 2026-09-25T00:00:00.000Z
+  # Medium severity - zlib/zlib1g (Ubuntu 24.04 base-image OS package), same shared
+  # ecr-publish-image workflow build image as the openssl ignores above; not from this
+  # repo's own Dockerfiles (amazoncorretto:*-alpine).
+  SNYK-UBUNTU2404-ZLIB-19530295:
+    - '*':
+        reason: >-
+          Base-image (Ubuntu 24.04) zlib/zlib1g Out-of-bounds Write, introduced via the
+          shared ecr-publish-image reusable workflow's build image, not this repo's own
+          Dockerfiles. No application-code or local-Dockerfile remediation available;
+          will clear once that base image is rebuilt with an upstream fix.
+        expires: 2026-11-25T00:00:00.000Z
+  # Medium severity - glibc/libc6 (Ubuntu 24.04 base-image OS package), same shared
+  # ecr-publish-image workflow build image as the openssl ignores above; not from this
+  # repo's own Dockerfiles (amazoncorretto:*-alpine).
+  SNYK-UBUNTU2404-GLIBC-19437583:
+    - '*':
+        reason: >-
+          Base-image (Ubuntu 24.04) glibc/libc6 CVE-2026-18374, introduced via the
+          shared ecr-publish-image reusable workflow's build image, not this repo's own
+          Dockerfiles. No application-code or local-Dockerfile remediation available;
+          will clear once that base image is rebuilt with an upstream fix.
+        expires: 2026-11-25T00:00:00.000Z
 patch: {}
