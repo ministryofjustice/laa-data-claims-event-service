@@ -32,7 +32,7 @@ jobs:
 
           echo "SUCCESS: Octo STS returned a token"
 
-      - name: Test GitHub Packages authentication
+      - name: Test downloading actual package with Octo STS
         env:
           OCTO_STS_TOKEN: ${{ steps.octo-sts.outputs.token }}
         run: |
@@ -40,4 +40,8 @@ jobs:
             --user "${{ github.actor }}:${OCTO_STS_TOKEN}" \
             --location \
             --verbose \
-            "https://maven.pkg.github.com/ministryofjustice/laa-data-controlled-work-validator/"
+            --output /tmp/claims-validation-core.pom \
+            "https://maven.pkg.github.com/ministryofjustice/laa-data-controlled-work-validator/uk/gov/justice/laa/dstew/payments/claims/validation/claims-validation-core/1.4.16/claims-validation-core-1.4.16.pom"
+
+          echo "SUCCESS: Downloaded claims-validation-core POM using Octo STS"
+          head -20 /tmp/claims-validation-core.pom
