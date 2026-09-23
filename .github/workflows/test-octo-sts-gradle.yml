@@ -1,0 +1,31 @@
+name: Test Octo STS Gradle access
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  test-octo-sts:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get token from Octo STS
+        id: octo-sts
+        uses: octo-sts/action@6177b4481c00308b3839969c3eca88c96a91775f # v1.0.0
+        with:
+          scope: ministryofjustice/laa-data-controlled-work-validator
+          identity: gradle-package-test
+
+      - name: Confirm token was returned
+        env:
+          OCTO_STS_TOKEN: ${{ steps.octo-sts.outputs.token }}
+        run: |
+          if [ -z "$OCTO_STS_TOKEN" ]; then
+            echo "Octo STS did not return a token"
+            exit 1
+          fi
+
+          echo "SUCCESS: Octo STS returned a token"
