@@ -66,9 +66,25 @@ dependencyManagement {
 
 dependencies {
 
+    // Security: upgrade logback-classic to 1.6.3 to fix SNYK-JAVA-CHQOSLOGBACK-19882330
+    // (Directory Traversal). NOTE: a `constraints {}` entry alone is NOT sufficient here -
+    // Spring Boot's platform-imported version (ch.qos.logback:logback-classic:1.5.38) wins
+    // over a plain constraint. Only an explicit `implementation` dependency.
+    implementation 'ch.qos.logback:logback-classic:1.6.3'
+    implementation 'ch.qos.logback:logback-core:1.6.3'
+
     implementation project(':reference-fee-scheme-platform-api')
 
-    implementation 'uk.gov.justice.laa.dstew.payments.claims.validation:claims-validation-core:1.4.10'
+    // Note: claims-validation-core pulls in reference-provider-details-api transitively, which
+    // ships a stale duplicate copy of the uk.gov.justice.laadata.providers.model / .api packages
+    // (missing fields such as NmsAuthDetails.uniqueAuthorisationRef) that are also provided by
+    // providers-api below. Having both on the classpath is a split-package hazard: whichever jar
+    // happens to resolve first wins for those classes, silently shadowing the up-to-date one.
+    // We only need claims-validation-core for its config classes (e.g. ProviderDetailsApiConfig),
+    // so exclude the duplicate reference module to make resolution deterministic.
+    implementation('uk.gov.justice.laa.dstew.payments.claims.validation:claims-validation-core:1.4.16') {
+        exclude group: 'uk.gov.justice.laa.dstew.payments.claims.validation', module: 'reference-provider-details-api'
+    }
     implementation 'uk.gov.justice.laa.datastewardship.payments:data-claims-api-models:1.21.0'
     implementation 'uk.gov.justice.laadata.providers:providers-api:1.40.1'
 
