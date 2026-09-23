@@ -10,7 +10,7 @@ permissions:
   id-token: write
 
 jobs:
-  test-octo-sts:
+  test-package-access:
     runs-on: ubuntu-latest
 
     steps:
@@ -21,7 +21,7 @@ jobs:
           scope: ministryofjustice/laa-data-controlled-work-validator
           identity: gradle-package-test
 
-      - name: Confirm token was returned
+      - name: Confirm Octo STS token was returned
         env:
           OCTO_STS_TOKEN: ${{ steps.octo-sts.outputs.token }}
         run: |
@@ -32,21 +32,10 @@ jobs:
 
           echo "SUCCESS: Octo STS returned a token"
 
-      - name: Test package with PAT
-        env:
-          PAT_TOKEN: ${{ env.PHILS_PAT_TOKEN }}
-        run: |
-          curl --fail-with-body \
-            --user "${{ github.actor }}:${PAT_TOKEN}" \
-            --location \
-            --verbose \
-            --output /tmp/pat.pom \
-            "https://maven.pkg.github.com/ministryofjustice/laa-data-controlled-work-validator/uk/gov/justice/laa/dstew/payments/claims/validation/claims-validation-core/1.4.16/claims-validation-core-1.4.16.pom"
-
-          echo "SUCCESS: PAT downloaded package"
-          head -20 /tmp/pat.pom
-
+      # We expect this test may return HTTP 401.
+      # continue-on-error allows the PAT control test to run afterwards.
       - name: Test package with Octo STS token
+        continue-on-error: true
         env:
           OCTO_STS_TOKEN: ${{ steps.octo-sts.outputs.token }}
         run: |
@@ -57,4 +46,29 @@ jobs:
             --output /tmp/octo-sts.pom \
             "https://maven.pkg.github.com/ministryofjustice/laa-data-controlled-work-validator/uk/gov/justice/laa/dstew/payments/claims/validation/claims-validation-core/1.4.16/claims-validation-core-1.4.16.pom"
 
-          echo "SUCCESS: Octo STS downloaded package"
+          echo "SUCCESS: Octo STS token downloaded the package"
+
+      # Control test using the PAT.
+      # PHILS_PAT_TOKEN should be stored as a GitHub Actions secret.
+      - name: Test package with PAT
+        env:
+          PAT_TOKEN: ${{ secrets.PHILS_PAT_TOKEN }}
+        run: |
+          if [ -z "$PAT_TOKEN" ]; then
+            echo "PHILS_PAT_TOKEN was not available"
+            exit 1
+          fi
+
+          curl --fail-with-body \
+            --user "${{ github.actor }}:${PAT_TOKEN}" \
+            --location \
+            --verbose \
+            --output /tmp/pat.pom \
+            "https://maven.pkg.github.com/ministryofjustice/laa-data-controlled-work-validator/uk/gov/justice/laa/dstew/payments/claims/validation/claims-validation-core/1.4.16/claims-validation-core-1.4.16.pom"
+
+          echo "SUCCESS: PAT downloaded the package"
+
+      - name: Show downloaded POM
+        run: |
+          echo "Downloaded POM:"
+          head -20 /tmp/pat.pom
