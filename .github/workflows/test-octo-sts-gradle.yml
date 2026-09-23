@@ -31,3 +31,13 @@ jobs:
           fi
 
           echo "SUCCESS: Octo STS returned a token"
+
+      - name: Test GitHub Packages authentication
+        env:
+          OCTO_STS_TOKEN: ${{ steps.octo-sts.outputs.token }}
+        run: |
+          curl --fail-with-body \
+            --user "${{ github.actor }}:${OCTO_STS_TOKEN}" \
+            --location \
+            --verbose \
+            "https://maven.pkg.github.com/ministryofjustice/laa-data-controlled-work-validator/"
