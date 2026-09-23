@@ -1,4 +1,4 @@
-name: Test Octo STS Gradle access
+name: Test building validator from source
 
 on:
   push:
@@ -9,19 +9,33 @@ permissions:
   contents: read
   id-token: write
 
+env:
+  VALIDATOR_VERSION: v1.4.16
+
 jobs:
-  test-package-access:
+  build-validator:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Get token from Octo STS
+      # ----------------------------------------------------------
+      # 1. Checkout the consumer repository
+      # ----------------------------------------------------------
+      - name: Checkout claims event service
+        uses: actions/checkout@v4
+        with:
+          path: claims-event-service
+
+      # ----------------------------------------------------------
+      # 2. Obtain short-lived access to the validator repository
+      # ----------------------------------------------------------
+      - name: Get validator token from Octo STS
         id: octo-sts
         uses: octo-sts/action@v1.1.1
         with:
           scope: ministryofjustice/laa-data-controlled-work-validator
           identity: gradle-package-test
 
-      - name: Confirm Octo STS token was returned
+      - name: Confirm Octo STS token
         env:
           OCTO_STS_TOKEN: ${{ steps.octo-sts.outputs.token }}
         run: |
@@ -32,43 +46,61 @@ jobs:
 
           echo "SUCCESS: Octo STS returned a token"
 
-      # We expect this test may return HTTP 401.
-      # continue-on-error allows the PAT control test to run afterwards.
-      - name: Test package with Octo STS token
-        continue-on-error: true
-        env:
-          OCTO_STS_TOKEN: ${{ steps.octo-sts.outputs.token }}
+      # ----------------------------------------------------------
+      # 3. Checkout the EXACT validator version requested above
+      # ----------------------------------------------------------
+      - name: Checkout validator
+        uses: actions/checkout@v4
+        with:
+          repository: ministryofjustice/laa-data-controlled-work-validator
+          ref: ${{ env.VALIDATOR_VERSION }}
+          token: ${{ steps.octo-sts.outputs.token }}
+          path: validator
+
+      # ----------------------------------------------------------
+      # 4. Show exactly what was checked out
+      # ----------------------------------------------------------
+      - name: Verify validator checkout
+        working-directory: validator
         run: |
-          curl --fail-with-body \
-            --user "${{ github.actor }}:${OCTO_STS_TOKEN}" \
-            --location \
-            --verbose \
-            --output /tmp/octo-sts.pom \
-            "https://maven.pkg.github.com/ministryofjustice/laa-data-controlled-work-validator/uk/gov/justice/laa/dstew/payments/claims/validation/claims-validation-core/1.4.16/claims-validation-core-1.4.16.pom"
+          echo "Requested version: $VALIDATOR_VERSION"
+          echo "Checked out commit:"
+          git rev-parse HEAD
 
-          echo "SUCCESS: Octo STS token downloaded the package"
+          echo "Git description:"
+          git describe --tags --always
 
-      # Control test using the PAT.
-      # PHILS_PAT_TOKEN should be stored as a GitHub Actions secret.
-      - name: Test package with PAT
-        env:
-          PAT_TOKEN: ${{ secrets.PHILS_PAT_TOKEN }}
+      # ----------------------------------------------------------
+      # 5. Set up Java
+      # ----------------------------------------------------------
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'corretto'
+          java-version: "25"
+
+      # ----------------------------------------------------------
+      # 6. Make sure the Gradle wrapper is executable
+      # ----------------------------------------------------------
+      - name: Configure Gradle wrapper
+        working-directory: validator
+        run: chmod +x gradlew
+
+      # ----------------------------------------------------------
+      # 7. Build claims-validation-core directly from source
+      # ----------------------------------------------------------
+      - name: Build claims-validation-core
+        working-directory: validator
         run: |
-          if [ -z "$PAT_TOKEN" ]; then
-            echo "PHILS_PAT_TOKEN was not available"
-            exit 1
-          fi
+          ./gradlew :claims-validation-core:build --no-daemon
 
-          curl --fail-with-body \
-            --user "${{ github.actor }}:${PAT_TOKEN}" \
-            --location \
-            --verbose \
-            --output /tmp/pat.pom \
-            "https://maven.pkg.github.com/ministryofjustice/laa-data-controlled-work-validator/uk/gov/justice/laa/dstew/payments/claims/validation/claims-validation-core/1.4.16/claims-validation-core-1.4.16.pom"
-
-          echo "SUCCESS: PAT downloaded the package"
-
-      - name: Show downloaded POM
+      # ----------------------------------------------------------
+      # 8. Show us what Gradle produced
+      # ----------------------------------------------------------
+      - name: Show built artifacts
         run: |
-          echo "Downloaded POM:"
-          head -20 /tmp/pat.pom
+          echo "Built validator artifacts:"
+          find validator/claims-validation-core/build/libs \
+            -maxdepth 1 \
+            -type f \
+            -print
