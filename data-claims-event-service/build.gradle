@@ -66,6 +66,13 @@ dependencyManagement {
 
 dependencies {
 
+    // Security: upgrade logback-classic to 1.6.3 to fix SNYK-JAVA-CHQOSLOGBACK-19882330
+    // (Directory Traversal). NOTE: a `constraints {}` entry alone is NOT sufficient here -
+    // Spring Boot's platform-imported version (ch.qos.logback:logback-classic:1.5.38) wins
+    // over a plain constraint. Only an explicit `implementation` dependency.
+    implementation 'ch.qos.logback:logback-classic:1.6.3'
+    implementation 'ch.qos.logback:logback-core:1.6.3'
+
     implementation project(':reference-fee-scheme-platform-api')
 
     implementation 'uk.gov.justice.laa.dstew.payments.claims.validation:claims-validation-core:1.4.10'
