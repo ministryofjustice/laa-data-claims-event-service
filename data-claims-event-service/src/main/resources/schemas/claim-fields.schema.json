@@ -534,7 +534,7 @@
     },
     "case_stage_code": {
       "type": "string",
-      "pattern": "^(FPL(0[1-9]|1[0-9]|20|21)|FPC0[1-3]|MHL(0[1-9]|10))$",
+      "pattern": "^(FPL(0[1-9]|1[0-9]|20|21)|FPC0[1-3]|MHL(0[1-9]|1[0-6]))$",
       "minLength": 5,
       "maxLength": 5,
       "validationErrorMessages": [

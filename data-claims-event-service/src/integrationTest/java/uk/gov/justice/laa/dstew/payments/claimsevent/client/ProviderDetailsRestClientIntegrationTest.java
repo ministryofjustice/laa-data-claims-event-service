@@ -266,7 +266,7 @@ class ProviderDetailsRestClientIntegrationTest extends MockServerIntegrationTest
           .isInstanceOf(WebClientResponseException.class)
           .hasMessageContaining(
               "409 Conflict from GET http://%s:%d/api/v1/provider-offices/1234/schedules"
-                  .formatted(mockServerContainer.getHost(), mockServerContainer.getServerPort()));
+                  .formatted(MOCK_SERVER.getHost(), MOCK_SERVER.getServerPort()));
     }
   }
 }
