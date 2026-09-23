@@ -9,7 +9,7 @@ plugins {
 def versions = [
     sentry : '8.31.0',
     testcontainers : '1.20.1',
-    jackson : '2.21.6' // bumped to patch release to address Snyk jackson-databind finding
+    jackson : '2.21.7' // bumped to patch release to address Snyk jackson-core/jackson-databind findings
 ]
 
 test {
@@ -51,12 +51,15 @@ dependencyManagement {
         //
         // Explicitly pin the individual artifacts here (highest precedence in dependency
         // resolution) to fix:
-        //  - SNYK-JAVA-COMFASTERXMLJACKSONCORE-19477042 / 19496766 (jackson-databind 2.21.5)
-        //  - SNYK-JAVA-TOOLSJACKSONCORE-19477043 / 19496767 (jackson-databind 3.1.5)
-        dependency 'com.fasterxml.jackson.core:jackson-databind:2.21.6'
-        dependency 'tools.jackson.core:jackson-databind:3.1.6'
-        dependency 'tools.jackson.core:jackson-core:3.1.6'
-        dependency 'tools.jackson.core:jackson-annotations:3.1.6'
+        //  - SNYK-JAVA-COMFASTERXMLJACKSONCORE-20059677 / 20059179 (jackson-core 2.21.5)
+        //  - SNYK-JAVA-COMFASTERXMLJACKSONCORE-20059685 / 20059683 (jackson-databind 2.21.6)
+        //  - SNYK-JAVA-TOOLSJACKSONCORE-20059678 / 20059180 (jackson-core 3.1.6)
+        //  - SNYK-JAVA-TOOLSJACKSONCORE-20059686 / 20059682 (jackson-databind 3.1.6)
+        dependency 'com.fasterxml.jackson.core:jackson-core:2.21.7'
+        dependency 'com.fasterxml.jackson.core:jackson-databind:2.21.7'
+        dependency 'tools.jackson.core:jackson-databind:3.1.7'
+        dependency 'tools.jackson.core:jackson-core:3.1.7'
+        dependency 'tools.jackson.core:jackson-annotations:3.1.7'
 
         // Upgrade to fix Snyk finding SNYK-JAVA-IONETTY-19778369
         // (HTTP Request Smuggling) in io.netty:netty-codec-http:4.2.17.Final
@@ -122,7 +125,7 @@ dependencies {
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
     // Ensure Jackson 3.x (tools.jackson) BOM is bumped to a patched release to remediate Snyk findings
-    implementation enforcedPlatform('tools.jackson:jackson-bom:3.1.6')
+    implementation enforcedPlatform('tools.jackson:jackson-bom:3.1.7')
     implementation 'com.networknt:json-schema-validator:1.5.8'
     implementation 'io.github.resilience4j:resilience4j-spring-boot3:2.1.0'
     implementation 'io.github.resilience4j:resilience4j-reactor:2.1.0'
