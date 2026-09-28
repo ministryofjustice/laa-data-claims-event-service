@@ -81,24 +81,21 @@ public abstract class MockServerIntegrationTest {
       DockerImageName.parse("mockserver/mockserver")
           .withTag("mockserver-" + MockServerClient.class.getPackage().getImplementationVersion());
 
-  private static final MockServerContainer MOCK_SERVER_CONTAINER = createContainer();
-
-  protected static MockServerContainer mockServerContainer;
   protected MockServerClient mockServerClient;
-  protected static MockServerContainer mockStaticServerContainer = MOCK_SERVER_CONTAINER;
+
+  /**
+   * One container per JVM; started eagerly so tests and configuration beans can read its endpoint
+   * via MOCK_SERVER.getEndpoint().
+   */
+  protected static final MockServerContainer MOCK_SERVER =
+      new MockServerContainer(MOCKSERVER_IMAGE)
+          .waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofSeconds(60)));
+
+  static {
+    MOCK_SERVER.start();
+  }
 
   protected ObjectMapper objectMapper = new ObjectMapper();
-
-  private static MockServerContainer createContainer() {
-    List<String> portBinding = List.of("30000:1080");
-    MockServerContainer container =
-        new MockServerContainer(MOCKSERVER_IMAGE)
-            .waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofSeconds(30)));
-    container.setPortBindings(portBinding);
-    container.start();
-    log.info("Started MockServer container on port: {}", container.getFirstMappedPort());
-    return container;
-  }
 
   @MockitoBean PrometheusRegistry prometheusRegistry;
 
@@ -117,12 +114,8 @@ public abstract class MockServerIntegrationTest {
         DockerClientFactory.instance().isDockerAvailable(),
         "Docker is not available, skipping the tests.");
 
-    // Start MockServer container
-    mockServerContainer = MOCK_SERVER_CONTAINER;
-
     // Initialize MockServerClient
-    mockServerClient =
-        new MockServerClient(mockServerContainer.getHost(), mockServerContainer.getServerPort());
+    mockServerClient = new MockServerClient(MOCK_SERVER.getHost(), MOCK_SERVER.getServerPort());
 
     // Setup object mapper
     objectMapper =
@@ -142,8 +135,7 @@ public abstract class MockServerIntegrationTest {
   }
 
   protected static @NotNull WebClient createWebClient() {
-    ApiProperties apiProperties =
-        new ApiProperties(mockServerContainer.getEndpoint(), "", "Authorization");
+    ApiProperties apiProperties = new ApiProperties(MOCK_SERVER.getEndpoint(), "", "Authorization");
     return WebClientConfiguration.createWebClient(apiProperties);
   }
 
@@ -417,22 +409,19 @@ public abstract class MockServerIntegrationTest {
     @Bean
     @Primary
     DataClaimsApiProperties dataClaimsApiProperties() {
-      // Set using host and port running the mock server
-      return new DataClaimsApiProperties("http://localhost:30000", "");
+      return new DataClaimsApiProperties(MOCK_SERVER.getEndpoint(), "");
     }
 
     @Bean
     @Primary
     FeeSchemePlatformApiProperties feeSchemePlatformApiProperties() {
-      // Set using host and port running the mock server
-      return new FeeSchemePlatformApiProperties("http://localhost:30000", "");
+      return new FeeSchemePlatformApiProperties(MOCK_SERVER.getEndpoint(), "");
     }
 
     @Bean
     @Primary
     ProviderDetailsApiProperties providerDetailsApiProperties() {
-      // Set using host and port running the mock server
-      return new ProviderDetailsApiProperties("http://localhost:30000", "");
+      return new ProviderDetailsApiProperties(MOCK_SERVER.getEndpoint(), "");
     }
 
     @Bean
@@ -451,7 +440,7 @@ public abstract class MockServerIntegrationTest {
     @Primary
     public DataClaimsApiConfig coreDataClaimsApiConfig() {
       DataClaimsApiConfig cfg = new DataClaimsApiConfig();
-      cfg.setUrl("http://localhost:30000");
+      cfg.setUrl(MOCK_SERVER.getEndpoint());
       cfg.setAccessToken("");
       return cfg;
     }
@@ -460,7 +449,7 @@ public abstract class MockServerIntegrationTest {
     @Primary
     public FeeSchemeApiConfig coreFeeSchemeApiConfig() {
       FeeSchemeApiConfig cfg = new FeeSchemeApiConfig();
-      cfg.setUrl("http://localhost:30000");
+      cfg.setUrl(MOCK_SERVER.getEndpoint());
       cfg.setAccessToken("");
       return cfg;
     }
@@ -469,7 +458,7 @@ public abstract class MockServerIntegrationTest {
     @Primary
     public ProviderDetailsApiConfig coreProviderDetailsApiConfig() {
       ProviderDetailsApiConfig cfg = new ProviderDetailsApiConfig();
-      cfg.setUrl("http://localhost:30000");
+      cfg.setUrl(MOCK_SERVER.getEndpoint());
       cfg.setAccessToken("");
       return cfg;
     }

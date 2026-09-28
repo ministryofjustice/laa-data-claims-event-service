@@ -202,7 +202,18 @@ public class ClaimSchemaValidatorITest extends ClaimValidationIntegrationTestBas
         // Arguments.of(SUBMISSION_MEDIATION, "med-invalid-unique-case-id.json", SCHEMA_ERROR),
 
         // ── case_stage_code ───────────────────────────────────────────────────
+        // valid examples (fixtures should be named and placed under ClaimSchemaValidator/)
+        Arguments.of(SUBMISSION_LEGAL_HELP, "lh-valid-case-stage-FPL01.json", NONE),
+        Arguments.of(SUBMISSION_LEGAL_HELP, "lh-valid-case-stage-FPC01.json", NONE),
+        Arguments.of(SUBMISSION_LEGAL_HELP, "lh-valid-case-stage-MHL16.json", NONE),
+
+        // existing invalid example retained for compatibility
         Arguments.of(SUBMISSION_LEGAL_HELP, "lh-invalid-case-stage-code.json", SCHEMA_ERROR),
+
+        // additional invalid examples (new fixtures should follow naming convention lh-invalid-...)
+        Arguments.of(SUBMISSION_LEGAL_HELP, "lh-invalid-case-stage-FPL22.json", SCHEMA_ERROR),
+        Arguments.of(SUBMISSION_LEGAL_HELP, "lh-invalid-case-stage-FPC04.json", SCHEMA_ERROR),
+        Arguments.of(SUBMISSION_LEGAL_HELP, "lh-invalid-case-stage-MHL17.json", SCHEMA_ERROR),
 
         // ── stage_reached_code ────────────────────────────────────────────────
         Arguments.of(SUBMISSION_LEGAL_HELP, "lh-invalid-stage-reached-code.json", SCHEMA_ERROR),
