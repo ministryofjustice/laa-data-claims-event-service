@@ -64,6 +64,19 @@ dependencyManagement {
         // Upgrade to fix Snyk finding SNYK-JAVA-IONETTY-19778369
         // (HTTP Request Smuggling) in io.netty:netty-codec-http:4.2.17.Final
         dependency 'io.netty:netty-codec-http:4.2.18.Final'
+
+        // Upgrade to fix Snyk findings in io.netty:netty-codec-classes-quic:4.2.17.Final
+        // and io.netty:netty-codec-http3:4.2.17.Final:
+        //  - SNYK-JAVA-IONETTY-20154418 (Improper Certificate Validation, High)
+        //  - SNYK-JAVA-IONETTY-20154842 (HTTP Request Smuggling, Medium)
+        //  - SNYK-JAVA-IONETTY-20154839 / 20154840 (Allocation of Resources Without Limits or
+        //    Throttling, High)
+        //  - SNYK-JAVA-IONETTY-20154841 / 20158598 (HTTP Request Smuggling, High)
+        //  - SNYK-JAVA-IONETTY-20158603 (Allocation of Resources Without Limits or Throttling, High)
+        // These artifacts are pulled in transitively (e.g. via reactor-netty-incubator-quic) and
+        // are not covered by Spring Boot's own dependency management, so pin them explicitly here.
+        dependency 'io.netty:netty-codec-classes-quic:4.2.18.Final'
+        dependency 'io.netty:netty-codec-http3:4.2.18.Final'
     }
 }
 
