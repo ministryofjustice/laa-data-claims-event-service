@@ -65,11 +65,11 @@ public class FeeCalculationService {
             feeCalculationResponse.getValidationMessages();
 
         if (validationMessages != null && !validationMessages.isEmpty()) {
-          for (var m : validationMessages) {
-            if (ValidationMessagesInner.TypeEnum.ERROR.equals(m.getType())
-                || ValidationMessagesInner.TypeEnum.WARNING.equals(m.getType())) {
-              log.debug("Fee calculation returned validation message: {}", m);
-              addFeeCalculationMessage(context, claim, m);
+          for (var message : validationMessages) {
+            if (ValidationMessagesInner.TypeEnum.ERROR.equals(message.getType())
+                || ValidationMessagesInner.TypeEnum.WARNING.equals(message.getType())) {
+              log.debug("Fee calculation returned validation message: {}", message);
+              addFeeCalculationMessage(context, claim, message);
             }
           }
         }
