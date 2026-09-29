@@ -275,12 +275,12 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
             .status(SubmissionStatus.VALIDATION_IN_PROGRESS)
             .build();
     stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodyInProgress);
-    SubmissionPatch patchBodySucceeded =
+    SubmissionPatch patchBodyFailed =
         SubmissionPatch.builder()
             .submissionId(SUBMISSION_ID)
             .status(SubmissionStatus.VALIDATION_FAILED)
             .build();
-    stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodySucceeded);
+    stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodyFailed);
 
     getStubForGetSubmissionByCriteria(
         List.of(
