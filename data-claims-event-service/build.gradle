@@ -12,6 +12,13 @@ def versions = [
     jackson : '2.21.7' // bumped to patch release to address Snyk jackson-core/jackson-databind findings
 ]
 
+// Spring Boot 4.1.1 pins tomcat.version to 11.0.24, which is one patch release below the fix for the
+// critical Snyk finding SNYK-JAVA-ORGAPACHETOMCATEMBED-20302843 (Incorrect Authorization via FORM auth
+// request-method bypass). Overriding the BOM property here ensures the resolved tomcat-embed-*
+// versions are patched.
+// TODO: remove when Spring Boot ships a BOM that sets tomcat.version >= 11.0.25.
+ext['tomcat.version'] = '11.0.25'
+
 test {
     useJUnitPlatform()
     finalizedBy jacocoTestReport
@@ -227,7 +234,7 @@ tasks.register("checkstyleStaged", Checkstyle) {
 
     def filesToCheck = project.findProperty("checkstyleFiles")
     if (filesToCheck != null) {
-        source = files(filesToCheck.split(","))
+        source = files(filesToCheck.split("," as Closure))
     } else {
         source = sourceSets.main.allJava
     }
@@ -243,7 +250,7 @@ pact {
 
         pactDirectory = layout.buildDirectory.dir("pacts").get().asFile.path
 
-        def projectVersion = project.version != 'unspecified' ? project.version : '1.0.0';
+        def projectVersion = project.version != 'unspecified' ? project.version : '1.0.0'
         def gitSha = providers.environmentVariable('GIT_SHA').getOrNull()
 
         // Define the branch from a property, environment variable, or fallback to 'main'
