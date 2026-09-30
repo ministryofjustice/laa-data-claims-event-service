@@ -234,7 +234,7 @@ tasks.register("checkstyleStaged", Checkstyle) {
 
     def filesToCheck = project.findProperty("checkstyleFiles")
     if (filesToCheck != null) {
-        source = files(filesToCheck.split("," as Closure))
+        source = files(filesToCheck.toString().split(","))
     } else {
         source = sourceSets.main.allJava
     }
