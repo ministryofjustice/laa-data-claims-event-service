@@ -108,7 +108,7 @@ dependencies {
     implementation('uk.gov.justice.laa.dstew.payments.claims.validation:claims-validation-core:1.4.16') {
         exclude group: 'uk.gov.justice.laa.dstew.payments.claims.validation', module: 'reference-provider-details-api'
     }
-    implementation 'uk.gov.justice.laa.datastewardship.payments:data-claims-api-models:1.21.0'
+    implementation 'uk.gov.justice.laa.datastewardship.payments:data-claims-api-models:1.28.0'
     implementation 'uk.gov.justice.laadata.providers:providers-api:1.40.1'
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
