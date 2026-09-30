@@ -1466,4 +1466,68 @@ class DuplicateClaimLegalHelpDisbursementValidationStrategyTest
       assertThat(context.hasErrors()).isFalse();
     }
   }
+
+  @Nested
+  @DisplayName(
+      "Regression: same-submission duplicate detection is independent of pagination "
+          + "(DSTEW-1717)")
+  class PaginationIndependence {
+
+    @Test
+    @DisplayName(
+        "Detects a same-submission duplicate even when the duplicate is NOT present in the "
+            + "page-local submissionClaims list passed by ClaimValidationService — proving the "
+            + "check no longer depends on which page of the submission is currently being "
+            + "processed")
+    void detectsSameSubmissionDuplicateNotPresentInLocalPage() {
+      var incoming =
+          createClaim(
+              "claimId1",
+              "submissionId1",
+              FEE_CODE,
+              UFN,
+              UCN,
+              ClaimStatus.READY_TO_PROCESS,
+              "MAY-2025",
+              null);
+      // Genuine duplicate of `incoming` (same submission, fee code, UFN and UCN), simulated as
+      // living on a *different page* of ClaimValidationService's paginated fetch - i.e.
+      // deliberately absent from the submissionClaims list passed in below.
+      var duplicateOnAnotherPage =
+          createClaim(
+              "claimId2",
+              "submissionId1",
+              FEE_CODE,
+              UFN,
+              UCN,
+              ClaimStatus.READY_TO_PROCESS,
+              "MAY-2025",
+              null);
+
+      // The page-local list visible to ClaimValidationService for this page contains only the
+      // claim being processed - the duplicate is on a different page and therefore not present.
+      var pageLocalSubmissionClaims = List.of(incoming);
+
+      when(dataClaimsRestClient.getClaims(
+              any(), any(), any(), any(), any(), any(), any(), any(), any()))
+          .thenReturn(
+              ResponseEntity.of(
+                  Optional.of(
+                      new ClaimResultSet().content(singletonList(duplicateOnAnotherPage)))));
+
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      duplicateClaimValidationService.validateDuplicateClaims(
+          incoming,
+          pageLocalSubmissionClaims,
+          OFFICE_CODE,
+          context,
+          FeeCalculationType.DISB_ONLY.getValue());
+
+      assertThat(context.hasErrors()).isTrue();
+      assertContextClaimError(
+          context,
+          "claimId1",
+          ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_EXISTING_SUBMISSION);
+    }
+  }
 }

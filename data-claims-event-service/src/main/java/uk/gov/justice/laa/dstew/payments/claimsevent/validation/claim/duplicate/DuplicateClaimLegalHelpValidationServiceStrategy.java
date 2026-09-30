@@ -8,7 +8,6 @@ import uk.gov.justice.laa.dstew.payments.claims.validation.core.util.FeeTypeUtil
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
-import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
 /** Validation service for legal help duplicate claims. */
@@ -46,30 +45,14 @@ public final class DuplicateClaimLegalHelpValidationServiceStrategy
       return;
     }
 
-    // Get all claims from the API by officeCode, feeCode, uniqueFileNumber and uniqueClientNumber.
-    List<ClaimResponse> duplicateClaims =
-        getDuplicateClaims(
-            officeCode,
-            currentClaim.getFeeCode(),
-            currentClaim.getUniqueFileNumber(),
-            currentClaim.getUniqueClientNumber());
-
-    // Filter the claims to find duplicates in the current submission.
-    List<ClaimResponse> submissionDuplicateClaims =
-        filterDuplicateClaimsInSameSubmission(currentClaim, duplicateClaims);
-    findDuplicateClaims(
+    // Get all claims from the API and report any duplicates found in the current submission
+    // or a previous submission.
+    checkSameAndPreviousSubmissionDuplicates(
         currentClaim,
-        submissionDuplicateClaims,
-        ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_EXISTING_SUBMISSION,
-        context);
-
-    // Filter the claims to find duplicates in previous submissions.
-    List<ClaimResponse> officeDuplicateClaims =
-        filterDuplicateClaimsInPreviousSubmission(currentClaim, duplicateClaims);
-    findDuplicateClaims(
-        currentClaim,
-        officeDuplicateClaims,
-        ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_ANOTHER_SUBMISSION,
+        officeCode,
+        currentClaim.getFeeCode(),
+        currentClaim.getUniqueFileNumber(),
+        currentClaim.getUniqueClientNumber(),
         context);
 
     log.debug(

@@ -427,4 +427,66 @@ class DuplicateClaimLegalHelpValidationServiceStrategyTest
                   .getDisplayMessage());
     }
   }
+
+  @Nested
+  @DisplayName(
+      "Regression: same-submission duplicate detection is independent of pagination "
+          + "(DSTEW-1717)")
+  class PaginationIndependence {
+
+    @DisplayName(
+        "Detects a same-submission duplicate even when the duplicate is NOT present in the "
+            + "page-local submissionClaims list passed by ClaimValidationService - proving the "
+            + "check no longer depends on which page of the submission is currently being "
+            + "processed")
+    @Test
+    void detectsSameSubmissionDuplicateNotPresentInLocalPage() {
+      var claimTobeProcessed =
+          createClaim(
+              "claimId1",
+              "submissionId1",
+              "CIV123",
+              "070722/001",
+              "CLI001",
+              ClaimStatus.READY_TO_PROCESS);
+      // Genuine duplicate of claimTobeProcessed (same submission, fee code, UFN and UCN), but
+      // simulated as living on a *different page* of ClaimValidationService's paginated fetch -
+      // i.e. deliberately absent from the submissionClaims list passed in below. Before this
+      // fix, the same-submission check compared only against that local list and so could never
+      // see this duplicate.
+      var duplicateOnAnotherPage =
+          createClaim(
+              "claimId2",
+              "submissionId1",
+              "CIV123",
+              "070722/001",
+              "CLI001",
+              ClaimStatus.READY_TO_PROCESS);
+
+      // The page-local list visible to ClaimValidationService for this page contains only the
+      // claim being processed - the duplicate is on a different page and therefore not present.
+      var pageLocalSubmissionClaims = List.of(claimTobeProcessed);
+      var context = new SubmissionValidationContext();
+
+      // The Data Claims API is unpaginated for this targeted, filtered lookup, so it returns the
+      // duplicate regardless of which page ClaimValidationService is currently on.
+      when(mockDataClaimsRestClient.getClaims(
+              any(), any(), any(), any(), any(), any(), any(), any(), any()))
+          .thenReturn(
+              ResponseEntity.of(
+                  Optional.of(new ClaimResultSet().addContentItem(duplicateOnAnotherPage))));
+
+      duplicateClaimLegalHelpValidation.validateDuplicateClaims(
+          claimTobeProcessed, pageLocalSubmissionClaims, "2Q286D", context, "feeType");
+
+      assertThat(context.hasErrors()).isTrue();
+      ClaimValidationReport report =
+          context.getClaimReport(claimTobeProcessed.getId()).orElseThrow();
+      assertThat(report.getMessages())
+          .extracting(ValidationMessagePatch::getDisplayMessage)
+          .containsExactly(
+              ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_EXISTING_SUBMISSION
+                  .getDisplayMessage());
+    }
+  }
 }

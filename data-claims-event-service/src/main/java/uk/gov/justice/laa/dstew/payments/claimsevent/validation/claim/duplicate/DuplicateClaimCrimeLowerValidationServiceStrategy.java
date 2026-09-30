@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
-import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 
 /** Service responsible for validating whether a claim is a duplicate. */
@@ -34,6 +33,20 @@ public final class DuplicateClaimCrimeLowerValidationServiceStrategy
         getClass().getSimpleName(),
         currentClaim.getId());
 
+    // Skip the duplicate check entirely for claims already flagged for retry (e.g. a transient
+    // Fee Scheme Platform error earlier in this same validation pass - see
+    // EffectiveCategoryOfLawClaimValidator/CategoryOfLawValidationService). This is not a no-op:
+    // BulkClaimUpdater only defers persisting a retry-flagged claim when it has no errors. If the
+    // duplicate check ran anyway and added an error here, the claim would be persisted as INVALID
+    // this round using partial/unresolved fee data, instead of being cleanly deferred for retry.
+    if (context.isFlaggedForRetry(currentClaim.getId())) {
+      log.debug(
+          "[{}] Claim {} is flagged for retry, skipping duplicate check",
+          getClass().getSimpleName(),
+          currentClaim.getId());
+      return;
+    }
+
     if ("PROD".equals(currentClaim.getFeeCode())) {
       // Skipping PRD duplicate check. This is because PROD fee code do not have a unique
       // identifier and client details are not mandatory for this fee code. This was originally
@@ -44,27 +57,14 @@ public final class DuplicateClaimCrimeLowerValidationServiceStrategy
       return;
     }
 
-    // Get all claims from the API by officeCode, feeCode and uniqueFileNumber.
-    List<ClaimResponse> duplicateClaims =
-        getDuplicateClaims(
-            officeCode, currentClaim.getFeeCode(), currentClaim.getUniqueFileNumber(), null);
-
-    // Filter the claims to find duplicates in the current submission.
-    List<ClaimResponse> submissionDuplicateClaims =
-        filterDuplicateClaimsInSameSubmission(currentClaim, duplicateClaims);
-    findDuplicateClaims(
+    // Get all claims from the API and report any duplicates found in the current submission
+    // or a previous submission.
+    checkSameAndPreviousSubmissionDuplicates(
         currentClaim,
-        submissionDuplicateClaims,
-        ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_EXISTING_SUBMISSION,
-        context);
-
-    // Filter the claims to find duplicates in any previous submissions.
-    List<ClaimResponse> officeDuplicateClaims =
-        filterDuplicateClaimsInPreviousSubmission(currentClaim, duplicateClaims);
-    findDuplicateClaims(
-        currentClaim,
-        officeDuplicateClaims,
-        ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_ANOTHER_SUBMISSION,
+        officeCode,
+        currentClaim.getFeeCode(),
+        currentClaim.getUniqueFileNumber(),
+        null,
         context);
 
     log.debug(

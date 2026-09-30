@@ -486,5 +486,134 @@ class DuplicateClaimCrimeLowerValidationServiceStrategyTest {
             .getClaims(any(), any(), any(), any(), any(), any(), any(), any(), any());
       }
     }
+
+    @Nested
+    @DisplayName("Flagged for retry short-circuit")
+    class FlaggedForRetry {
+
+      @Test
+      @DisplayName(
+          "Crime Lower claims - skips duplicate check entirely and makes no API call when claim "
+              + "is flagged for retry")
+      void skipsDuplicateCheckWhenFlaggedForRetry() {
+        // Given
+        ClaimResponse claim1 =
+            new ClaimResponse()
+                .id("claimId1")
+                .submissionId("submissionId")
+                .feeCode("feeCode")
+                .uniqueFileNumber("ufn")
+                .status(ClaimStatus.READY_TO_PROCESS);
+
+        SubmissionValidationContext context = new SubmissionValidationContext();
+        context.addClaimReports(List.of(new ClaimValidationReport(claim1.getId())));
+        // Simulates an earlier validator (EffectiveCategoryOfLawClaimValidator, via
+        // CategoryOfLawValidationService) flagging the claim for retry due to a transient Fee
+        // Scheme Platform error, before the duplicate validator runs.
+        context.flagForRetry(claim1.getId());
+
+        // When
+        duplicateClaimValidationService.validateDuplicateClaims(
+            claim1, List.of(claim1), "officeCode", context, FeeCalculationType.FIXED.toString());
+
+        // Then
+        assertThat(context.hasErrors(claim1.getId())).isFalse();
+        verify(dataClaimsRestClient, times(0))
+            .getClaims(any(), any(), any(), any(), any(), any(), any(), any(), any());
+      }
+
+      @Test
+      @DisplayName("Crime Lower claims - still performs duplicate check when not flagged for retry")
+      void stillPerformsDuplicateCheckWhenNotFlaggedForRetry() {
+        // Given
+        ClaimResponse claim1 =
+            new ClaimResponse()
+                .id("claimId1")
+                .submissionId("submissionId")
+                .feeCode("feeCode")
+                .uniqueFileNumber("ufn")
+                .status(ClaimStatus.READY_TO_PROCESS);
+
+        SubmissionValidationContext context = new SubmissionValidationContext();
+        context.addClaimReports(List.of(new ClaimValidationReport(claim1.getId())));
+
+        when(dataClaimsRestClient.getClaims(
+                any(), any(), any(), any(), any(), any(), any(), any(), any()))
+            .thenReturn(ResponseEntity.of(Optional.of(new ClaimResultSet())));
+
+        // When
+        duplicateClaimValidationService.validateDuplicateClaims(
+            claim1, List.of(claim1), "officeCode", context, FeeCalculationType.FIXED.toString());
+
+        // Then
+        verify(dataClaimsRestClient, times(1))
+            .getClaims(any(), any(), any(), any(), any(), any(), any(), any(), any());
+      }
+    }
+
+    @Nested
+    @DisplayName(
+        "Regression: same-submission duplicate detection is independent of pagination "
+            + "(DSTEW-1717)")
+    class PaginationIndependence {
+
+      @Test
+      @DisplayName(
+          "Detects a same-submission duplicate even when the duplicate is NOT present in the "
+              + "page-local submissionClaims list passed by ClaimValidationService — proving the "
+              + "check no longer depends on which page of the submission is currently being "
+              + "processed")
+      void detectsSameSubmissionDuplicateNotPresentInLocalPage() {
+        // Given: two claims in the SAME submission share feeCode + UFN (a genuine duplicate),
+        // but claim2 is simulated as living on a *different page* of ClaimValidationService's
+        // paginated fetch than claim1 - i.e. it is absent from the submissionClaims list passed
+        // in for claim1's validation. Before this fix, main's implementation compared the
+        // current claim only against this local list and so could never detect this duplicate.
+        ClaimResponse claim1 =
+            new ClaimResponse()
+                .id("claimId1")
+                .submissionId("submissionId")
+                .feeCode("feeCode")
+                .uniqueFileNumber("ufn")
+                .status(ClaimStatus.READY_TO_PROCESS);
+        ClaimResponse claim2OnAnotherPage =
+            new ClaimResponse()
+                .id("claimId2")
+                .submissionId("submissionId")
+                .feeCode("feeCode")
+                .uniqueFileNumber("ufn")
+                .status(ClaimStatus.READY_TO_PROCESS);
+
+        // The page-local list visible to ClaimValidationService for this page contains only
+        // claim1 - claim2 is on a different page and therefore not present here.
+        List<ClaimResponse> pageLocalSubmissionClaims = List.of(claim1);
+
+        // The Data Claims API is unpaginated for this targeted, filtered lookup, so it returns
+        // both matching claims regardless of which page ClaimValidationService is currently on.
+        ClaimResultSet claimResultSet = new ClaimResultSet();
+        claimResultSet.content(List.of(claim2OnAnotherPage));
+        when(dataClaimsRestClient.getClaims(
+                any(), any(), any(), any(), any(), any(), any(), any(), any()))
+            .thenReturn(ResponseEntity.of(Optional.of(claimResultSet)));
+
+        SubmissionValidationContext context = new SubmissionValidationContext();
+        context.addClaimReports(List.of(new ClaimValidationReport(claim1.getId())));
+
+        // When
+        duplicateClaimValidationService.validateDuplicateClaims(
+            claim1,
+            pageLocalSubmissionClaims,
+            "officeCode",
+            context,
+            FeeCalculationType.FIXED.toString());
+
+        // Then
+        assertThat(context.hasErrors(claim1.getId())).isTrue();
+        assertContextClaimError(
+            context,
+            claim1.getId(),
+            ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_EXISTING_SUBMISSION);
+      }
+    }
   }
 }

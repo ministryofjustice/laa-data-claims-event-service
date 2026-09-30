@@ -81,6 +81,46 @@ public abstract class DuplicateClaimValidation implements DuplicateClaimValidati
   }
 
   /**
+   * Retrieves the duplicate claim candidates for the given business key and reports a validation
+   * error against {@code currentClaim} for each of the two duplicate scenarios this class supports:
+   * duplicates found within the current submission, and duplicates found in a previous submission
+   * for the same office. This centralizes the identical check sequence shared by the Crime Lower
+   * and Legal Help (non-disbursement) strategies, so that any future change to that sequence only
+   * needs to be made in one place.
+   *
+   * @param currentClaim the claim being validated
+   * @param officeCode the office code associated with the submission
+   * @param feeCode the fee code to match on
+   * @param uniqueFileNumber the unique file number to match on
+   * @param uniqueClientNumber the unique client number to match on, or {@code null} if not
+   *     applicable to this strategy
+   * @param context the validation context where claim-level errors will be recorded
+   */
+  protected void checkSameAndPreviousSubmissionDuplicates(
+      final ClaimResponse currentClaim,
+      final String officeCode,
+      final String feeCode,
+      final String uniqueFileNumber,
+      final String uniqueClientNumber,
+      final SubmissionValidationContext context) {
+
+    List<ClaimResponse> duplicateClaims =
+        getDuplicateClaims(officeCode, feeCode, uniqueFileNumber, uniqueClientNumber);
+
+    findDuplicateClaims(
+        currentClaim,
+        filterDuplicateClaimsInSameSubmission(currentClaim, duplicateClaims),
+        ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_EXISTING_SUBMISSION,
+        context);
+
+    findDuplicateClaims(
+        currentClaim,
+        filterDuplicateClaimsInPreviousSubmission(currentClaim, duplicateClaims),
+        ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_ANOTHER_SUBMISSION,
+        context);
+  }
+
+  /**
    * Evaluate a list of potential duplicate claims for the supplied {@code claim} and, if any
    * duplicates are present, log them and add the provided {@code validationError} to the {@code
    * SubmissionValidationContext} for the claim's id.
