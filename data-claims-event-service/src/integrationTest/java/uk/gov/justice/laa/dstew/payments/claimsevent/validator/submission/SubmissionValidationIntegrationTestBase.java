@@ -82,51 +82,11 @@ public abstract class SubmissionValidationIntegrationTestBase extends MockServer
    */
   protected SubmissionValidationContext runSubmissionValidation(
       String submissionFixture, boolean stubDuplicateSubmission) throws Exception {
-
-    String submissionJson = readJsonFromFile(submissionFixture);
-    JsonNode node = mapper.readTree(submissionJson);
-
-    UUID submissionId = UUID.fromString(node.get("submission_id").asText());
-    UUID bulkSubmissionId = UUID.fromString(node.get("bulk_submission_id").asText());
-
-    String officeAccountNumber =
-        node.has("office_account_number") && !node.get("office_account_number").isNull()
-            ? node.get("office_account_number").asText()
-            : "AQ2B3C";
-
-    AreaOfLaw areaOfLaw = AreaOfLaw.LEGAL_HELP;
-    if (node.has("area_of_law") && !node.get("area_of_law").isNull()) {
-      try {
-        areaOfLaw =
-            AreaOfLaw.valueOf(node.get("area_of_law").asText().replace(' ', '_').toUpperCase());
-      } catch (Exception ignored) {
-        // keep default
-      }
-    }
-
-    String submissionPeriod =
-        node.has("submission_period") && !node.get("submission_period").isNull()
-            ? node.get("submission_period").asText()
-            : "APR-2025";
-
-    stubForGetSubmission(submissionId, submissionFixture);
-    stubForUpdateSubmission(submissionId);
-    stubForUpdateBulkSubmission(bulkSubmissionId);
-    stubReturnNoClaims();
-
     String criteriaFixture =
         stubDuplicateSubmission
             ? SUBMISSION_BASE_PATH + "get-submissions-by-filter.json"
             : SUBMISSION_BASE_PATH + "get-submissions-by-filter_no_content.json";
-
-    getStubForGetSubmissionByCriteria(
-        List.of(
-            Parameter.param("offices", officeAccountNumber),
-            Parameter.param("area_of_law", areaOfLaw.name()),
-            Parameter.param("submission_period", submissionPeriod)),
-        criteriaFixture);
-
-    return submissionValidationService.validateSubmission(submissionId);
+    return runSubmissionValidationWithDuplicateFixture(submissionFixture, criteriaFixture);
   }
 
   /** Convenience overload — never stubs a duplicate (the common case). */
@@ -146,45 +106,62 @@ public abstract class SubmissionValidationIntegrationTestBase extends MockServer
   protected SubmissionValidationContext runSubmissionValidationWithDuplicateFixture(
       String submissionFixture, String duplicateCriteriaFixture) throws Exception {
 
-    String submissionJson = readJsonFromFile(submissionFixture);
-    JsonNode node = mapper.readTree(submissionJson);
+    SubmissionFixture fixture = readSubmissionFixture(submissionFixture);
 
-    UUID submissionId = UUID.fromString(node.get("submission_id").asText());
-    UUID bulkSubmissionId = UUID.fromString(node.get("bulk_submission_id").asText());
-
-    String officeAccountNumber =
-        node.has("office_account_number") && !node.get("office_account_number").isNull()
-            ? node.get("office_account_number").asText()
-            : "AQ2B3C";
-
-    AreaOfLaw areaOfLaw = AreaOfLaw.LEGAL_HELP;
-    if (node.has("area_of_law") && !node.get("area_of_law").isNull()) {
-      try {
-        areaOfLaw =
-            AreaOfLaw.valueOf(node.get("area_of_law").asText().replace(' ', '_').toUpperCase());
-      } catch (Exception ignored) {
-        // keep default
-      }
-    }
-
-    String submissionPeriod =
-        node.has("submission_period") && !node.get("submission_period").isNull()
-            ? node.get("submission_period").asText()
-            : "APR-2025";
-
-    stubForGetSubmission(submissionId, submissionFixture);
-    stubForUpdateSubmission(submissionId);
-    stubForUpdateBulkSubmission(bulkSubmissionId);
+    stubForGetSubmission(fixture.submissionId(), submissionFixture);
+    stubForUpdateSubmission(fixture.submissionId());
+    stubForUpdateBulkSubmission(fixture.bulkSubmissionId());
     stubReturnNoClaims();
 
     getStubForGetSubmissionByCriteria(
         List.of(
-            Parameter.param("offices", officeAccountNumber),
-            Parameter.param("area_of_law", areaOfLaw.name()),
-            Parameter.param("submission_period", submissionPeriod)),
+            Parameter.param("offices", fixture.officeAccountNumber()),
+            Parameter.param("area_of_law", fixture.areaOfLaw().name()),
+            Parameter.param("submission_period", fixture.submissionPeriod())),
         duplicateCriteriaFixture);
 
-    return submissionValidationService.validateSubmission(submissionId);
+    return submissionValidationService.validateSubmission(fixture.submissionId());
+  }
+
+  /** The subset of a submission fixture needed to set up the MockServer stubs. */
+  private record SubmissionFixture(
+      UUID submissionId,
+      UUID bulkSubmissionId,
+      String officeAccountNumber,
+      AreaOfLaw areaOfLaw,
+      String submissionPeriod) {}
+
+  /**
+   * Reads the identifiers and duplicate-key fields from a submission fixture, falling back to the
+   * defaults used by the majority of fixtures when a field is absent or null.
+   */
+  private SubmissionFixture readSubmissionFixture(String submissionFixture) throws Exception {
+    JsonNode node = mapper.readTree(readJsonFromFile(submissionFixture));
+
+    return new SubmissionFixture(
+        UUID.fromString(node.get("submission_id").asText()),
+        UUID.fromString(node.get("bulk_submission_id").asText()),
+        textOrDefault(node, "office_account_number", "AQ2B3C"),
+        areaOfLaw(node),
+        textOrDefault(node, "submission_period", "APR-2025"));
+  }
+
+  private String textOrDefault(JsonNode node, String fieldName, String defaultValue) {
+    JsonNode field = node.get(fieldName);
+    return field == null || field.isNull() ? defaultValue : field.asText();
+  }
+
+  /**
+   * Resolves the fixture's area of law, tolerating the space-separated form used in the JSON (e.g.
+   * "LEGAL HELP"). An unrecognised value fails the test rather than silently defaulting, so a typo
+   * in a fixture cannot make a test pass for the wrong reason.
+   */
+  private AreaOfLaw areaOfLaw(JsonNode node) {
+    JsonNode field = node.get("area_of_law");
+    if (field == null || field.isNull()) {
+      return AreaOfLaw.LEGAL_HELP;
+    }
+    return AreaOfLaw.valueOf(field.asText().replace(' ', '_').toUpperCase());
   }
 
   /**

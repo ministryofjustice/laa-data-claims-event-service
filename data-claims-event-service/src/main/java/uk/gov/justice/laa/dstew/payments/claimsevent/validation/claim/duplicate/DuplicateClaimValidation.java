@@ -83,10 +83,7 @@ public abstract class DuplicateClaimValidation {
             uniqueFileNumber,
             uniqueClientNumber,
             uniqueCaseId,
-            List.of(
-                ClaimStatus.READY_TO_PROCESS,
-                ClaimStatus.VALID,
-                ClaimStatus.VALIDATED_PENDING_APPROVAL),
+            listOfNonInvalidStatus,
             null)
         .getBody()
         .getContent()
