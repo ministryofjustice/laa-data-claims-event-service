@@ -37,11 +37,6 @@ public class SubmissionValidationService {
 
   private final ValidationService validationService;
   private final ClaimValidationService claimValidationService;
-
-  // Required by the generated constructor for the service's dependency-injection contract.
-  @SuppressWarnings("unused")
-  private final BulkClaimUpdater bulkClaimUpdater;
-
   private final DataClaimsRestClient dataClaimsRestClient;
   private final List<SubmissionValidator> submissionValidatorList;
   private final EventServiceMetricService eventServiceMetricService;
@@ -136,9 +131,15 @@ public class SubmissionValidationService {
     // Stop submission validation timer
     eventServiceMetricService.stopSubmissionValidationTimer(submissionId);
 
-    dataClaimsRestClient.updateSubmission(submissionId.toString(), submissionPatch);
+    // The bulk submission is patched before the submission so that the submission status is the
+    // last write of the flow. The idempotency guard above keys off the submission status, so
+    // making it the final write means a failure part-way through leaves the submission in
+    // VALIDATION_IN_PROGRESS and a redelivered message re-runs the whole flow (every patch issued
+    // here is idempotent). Writing the submission first would let the guard short-circuit a retry
+    // and strand the bulk submission in VALIDATION_IN_PROGRESS with no way to recover.
     dataClaimsRestClient.updateBulkSubmission(
         String.valueOf(bulkSubmissionId), bulkSubmissionPatch);
+    dataClaimsRestClient.updateSubmission(submissionId.toString(), submissionPatch);
     return context;
   }
 

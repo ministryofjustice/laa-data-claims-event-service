@@ -21,7 +21,9 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import uk.gov.justice.laa.dstew.payments.claims.validation.core.model.ValidationResult;
@@ -46,8 +48,6 @@ class SubmissionValidationServiceTest {
 
   @Mock private ClaimValidationService claimValidationService;
 
-  @Mock private BulkClaimUpdater bulkClaimUpdater;
-
   @Mock private DataClaimsRestClient dataClaimsRestClient;
 
   @Mock private SubmissionValidator submissionValidator;
@@ -64,7 +64,6 @@ class SubmissionValidationServiceTest {
         new SubmissionValidationService(
             validationService,
             claimValidationService,
-            bulkClaimUpdater,
             dataClaimsRestClient,
             singletonList(submissionValidator),
             eventServiceMetricService);
@@ -152,6 +151,14 @@ class SubmissionValidationServiceTest {
             .updateBulkSubmission(any(), bulkSubmissionPatchCaptor.capture());
         assertThat(bulkSubmissionPatchCaptor.getValue().getStatus())
             .isEqualTo(BulkSubmissionStatus.VALIDATED_PENDING_APPROVAL);
+
+        // The submission status is what the idempotency guard keys off, so it must be written
+        // last. If the bulk submission patch were to fail after the submission had already moved
+        // to VALIDATED_PENDING_APPROVAL, the redelivered message would short-circuit and leave the
+        // bulk submission stranded in VALIDATION_IN_PROGRESS.
+        InOrder inOrder = Mockito.inOrder(dataClaimsRestClient);
+        inOrder.verify(dataClaimsRestClient).updateBulkSubmission(any(), any());
+        inOrder.verify(dataClaimsRestClient).updateSubmission(any(), any());
       } else {
         // When
         result = submissionValidationService.validateSubmission(submission.getSubmissionId());
