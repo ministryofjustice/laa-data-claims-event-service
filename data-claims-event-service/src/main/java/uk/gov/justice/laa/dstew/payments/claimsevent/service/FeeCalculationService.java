@@ -66,11 +66,8 @@ public class FeeCalculationService {
 
         if (validationMessages != null && !validationMessages.isEmpty()) {
           for (var message : validationMessages) {
-            if (ValidationMessagesInner.TypeEnum.ERROR.equals(message.getType())
-                || ValidationMessagesInner.TypeEnum.WARNING.equals(message.getType())) {
-              log.debug("Fee calculation returned validation message: {}", message);
-              addFeeCalculationMessage(context, claim, message);
-            }
+            log.debug("Fee calculation returned validation message: {}", message);
+            addFeeCalculationMessage(context, claim, message);
           }
         }
 
@@ -84,6 +81,15 @@ public class FeeCalculationService {
 
   private void addFeeCalculationMessage(
       SubmissionValidationContext context, ClaimResponse claim, ValidationMessagesInner message) {
+    if (message.getType() == null
+        || !ValidationMessagesInner.TypeEnum.ERROR.equals(message.getType())
+            && !ValidationMessagesInner.TypeEnum.WARNING.equals(message.getType())) {
+      context.addClaimMessages(
+          claim.getId(),
+          List.of(ClaimValidationError.TECHNICAL_ERROR_FEE_CALCULATION_SERVICE.toPatch()));
+      return;
+    }
+
     ValidationMessageType type =
         ValidationMessagesInner.TypeEnum.ERROR.equals(message.getType())
             ? ValidationMessageType.ERROR

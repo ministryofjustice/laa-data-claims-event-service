@@ -9,7 +9,6 @@ import static uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw.LEGAL
 
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -23,6 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessageType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.mapper.FeeSchemeMapper;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
@@ -94,7 +94,6 @@ class FeeCalculationServiceTest {
       SubmissionValidationContext context = new SubmissionValidationContext();
       context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
 
-      UUID submissionId = new UUID(1, 1);
       feeCalculationService.calculateFee(claim, context, LEGAL_HELP);
 
       verify(feeSchemePlatformRestClient, times(1)).calculateFee(feeCalculationRequest);
@@ -175,6 +174,7 @@ class FeeCalculationServiceTest {
       verify(feeSchemePlatformRestClient, times(1)).calculateFee(feeCalculationRequest);
 
       var actualMessages = context.getClaimReport(claim.getId()).get().getMessages();
+      assertThat(context.hasErrors(claim.getId())).isFalse();
       assertThat(actualMessages)
           .hasSize(1)
           .extracting(ValidationMessagePatch::getMessageCode)
@@ -182,6 +182,9 @@ class FeeCalculationServiceTest {
       assertThat(actualMessages)
           .extracting(ValidationMessagePatch::getDisplayMessage)
           .contains("A field warning message from FSP");
+      assertThat(actualMessages)
+          .extracting(ValidationMessagePatch::getType)
+          .contains(ValidationMessageType.WARNING);
     }
 
     @Test
@@ -320,8 +323,8 @@ class FeeCalculationServiceTest {
     }
 
     @Test
-    @DisplayName("Non error/warning validation messages are ignored")
-    void nonErrorOrWarningValidationMessagesAreIgnored() {
+    @DisplayName("Null validation message type results in a technical error")
+    void nullValidationMessageTypeResultsInTechnicalError() {
 
       ClaimResponse claim = new ClaimResponse().id("claimId").feeCode("feeCode");
 
@@ -345,8 +348,19 @@ class FeeCalculationServiceTest {
 
       verify(feeSchemePlatformRestClient, times(1)).calculateFee(feeCalculationRequest);
       assertThat(actualResponse).contains(feeCalculationResponse);
-      assertThat(context.hasErrors(claim.getId())).isFalse();
-      assertThat(context.getClaimReport(claim.getId()).get().getMessages()).isEmpty();
+      assertThat(context.hasErrors(claim.getId())).isTrue();
+      var actualMessages = context.getClaimReport(claim.getId()).get().getMessages();
+      assertThat(actualMessages)
+          .extracting(ValidationMessagePatch::getDisplayMessage)
+          .contains(
+              ClaimValidationError.TECHNICAL_ERROR_FEE_CALCULATION_SERVICE.getDisplayMessage());
+      assertThat(actualMessages)
+          .extracting(ValidationMessagePatch::getTechnicalMessage)
+          .contains(
+              ClaimValidationError.TECHNICAL_ERROR_FEE_CALCULATION_SERVICE.getTechnicalMessage());
+      assertThat(actualMessages)
+          .extracting(ValidationMessagePatch::getType)
+          .contains(ClaimValidationError.TECHNICAL_ERROR_FEE_CALCULATION_SERVICE.getType());
     }
 
     @Test
