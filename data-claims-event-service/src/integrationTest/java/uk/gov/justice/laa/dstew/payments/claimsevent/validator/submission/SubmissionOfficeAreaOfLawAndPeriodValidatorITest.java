@@ -32,12 +32,13 @@ public class SubmissionOfficeAreaOfLawAndPeriodValidatorITest
 
   @Test
   @DisplayName(
-      "Prior READY_FOR_SUBMISSION submission exists for same office/area/period - should produce SUBMISSION_AWAITING_FINAL_SUBMIT")
-  void duplicateAwaitingFinalSubmitSubmissionIsInvalid() throws Exception {
+      "Prior VALIDATED_PENDING_APPROVAL submission exists for same office/area/period - should produce SUBMISSION_AWAITING_FINAL_APPROVAL")
+  void duplicateAwaitingFinalApprovalSubmissionIsInvalid() throws Exception {
     var ctx =
         runSubmissionValidationWithDuplicateFixture(
             P + "duplicate-submission.json",
-            SUBMISSION_BASE_PATH + "get-submissions-by-filter_ready-for-submission.json");
-    assertSubmissionErrors(ctx, Set.of(SubmissionValidationError.SUBMISSION_AWAITING_FINAL_SUBMIT));
+            SUBMISSION_BASE_PATH + "get-submissions-by-filter_validated-pending-approval.json");
+    assertSubmissionErrors(
+        ctx, Set.of(SubmissionValidationError.SUBMISSION_AWAITING_FINAL_APPROVAL));
   }
 }

@@ -127,12 +127,13 @@ class SubmissionOfficeAreaOfLawAndPeriodValidatorTest {
     }
 
     @DisplayName(
-        "Should reject with SUBMISSION_AWAITING_FINAL_SUBMIT when the earlier live duplicate has"
-            + " passed validation and is awaiting final submission")
+        "Should reject with SUBMISSION_AWAITING_FINAL_APPROVAL when the earlier live duplicate has"
+            + " passed validation and is awaiting final approval")
     @Test
-    void shouldRejectWithAwaitingFinalSubmitWhenDuplicateIsReadyForSubmission() {
+    void shouldRejectWithAwaitingFinalApprovalWhenDuplicateIsValidatedPendingApproval() {
       stubExistingSubmissions(
-          existingSubmission(OTHER_SUBMISSION_ID, SubmissionStatus.READY_FOR_SUBMISSION, EARLIER));
+          existingSubmission(
+              OTHER_SUBMISSION_ID, SubmissionStatus.VALIDATED_PENDING_APPROVAL, EARLIER));
 
       var submissionValidationContext = new SubmissionValidationContext();
 
@@ -141,7 +142,7 @@ class SubmissionOfficeAreaOfLawAndPeriodValidatorTest {
       assertThat(submissionValidationContext.hasErrors()).isTrue();
       assertContextClaimError(
           submissionValidationContext,
-          SubmissionValidationError.SUBMISSION_AWAITING_FINAL_SUBMIT,
+          SubmissionValidationError.SUBMISSION_AWAITING_FINAL_APPROVAL,
           OFFICE_CODE,
           AREA_OF_LAW,
           SUBMISSION_PERIOD);

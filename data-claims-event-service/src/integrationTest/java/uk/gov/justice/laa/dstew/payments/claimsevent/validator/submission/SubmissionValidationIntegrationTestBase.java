@@ -138,7 +138,7 @@ public abstract class SubmissionValidationIntegrationTestBase extends MockServer
   /**
    * Runs submission validation while stubbing the office/area/period criteria call to return the
    * supplied duplicate fixture. Lets tests exercise duplicate outcomes that depend on the blocking
-   * submission's status (e.g. a READY_FOR_SUBMISSION duplicate awaiting Final Submit).
+   * submission's status (e.g. a VALIDATED_PENDING_APPROVAL duplicate awaiting final approval).
    *
    * @param submissionFixture the fixture describing the submission under validation
    * @param duplicateCriteriaFixture the fixture returned for the getSubmissions criteria call

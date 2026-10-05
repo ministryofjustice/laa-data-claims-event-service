@@ -37,7 +37,11 @@ public class SubmissionValidationService {
 
   private final ValidationService validationService;
   private final ClaimValidationService claimValidationService;
+
+  // Required by the generated constructor for the service's dependency-injection contract.
+  @SuppressWarnings("unused")
   private final BulkClaimUpdater bulkClaimUpdater;
+
   private final DataClaimsRestClient dataClaimsRestClient;
   private final List<SubmissionValidator> submissionValidatorList;
   private final EventServiceMetricService eventServiceMetricService;
@@ -55,14 +59,17 @@ public class SubmissionValidationService {
     Assert.notNull(submission, "Submission not retrievable: " + submissionId.toString());
 
     // Idempotency guard: a submission that has already passed INITIAL validation is held in
-    // READY_FOR_SUBMISSION for the provider's Final Submit. A redelivery of the validation message
+    // VALIDATED_PENDING_APPROVAL for the provider's final approval. A redelivery of the validation
+    // message
     // for such a submission must be a no-op: re-running validation would otherwise trip the status
     // gate (SubmissionStatusValidator) and incorrectly flip the submission to VALIDATION_FAILED,
     // as well as re-publish the initial-validation-succeeded event for the same transition.
-    if (submission.getStatus() == SubmissionStatus.READY_FOR_SUBMISSION) {
+    if (isAlreadyValidated(submission)) {
       log.debug(
-          "Submission {} already in READY_FOR_SUBMISSION; skipping re-validation (no-op).",
-          submissionId);
+          "Submission {} already passed initial validation in status {}; skipping re-validation "
+              + "(no-op).",
+          submissionId,
+          submission.getStatus());
       eventServiceMetricService.stopSubmissionValidationTimer(submissionId);
       return new SubmissionValidationContext();
     }
@@ -113,12 +120,13 @@ public class SubmissionValidationService {
     } else {
       log.debug("Validation completed for submission {} with no errors", submissionId);
       // INITIAL validation passed: hold the submission (and its bulk submission) in
-      // READY_FOR_SUBMISSION for the provider's Final Submit rather than accepting it outright.
-      // Acceptance (VALIDATION_SUCCEEDED) and post-acceptance processing only happen at Final
-      // Submit, which is out of scope here.
-      submissionPatch.status(SubmissionStatus.READY_FOR_SUBMISSION);
+      // VALIDATED_PENDING_APPROVAL for the provider's final approval rather than accepting it
+      // outright.
+      // Acceptance (VALIDATION_SUCCEEDED) and post-acceptance processing happen after approval,
+      // which is out of scope here.
+      submissionPatch.status(SubmissionStatus.VALIDATED_PENDING_APPROVAL);
       eventServiceMetricService.incrementTotalValidSubmissions();
-      bulkSubmissionPatch.status(BulkSubmissionStatus.READY_FOR_SUBMISSION);
+      bulkSubmissionPatch.status(BulkSubmissionStatus.VALIDATED_PENDING_APPROVAL);
     }
 
     // Record what submission errors were found
@@ -132,6 +140,11 @@ public class SubmissionValidationService {
     dataClaimsRestClient.updateBulkSubmission(
         String.valueOf(bulkSubmissionId), bulkSubmissionPatch);
     return context;
+  }
+
+  private boolean isAlreadyValidated(SubmissionResponse submission) {
+    return submission.getStatus() == SubmissionStatus.VALIDATED_PENDING_APPROVAL
+        || submission.getStatus() == SubmissionStatus.VALIDATION_SUCCEEDED;
   }
 
   /**

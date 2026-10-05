@@ -38,17 +38,19 @@ public class SubmissionOfficeAreaOfLawAndPeriodValidator implements SubmissionVa
 
     if (!blockingDuplicates.isEmpty()) {
       // Distinguish a duplicate that has merely passed initial validation and is being held for the
-      // provider's Final Submit (READY_FOR_SUBMISSION) from one that is otherwise live (e.g.
+      // provider's final approval (VALIDATED_PENDING_APPROVAL) from one that is otherwise live
+      // (e.g.
       // already accepted). This lets the provider know their earlier upload is awaiting final
       // submission rather than being told it is an outright duplicate.
-      boolean awaitingFinalSubmit =
+      boolean awaitingFinalApproval =
           blockingDuplicates.stream()
               .anyMatch(
-                  candidate -> candidate.getStatus() == SubmissionStatus.READY_FOR_SUBMISSION);
+                  candidate ->
+                      candidate.getStatus() == SubmissionStatus.VALIDATED_PENDING_APPROVAL);
 
       SubmissionValidationError error =
-          awaitingFinalSubmit
-              ? SubmissionValidationError.SUBMISSION_AWAITING_FINAL_SUBMIT
+          awaitingFinalApproval
+              ? SubmissionValidationError.SUBMISSION_AWAITING_FINAL_APPROVAL
               : SubmissionValidationError.SUBMISSION_ALREADY_EXISTS;
 
       context.addSubmissionValidationError(

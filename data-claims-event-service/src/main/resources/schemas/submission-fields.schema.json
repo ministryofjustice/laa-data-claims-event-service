@@ -50,12 +50,12 @@
         "VALIDATION_SUCCEEDED",
         "VALIDATION_FAILED",
         "REPLACED",
-        "READY_FOR_SUBMISSION"
+        "VALIDATED_PENDING_APPROVAL"
       ],
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Status must be one of: CREATED, READY_FOR_VALIDATION, VALIDATION_IN_PROGRESS, VALIDATION_SUCCEEDED, VALIDATION_FAILED, REPLACED, or READY_FOR_SUBMISSION"
+          "value": "Status must be one of: CREATED, READY_FOR_VALIDATION, VALIDATION_IN_PROGRESS, VALIDATION_SUCCEEDED, VALIDATION_FAILED, REPLACED, or VALIDATED_PENDING_APPROVAL"
         }
       ]
     },

@@ -70,7 +70,8 @@ class SubmissionValidationServiceTest {
             eventServiceMetricService);
     // Ensure ValidationService.validateSubmission returns a non-null ValidationResult so
     // SubmissionValidationService can proceed without NullPointerException during tests.
-    // Lenient because the READY_FOR_SUBMISSION idempotency no-op path returns before this is used.
+    // Lenient because the VALIDATED_PENDING_APPROVAL idempotency no-op path returns before this is
+    // used.
     org.mockito.Mockito.lenient()
         .when(validationService.validateSubmission(any()))
         .thenReturn(ValidationResult.builder().isValid(true).issues(List.of()).build());
@@ -136,20 +137,21 @@ class SubmissionValidationServiceTest {
         verifyCommonInteractions(submission, result);
 
         // Passing INITIAL validation holds the submission and its bulk submission in
-        // READY_FOR_SUBMISSION (awaiting the provider's Final Submit) rather than accepting them.
+        // VALIDATED_PENDING_APPROVAL (awaiting the provider's final approval) rather than accepting
+        // them.
         ArgumentCaptor<SubmissionPatch> submissionPatchCaptor =
             ArgumentCaptor.forClass(SubmissionPatch.class);
         verify(dataClaimsRestClient)
             .updateSubmission(eq(submissionId.toString()), submissionPatchCaptor.capture());
         assertThat(submissionPatchCaptor.getValue().getStatus())
-            .isEqualTo(SubmissionStatus.READY_FOR_SUBMISSION);
+            .isEqualTo(SubmissionStatus.VALIDATED_PENDING_APPROVAL);
 
         ArgumentCaptor<BulkSubmissionPatch> bulkSubmissionPatchCaptor =
             ArgumentCaptor.forClass(BulkSubmissionPatch.class);
         verify(dataClaimsRestClient)
             .updateBulkSubmission(any(), bulkSubmissionPatchCaptor.capture());
         assertThat(bulkSubmissionPatchCaptor.getValue().getStatus())
-            .isEqualTo(BulkSubmissionStatus.READY_FOR_SUBMISSION);
+            .isEqualTo(BulkSubmissionStatus.VALIDATED_PENDING_APPROVAL);
       } else {
         // When
         result = submissionValidationService.validateSubmission(submission.getSubmissionId());
@@ -158,13 +160,13 @@ class SubmissionValidationServiceTest {
 
     @Test
     @DisplayName(
-        "Should be a no-op when the submission is already held in READY_FOR_SUBMISSION (retry)")
-    void shouldNotReprocessSubmissionAlreadyReadyForSubmission() {
-      // Given a redelivered validation message for a submission already awaiting Final Submit
+        "Should be a no-op when the submission is already held in VALIDATED_PENDING_APPROVAL (retry)")
+    void shouldNotReprocessSubmissionAlreadyValidatedPendingApproval() {
+      // Given a redelivered validation message for a submission already awaiting final approval
       UUID submissionId = new UUID(0, 0);
       SubmissionResponse submission =
           getSubmission(
-              SubmissionStatus.READY_FOR_SUBMISSION,
+              SubmissionStatus.VALIDATED_PENDING_APPROVAL,
               submissionId,
               AreaOfLaw.LEGAL_HELP,
               "officeAccountNumber",
@@ -178,6 +180,34 @@ class SubmissionValidationServiceTest {
           submissionValidationService.validateSubmission(submissionId);
 
       // Then no re-validation, no status change and no further event/patch is produced.
+      assertThat(result.hasErrors()).isFalse();
+      verify(claimValidationService, never()).validateAndUpdateClaims(any(), any());
+      verify(submissionValidator, never()).validate(any(), any());
+      verify(dataClaimsRestClient, never()).updateSubmission(any(), any());
+      verify(dataClaimsRestClient, never()).updateBulkSubmission(any(), any());
+    }
+
+    @Test
+    @DisplayName(
+        "Should be a no-op when the submission is already VALIDATION_SUCCEEDED (legacy retry)")
+    void shouldNotReprocessLegacyValidatedSubmission() {
+      // With legacy coercion enabled in the Claims API, the pending-approval patch is stored as
+      // VALIDATION_SUCCEEDED. A redelivered validation message must remain idempotent.
+      UUID submissionId = new UUID(0, 0);
+      SubmissionResponse submission =
+          getSubmission(
+              SubmissionStatus.VALIDATION_SUCCEEDED,
+              submissionId,
+              AreaOfLaw.LEGAL_HELP,
+              "officeAccountNumber",
+              false,
+              List.of());
+      when(dataClaimsRestClient.getSubmission(submissionId))
+          .thenReturn(ResponseEntity.of(Optional.of(submission)));
+
+      SubmissionValidationContext result =
+          submissionValidationService.validateSubmission(submissionId);
+
       assertThat(result.hasErrors()).isFalse();
       verify(claimValidationService, never()).validateAndUpdateClaims(any(), any());
       verify(submissionValidator, never()).validate(any(), any());

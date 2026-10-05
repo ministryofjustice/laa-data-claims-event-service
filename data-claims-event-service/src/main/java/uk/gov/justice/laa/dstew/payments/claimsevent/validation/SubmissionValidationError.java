@@ -50,9 +50,9 @@ public enum SubmissionValidationError {
   SUBMISSION_ALREADY_EXISTS(
       "Submission already exists for Office (%s), Area of Law (%s), Period (%s)",
       null, EVENT_SERVICE, ValidationMessageType.ERROR),
-  SUBMISSION_AWAITING_FINAL_SUBMIT(
+  SUBMISSION_AWAITING_FINAL_APPROVAL(
       "A submission for Office (%s), Area of Law (%s), Period (%s) has passed validation and is "
-          + "awaiting final submission",
+          + "awaiting final approval",
       null, EVENT_SERVICE, ValidationMessageType.ERROR);
 
   final String displayMessage;

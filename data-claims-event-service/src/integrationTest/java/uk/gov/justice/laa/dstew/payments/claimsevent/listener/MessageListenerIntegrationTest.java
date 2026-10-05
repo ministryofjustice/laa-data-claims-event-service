@@ -63,7 +63,7 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
     SubmissionPatch patchBodySucceeded =
         SubmissionPatch.builder()
             .submissionId(SUBMISSION_ID)
-            .status(SubmissionStatus.READY_FOR_SUBMISSION)
+            .status(SubmissionStatus.VALIDATED_PENDING_APPROVAL)
             .build();
     stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodySucceeded);
     stubReturnNoClaims();
@@ -83,6 +83,31 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
   }
 
   @Test
+  void sendMessage_legacyValidatedSubmission_isIdempotent() throws Exception {
+    // With legacy coercion enabled in the Claims API, a pending-approval update is returned as
+    // VALIDATION_SUCCEEDED. A redelivered validation message must not re-run validation.
+    stubForGetSubmission(
+        SUBMISSION_ID, "data-claims/get-submission/get-submission-validation-succeeded.json");
+
+    sendSubmissionValidationMessage();
+
+    await()
+        .pollInterval(Duration.ofMillis(500))
+        .atMost(Duration.ofSeconds(20))
+        .untilAsserted(
+            () ->
+                mockServerClient.verify(
+                    request()
+                        .withMethod("GET")
+                        .withPath(API_VERSION_1 + "submissions/" + SUBMISSION_ID),
+                    VerificationTimes.exactly(1)));
+
+    mockServerClient.verify(
+        request().withMethod("PATCH").withPath(API_VERSION_1 + "submissions/" + SUBMISSION_ID),
+        VerificationTimes.exactly(0));
+  }
+
+  @Test
   void sendMessage_noErrors_withClaims() throws Exception {
     // Given a submission with a claim
     stubForGetSubmission(
@@ -96,7 +121,7 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
     SubmissionPatch patchBodySucceeded =
         SubmissionPatch.builder()
             .submissionId(SUBMISSION_ID)
-            .status(SubmissionStatus.READY_FOR_SUBMISSION)
+            .status(SubmissionStatus.VALIDATED_PENDING_APPROVAL)
             .build();
     stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodySucceeded);
 
@@ -144,7 +169,7 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
     SubmissionPatch patchBodySucceeded =
         SubmissionPatch.builder()
             .submissionId(SUBMISSION_ID)
-            .status(SubmissionStatus.READY_FOR_SUBMISSION)
+            .status(SubmissionStatus.VALIDATED_PENDING_APPROVAL)
             .build();
     stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodySucceeded);
 
@@ -195,7 +220,7 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
     SubmissionPatch patchBodySucceeded =
         SubmissionPatch.builder()
             .submissionId(SUBMISSION_ID)
-            .status(SubmissionStatus.READY_FOR_SUBMISSION)
+            .status(SubmissionStatus.VALIDATED_PENDING_APPROVAL)
             .build();
     stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodySucceeded);
 
@@ -306,7 +331,7 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
     ClaimPatch validClaimPatch =
         ClaimPatch.builder()
             .id(CLAIM_ID.toString())
-            .status(ClaimStatus.READY_FOR_SUBMISSION)
+            .status(ClaimStatus.VALIDATED_PENDING_APPROVAL)
             .build();
     ClaimPatch feeCalculationPatch =
         ClaimPatch.builder()
