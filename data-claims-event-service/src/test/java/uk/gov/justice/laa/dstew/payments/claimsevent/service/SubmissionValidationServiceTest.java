@@ -2,6 +2,7 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -39,6 +40,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.submission.SubmissionValidator;
@@ -163,6 +165,90 @@ class SubmissionValidationServiceTest {
         // When
         result = submissionValidationService.validateSubmission(submission.getSubmissionId());
       }
+    }
+
+    @Test
+    @DisplayName(
+        "Should persist a failed submission before the bulk status and avoid claim re-validation on retry")
+    void failedValidationPersistsSubmissionBeforeBulkAndAvoidsClaimRevalidationOnRetry() {
+      UUID submissionId = new UUID(0, 0);
+      UUID claimId = new UUID(1, 1);
+      SubmissionResponse initialSubmission = buildSubmission(submissionId, claimId, false);
+      SubmissionResponse failedSubmission =
+          getSubmission(
+              SubmissionStatus.VALIDATION_FAILED,
+              submissionId,
+              AreaOfLaw.LEGAL_HELP,
+              "officeAccountNumber",
+              false,
+              List.of());
+
+      when(dataClaimsRestClient.getSubmission(submissionId))
+          .thenReturn(ResponseEntity.ok(initialSubmission), ResponseEntity.ok(failedSubmission));
+      doAnswer(
+              invocation -> {
+                SubmissionValidationContext context = invocation.getArgument(1);
+                if (invocation.<SubmissionResponse>getArgument(0).getStatus()
+                    == SubmissionStatus.VALIDATION_FAILED) {
+                  context.addSubmissionValidationError("already failed");
+                }
+                return null;
+              })
+          .when(submissionValidator)
+          .validate(any(), any());
+      doAnswer(
+              invocation -> {
+                SubmissionValidationContext context = invocation.getArgument(1);
+                context.addClaimError(
+                    claimId.toString(),
+                    ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_EXISTING_SUBMISSION);
+                return null;
+              })
+          .when(claimValidationService)
+          .validateAndUpdateClaims(any(), any());
+      when(dataClaimsRestClient.updateBulkSubmission(any(), any()))
+          .thenThrow(new RuntimeException("bulk patch failed"))
+          .thenReturn(ResponseEntity.noContent().build());
+
+      assertThatThrownBy(() -> submissionValidationService.validateSubmission(submissionId))
+          .isInstanceOf(RuntimeException.class)
+          .hasMessage("bulk patch failed");
+
+      submissionValidationService.validateSubmission(submissionId);
+
+      InOrder inOrder = Mockito.inOrder(dataClaimsRestClient);
+      inOrder.verify(dataClaimsRestClient).updateSubmission(any(), any());
+      inOrder.verify(dataClaimsRestClient).updateBulkSubmission(any(), any());
+      inOrder.verify(dataClaimsRestClient).updateSubmission(any(), any());
+      inOrder.verify(dataClaimsRestClient).updateBulkSubmission(any(), any());
+      verify(claimValidationService, times(1)).validateAndUpdateClaims(any(), any());
+    }
+
+    @Test
+    @DisplayName("Should recover when the bulk status succeeds but the submission status fails")
+    void successfulBulkPatchFollowedByFailedSubmissionPatchRecoversOnRetry() {
+      UUID submissionId = new UUID(0, 0);
+      UUID claimId = new UUID(1, 1);
+      SubmissionResponse submission = buildSubmission(submissionId, claimId, false);
+
+      when(dataClaimsRestClient.getSubmission(submissionId))
+          .thenReturn(ResponseEntity.ok(submission), ResponseEntity.ok(submission));
+      when(dataClaimsRestClient.updateSubmission(any(), any()))
+          .thenThrow(new RuntimeException("submission patch failed"))
+          .thenReturn(ResponseEntity.noContent().build());
+
+      assertThatThrownBy(() -> submissionValidationService.validateSubmission(submissionId))
+          .isInstanceOf(RuntimeException.class)
+          .hasMessage("submission patch failed");
+
+      submissionValidationService.validateSubmission(submissionId);
+
+      InOrder inOrder = Mockito.inOrder(dataClaimsRestClient);
+      inOrder.verify(dataClaimsRestClient).updateBulkSubmission(any(), any());
+      inOrder.verify(dataClaimsRestClient).updateSubmission(any(), any());
+      inOrder.verify(dataClaimsRestClient).updateBulkSubmission(any(), any());
+      inOrder.verify(dataClaimsRestClient).updateSubmission(any(), any());
+      verify(claimValidationService, times(2)).validateAndUpdateClaims(any(), any());
     }
 
     @Test

@@ -131,15 +131,21 @@ public class SubmissionValidationService {
     // Stop submission validation timer
     eventServiceMetricService.stopSubmissionValidationTimer(submissionId);
 
-    // The bulk submission is patched before the submission so that the submission status is the
-    // last write of the flow. The idempotency guard above keys off the submission status, so
-    // making it the final write means a failure part-way through leaves the submission in
-    // VALIDATION_IN_PROGRESS and a redelivered message re-runs the whole flow (every patch issued
-    // here is idempotent). Writing the submission first would let the guard short-circuit a retry
-    // and strand the bulk submission in VALIDATION_IN_PROGRESS with no way to recover.
-    dataClaimsRestClient.updateBulkSubmission(
-        String.valueOf(bulkSubmissionId), bulkSubmissionPatch);
-    dataClaimsRestClient.updateSubmission(submissionId.toString(), submissionPatch);
+    if (context.hasErrors()) {
+      // Persist the submission failure first. If the bulk patch then fails, a redelivery sees the
+      // terminal submission status and the status validator prevents claim re-validation, thereby
+      // preserving the claim results already written by ClaimValidationService.
+      dataClaimsRestClient.updateSubmission(submissionId.toString(), submissionPatch);
+      dataClaimsRestClient.updateBulkSubmission(
+          String.valueOf(bulkSubmissionId), bulkSubmissionPatch);
+    } else {
+      // Persist the bulk status first. The submission idempotency guard keys off the submission
+      // status, so a failed bulk patch leaves the submission retryable and allows the redelivery to
+      // recover the bulk status.
+      dataClaimsRestClient.updateBulkSubmission(
+          String.valueOf(bulkSubmissionId), bulkSubmissionPatch);
+      dataClaimsRestClient.updateSubmission(submissionId.toString(), submissionPatch);
+    }
     return context;
   }
 
