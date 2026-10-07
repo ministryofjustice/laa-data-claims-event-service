@@ -25,7 +25,6 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessageType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.ContextUtil;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MessageListenerBase;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MockServerIntegrationTest;
-import uk.gov.justice.laa.dstew.payments.claimsevent.service.ProviderDetailsService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.SubmissionValidationService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
@@ -53,7 +52,6 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
       "data-claims/get-submission/get-submission-APR-25.json";
 
   @Autowired protected SubmissionValidationService submissionValidationService;
-  @Autowired protected ProviderDetailsService providerDetailsService;
 
   private static final UUID SUBMISSION_ID = UUID.fromString("0561d67b-30ed-412e-8231-f6296a53538d");
   private static final UUID BULK_SUBMISSION_ID =
@@ -301,7 +299,7 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
       stubForGetProviderOffice(
           OFFICE_CODE,
           List.of(Parameter.param("requireOpenStatus", "false")),
-          "provider-details/get-firm-schedules-openapi-200.json");
+          "provider-details/incident-crime.json");
 
       stubForGetClaims(Collections.emptyList(), claimsJson);
       stubForGetFeeDetails("CAPA", "fee-scheme/get-fee-details-200.json");
@@ -368,15 +366,6 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
   @Nested
   @DisplayName("Incident-shaped end-to-end submission tests")
   class IncidentShapeEndToEndTests {
-
-    @BeforeEach
-    void resetProviderDetailsCache() {
-      // These tests all reuse office code AQ2B3C but stub different/overlapping provider
-      // schedules (civil vs crime). ProviderDetailsService is a Spring singleton whose cache
-      // merges schedule data per office code across calls, so without clearing it here a schedule
-      // cached by an earlier test can leak into a later test that expects a different schedule.
-      providerDetailsService.clearCaches();
-    }
 
     @Test
     @DisplayName(

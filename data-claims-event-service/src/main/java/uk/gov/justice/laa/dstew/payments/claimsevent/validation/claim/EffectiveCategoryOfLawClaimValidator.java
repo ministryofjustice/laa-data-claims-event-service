@@ -109,7 +109,8 @@ public final class EffectiveCategoryOfLawClaimValidator implements ClaimValidato
    *
    * @param officeCode the office code
    * @param effectiveDate the claim's effective date; must not be {@code null}
-   * @return distinct category-of-law codes for the office/date; throws if none are found
+   * @return distinct category-of-law codes for the office/date, possibly empty when no schedules
+   *     are returned
    */
   private List<String> getEffectiveCategoriesOfLaw(String officeCode, LocalDate effectiveDate) {
     List<FirmOfficeContractAndScheduleDetails> schedules =
@@ -119,17 +120,7 @@ public final class EffectiveCategoryOfLawClaimValidator implements ClaimValidato
             .map(ProviderFirmOfficeContractAndScheduleDto::getSchedules)
             .orElse(Collections.emptyList());
 
-    List<String> categoriesOfLaw = getEffectiveCategoriesOfLawForSchedules(schedules);
-
-    if (categoriesOfLaw.isEmpty()) {
-      throw new EventServiceIllegalArgumentException(
-          "No category of law schedules found for effective date "
-              + effectiveDate
-              + " and office code "
-              + officeCode);
-    }
-
-    return categoriesOfLaw;
+    return getEffectiveCategoriesOfLawForSchedules(schedules);
   }
 
   private void handleProviderDetailsApiError(SubmissionValidationContext context, String claimId) {

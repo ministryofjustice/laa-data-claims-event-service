@@ -36,9 +36,9 @@ import uk.gov.justice.laadata.providers.model.FirmOfficeContractAndScheduleDetai
 import uk.gov.justice.laadata.providers.model.ProviderFirmOfficeContractAndScheduleDto;
 
 /**
- * Known failing / desired-behaviour tests moved out of the main cache integration test to allow
- * focused high-level experimentation without blocking the main suite. These tests are kept disabled
- * until DSTEW-2227 is resolved.
+ * Legacy duplicate incident and effective-date tests retained temporarily while the active
+ * per-claim integration coverage is consolidated. These tests are disabled and should not be used
+ * as the primary source of regression coverage.
  */
 @ActiveProfiles("test")
 @ImportTestcontainers(MessageListenerBase.class)
@@ -47,10 +47,10 @@ import uk.gov.justice.laadata.providers.model.ProviderFirmOfficeContractAndSched
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = {"spring.cloud.aws.sqs.enabled=false", "laa.bulk-claim-queue.name=not-used"})
-@DisplayName("Provider details service - known failing behaviour (disabled)")
+@DisplayName("Provider details service - legacy duplicate tests (disabled)")
 @Disabled(
-    "Moved from ProviderDetailsServiceCacheIntegrationTest; kept for reference until DSTEW-2227 is resolved")
-class ProviderDetailsServiceKnownFailingTests extends MockServerIntegrationTest {
+    "Legacy duplicate fixture; active coverage is maintained in ProviderDetailsServicePerClaimIntegrationTest")
+class ProviderDetailsServiceLegacyDuplicateTests extends MockServerIntegrationTest {
 
   private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
@@ -121,7 +121,7 @@ class ProviderDetailsServiceKnownFailingTests extends MockServerIntegrationTest 
         name =
             "[{index}] later claim dated {0} should be authorised under its own crime schedule, not the earlier cached civil schedule")
     @MethodSource(
-        "uk.gov.justice.laa.dstew.payments.claimsevent.service.ProviderDetailsServiceCacheIntegrationTest#laterCrimeDatedClaimDatesProvider")
+        "uk.gov.justice.laa.dstew.payments.claimsevent.service.ProviderDetailsServicePerClaimIntegrationTest#laterCrimeDatedClaimDatesProvider")
     @DisplayName(
         "incident shape: later dated claims must resolve to their own effective schedule, not an earlier cached one")
     void shouldResolveIncidentShapeLaterClaimsToTheirOwnSchedule(LocalDate laterClaimDate)
@@ -229,7 +229,8 @@ class ProviderDetailsServiceKnownFailingTests extends MockServerIntegrationTest 
                 .withMethod("GET")
                 .withPath("/api/v1/provider-offices/" + officeCode + "/schedules")
                 .withQueryStringParameters(
-                    new Parameter("effectiveDate", FORMATTER.format(effectiveDate))),
+                    new Parameter("effectiveDate", FORMATTER.format(effectiveDate)),
+                    new Parameter("requireOpenStatus", "false")),
             Times.exactly(1))
         .respond(
             HttpResponse.response()
