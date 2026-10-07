@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.context.ImportTestcontainers;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
@@ -40,6 +41,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
       "spring.cloud.aws.sqs.enabled=false", // Disable AWS SQS functionality
       "laa.bulk-claim-queue.name=not-used", // Dummy queue name to avoid initialization issues,
     })
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @DisplayName("Submission validation service integration tests")
 public class SubmissionValidationServiceIntegrationTest extends MockServerIntegrationTest {
 
