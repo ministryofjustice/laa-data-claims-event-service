@@ -39,7 +39,7 @@ public final class EffectiveCategoryOfLawClaimValidator implements ClaimValidato
    * Constructs an instance of {@link EffectiveCategoryOfLawClaimValidator}.
    *
    * @param categoryOfLawValidationService the category of law validation service
-   * @param providerDetailsService the provider details service (owns caching/retry for PDA calls)
+   * @param providerDetailsService the provider details service (owns retry for PDA calls)
    */
   public EffectiveCategoryOfLawClaimValidator(
       CategoryOfLawValidationService categoryOfLawValidationService,
