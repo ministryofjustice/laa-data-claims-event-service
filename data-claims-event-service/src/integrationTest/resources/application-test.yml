@@ -1,6 +1,11 @@
 laa:
   bulk-claim-queue:
     name: test-queue-name
+  dstew:
+    payments:
+      validator:
+        submission:
+          minimum-period: APR-2025
 spring:
   cloud:
     aws:

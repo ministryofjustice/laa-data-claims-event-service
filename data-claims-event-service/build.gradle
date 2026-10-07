@@ -7,11 +7,17 @@ plugins {
 }
 
 def versions = [
-        sentry : '8.31.0',
-        testcontainers : '1.20.1',
-        jackson : '2.21.5' // bumped to patch release to address Snyk jackson-databind finding
+    sentry : '8.31.0',
+    testcontainers : '1.20.1',
+    jackson : '2.21.7' // bumped to patch release to address Snyk jackson-core/jackson-databind findings
 ]
 
+// Spring Boot 4.1.1 pins tomcat.version to 11.0.24, which is one patch release below the fix for the
+// critical Snyk finding SNYK-JAVA-ORGAPACHETOMCATEMBED-20302843 (Incorrect Authorization via FORM auth
+// request-method bypass). Overriding the BOM property here ensures the resolved tomcat-embed-*
+// versions are patched.
+// TODO: remove when Spring Boot ships a BOM that sets tomcat.version >= 11.0.25.
+ext['tomcat.version'] = '11.0.25'
 
 test {
     useJUnitPlatform()
@@ -42,14 +48,67 @@ dependencyManagement {
         // Upgrade to fix Snyk high severity finding SNYK-JAVA-ORGSPRINGFRAMEWORKRETRY-17260993
         // (Allocation of Resources Without Limits or Throttling) in spring-retry:2.0.12
         dependency 'org.springframework.retry:spring-retry:2.0.13'
+
+        // Spring Boot's own dependency management pins jackson-databind (both the
+        // com.fasterxml.jackson.core "2.x" and tools.jackson.core "3.x" artifacts) to versions
+        // that are older than the ones declared via the jackson-bom platforms below. Because
+        // Spring Boot's BOM constraints win over an ordinary/enforced platform for the same
+        // module, the vulnerable 2.21.5 / 3.1.5 releases were still being resolved on the
+        // classpath even though the BOM versions above had been bumped.
+        //
+        // Explicitly pin the individual artifacts here (highest precedence in dependency
+        // resolution) to fix:
+        //  - SNYK-JAVA-COMFASTERXMLJACKSONCORE-20059677 / 20059179 (jackson-core 2.21.5)
+        //  - SNYK-JAVA-COMFASTERXMLJACKSONCORE-20059685 / 20059683 (jackson-databind 2.21.6)
+        //  - SNYK-JAVA-TOOLSJACKSONCORE-20059678 / 20059180 (jackson-core 3.1.6)
+        //  - SNYK-JAVA-TOOLSJACKSONCORE-20059686 / 20059682 (jackson-databind 3.1.6)
+        dependency 'com.fasterxml.jackson.core:jackson-core:2.21.7'
+        dependency 'com.fasterxml.jackson.core:jackson-databind:2.21.7'
+        dependency 'tools.jackson.core:jackson-databind:3.1.7'
+        dependency 'tools.jackson.core:jackson-core:3.1.7'
+        dependency 'tools.jackson.core:jackson-annotations:3.1.7'
+
+        // Upgrade to fix Snyk finding SNYK-JAVA-IONETTY-19778369
+        // (HTTP Request Smuggling) in io.netty:netty-codec-http:4.2.17.Final
+        dependency 'io.netty:netty-codec-http:4.2.18.Final'
+
+        // Upgrade to fix Snyk findings in io.netty:netty-codec-classes-quic:4.2.17.Final
+        // and io.netty:netty-codec-http3:4.2.17.Final:
+        //  - SNYK-JAVA-IONETTY-20154418 (Improper Certificate Validation, High)
+        //  - SNYK-JAVA-IONETTY-20154842 (HTTP Request Smuggling, Medium)
+        //  - SNYK-JAVA-IONETTY-20154839 / 20154840 (Allocation of Resources Without Limits or
+        //    Throttling, High)
+        //  - SNYK-JAVA-IONETTY-20154841 / 20158598 (HTTP Request Smuggling, High)
+        //  - SNYK-JAVA-IONETTY-20158603 (Allocation of Resources Without Limits or Throttling, High)
+        // These artifacts are pulled in transitively (e.g. via reactor-netty-incubator-quic) and
+        // are not covered by Spring Boot's own dependency management, so pin them explicitly here.
+        dependency 'io.netty:netty-codec-classes-quic:4.2.18.Final'
+        dependency 'io.netty:netty-codec-http3:4.2.18.Final'
     }
 }
 
 dependencies {
 
+    // Security: upgrade logback-classic to 1.6.3 to fix SNYK-JAVA-CHQOSLOGBACK-19882330
+    // (Directory Traversal). NOTE: a `constraints {}` entry alone is NOT sufficient here -
+    // Spring Boot's platform-imported version (ch.qos.logback:logback-classic:1.5.38) wins
+    // over a plain constraint. Only an explicit `implementation` dependency.
+    implementation 'ch.qos.logback:logback-classic:1.6.3'
+    implementation 'ch.qos.logback:logback-core:1.6.3'
+
     implementation project(':reference-fee-scheme-platform-api')
 
-    implementation 'uk.gov.justice.laa.datastewardship.payments:data-claims-api-models:1.13.2'
+    // Note: claims-validation-core pulls in reference-provider-details-api transitively, which
+    // ships a stale duplicate copy of the uk.gov.justice.laadata.providers.model / .api packages
+    // (missing fields such as NmsAuthDetails.uniqueAuthorisationRef) that are also provided by
+    // providers-api below. Having both on the classpath is a split-package hazard: whichever jar
+    // happens to resolve first wins for those classes, silently shadowing the up-to-date one.
+    // We only need claims-validation-core for its config classes (e.g. ProviderDetailsApiConfig),
+    // so exclude the duplicate reference module to make resolution deterministic.
+    implementation('uk.gov.justice.laa.dstew.payments.claims.validation:claims-validation-core:1.4.16') {
+        exclude group: 'uk.gov.justice.laa.dstew.payments.claims.validation', module: 'reference-provider-details-api'
+    }
+    implementation 'uk.gov.justice.laa.datastewardship.payments:data-claims-api-models:1.28.0'
     implementation 'uk.gov.justice.laadata.providers:providers-api:1.40.1'
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
@@ -85,6 +144,8 @@ dependencies {
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml'
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+    // Ensure Jackson 3.x (tools.jackson) BOM is bumped to a patched release to remediate Snyk findings
+    implementation enforcedPlatform('tools.jackson:jackson-bom:3.1.7')
     implementation 'com.networknt:json-schema-validator:1.5.8'
     implementation 'io.github.resilience4j:resilience4j-spring-boot3:2.1.0'
     implementation 'io.github.resilience4j:resilience4j-reactor:2.1.0'
@@ -98,6 +159,7 @@ dependencies {
     testImplementation 'org.awaitility:awaitility'
     testImplementation 'org.mock-server:mockserver-client-java:6.0.0'
     testImplementation("io.projectreactor:reactor-test:3.1.0.RELEASE")
+
     // Sentry
     implementation platform("io.sentry:sentry-bom:$versions.sentry")
     implementation "io.sentry:sentry-logback:$versions.sentry"
@@ -107,6 +169,14 @@ dependencies {
 
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     testImplementation 'au.com.dius.pact.consumer:junit5:4.6.19'
+
+    testImplementation('org.springframework.boot:spring-boot-starter-test') {
+        // exclude the repackaged android-json coming in via jsonassert
+        exclude group: 'com.vaadin.external.google', module: 'android-json'
+    }
+
+    // ensure a known org.json implementation is present
+    testImplementation 'org.json:json:20250517'
 }
 
 // To keep pact stuff separate
@@ -164,7 +234,7 @@ tasks.register("checkstyleStaged", Checkstyle) {
 
     def filesToCheck = project.findProperty("checkstyleFiles")
     if (filesToCheck != null) {
-        source = files(filesToCheck.split(","))
+        source = files(filesToCheck.toString().split(","))
     } else {
         source = sourceSets.main.allJava
     }
@@ -180,7 +250,7 @@ pact {
 
         pactDirectory = layout.buildDirectory.dir("pacts").get().asFile.path
 
-        def projectVersion = project.version != 'unspecified' ? project.version : '1.0.0';
+        def projectVersion = project.version != 'unspecified' ? project.version : '1.0.0'
         def gitSha = providers.environmentVariable('GIT_SHA').getOrNull()
 
         // Define the branch from a property, environment variable, or fallback to 'main'

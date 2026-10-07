@@ -2,11 +2,14 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+import uk.gov.justice.laa.dstew.payments.claims.validation.core.model.ValidationResult;
+import uk.gov.justice.laa.dstew.payments.claims.validation.core.service.ValidationService;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionErrorCode;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionStatus;
@@ -17,6 +20,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
+import uk.gov.justice.laa.dstew.payments.claimsevent.util.ValidationResultComparator;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.submission.SubmissionValidator;
@@ -31,6 +35,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.submission.Submi
 @AllArgsConstructor
 public class SubmissionValidationService {
 
+  private final ValidationService validationService;
   private final ClaimValidationService claimValidationService;
   private final BulkClaimUpdater bulkClaimUpdater;
   private final DataClaimsRestClient dataClaimsRestClient;
@@ -57,6 +62,8 @@ public class SubmissionValidationService {
     submissionValidatorList.stream()
         .sorted(Comparator.comparingInt(SubmissionValidator::priority))
         .forEach(validator -> validator.validate(submission, context));
+
+    compareSubmissionValidationResults(submissionId, submission, context);
 
     // Only validate claims if no submission level validation errors have been recorded.
     if (!context.hasSubmissionLevelErrors()) {
@@ -107,6 +114,36 @@ public class SubmissionValidationService {
     dataClaimsRestClient.updateBulkSubmission(
         String.valueOf(bulkSubmissionId), bulkSubmissionPatch);
     return context;
+  }
+
+  /**
+   * Runs the new submission-level validator and compares its issues against the existing submission
+   * validation errors recorded in the context. Differences are logged as WARN via {@link
+   * ValidationResultComparator}. Any unexpected error is caught and logged to prevent disruption to
+   * the existing validation flow.
+   */
+  private void compareSubmissionValidationResults(
+      UUID submissionId, SubmissionResponse submission, SubmissionValidationContext context) {
+
+    try {
+      ValidationResult validationResult = validationService.validateSubmission(submission);
+
+      if (validationResult == null) {
+        log.warn("Validation service returned null for submission {}", submissionId);
+        return;
+      }
+
+      var newIssues =
+          Optional.of(validationResult).map(ValidationResult::getIssues).orElseGet(List::of);
+
+      ValidationResultComparator.compare(
+          "Submission " + submissionId, newIssues, context.getSubmissionValidationErrors());
+    } catch (Exception e) {
+      log.error(
+          "Error during dry-run submission validation comparison for submission {} - existing validation unaffected",
+          submissionId,
+          e);
+    }
   }
 
   private SubmissionValidationContext initialiseValidationContext(SubmissionResponse submission) {
