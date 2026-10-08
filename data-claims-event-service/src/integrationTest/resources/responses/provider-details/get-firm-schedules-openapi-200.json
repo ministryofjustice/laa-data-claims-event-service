@@ -43,7 +43,7 @@
       "scheduleLines": [
         {
           "areaOfLaw": "LEGAL HELP",
-          "categoryOfLaw": "string",
+          "categoryOfLaw": "CRL",
           "description": "string",
           "devolvedPowersStatus": "string",
           "dpTypeOfChange": "string",

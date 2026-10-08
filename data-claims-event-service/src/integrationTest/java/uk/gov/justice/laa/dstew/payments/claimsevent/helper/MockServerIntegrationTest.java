@@ -191,12 +191,26 @@ public abstract class MockServerIntegrationTest {
   protected void stubForGetProviderOffice(
       final String officeCode, final List<Parameter> parameters, final String expectedResponse)
       throws Exception {
+    org.mockserver.model.HttpRequest request =
+        HttpRequest.request()
+            .withMethod(HttpMethod.GET.toString())
+            .withPath(PROVIDER_OFFICES + officeCode + SCHEDULES_ENDPOINT);
+
+    // Add any provided query parameters individually so the expectation still matches when
+    // additional query parameters are present in the actual request (avoids brittle exact-set
+    // matching behaviour).
+    if (parameters != null && !parameters.isEmpty()) {
+      for (Parameter p : parameters) {
+        // Parameter#getValues() returns a list of values for the parameter; convert to array
+        // of String for MockServer API and convert the (Nottable) name to String as well.
+        String name = p.getName().toString();
+        String[] values = p.getValues().stream().map(Object::toString).toArray(String[]::new);
+        request = request.withQueryStringParameter(name, values);
+      }
+    }
+
     mockServerClient
-        .when(
-            HttpRequest.request()
-                .withMethod(HttpMethod.GET.toString())
-                .withPath(PROVIDER_OFFICES + officeCode + SCHEDULES_ENDPOINT)
-                .withQueryStringParameters(parameters))
+        .when(request)
         .respond(
             HttpResponse.response()
                 .withStatusCode(HttpStatusCode.OK)
