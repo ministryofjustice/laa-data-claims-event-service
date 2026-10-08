@@ -57,14 +57,12 @@ class JsonSchemaValidatorTest {
 
   private JsonSchemaValidator jsonSchemaValidator;
 
-  private SchemaValidationConfig schemaValidationConfig;
-
   private Map<String, Set<ValidationErrorMessage>> schemaValidationErrorMessages;
 
   @BeforeAll
   void setUp() throws Exception {
     ObjectMapper mapper = new ObjectMapper();
-    schemaValidationConfig =
+    SchemaValidationConfig schemaValidationConfig =
         new SchemaValidationConfig(
             mapper,
             new ClassPathResource("schemas/submission-fields.schema.json"),
@@ -229,9 +227,9 @@ class JsonSchemaValidatorTest {
       // integer fields
       "status, '\"SNAFU\"', 'status: does not have a value in the enumeration [\"CREATED\", "
           + "\"READY_FOR_VALIDATION\", \"VALIDATION_IN_PROGRESS\", \"VALIDATION_SUCCEEDED\", "
-          + "\"VALIDATION_FAILED\", \"REPLACED\"] (provided value: SNAFU)',"
+          + "\"VALIDATION_FAILED\", \"REPLACED\", \"VALIDATED_PENDING_APPROVAL\"] (provided value: SNAFU)',"
           + "'Status must be one of: CREATED, READY_FOR_VALIDATION, VALIDATION_IN_PROGRESS, "
-          + "VALIDATION_SUCCEEDED, VALIDATION_FAILED, or REPLACED'",
+          + "VALIDATION_SUCCEEDED, VALIDATION_FAILED, REPLACED, or VALIDATED_PENDING_APPROVAL'",
     })
     void validateSubmissionForInvalidDataTypes(
         String fieldName, String badJsonValue, String technicalMessage, String displayMessage)

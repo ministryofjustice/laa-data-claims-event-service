@@ -37,7 +37,6 @@ public class SubmissionValidationService {
 
   private final ValidationService validationService;
   private final ClaimValidationService claimValidationService;
-  private final BulkClaimUpdater bulkClaimUpdater;
   private final DataClaimsRestClient dataClaimsRestClient;
   private final List<SubmissionValidator> submissionValidatorList;
   private final EventServiceMetricService eventServiceMetricService;
@@ -53,6 +52,23 @@ public class SubmissionValidationService {
 
     SubmissionResponse submission = dataClaimsRestClient.getSubmission(submissionId).getBody();
     Assert.notNull(submission, "Submission not retrievable: " + submissionId.toString());
+
+    // Idempotency guard: a submission that has already passed INITIAL validation is held in
+    // VALIDATED_PENDING_APPROVAL for the provider's final approval. A redelivery of the validation
+    // message
+    // for such a submission must be a no-op: re-running validation would otherwise trip the status
+    // gate (SubmissionStatusValidator) and incorrectly flip the submission to VALIDATION_FAILED,
+    // as well as re-publish the initial-validation-succeeded event for the same transition.
+    if (isAlreadyValidated(submission)) {
+      log.debug(
+          "Submission {} already passed initial validation in status {}; skipping re-validation "
+              + "(no-op).",
+          submissionId,
+          submission.getStatus());
+      eventServiceMetricService.stopSubmissionValidationTimer(submissionId);
+      return new SubmissionValidationContext();
+    }
+
     SubmissionValidationContext context = initialiseValidationContext(submission);
 
     // Currently validating:
@@ -98,9 +114,14 @@ public class SubmissionValidationService {
                   .formatted(bulkSubmissionId));
     } else {
       log.debug("Validation completed for submission {} with no errors", submissionId);
-      submissionPatch.status(SubmissionStatus.VALIDATION_SUCCEEDED);
+      // INITIAL validation passed: hold the submission (and its bulk submission) in
+      // VALIDATED_PENDING_APPROVAL for the provider's final approval rather than accepting it
+      // outright.
+      // Acceptance (VALIDATION_SUCCEEDED) and post-acceptance processing happen after approval,
+      // which is out of scope here.
+      submissionPatch.status(SubmissionStatus.VALIDATED_PENDING_APPROVAL);
       eventServiceMetricService.incrementTotalValidSubmissions();
-      bulkSubmissionPatch.status(BulkSubmissionStatus.VALIDATION_SUCCEEDED);
+      bulkSubmissionPatch.status(BulkSubmissionStatus.VALIDATED_PENDING_APPROVAL);
     }
 
     // Record what submission errors were found
@@ -110,10 +131,27 @@ public class SubmissionValidationService {
     // Stop submission validation timer
     eventServiceMetricService.stopSubmissionValidationTimer(submissionId);
 
-    dataClaimsRestClient.updateSubmission(submissionId.toString(), submissionPatch);
-    dataClaimsRestClient.updateBulkSubmission(
-        String.valueOf(bulkSubmissionId), bulkSubmissionPatch);
+    if (context.hasErrors()) {
+      // Persist the submission failure first. If the bulk patch then fails, a redelivery sees the
+      // terminal submission status and the status validator prevents claim re-validation, thereby
+      // preserving the claim results already written by ClaimValidationService.
+      dataClaimsRestClient.updateSubmission(submissionId.toString(), submissionPatch);
+      dataClaimsRestClient.updateBulkSubmission(
+          String.valueOf(bulkSubmissionId), bulkSubmissionPatch);
+    } else {
+      // Persist the bulk status first. The submission idempotency guard keys off the submission
+      // status, so a failed bulk patch leaves the submission retryable and allows the redelivery to
+      // recover the bulk status.
+      dataClaimsRestClient.updateBulkSubmission(
+          String.valueOf(bulkSubmissionId), bulkSubmissionPatch);
+      dataClaimsRestClient.updateSubmission(submissionId.toString(), submissionPatch);
+    }
     return context;
+  }
+
+  private boolean isAlreadyValidated(SubmissionResponse submission) {
+    return submission.getStatus() == SubmissionStatus.VALIDATED_PENDING_APPROVAL
+        || submission.getStatus() == SubmissionStatus.VALIDATION_SUCCEEDED;
   }
 
   /**

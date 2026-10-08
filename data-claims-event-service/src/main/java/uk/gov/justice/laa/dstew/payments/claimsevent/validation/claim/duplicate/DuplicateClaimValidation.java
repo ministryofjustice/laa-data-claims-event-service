@@ -11,7 +11,8 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient
 public abstract class DuplicateClaimValidation {
 
   protected static final List<ClaimStatus> listOfNonInvalidStatus =
-      List.of(ClaimStatus.READY_TO_PROCESS, ClaimStatus.VALID);
+      List.of(
+          ClaimStatus.READY_TO_PROCESS, ClaimStatus.VALID, ClaimStatus.VALIDATED_PENDING_APPROVAL);
 
   protected final DataClaimsRestClient dataClaimsRestClient;
 
@@ -76,12 +77,13 @@ public abstract class DuplicateClaimValidation {
                 SubmissionStatus.CREATED,
                 SubmissionStatus.VALIDATION_IN_PROGRESS,
                 SubmissionStatus.READY_FOR_VALIDATION,
-                SubmissionStatus.VALIDATION_SUCCEEDED),
+                SubmissionStatus.VALIDATION_SUCCEEDED,
+                SubmissionStatus.VALIDATED_PENDING_APPROVAL),
             feeCode,
             uniqueFileNumber,
             uniqueClientNumber,
             uniqueCaseId,
-            List.of(ClaimStatus.READY_TO_PROCESS, ClaimStatus.VALID),
+            listOfNonInvalidStatus,
             null)
         .getBody()
         .getContent()

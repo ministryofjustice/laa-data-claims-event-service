@@ -28,8 +28,7 @@ public class SubmissionStatusValidatorITest extends SubmissionValidationIntegrat
   }
 
   @Test
-  @DisplayName(
-      "Status VALIDATION_SUCCEEDED - should produce INCORRECT_SUBMISSION_STATUS_FOR_VALIDATION")
+  @DisplayName("Status CREATED - should produce INCORRECT_SUBMISSION_STATUS_FOR_VALIDATION")
   void incorrectStatusIsInvalid() throws Exception {
     var ctx = runSubmissionValidation(P + "status-incorrect.json");
     assertSubmissionErrors(

@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.listener;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.JsonBody.json;
@@ -21,6 +22,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.context.ImportTestcontainers;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
+import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.sqs.model.GetQueueAttributesRequest;
+import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest;
+import software.amazon.awssdk.services.sqs.model.QueueAttributeName;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
@@ -46,8 +51,10 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
   private static final UUID BULK_SUBMISSION_ID =
       UUID.fromString("3fa85f64-5717-4562-b3fc-2c963f66afa6");
   private static final UUID CLAIM_ID = UUID.fromString("f6bde766-a0a3-483b-bf13-bef888b4f06e");
+  private static final String QUEUE_NAME = "test-queue-name";
 
   @Autowired private SqsTemplate sqsTemplate;
+  @Autowired private SqsClient sqsClient;
   @Autowired private ObjectMapper objectMapper;
 
   @Test
@@ -63,7 +70,7 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
     SubmissionPatch patchBodySucceeded =
         SubmissionPatch.builder()
             .submissionId(SUBMISSION_ID)
-            .status(SubmissionStatus.VALIDATION_SUCCEEDED)
+            .status(SubmissionStatus.VALIDATED_PENDING_APPROVAL)
             .build();
     stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodySucceeded);
     stubReturnNoClaims();
@@ -83,6 +90,33 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
   }
 
   @Test
+  void sendMessage_legacyValidatedSubmission_isIdempotent() throws Exception {
+    // With legacy coercion enabled in the Claims API, a pending-approval update is returned as
+    // VALIDATION_SUCCEEDED. A redelivered validation message must not re-run validation.
+    stubForGetSubmission(
+        SUBMISSION_ID, "data-claims/get-submission/get-submission-validation-succeeded.json");
+
+    sendSubmissionValidationMessage();
+
+    await()
+        .pollInterval(Duration.ofMillis(500))
+        .atMost(Duration.ofSeconds(20))
+        .untilAsserted(
+            () ->
+                mockServerClient.verify(
+                    request()
+                        .withMethod("GET")
+                        .withPath(API_VERSION_1 + "submissions/" + SUBMISSION_ID),
+                    VerificationTimes.exactly(1)));
+
+    awaitMessageAcknowledged();
+
+    mockServerClient.verify(
+        request().withMethod("PATCH").withPath(API_VERSION_1 + "submissions/" + SUBMISSION_ID),
+        VerificationTimes.exactly(0));
+  }
+
+  @Test
   void sendMessage_noErrors_withClaims() throws Exception {
     // Given a submission with a claim
     stubForGetSubmission(
@@ -96,7 +130,7 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
     SubmissionPatch patchBodySucceeded =
         SubmissionPatch.builder()
             .submissionId(SUBMISSION_ID)
-            .status(SubmissionStatus.VALIDATION_SUCCEEDED)
+            .status(SubmissionStatus.VALIDATED_PENDING_APPROVAL)
             .build();
     stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodySucceeded);
 
@@ -144,7 +178,7 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
     SubmissionPatch patchBodySucceeded =
         SubmissionPatch.builder()
             .submissionId(SUBMISSION_ID)
-            .status(SubmissionStatus.VALIDATION_SUCCEEDED)
+            .status(SubmissionStatus.VALIDATED_PENDING_APPROVAL)
             .build();
     stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodySucceeded);
 
@@ -195,7 +229,7 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
     SubmissionPatch patchBodySucceeded =
         SubmissionPatch.builder()
             .submissionId(SUBMISSION_ID)
-            .status(SubmissionStatus.VALIDATION_SUCCEEDED)
+            .status(SubmissionStatus.VALIDATED_PENDING_APPROVAL)
             .build();
     stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodySucceeded);
 
@@ -351,6 +385,35 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
                 .header("SubmissionEventType", SubmissionEventType.VALIDATE_SUBMISSION.toString()));
   }
 
+  private void awaitMessageAcknowledged() {
+    String queueUrl =
+        sqsClient
+            .getQueueUrl(GetQueueUrlRequest.builder().queueName(QUEUE_NAME).build())
+            .queueUrl();
+
+    await()
+        .pollInterval(Duration.ofMillis(500))
+        .atMost(Duration.ofSeconds(20))
+        .untilAsserted(
+            () -> {
+              var attributes =
+                  sqsClient
+                      .getQueueAttributes(
+                          GetQueueAttributesRequest.builder()
+                              .queueUrl(queueUrl)
+                              .attributeNames(
+                                  QueueAttributeName.APPROXIMATE_NUMBER_OF_MESSAGES,
+                                  QueueAttributeName.APPROXIMATE_NUMBER_OF_MESSAGES_NOT_VISIBLE)
+                              .build())
+                      .attributes();
+              assertThat(attributes.get(QueueAttributeName.APPROXIMATE_NUMBER_OF_MESSAGES))
+                  .isEqualTo("0");
+              assertThat(
+                      attributes.get(QueueAttributeName.APPROXIMATE_NUMBER_OF_MESSAGES_NOT_VISIBLE))
+                  .isEqualTo("0");
+            });
+  }
+
   private void verifySubmissionRequests() {
     await()
         .pollInterval(Duration.ofMillis(500))
@@ -380,7 +443,10 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
 
   private void verifyClaimRequestInvocation() throws JsonProcessingException {
     ClaimPatch validClaimPatch =
-        ClaimPatch.builder().id(CLAIM_ID.toString()).status(ClaimStatus.VALID).build();
+        ClaimPatch.builder()
+            .id(CLAIM_ID.toString())
+            .status(ClaimStatus.VALIDATED_PENDING_APPROVAL)
+            .build();
     ClaimPatch feeCalculationPatch =
         ClaimPatch.builder()
             .id(CLAIM_ID.toString())
