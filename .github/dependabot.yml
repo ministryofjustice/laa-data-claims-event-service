@@ -15,22 +15,22 @@ registries:
     type: maven-repository
     url: https://maven.pkg.github.com/ministryofjustice/laa-spring-boot-common
     username: ${{ github.actor }}
-    password: ${{ secrets.PHILS_PAT_TOKEN }}
+    password: ${{ secrets.GH_PACKAGES_TOKEN }}
   data-claims-api-github-packages:
     type: maven-repository
     url: https://maven.pkg.github.com/ministryofjustice/laa-data-claims-api
     username: ${{ github.actor }}
-    password: ${{ secrets.PHILS_PAT_TOKEN }}
+    password: ${{ secrets.GH_PACKAGES_TOKEN }}
   data-provider-github-packages:
     type: maven-repository
     url: https://maven.pkg.github.com/ministryofjustice/laa-data-provider-data
     username: ${{ github.actor }}
-    password: ${{ secrets.PHILS_PAT_TOKEN }}
+    password: ${{ secrets.GH_PACKAGES_TOKEN }}
   laa-data-controlled-work-validator-github-packages:
     type: maven-repository
     url: https://maven.pkg.github.com/ministryofjustice/laa-data-controlled-work-validator
     username: ${{ github.actor }}
-    password: ${{ secrets.PHILS_PAT_TOKEN }}
+    password: ${{ secrets.GH_PACKAGES_TOKEN }}
 
 updates:
   - package-ecosystem: "gradle"

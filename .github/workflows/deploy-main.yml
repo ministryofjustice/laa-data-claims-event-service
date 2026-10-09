@@ -21,7 +21,7 @@ env:
 
 jobs:
   release:
-    uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/gradle-build-and-publish.yml@035ee98ca0047659f865532ea6234abd69529ee8 # v2.5.0
+    uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/gradle-build-and-publish.yml@DSTEW-2417
     permissions:
       contents: write
       packages: write
@@ -36,12 +36,13 @@ jobs:
       release_type: ${{ inputs.release_type != 'auto' && inputs.release_type || '' }}
     secrets:
       # requires a pat due to accessing a private github repos packages (providers-api)
-      gh_token: ${{ secrets.PHILS_PAT_TOKEN }}
+      gh_token: ${{ secrets.GITHUB_TOKEN }}
+      gh_packages_token: ${{ secrets.GH_PACKAGES_TOKEN }}
       aws_region: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_AWS_REGION }}
 
   pact-test:
     needs: [ release ]
-    uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/pact-and-publish.yml@035ee98ca0047659f865532ea6234abd69529ee8 # v2.5.0
+    uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/pact-and-publish.yml@DSTEW-2417
     permissions:
       contents: write
       packages: write
@@ -55,14 +56,15 @@ jobs:
       pact_tags: '${{ needs.release.outputs.published_artifact_version }},candidate'
     secrets:
       # requires a pat due to accessing a private github repos packages (providers-api)
-      gh_token: ${{ secrets.PHILS_PAT_TOKEN }}
+      gh_token: ${{ secrets.GITHUB_TOKEN }}
+      gh_packages_token: ${{ secrets.GH_PACKAGES_TOKEN }}
       pact_broker_url: ${{ secrets.PACT_BROKER_URL }}
       pact_broker_username: ${{ secrets.PACT_BROKER_USERNAME }}
       pact_broker_password: ${{ secrets.PACT_BROKER_PASSWORD }}
 
   ecr-publish-image:
     needs: [ release ]
-    uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/ecr-publish-image.yml@035ee98ca0047659f865532ea6234abd69529ee8 # v2.5.0
+    uses: ministryofjustice/laa-ccms-common-workflows/.github/workflows/ecr-publish-image.yml@DSTEW-2417
     permissions:
       contents: read
       id-token: write
@@ -74,7 +76,8 @@ jobs:
       image_version: ${{ format('{0}-{1}', vars.LAA_DATA_CLAIMS_EVENT_SERVICE_IMAGE_PREFIX, needs.release.outputs.published_artifact_version) }}
     secrets:
       # requires a pat due to accessing a private github repos packages (providers-api)
-      gh_token: ${{ secrets.PHILS_PAT_TOKEN }}
+      gh_token: ${{ secrets.GITHUB_TOKEN }}
+      gh_packages_token: ${{ secrets.GH_PACKAGES_TOKEN }}
       ecr_repository: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_REPOSITORY }}
       ecr_region: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_REGION }}
       ecr_role_to_assume: ${{ secrets.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_ROLE_TO_ASSUME }}
