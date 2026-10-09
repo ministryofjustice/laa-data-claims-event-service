@@ -49,12 +49,13 @@
         "VALIDATION_IN_PROGRESS",
         "VALIDATION_SUCCEEDED",
         "VALIDATION_FAILED",
-        "REPLACED"
+        "REPLACED",
+        "VALIDATED_PENDING_APPROVAL"
       ],
       "validationErrorMessages": [
         {
           "key": "ALL",
-          "value": "Status must be one of: CREATED, READY_FOR_VALIDATION, VALIDATION_IN_PROGRESS, VALIDATION_SUCCEEDED, VALIDATION_FAILED, or REPLACED"
+          "value": "Status must be one of: CREATED, READY_FOR_VALIDATION, VALIDATION_IN_PROGRESS, VALIDATION_SUCCEEDED, VALIDATION_FAILED, REPLACED, or VALIDATED_PENDING_APPROVAL"
         }
       ]
     },
