@@ -22,7 +22,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.context.ImportTestcontainers;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
-import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.GetQueueAttributesRequest;
 import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest;
 import software.amazon.awssdk.services.sqs.model.QueueAttributeName;
@@ -35,14 +34,20 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MessageListenerBase;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MockServerIntegrationTest;
+import uk.gov.justice.laa.dstew.payments.claimsevent.helper.SqsQueueCleaningIntegrationTest;
 import uk.gov.justice.laa.dstew.payments.claimsevent.model.SubmissionEventType;
 
 @ActiveProfiles("test")
 @ImportTestcontainers(MessageListenerBase.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+    properties = {
+      "laa.bulk-claim-queue.visibility-timeout-seconds=2",
+      "laa.bulk-claim-queue.visibility-extension-interval-seconds=1"
+    })
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Import(MockServerIntegrationTest.ClaimsConfiguration.class)
-public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
+public class MessageListenerIntegrationTest extends SqsQueueCleaningIntegrationTest {
 
   private static final String OFFICE_CODE = "AQ2B3C";
   private static final AreaOfLaw AREA_OF_LAW = AreaOfLaw.LEGAL_HELP;
@@ -54,7 +59,6 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
   private static final String QUEUE_NAME = "test-queue-name";
 
   @Autowired private SqsTemplate sqsTemplate;
-  @Autowired private SqsClient sqsClient;
   @Autowired private ObjectMapper objectMapper;
 
   @Test
@@ -330,6 +334,8 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
 
     stubForGetClaims(Collections.emptyList(), "data-claims/get-claims/claim-valid.json");
     stubForPostFeeCalculation("fee-scheme/post-fee-calculation-validation-error-200.json");
+    stubForUpdateClaim(SUBMISSION_ID, CLAIM_ID);
+    stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
 
     sendSubmissionValidationMessage();
 
@@ -349,7 +355,7 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
     SubmissionPatch patchBodySucceeded =
         SubmissionPatch.builder()
             .submissionId(SUBMISSION_ID)
-            .status(SubmissionStatus.VALIDATION_SUCCEEDED)
+            .status(SubmissionStatus.VALIDATED_PENDING_APPROVAL)
             .build();
     stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodySucceeded);
 
@@ -518,11 +524,12 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
 
   private void verifyClaimRequestInvocationWithFeeCalculationWarningMessageCode()
       throws JsonProcessingException {
-    // FSP warnings don't make the claim INVALID — status should still be VALID
+    // FSP warnings don't make the claim INVALID — successful initial validation still transitions
+    // the claim to pending approval.
     ClaimPatch expectedClaimPatch =
         ClaimPatch.builder()
             .id(CLAIM_ID.toString())
-            .status(ClaimStatus.VALID)
+            .status(ClaimStatus.VALIDATED_PENDING_APPROVAL)
             .validationMessages(
                 List.of(
                     ValidationMessagePatch.builder()
