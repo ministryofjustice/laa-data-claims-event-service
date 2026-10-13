@@ -647,7 +647,14 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
 
       // Then: the crime-dated claim must be flagged as
       // INVALID_CATEGORY_OF_LAW_NOT_AUTHORISED_FOR_PROVIDER
-      Assertions.assertTrue(context.hasErrors("66666666-6666-6666-6666-666666666666"));
+      var report = context.getClaimReport("66666666-6666-6666-6666-666666666666");
+      assertThat(report).isPresent();
+      assertThat(report.orElseThrow().getMessages())
+          .usingRecursiveComparison()
+          .isEqualTo(
+              List.of(
+                  ClaimValidationError.INVALID_CATEGORY_OF_LAW_NOT_AUTHORISED_FOR_PROVIDER
+                      .toPatch()));
     }
   }
 }

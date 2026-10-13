@@ -39,7 +39,7 @@ public final class EffectiveCategoryOfLawClaimValidator implements ClaimValidato
    * Constructs an instance of {@link EffectiveCategoryOfLawClaimValidator}.
    *
    * @param categoryOfLawValidationService the category of law validation service
-   * @param providerDetailsService the provider details service (owns caching/retry for PDA calls)
+   * @param providerDetailsService the provider details service for PDA schedule retrieval
    */
   public EffectiveCategoryOfLawClaimValidator(
       CategoryOfLawValidationService categoryOfLawValidationService,
@@ -104,8 +104,8 @@ public final class EffectiveCategoryOfLawClaimValidator implements ClaimValidato
    * Retrieves the category-of-law codes effective for the given office and date.
    *
    * <p>The PDA API requires an explicit {@code effectiveDate} (omitting it defaults server-side to
-   * "today"), so it is always passed through to {@link ProviderDetailsService}, which owns caching
-   * and retry behaviour for this call.
+   * "today"), so it is always passed through to {@link ProviderDetailsService}, which applies the
+   * configured retry behaviour for this call.
    *
    * @param officeCode the office code
    * @param effectiveDate the claim's effective date; must not be {@code null}

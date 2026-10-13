@@ -27,7 +27,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = {"spring.cloud.aws.sqs.enabled=false", "laa.bulk-claim-queue.name=not-used"})
-@DisplayName("High-level incident integration tests for provider-details cache behaviour")
+@DisplayName("High-level incident integration tests for provider-details schedule behaviour")
 public class SubmissionValidationServiceIncidentIntegrationTest extends MockServerIntegrationTest {
 
   @Autowired protected SubmissionValidationService submissionValidationService;
@@ -90,5 +90,9 @@ public class SubmissionValidationServiceIncidentIntegrationTest extends MockServ
     // Then: expect no validation errors for the later Crime claim (i.e., it used its Crime
     // schedule)
     assertThat(context.getSubmissionValidationErrors()).isEmpty();
+    assertThat(context.getClaimReport("22222222-2222-2222-2222-222222222222"))
+        .isPresent()
+        .get()
+        .satisfies(report -> assertThat(report.hasErrors()).isFalse());
   }
 }
