@@ -34,9 +34,27 @@ public class SubmissionOfficeAreaOfLawAndPeriodValidator implements SubmissionVa
   @Override
   public void validate(SubmissionResponse submission, SubmissionValidationContext context) {
 
-    if (isDuplicateSubmission(submission)) {
+    final List<SubmissionBase> blockingDuplicates = findBlockingDuplicates(submission);
+
+    if (!blockingDuplicates.isEmpty()) {
+      // Distinguish a duplicate that has merely passed initial validation and is being held for the
+      // provider's final approval (VALIDATED_PENDING_APPROVAL) from one that is otherwise live
+      // (e.g.
+      // already accepted). This lets the provider know their earlier upload is awaiting final
+      // submission rather than being told it is an outright duplicate.
+      boolean awaitingFinalApproval =
+          blockingDuplicates.stream()
+              .anyMatch(
+                  candidate ->
+                      candidate.getStatus() == SubmissionStatus.VALIDATED_PENDING_APPROVAL);
+
+      SubmissionValidationError error =
+          awaitingFinalApproval
+              ? SubmissionValidationError.SUBMISSION_AWAITING_FINAL_APPROVAL
+              : SubmissionValidationError.SUBMISSION_ALREADY_EXISTS;
+
       context.addSubmissionValidationError(
-          SubmissionValidationError.SUBMISSION_ALREADY_EXISTS,
+          error,
           submission.getOfficeAccountNumber(),
           submission.getAreaOfLaw(),
           submission.getSubmissionPeriod());
@@ -48,7 +66,7 @@ public class SubmissionOfficeAreaOfLawAndPeriodValidator implements SubmissionVa
     return 100;
   }
 
-  private Boolean isDuplicateSubmission(SubmissionResponse submission) {
+  private List<SubmissionBase> findBlockingDuplicates(SubmissionResponse submission) {
 
     final List<SubmissionBase> duplicates =
         dataClaimsRestClient
@@ -65,7 +83,7 @@ public class SubmissionOfficeAreaOfLawAndPeriodValidator implements SubmissionVa
             .toList();
     log.debug("Found {} duplicates for submission {}", duplicates.size(), submission);
 
-    return !duplicates.isEmpty();
+    return duplicates;
   }
 
   private boolean isDifferentSubmission(SubmissionBase candidate, SubmissionResponse submission) {

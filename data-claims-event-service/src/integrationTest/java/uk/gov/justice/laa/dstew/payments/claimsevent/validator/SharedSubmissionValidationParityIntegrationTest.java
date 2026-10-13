@@ -169,7 +169,7 @@ public class SharedSubmissionValidationParityIntegrationTest
 
   @Test
   @DisplayName(
-      "Parity: incorrect submission status (VALIDATION_SUCCEEDED) - both produce INCORRECT_SUBMISSION_STATUS_FOR_VALIDATION")
+      "Parity: incorrect submission status (CREATED) - both produce INCORRECT_SUBMISSION_STATUS_FOR_VALIDATION")
   void parityIncorrectStatus() throws Exception {
     var fixture = SUBMISSION_BASE_PATH + "SubmissionStatusValidator/status-incorrect.json";
     SubmissionValidationContext ctx = runSubmissionValidation(fixture);
