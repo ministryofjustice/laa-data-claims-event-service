@@ -9,7 +9,6 @@ import static uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw.LEGAL
 
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -23,6 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessageType;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.FeeSchemePlatformRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.mapper.FeeSchemeMapper;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
@@ -94,7 +94,6 @@ class FeeCalculationServiceTest {
       SubmissionValidationContext context = new SubmissionValidationContext();
       context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
 
-      UUID submissionId = new UUID(1, 1);
       feeCalculationService.calculateFee(claim, context, LEGAL_HELP);
 
       verify(feeSchemePlatformRestClient, times(1)).calculateFee(feeCalculationRequest);
@@ -102,6 +101,90 @@ class FeeCalculationServiceTest {
       .updateClaimWithFeeCalculationDetails(submissionId, claim, feeCalculationResponse, null);*/
 
       assertThat(context.hasErrors(claim.getId())).isTrue();
+    }
+
+    @Test
+    @DisplayName("ERROR validation message includes messageCode in context")
+    void errorValidationMessageIncludesMessageCodeInContext() {
+
+      ClaimResponse claim =
+          new ClaimResponse().id("0199a9c0-63ba-7bc2-bf71-0a8acfe1700e").feeCode("feeCode");
+
+      FeeCalculationRequest feeCalculationRequest = new FeeCalculationRequest().feeCode("feeCode");
+
+      ValidationMessagesInner validationMessagesInner =
+          new ValidationMessagesInner()
+              .message("A field validation message from FSP")
+              .code("ERRALL1")
+              .type(ValidationMessagesInner.TypeEnum.ERROR);
+      FeeCalculationResponse feeCalculationResponse =
+          new FeeCalculationResponse()
+              .validationMessages(Collections.singletonList(validationMessagesInner));
+
+      when(feeSchemeMapper.mapToFeeCalculationRequest(claim, LEGAL_HELP))
+          .thenReturn(feeCalculationRequest);
+      when(feeSchemePlatformRestClient.calculateFee(feeCalculationRequest))
+          .thenReturn(ResponseEntity.ok(feeCalculationResponse));
+
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
+
+      feeCalculationService.calculateFee(claim, context, LEGAL_HELP);
+
+      verify(feeSchemePlatformRestClient, times(1)).calculateFee(feeCalculationRequest);
+
+      var actualMessages = context.getClaimReport(claim.getId()).get().getMessages();
+      assertThat(actualMessages)
+          .hasSize(1)
+          .extracting(ValidationMessagePatch::getMessageCode)
+          .contains("ERRALL1");
+      assertThat(actualMessages)
+          .extracting(ValidationMessagePatch::getDisplayMessage)
+          .contains("A field validation message from FSP");
+    }
+
+    @Test
+    @DisplayName("WARNING validation message includes messageCode in context")
+    void warningValidationMessageIncludesMessageCodeInContext() {
+
+      ClaimResponse claim =
+          new ClaimResponse().id("0199a9c0-63ba-7bc2-bf71-0a8acfe1700e").feeCode("feeCode");
+
+      FeeCalculationRequest feeCalculationRequest = new FeeCalculationRequest().feeCode("feeCode");
+
+      ValidationMessagesInner validationMessagesInner =
+          new ValidationMessagesInner()
+              .message("A field warning message from FSP")
+              .code("WARFAM1")
+              .type(ValidationMessagesInner.TypeEnum.WARNING);
+      FeeCalculationResponse feeCalculationResponse =
+          new FeeCalculationResponse()
+              .validationMessages(Collections.singletonList(validationMessagesInner));
+
+      when(feeSchemeMapper.mapToFeeCalculationRequest(claim, LEGAL_HELP))
+          .thenReturn(feeCalculationRequest);
+      when(feeSchemePlatformRestClient.calculateFee(feeCalculationRequest))
+          .thenReturn(ResponseEntity.ok(feeCalculationResponse));
+
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
+
+      feeCalculationService.calculateFee(claim, context, LEGAL_HELP);
+
+      verify(feeSchemePlatformRestClient, times(1)).calculateFee(feeCalculationRequest);
+
+      var actualMessages = context.getClaimReport(claim.getId()).get().getMessages();
+      assertThat(context.hasErrors(claim.getId())).isFalse();
+      assertThat(actualMessages)
+          .hasSize(1)
+          .extracting(ValidationMessagePatch::getMessageCode)
+          .contains("WARFAM1");
+      assertThat(actualMessages)
+          .extracting(ValidationMessagePatch::getDisplayMessage)
+          .contains("A field warning message from FSP");
+      assertThat(actualMessages)
+          .extracting(ValidationMessagePatch::getType)
+          .contains(ValidationMessageType.WARNING);
     }
 
     @Test
@@ -237,6 +320,87 @@ class FeeCalculationServiceTest {
       verifyNoInteractions(feeSchemeMapper);
       verifyNoInteractions(feeSchemePlatformRestClient);
       assertThat(context.isFlaggedForRetry(claim.getId())).isTrue();
+    }
+
+    @Test
+    @DisplayName("Null validation message type results in a technical error")
+    void nullValidationMessageTypeResultsInTechnicalError() {
+
+      ClaimResponse claim = new ClaimResponse().id("claimId").feeCode("feeCode");
+
+      FeeCalculationRequest feeCalculationRequest = new FeeCalculationRequest().feeCode("feeCode");
+
+      ValidationMessagesInner validationMessagesInner =
+          new ValidationMessagesInner().message("Unclassified message").code("INFO1").type(null);
+      FeeCalculationResponse feeCalculationResponse =
+          new FeeCalculationResponse()
+              .validationMessages(Collections.singletonList(validationMessagesInner));
+
+      when(feeSchemeMapper.mapToFeeCalculationRequest(claim, LEGAL_HELP))
+          .thenReturn(feeCalculationRequest);
+      when(feeSchemePlatformRestClient.calculateFee(feeCalculationRequest))
+          .thenReturn(ResponseEntity.ok(feeCalculationResponse));
+
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
+
+      var actualResponse = feeCalculationService.calculateFee(claim, context, LEGAL_HELP);
+
+      verify(feeSchemePlatformRestClient, times(1)).calculateFee(feeCalculationRequest);
+      assertThat(actualResponse).contains(feeCalculationResponse);
+      assertThat(context.hasErrors(claim.getId())).isTrue();
+      var actualMessages = context.getClaimReport(claim.getId()).get().getMessages();
+      assertThat(actualMessages)
+          .extracting(ValidationMessagePatch::getDisplayMessage)
+          .contains(
+              ClaimValidationError.TECHNICAL_ERROR_FEE_CALCULATION_SERVICE.getDisplayMessage());
+      assertThat(actualMessages)
+          .extracting(ValidationMessagePatch::getTechnicalMessage)
+          .contains(
+              ClaimValidationError.TECHNICAL_ERROR_FEE_CALCULATION_SERVICE.getTechnicalMessage());
+      assertThat(actualMessages)
+          .extracting(ValidationMessagePatch::getType)
+          .contains(ClaimValidationError.TECHNICAL_ERROR_FEE_CALCULATION_SERVICE.getType());
+    }
+
+    @Test
+    @DisplayName("Empty response body flags claim for retry and returns empty")
+    void emptyResponseBodyFlagsClaimForRetryAndReturnsEmpty() {
+
+      ClaimResponse claim = new ClaimResponse().id("claimId").feeCode("feeCode");
+
+      FeeCalculationRequest feeCalculationRequest = new FeeCalculationRequest().feeCode("feeCode");
+
+      when(feeSchemeMapper.mapToFeeCalculationRequest(claim, LEGAL_HELP))
+          .thenReturn(feeCalculationRequest);
+      when(feeSchemePlatformRestClient.calculateFee(feeCalculationRequest))
+          .thenReturn(ResponseEntity.ok(null));
+
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
+
+      var actualResponse = feeCalculationService.calculateFee(claim, context, LEGAL_HELP);
+
+      verify(feeSchemePlatformRestClient, times(1)).calculateFee(feeCalculationRequest);
+      assertThat(actualResponse).isEmpty();
+      assertThat(context.isFlaggedForRetry(claim.getId())).isTrue();
+    }
+
+    @Test
+    @DisplayName("Skips validation if fee code is blank")
+    void skipsValidationIfFeeCodeIsBlank() {
+
+      ClaimResponse claim = new ClaimResponse().id("claimId").feeCode("   ");
+
+      SubmissionValidationContext context = new SubmissionValidationContext();
+      context.addClaimReports(List.of(new ClaimValidationReport(claim.getId())));
+
+      var actualResponse = feeCalculationService.calculateFee(claim, context, LEGAL_HELP);
+
+      assertThat(actualResponse).isEmpty();
+      verifyNoInteractions(feeSchemeMapper);
+      verifyNoInteractions(feeSchemePlatformRestClient);
+      assertThat(context.isFlaggedForRetry(claim.getId())).isFalse();
     }
   }
 }
