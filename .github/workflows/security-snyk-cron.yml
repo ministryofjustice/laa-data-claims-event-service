@@ -19,7 +19,7 @@ jobs:
       security-events: write
     with:
       image_prefix: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_IMAGE_PREFIX }}
-      jar_subproject: 'claims-data:service'
+      jar_subproject: 'data-claims-event-service'
     secrets:
       gh_token: ${{ secrets.PHILS_PAT_TOKEN }}
       ecr_repository: ${{ vars.LAA_DATA_CLAIMS_EVENT_SERVICE_ECR_REPOSITORY }}
