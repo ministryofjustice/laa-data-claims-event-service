@@ -13,6 +13,7 @@ jobs:
   image-scan:
     uses: ministryofjustice/laa-data-claims-api/.github/workflows/security-snyk-scan.yml@eca7c2d3bb4c961bf112f2f947c116a8bc4b9213 # v1.32.2
     permissions:
+      actions: read
       contents: read
       id-token: write
       security-events: write
