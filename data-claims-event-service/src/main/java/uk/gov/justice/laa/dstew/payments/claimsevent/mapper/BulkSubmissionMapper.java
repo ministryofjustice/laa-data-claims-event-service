@@ -17,6 +17,7 @@ import org.springframework.util.StringUtils;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionMatterStart;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionOutcome;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimInquestDetail;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPost;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.GetBulkSubmission200Response;
@@ -195,7 +196,39 @@ public interface BulkSubmissionMapper {
   @Mapping(target = "surgeryClientsCount", source = "noOfClients")
   @Mapping(target = "surgeryMattersCount", source = "noOfSurgeryClients")
   @Mapping(target = "createdByUserId", constant = EVENT_SERVICE)
+  @Mapping(target = "inquestDetail", source = "outcome", qualifiedByName = "mapInquestDetail")
   ClaimPost mapToClaimPost(BulkSubmissionOutcome outcome, @Context AreaOfLaw areaOfLaw);
+
+  /**
+   * Maps supplied Inquest values, leaving the object absent when no Inquest data is supplied.
+   *
+   * @param outcome the parsed outcome
+   * @return the Inquest details, or null when no Inquest data is supplied
+   */
+  @Named("mapInquestDetail")
+  default ClaimInquestDetail mapInquestDetail(BulkSubmissionOutcome outcome) {
+    if (outcome == null || !hasInquestData(outcome)) {
+      return null;
+    }
+
+    return new ClaimInquestDetail()
+        .isClientMeansTested(outcome.getIsClientMeansTested())
+        .deceasedForename(outcome.getDeceasedForename())
+        .deceasedSurname(outcome.getDeceasedSurname())
+        .deceasedDateOfDeath(outcome.getDeceasedDateOfDeath())
+        .coronersInquestReference(outcome.getCoronersInquestReference())
+        .interestedDepartments(outcome.getInterestedDepartments());
+  }
+
+  private boolean hasInquestData(BulkSubmissionOutcome outcome) {
+    return outcome.getIsClientMeansTested() != null
+        || StringUtils.hasText(outcome.getDeceasedForename())
+        || StringUtils.hasText(outcome.getDeceasedSurname())
+        || StringUtils.hasText(outcome.getDeceasedDateOfDeath())
+        || StringUtils.hasText(outcome.getCoronersInquestReference())
+        || (outcome.getInterestedDepartments() != null
+            && !outcome.getInterestedDepartments().isEmpty());
+  }
 
   /**
    * Applies post-mapping adjustments to a mapped {@link ClaimPost} based on the provided {@link
