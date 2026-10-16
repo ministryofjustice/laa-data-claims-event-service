@@ -44,7 +44,7 @@ class BulkSubmissionMapperTest {
     BulkSubmissionOutcome outcome =
         new BulkSubmissionOutcome()
             .isClientMeansTested(false)
-            .deceasedForename("Ron")
+            .deceasedForename("John")
             .deceasedSurname("Smith")
             .deceasedDateOfDeath("01/01/2025")
             .coronersInquestReference("INQ-TEST-001")
@@ -58,7 +58,7 @@ class BulkSubmissionMapperTest {
 
     assertThat(claim.getInquestDetail()).isNotNull();
     assertThat(claim.getInquestDetail().getIsClientMeansTested()).isFalse();
-    assertThat(claim.getInquestDetail().getDeceasedForename()).isEqualTo("Ron");
+    assertThat(claim.getInquestDetail().getDeceasedForename()).isEqualTo("John");
     assertThat(claim.getInquestDetail().getDeceasedSurname()).isEqualTo("Smith");
     assertThat(claim.getInquestDetail().getDeceasedDateOfDeath()).isEqualTo("01/01/2025");
     assertThat(claim.getInquestDetail().getCoronersInquestReference()).isEqualTo("INQ-TEST-001");

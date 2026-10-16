@@ -327,7 +327,7 @@ class JsonSchemaValidatorTest {
       claim.setInquestDetail(
           new ClaimInquestDetail()
               .isClientMeansTested(false)
-              .deceasedForename("Ron")
+              .deceasedForename("John")
               .deceasedSurname("Smith")
               .deceasedDateOfDeath("01/01/2025")
               .coronersInquestReference("INQ-TEST-001")
