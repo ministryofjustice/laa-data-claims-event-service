@@ -5,11 +5,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.ValidationServiceTestUtils.assertContextClaimError;
 
@@ -304,6 +306,117 @@ class SubmissionValidationServiceTest {
       assertThat(result.hasErrors()).isFalse();
       verify(claimValidationService, never()).validateAndUpdateClaims(any(), any());
       verify(submissionValidator, never()).validate(any(), any());
+      verify(dataClaimsRestClient, never()).updateSubmission(any(), any());
+      verify(dataClaimsRestClient, never()).updateBulkSubmission(any(), any());
+    }
+
+    @Test
+    @DisplayName("Should rerun validation and accept a submission after final approval")
+    void shouldCompleteFinalValidationSuccessfully() {
+      UUID submissionId = new UUID(0, 0);
+      UUID bulkSubmissionId = new UUID(1, 1);
+      SubmissionResponse submission =
+          SubmissionResponse.builder()
+              .submissionId(submissionId)
+              .bulkSubmissionId(bulkSubmissionId)
+              .areaOfLaw(AreaOfLaw.LEGAL_HELP)
+              .officeAccountNumber("officeAccountNumber")
+              .status(SubmissionStatus.READY_FOR_FINAL_VALIDATION)
+              .build();
+      when(dataClaimsRestClient.getSubmission(submissionId))
+          .thenReturn(ResponseEntity.ok(submission));
+      when(dataClaimsRestClient.updateSubmission(any(), any()))
+          .thenReturn(ResponseEntity.noContent().build());
+      when(dataClaimsRestClient.updateBulkSubmission(any(), any()))
+          .thenReturn(ResponseEntity.noContent().build());
+
+      submissionValidationService.finalValidateSubmission(submissionId);
+
+      ArgumentCaptor<SubmissionPatch> submissionPatchCaptor =
+          ArgumentCaptor.forClass(SubmissionPatch.class);
+      verify(dataClaimsRestClient, times(2))
+          .updateSubmission(eq(submissionId.toString()), submissionPatchCaptor.capture());
+      assertThat(submissionPatchCaptor.getAllValues())
+          .extracting(SubmissionPatch::getStatus)
+          .containsExactly(
+              SubmissionStatus.FINAL_VALIDATION_IN_PROGRESS, SubmissionStatus.VALIDATION_SUCCEEDED);
+
+      ArgumentCaptor<BulkSubmissionPatch> bulkSubmissionPatchCaptor =
+          ArgumentCaptor.forClass(BulkSubmissionPatch.class);
+      verify(dataClaimsRestClient)
+          .updateBulkSubmission(
+              eq(bulkSubmissionId.toString()), bulkSubmissionPatchCaptor.capture());
+      assertThat(bulkSubmissionPatchCaptor.getValue().getStatus())
+          .isEqualTo(BulkSubmissionStatus.VALIDATION_SUCCEEDED);
+      verify(claimValidationService).validateAndUpdateClaims(eq(submission), any(), eq(true));
+    }
+
+    @Test
+    @DisplayName("Should fail final validation and persist the failure")
+    void shouldCompleteFinalValidationWithFailure() {
+      UUID submissionId = new UUID(0, 0);
+      UUID bulkSubmissionId = new UUID(1, 1);
+      SubmissionResponse submission =
+          SubmissionResponse.builder()
+              .submissionId(submissionId)
+              .bulkSubmissionId(bulkSubmissionId)
+              .areaOfLaw(AreaOfLaw.LEGAL_HELP)
+              .officeAccountNumber("officeAccountNumber")
+              .status(SubmissionStatus.FINAL_VALIDATION_IN_PROGRESS)
+              .build();
+      when(dataClaimsRestClient.getSubmission(submissionId))
+          .thenReturn(ResponseEntity.ok(submission));
+      doAnswer(
+              invocation -> {
+                SubmissionValidationContext context = invocation.getArgument(1);
+                context.addSubmissionValidationError("final validation failed");
+                return null;
+              })
+          .when(submissionValidator)
+          .validate(any(), any());
+      when(dataClaimsRestClient.updateSubmission(any(), any()))
+          .thenReturn(ResponseEntity.noContent().build());
+      when(dataClaimsRestClient.updateBulkSubmission(any(), any()))
+          .thenReturn(ResponseEntity.noContent().build());
+
+      submissionValidationService.finalValidateSubmission(submissionId);
+
+      ArgumentCaptor<SubmissionPatch> submissionPatchCaptor =
+          ArgumentCaptor.forClass(SubmissionPatch.class);
+      verify(dataClaimsRestClient)
+          .updateSubmission(eq(submissionId.toString()), submissionPatchCaptor.capture());
+      assertThat(submissionPatchCaptor.getValue().getStatus())
+          .isEqualTo(SubmissionStatus.VALIDATION_FAILED);
+      ArgumentCaptor<BulkSubmissionPatch> bulkSubmissionPatchCaptor =
+          ArgumentCaptor.forClass(BulkSubmissionPatch.class);
+      verify(dataClaimsRestClient)
+          .updateBulkSubmission(
+              eq(bulkSubmissionId.toString()), bulkSubmissionPatchCaptor.capture());
+      assertThat(bulkSubmissionPatchCaptor.getValue().getStatus())
+          .isEqualTo(BulkSubmissionStatus.VALIDATION_FAILED);
+      verify(claimValidationService, never()).validateAndUpdateClaims(any(), any(), anyBoolean());
+    }
+
+    @Test
+    @DisplayName("Should not rerun final validation after a terminal result")
+    void shouldNotReprocessCompletedFinalValidation() {
+      UUID submissionId = new UUID(0, 0);
+      SubmissionResponse submission =
+          getSubmission(
+              SubmissionStatus.VALIDATION_SUCCEEDED,
+              submissionId,
+              AreaOfLaw.LEGAL_HELP,
+              "officeAccountNumber",
+              false,
+              List.of());
+      when(dataClaimsRestClient.getSubmission(submissionId))
+          .thenReturn(ResponseEntity.ok(submission));
+
+      SubmissionValidationContext result =
+          submissionValidationService.finalValidateSubmission(submissionId);
+
+      assertThat(result.hasErrors()).isFalse();
+      verifyNoInteractions(submissionValidator, claimValidationService);
       verify(dataClaimsRestClient, never()).updateSubmission(any(), any());
       verify(dataClaimsRestClient, never()).updateBulkSubmission(any(), any());
     }

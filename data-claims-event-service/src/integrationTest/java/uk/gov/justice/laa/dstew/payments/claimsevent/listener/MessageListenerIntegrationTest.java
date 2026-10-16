@@ -94,6 +94,27 @@ public class MessageListenerIntegrationTest extends SqsQueueCleaningIntegrationT
   }
 
   @Test
+  void sendApproveMessage_noErrors_noClaims_completesFinalValidation() throws Exception {
+    stubForGetSubmission(
+        SUBMISSION_ID, "data-claims/get-submission/get-submission-ready-for-final-validation.json");
+    stubForUpdateSubmission(SUBMISSION_ID);
+    stubReturnNoClaims();
+    getStubForGetSubmissionByCriteria(
+        List.of(
+            Parameter.param("offices", OFFICE_CODE),
+            Parameter.param("area_of_law", AREA_OF_LAW.name()),
+            Parameter.param("submission_period", "APR-2025")),
+        "data-claims/get-submission/get-submissions-by-filter_no_content.json");
+    stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
+
+    sendSubmissionApprovalMessage();
+
+    verifySubmissionRequests();
+    verifySubmissionPatch(SubmissionStatus.FINAL_VALIDATION_IN_PROGRESS);
+    verifySubmissionPatch(SubmissionStatus.VALIDATION_SUCCEEDED);
+  }
+
+  @Test
   void sendMessage_legacyValidatedSubmission_isIdempotent() throws Exception {
     // With legacy coercion enabled in the Claims API, a pending-approval update is returned as
     // VALIDATION_SUCCEEDED. A redelivered validation message must not re-run validation.
@@ -391,6 +412,16 @@ public class MessageListenerIntegrationTest extends SqsQueueCleaningIntegrationT
                 .header("SubmissionEventType", SubmissionEventType.VALIDATE_SUBMISSION.toString()));
   }
 
+  private void sendSubmissionApprovalMessage() throws JsonProcessingException {
+    String messageBody = objectMapper.writeValueAsString(Map.of("submission_id", SUBMISSION_ID));
+    sqsTemplate.send(
+        toQueue ->
+            toQueue
+                .queue("test-queue-name")
+                .payload(messageBody)
+                .header("SubmissionEventType", SubmissionEventType.APPROVE_SUBMISSION.toString()));
+  }
+
   private void awaitMessageAcknowledged() {
     String queueUrl =
         sqsClient
@@ -425,6 +456,17 @@ public class MessageListenerIntegrationTest extends SqsQueueCleaningIntegrationT
         .pollInterval(Duration.ofMillis(500))
         .atMost(Duration.ofSeconds(20))
         .untilAsserted(this::verifySubmissionRequestInvocation);
+  }
+
+  private void verifySubmissionPatch(SubmissionStatus status) throws JsonProcessingException {
+    SubmissionPatch expectedPatch =
+        SubmissionPatch.builder().submissionId(SUBMISSION_ID).status(status).build();
+    mockServerClient.verify(
+        request()
+            .withMethod("PATCH")
+            .withPath(API_VERSION_1 + "submissions/" + SUBMISSION_ID)
+            .withBody(json(objectMapper.writeValueAsString(expectedPatch))),
+        VerificationTimes.exactly(1));
   }
 
   private void verifySubmissionAndClaimRequests() {
@@ -494,8 +536,7 @@ public class MessageListenerIntegrationTest extends SqsQueueCleaningIntegrationT
         VerificationTimes.exactly(1));
   }
 
-  private void verifyClaimRequestInvocationWithFeeCalculationValidationMessageCode()
-      throws JsonProcessingException {
+  private void verifyClaimRequestInvocationWithFeeCalculationValidationMessageCode() {
     ClaimPatch invalidClaimPatch =
         ClaimPatch.builder()
             .id(CLAIM_ID.toString())
@@ -522,8 +563,7 @@ public class MessageListenerIntegrationTest extends SqsQueueCleaningIntegrationT
                     VerificationTimes.exactly(1)));
   }
 
-  private void verifyClaimRequestInvocationWithFeeCalculationWarningMessageCode()
-      throws JsonProcessingException {
+  private void verifyClaimRequestInvocationWithFeeCalculationWarningMessageCode() {
     // FSP warnings don't make the claim INVALID — successful initial validation still transitions
     // the claim to pending approval.
     ClaimPatch expectedClaimPatch =

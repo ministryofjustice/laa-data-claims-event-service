@@ -168,6 +168,7 @@ class ClaimValidationServiceTest {
             eq(claimsList),
             eq(AreaOfLaw.LEGAL_HELP),
             eq(context),
-            eq(feeDetailsResponseMap));
+            eq(feeDetailsResponseMap),
+            eq(false));
   }
 }

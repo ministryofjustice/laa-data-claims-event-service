@@ -61,6 +61,26 @@ public class BulkClaimUpdater {
       AreaOfLaw areaOfLaw,
       SubmissionValidationContext context,
       Map<String, FeeDetailsResponseWrapper> feeDetailsResponseMap) {
+    updateClaims(submissionId, claimResponses, areaOfLaw, context, feeDetailsResponseMap, false);
+  }
+
+  /**
+   * Updates claims with the result of either initial or final validation.
+   *
+   * @param submissionId the submission ID
+   * @param claimResponses the claims being updated
+   * @param areaOfLaw the submission area of law
+   * @param context validation context
+   * @param feeDetailsResponseMap fee details used by fee calculation
+   * @param finalValidation whether the claims are being accepted after final validation
+   */
+  public void updateClaims(
+      UUID submissionId,
+      List<ClaimResponse> claimResponses,
+      AreaOfLaw areaOfLaw,
+      SubmissionValidationContext context,
+      Map<String, FeeDetailsResponseWrapper> feeDetailsResponseMap,
+      boolean finalValidation) {
     log.debug("Updating claims for submission {}", submissionId);
     AtomicInteger claimsUpdated = new AtomicInteger();
     AtomicInteger claimsFlaggedForRetry = new AtomicInteger();
@@ -87,7 +107,7 @@ public class BulkClaimUpdater {
           }
 
           // If a claim was found to be invalid, make the rest of the claims invalid
-          ClaimStatus claimStatus = getClaimStatus(claim.getId(), context);
+          ClaimStatus claimStatus = getClaimStatus(claim.getId(), context, finalValidation);
           ClaimPatch claimPatch = buildClaimPatch(claim, feeCalculationPatch, context, claimStatus);
 
           // Update claim regardless of fee calculation presence
@@ -114,12 +134,15 @@ public class BulkClaimUpdater {
   }
 
   private ClaimStatus getClaimStatus(
-      final String claimId, final SubmissionValidationContext context) {
+      final String claimId,
+      final SubmissionValidationContext context,
+      final boolean finalValidation) {
     // On successful INITIAL validation a claim is held in VALIDATED_PENDING_APPROVAL alongside its
     // submission (awaiting the provider's final approval) rather than being accepted (VALID).
-    return (context.hasSubmissionLevelErrors() || context.hasErrors(claimId))
-        ? ClaimStatus.INVALID
-        : ClaimStatus.VALIDATED_PENDING_APPROVAL;
+    if (context.hasSubmissionLevelErrors() || context.hasErrors(claimId)) {
+      return ClaimStatus.INVALID;
+    }
+    return finalValidation ? ClaimStatus.VALID : ClaimStatus.VALIDATED_PENDING_APPROVAL;
   }
 
   private Optional<FeeCalculationResponse> getFeeCalculationResponse(

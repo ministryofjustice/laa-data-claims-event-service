@@ -104,6 +104,7 @@ public class SubmissionListener {
     switch (submissionEventType) {
       case PARSE_BULK_SUBMISSION -> handleBulkSubmissionMessage(message);
       case VALIDATE_SUBMISSION -> handleSubmissionValidationMessage(message);
+      case APPROVE_SUBMISSION -> handleSubmissionApprovalMessage(message);
       default ->
           throw new SubmissionEventProcessingException(
               "Unsupported submission event type: " + submissionEventType);
@@ -122,6 +123,21 @@ public class SubmissionListener {
     } catch (JsonProcessingException e) {
       throw new SubmissionEventProcessingException(
           "Unable to read submission validation message", e);
+    }
+  }
+
+  private void handleSubmissionApprovalMessage(Message message) {
+    try {
+      SubmissionValidationMessage submissionValidationMessage =
+          objectMapper.readValue(message.body(), SubmissionValidationMessage.class);
+
+      log.info(
+          "Received final validation request for submission {}",
+          submissionValidationMessage.submissionId());
+      submissionValidationService.finalValidateSubmission(
+          submissionValidationMessage.submissionId());
+    } catch (JsonProcessingException e) {
+      throw new SubmissionEventProcessingException("Unable to read submission approval message", e);
     }
   }
 

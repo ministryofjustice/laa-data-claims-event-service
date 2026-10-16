@@ -93,7 +93,7 @@ class SubmissionStatusValidatorTest {
   @ParameterizedTest
   @EnumSource(
       value = SubmissionStatus.class,
-      names = {"READY_FOR_VALIDATION", "VALIDATION_IN_PROGRESS"},
+      names = {"READY_FOR_VALIDATION", "VALIDATION_IN_PROGRESS", "FINAL_VALIDATION_IN_PROGRESS"},
       mode = EnumSource.Mode.EXCLUDE)
   void shouldAddErrorIfSubmissionStatusUnknownValue(SubmissionStatus status) {
     // Given

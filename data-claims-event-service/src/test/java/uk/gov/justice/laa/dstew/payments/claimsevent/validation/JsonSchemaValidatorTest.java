@@ -134,7 +134,7 @@ class JsonSchemaValidatorTest {
       "crime_lower_schedule_number,CRIME_LOWER,CRM/1A123B/13",
       "mediation_submission_reference,MEDIATION,1A123B/MEDI2010/14"
     })
-    void validateNoErrorWhenAValidValueIsSetForScheduleNum(
+    void validScheduleNumberProducesNoErrors(
         String jsonField, String areaOfLaw, String scheduleNum) {
       SubmissionResponse submission = getMinimumValidSubmission();
       submission.setAreaOfLaw(AreaOfLaw.valueOf(areaOfLaw));
@@ -226,10 +226,12 @@ class JsonSchemaValidatorTest {
     @CsvSource({
       // integer fields
       "status, '\"SNAFU\"', 'status: does not have a value in the enumeration [\"CREATED\", "
-          + "\"READY_FOR_VALIDATION\", \"VALIDATION_IN_PROGRESS\", \"VALIDATION_SUCCEEDED\", "
-          + "\"VALIDATION_FAILED\", \"REPLACED\", \"VALIDATED_PENDING_APPROVAL\"] (provided value: SNAFU)',"
+          + "\"READY_FOR_VALIDATION\", \"VALIDATION_IN_PROGRESS\", \"READY_FOR_FINAL_VALIDATION\", "
+          + "\"FINAL_VALIDATION_IN_PROGRESS\", \"VALIDATION_SUCCEEDED\", \"VALIDATION_FAILED\", "
+          + "\"REPLACED\", \"VALIDATED_PENDING_APPROVAL\"] (provided value: SNAFU)',"
           + "'Status must be one of: CREATED, READY_FOR_VALIDATION, VALIDATION_IN_PROGRESS, "
-          + "VALIDATION_SUCCEEDED, VALIDATION_FAILED, REPLACED, or VALIDATED_PENDING_APPROVAL'",
+          + "READY_FOR_FINAL_VALIDATION, FINAL_VALIDATION_IN_PROGRESS, VALIDATION_SUCCEEDED, "
+          + "VALIDATION_FAILED, REPLACED, or VALIDATED_PENDING_APPROVAL'",
     })
     void validateSubmissionForInvalidDataTypes(
         String fieldName, String badJsonValue, String technicalMessage, String displayMessage)
@@ -511,9 +513,13 @@ class JsonSchemaValidatorTest {
 
     @ParameterizedTest(name = "Invalid value {1} for {0} should return error")
     @CsvSource({
-      "uniqueClientNumber, '$£%^&*(', LEGAL HELP, 'Unique Client Number must be in the format DDMMYYYY/X/ZZZZ with valid date, and be a maximum of 15 characters'",
-      "client2Ucn, '12121999-A-ABCD', LEGAL HELP, Client 2 Unique Client Number must be in the format DDMMYYYY/X/ZZZZ with valid date, and be a maximum of 15 characters'",
-      "caseReferenceNumber, 'Case:Ref:123', LEGAL HELP, Case Reference Number must contain only letters, numbers, forward slashes, periods, hyphens, and spaces, and be a maximum of 30 characters",
+      "uniqueClientNumber, '$£%^&*(', LEGAL HELP, "
+          + "'Unique Client Number must be in the format DDMMYYYY/X/ZZZZ with valid date, and be a maximum of 15 characters'",
+      "client2Ucn, '12121999-A-ABCD', LEGAL HELP, "
+          + "Client 2 Unique Client Number must be in the format DDMMYYYY/X/ZZZZ with valid date, and be a maximum of 15 characters'",
+      "caseReferenceNumber, 'Case:Ref:123', LEGAL HELP, "
+          + "Case Reference Number must contain only letters, numbers, forward slashes, periods, "
+          + "hyphens, and spaces, and be a maximum of 30 characters",
       "uniqueFileNumber, '010123-001', LEGAL HELP, Unique File Number (UFN) must be in the format DDMMYY/NNN with a date in the past",
       "caseStartDate, '1899-12-31', LEGAL HELP, Case Start Date must be a valid date in the format DD/MM/YYYY",
       "caseConcludedDate, '1899-12-31', LEGAL HELP, Case Concluded Date must be a valid date in the format DD/MM/YYYY",
@@ -525,7 +531,8 @@ class JsonSchemaValidatorTest {
       "representationOrderDate, '10/01/12', LEGAL HELP, Representation Order Date must be a valid date in the format DD/MM/YYYY",
       "suspectsDefendantsCount, '121', LEGAL HELP, Suspects Defendants Count must be less than 100",
       "policeStationCourtAttendancesCount, '121', LEGAL HELP, Police Station Court Attendances Count must be between 0 and 99",
-      "policeStationCourtPrisonId, '121', LEGAL HELP, Police Station Court Prison ID must be 1–6 alphanumeric characters and contain at least one letter",
+      "policeStationCourtPrisonId, '121', LEGAL HELP, "
+          + "Police Station Court Prison ID must be 1–6 alphanumeric characters and contain at least one letter",
       "dsccNumber, '121', LEGAL HELP, DSCC Number must be exactly 10 alphanumeric characters",
       "maatId, 'fdsdfs&121', LEGAL HELP, MAAT ID must be up to 10 alphanumeric characters",
       "prisonLawPriorApprovalNumber, 'fd121', LEGAL HELP, Prison Law Prior Approval Number must be exactly 10 alphanumeric characters",
@@ -534,10 +541,14 @@ class JsonSchemaValidatorTest {
       "mediationTimeMinutes, 9999999, LEGAL HELP, Mediation Time Minutes must be 99999 or less",
       "outreachLocation, ABCD5, LEGAL HELP, Outreach Location must be exactly 3 alphanumeric characters",
       "referralSource, 100, LEGAL HELP, Referral Source must be a valid 2-digit code (02-11)",
-      "clientForename, 'Anthony, Gonsalves', LEGAL HELP, Client Forename must contain only letters, numbers, spaces, hyphens, apostrophes, ampersands, and be a maximum of 30 characters",
-      "client2Forename, 'Anthony, Gonsalves', LEGAL HELP, Client 2 Forename must contain only letters, numbers, spaces, hyphens, apostrophes, ampersands, and be a maximum of 30 characters",
-      "clientSurname, 'Anthony, Gonsalves', LEGAL HELP, Client Surname must contain only letters, numbers, spaces, hyphens, apostrophes, ampersands, and be a maximum of 30 characters",
-      "client2Surname, 'Anthony, Gonsalves', LEGAL HELP, Client 2 Surname must contain only letters, numbers, spaces, hyphens, apostrophes, ampersands, and be a maximum of 30 characters",
+      "clientForename, 'Anthony, Gonsalves', LEGAL HELP, "
+          + "Client Forename must contain only letters, numbers, spaces, hyphens, apostrophes, ampersands, and be a maximum of 30 characters",
+      "client2Forename, 'Anthony, Gonsalves', LEGAL HELP, "
+          + "Client 2 Forename must contain only letters, numbers, spaces, hyphens, apostrophes, ampersands, and be a maximum of 30 characters",
+      "clientSurname, 'Anthony, Gonsalves', LEGAL HELP, "
+          + "Client Surname must contain only letters, numbers, spaces, hyphens, apostrophes, ampersands, and be a maximum of 30 characters",
+      "client2Surname, 'Anthony, Gonsalves', LEGAL HELP, "
+          + "Client 2 Surname must contain only letters, numbers, spaces, hyphens, apostrophes, ampersands, and be a maximum of 30 characters",
       "clientDateOfBirth, 01/09/08, LEGAL HELP, Client Date of Birth must be a valid date in the format DD/MM/YYYY",
       "clientPostcode, ABCD, LEGAL HELP, Client Postcode must be a valid UK postcode or NFA",
       "client2Postcode, ABCD, LEGAL HELP, Client 2 Postcode must be a valid UK postcode or NFA",
@@ -548,7 +559,8 @@ class JsonSchemaValidatorTest {
       "disabilityCode, ABC, LEGAL HELP, Disability Code must be valid",
       "client2DisabilityCode, ABC, LEGAL HELP, Client 2 Disability Code must be valid",
       "clientTypeCode, MF, LEGAL HELP, Client Type Code must be valid",
-      "homeOfficeClientNumber, abc def, LEGAL HELP, Home Office Client Number must contain only letters and numbers, and be a maximum of 16 characters",
+      "homeOfficeClientNumber, abc def, LEGAL HELP, "
+          + "Home Office Client Number must contain only letters and numbers, and be a maximum of 16 characters",
       "claReferenceNumber, ABC123, LEGAL HELP, CLA Reference Number must be between 1 and 7 digits",
       "claExemptionCode, ABCDE, LEGAL HELP, CLA Exemption Code must be exactly 4 characters",
       "client2DateOfBirth, 01/09/09, LEGAL HELP, Client 2 Date of Birth must be a valid date in the format DD/MM/YYYY",
@@ -560,7 +572,8 @@ class JsonSchemaValidatorTest {
       "stageReachedCode, ABCDE, CRIME LOWER, Stage Reached Code must be exactly 4 uppercase letters for Crime Lower claims",
       "standardFeeCategoryCode, XYZ, LEGAL HELP, Standard Fee Category Code must be valid",
       "designatedAccreditedRepresentativeCode, 6, LEGAL HELP, Designated Accredited Representative Code must be a number from 1 to 5",
-      "mentalHealthTribunalReference, AB/123456/12345, LEGAL HELP, Mental Health Tribunal Reference must be in format AA/NNNN/NNNNN (English) or AANNNNN (Welsh)",
+      "mentalHealthTribunalReference, AB/123456/12345, LEGAL HELP, "
+          + "Mental Health Tribunal Reference must be in format AA/NNNN/NNNNN (English) or AANNNNN (Welsh)",
       "exemptionCriteriaSatisfied, ab120, LEGAL HELP, Exemption Criteria Satisfied must be 2 uppercase letters followed by 3 digits",
       "exceptionalCaseFundingReference, 1234567ABX, LEGAL HELP, Exceptional Case Funding Reference must be 7 digits followed by 2 uppercase letters",
       "adviceTime, 99999999, LEGAL HELP, Advice Time must be a number",
