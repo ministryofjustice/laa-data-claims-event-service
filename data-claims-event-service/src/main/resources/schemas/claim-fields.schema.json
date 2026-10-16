@@ -1030,7 +1030,34 @@
     "has_assessment": {},
     "is_amended": {},
     "version": {},
-    "fee_calculation_response": {}
+    "fee_calculation_response": {},
+    "inquest_detail": {
+      "type": ["object", "null"],
+      "properties": {
+        "is_client_means_tested": {
+          "type": ["boolean", "null"]
+        },
+        "deceased_forename": {
+          "type": ["string", "null"]
+        },
+        "deceased_surname": {
+          "type": ["string", "null"]
+        },
+        "deceased_date_of_death": {
+          "type": ["string", "null"]
+        },
+        "coroners_inquest_reference": {
+          "type": ["string", "null"]
+        },
+        "interested_departments": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
   },
   "additionalProperties": false,
   "required": [

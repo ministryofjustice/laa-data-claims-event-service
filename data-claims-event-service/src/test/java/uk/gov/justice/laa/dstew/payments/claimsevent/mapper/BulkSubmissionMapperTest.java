@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,6 +36,57 @@ class BulkSubmissionMapperTest {
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
             .registerModule(new JavaTimeModule())
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+  }
+
+  @ParameterizedTest
+  @EnumSource(AreaOfLaw.class)
+  void shouldMapInquestDetailsFromParsedOutcome(AreaOfLaw areaOfLaw) {
+    BulkSubmissionOutcome outcome =
+        new BulkSubmissionOutcome()
+            .isClientMeansTested(false)
+            .deceasedForename("Ron")
+            .deceasedSurname("Smith")
+            .deceasedDateOfDeath("01/01/2025")
+            .coronersInquestReference("INQ-TEST-001")
+            .interestedDepartments(
+                List.of(
+                    "Ministry of Justice",
+                    "Ministry of Justice",
+                    "Department for Health and Social Care"));
+
+    ClaimPost claim = mapper.mapToClaimPost(outcome, areaOfLaw);
+
+    assertThat(claim.getInquestDetail()).isNotNull();
+    assertThat(claim.getInquestDetail().getIsClientMeansTested()).isFalse();
+    assertThat(claim.getInquestDetail().getDeceasedForename()).isEqualTo("Ron");
+    assertThat(claim.getInquestDetail().getDeceasedSurname()).isEqualTo("Smith");
+    assertThat(claim.getInquestDetail().getDeceasedDateOfDeath()).isEqualTo("01/01/2025");
+    assertThat(claim.getInquestDetail().getCoronersInquestReference()).isEqualTo("INQ-TEST-001");
+    assertThat(claim.getInquestDetail().getInterestedDepartments())
+        .containsExactly(
+            "Ministry of Justice", "Ministry of Justice", "Department for Health and Social Care");
+  }
+
+  @ParameterizedTest
+  @EnumSource(AreaOfLaw.class)
+  void shouldLeaveInquestDetailAbsentWhenNoInquestValuesAreSupplied(AreaOfLaw areaOfLaw) {
+    BulkSubmissionOutcome outcome = new BulkSubmissionOutcome().interestedDepartments(List.of());
+
+    assertThat(mapper.mapToClaimPost(outcome, areaOfLaw).getInquestDetail()).isNull();
+    assertThat(mapper.mapToClaimPost(new BulkSubmissionOutcome(), areaOfLaw).getInquestDetail())
+        .isNull();
+  }
+
+  @ParameterizedTest
+  @CsvSource({"true", "false"})
+  void shouldPreserveMeansTestedWhenItIsTheOnlyInquestValue(boolean meansTested) {
+    BulkSubmissionOutcome outcome = new BulkSubmissionOutcome().isClientMeansTested(meansTested);
+
+    ClaimInquestDetail detail = mapper.mapToClaimPost(outcome, LEGAL_HELP).getInquestDetail();
+
+    assertThat(detail).isNotNull();
+    assertThat(detail.getIsClientMeansTested()).isEqualTo(meansTested);
+    assertThat(detail.getDeceasedForename()).isNull();
   }
 
   @ParameterizedTest(name = "AreaOfLaw: {0}")
