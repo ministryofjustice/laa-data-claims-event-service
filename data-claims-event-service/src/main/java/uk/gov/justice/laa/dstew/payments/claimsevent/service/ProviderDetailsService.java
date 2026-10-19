@@ -34,12 +34,14 @@ public class ProviderDetailsService {
   public Mono<ProviderFirmOfficeContractAndScheduleDto> getProviderFirmSchedules(
       String officeCode, LocalDate effectiveDate) {
     Retry retry = retryRegistry.retry("pdaRetry");
-    log.debug(
-        "Calling PDA getProviderFirmSchedules for officeCode {}, effectiveDate {}",
-        officeCode,
-        effectiveDate);
     return providerDetailsRestClient
         .getProviderFirmSchedules(officeCode, effectiveDate)
+        .doOnSubscribe(
+            subscription ->
+                log.debug(
+                    "Calling PDA getProviderFirmSchedules for officeCode {}, effectiveDate {}",
+                    officeCode,
+                    effectiveDate))
         .transformDeferred(RetryOperator.of(retry));
   }
 }
