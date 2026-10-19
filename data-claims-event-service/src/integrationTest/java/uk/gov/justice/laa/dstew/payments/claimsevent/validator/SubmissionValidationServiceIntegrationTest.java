@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.ContextUtil.assertContextClaimError;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.ContextUtil.assertContextHasNoErrors;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockserver.model.HttpRequest;
 import org.mockserver.model.Parameter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -478,7 +480,18 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
       SubmissionValidationContext context =
           submissionValidationService.validateSubmission(SUBMISSION_ID);
 
-      // Then: later crime claims (c6..c8) must not be flagged for INVALID_CATEGORY
+      // Then: early civil claims (c1..c5) must be rejected for the CRL fee code
+      for (String claimId :
+          List.of(
+              "11111111-1111-1111-1111-111111111111",
+              "22222222-2222-2222-2222-222222222222",
+              "33333333-3333-3333-3333-333333333333",
+              "44444444-4444-4444-4444-444444444444",
+              "55555555-5555-5555-5555-555555555555")) {
+        assertClaimHasUnauthorisedCategoryError(context, claimId);
+      }
+
+      // Later crime claims (c6..c8) must be authorised and retain CRL in their PATCHes.
       for (String claimId :
           List.of(
               "66666666-6666-6666-6666-666666666666",
@@ -493,6 +506,7 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
                   + " messages="
                   + report.get().getMessages());
         }
+        assertClaimPatchContainsCrl(claimId);
       }
     }
 
@@ -550,8 +564,19 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
       SubmissionValidationContext context =
           submissionValidationService.validateSubmission(SUBMISSION_ID);
 
-      // Then: per-claim verdicts for crime claims must match the forward-order test (i.e. no
-      // errors)
+      // Then: early civil claims must reject the CRL fee code even when crime claims are processed
+      // first.
+      for (String claimId :
+          List.of(
+              "11111111-1111-1111-1111-111111111111",
+              "22222222-2222-2222-2222-222222222222",
+              "33333333-3333-3333-3333-333333333333",
+              "44444444-4444-4444-4444-444444444444",
+              "55555555-5555-5555-5555-555555555555")) {
+        assertClaimHasUnauthorisedCategoryError(context, claimId);
+      }
+
+      // Crime claims must remain valid and their fee-calculation PATCHes must contain CRL.
       for (String claimId :
           List.of(
               "66666666-6666-6666-6666-666666666666",
@@ -561,7 +586,33 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
         Assertions.assertTrue(report.isPresent());
         Assertions.assertFalse(
             report.get().hasErrors(), "Expected no claim-level errors for " + claimId);
+        assertClaimPatchContainsCrl(claimId);
       }
+    }
+
+    private void assertClaimHasUnauthorisedCategoryError(
+        SubmissionValidationContext context, String claimId) {
+      var report = context.getClaimReport(claimId);
+      assertThat(report).isPresent();
+      assertThat(report.orElseThrow().getMessages())
+          .contains(
+              ClaimValidationError.INVALID_CATEGORY_OF_LAW_NOT_AUTHORISED_FOR_PROVIDER.toPatch());
+    }
+
+    private void assertClaimPatchContainsCrl(String claimId) throws JsonProcessingException {
+      HttpRequest[] requests =
+          mockServerClient.retrieveRecordedRequests(
+              HttpRequest.request()
+                  .withMethod("PATCH")
+                  .withPath("/api/v1/submissions/" + SUBMISSION_ID + "/claims/" + claimId));
+
+      assertThat(requests).hasSize(1);
+      assertThat(
+              objectMapper
+                  .readTree(requests[0].getBodyAsString())
+                  .at("/fee_calculation_response/category_of_law")
+                  .asText(null))
+          .isEqualTo("CRL");
     }
 
     @Test

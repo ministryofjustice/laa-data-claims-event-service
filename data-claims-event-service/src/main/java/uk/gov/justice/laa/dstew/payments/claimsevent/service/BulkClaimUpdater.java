@@ -83,7 +83,7 @@ public class BulkClaimUpdater {
                 buildFeeCalculationPatch(
                     feeCalculationResponse.get(),
                     feeDetailsResponseMap.get(claim.getFeeCode()),
-                    context.getAuthorisedCategoryOfLawCode(claim.getFeeCode()));
+                    context.getAuthorisedCategoryOfLawCode(claim.getId()));
           }
 
           // If a claim was found to be invalid, make the rest of the claims invalid

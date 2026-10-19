@@ -54,6 +54,7 @@ class CategoryOfLawValidationServiceTest {
           claim, feeDetailsResponseWrapperMap, providerCategoriesOfLaw, context);
 
       assertThat(context.hasErrors()).isFalse();
+      assertThat(context.getAuthorisedCategoryOfLawCode(claim.getId())).isEqualTo("categoryOfLaw");
     }
 
     @Test
@@ -105,6 +106,7 @@ class CategoryOfLawValidationServiceTest {
           context,
           claim.getId(),
           ClaimValidationError.INVALID_CATEGORY_OF_LAW_NOT_AUTHORISED_FOR_PROVIDER);
+      assertThat(context.getAuthorisedCategoryOfLawCode(claim.getId())).isNull();
     }
 
     @Test
