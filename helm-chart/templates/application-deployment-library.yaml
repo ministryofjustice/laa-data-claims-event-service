@@ -144,7 +144,38 @@ spec:
             {{- else }}
             initialDelaySeconds: 10
             {{- end }}
+          startupProbe:
+            httpGet:
+              {{- if (((.Values.probe).startup).endpoint) }}
+              path: {{ .Values.probe.startup.endpoint }}
+              {{- else }}
+              path: "/actuator/health/liveness"
+              {{- end }}
+              {{- if ((.Values.management).port) }}
+              port: {{ .Values.management.port }}
+              {{- end }}
+            {{- if (((.Values.probe).startup).timeoutSeconds) }}
+            timeoutSeconds: {{ .Values.probe.startup.timeoutSeconds }}
+            {{- else }}
+            timeoutSeconds: 1
+            {{- end }}
+            {{- if (((.Values.probe).startup).failureThreshold) }}
+            failureThreshold: {{ .Values.probe.startup.failureThreshold }}
+            {{- else }}
+            failureThreshold: 30
+            {{- end }}
+            {{- if (((.Values.probe).startup).periodSeconds) }}
+            periodSeconds: {{ .Values.probe.startup.periodSeconds }}
+            {{- else }}
+            periodSeconds: 5
+            {{- end }}
           {{- end }}
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - sleep
+                  - "{{ (((.Values.probe).preStop).sleepSeconds) | default 5 }}"
           env:
           {{- if .Values.env }}
           {{- range .Values.env }}

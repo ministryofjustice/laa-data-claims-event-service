@@ -55,6 +55,13 @@ management:
   endpoint:
     health:
       show-details: always
+      probes:
+        enabled: true
+      group:
+        readiness:
+          include: readinessState
+        liveness:
+          include: livenessState
 
 sentry:
   dsn: ${SENTRY_DSN:}
