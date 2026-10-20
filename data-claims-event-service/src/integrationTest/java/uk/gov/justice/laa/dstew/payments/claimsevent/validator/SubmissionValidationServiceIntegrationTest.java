@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.ContextUtil.assertContextClaimError;
 import static uk.gov.justice.laa.dstew.payments.claimsevent.ContextUtil.assertContextHasNoErrors;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -13,11 +14,13 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockserver.model.HttpRequest;
 import org.mockserver.model.Parameter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.context.ImportTestcontainers;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
@@ -40,6 +43,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValida
       "spring.cloud.aws.sqs.enabled=false", // Disable AWS SQS functionality
       "laa.bulk-claim-queue.name=not-used", // Dummy queue name to avoid initialization issues,
     })
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @DisplayName("Submission validation service integration tests")
 public class SubmissionValidationServiceIntegrationTest extends MockServerIntegrationTest {
 
@@ -253,7 +257,9 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
 
       stubForGetProviderOffice(
           OFFICE_CODE,
-          List.of(new Parameter("effectiveDate", "14-08-2025")),
+          List.of(
+              new Parameter("effectiveDate", "14-08-2025"),
+              new Parameter("requireOpenStatus", "false")),
           "provider-details/get-firm-schedules-openapi-200.json");
 
       stubForPostFeeCalculationReturnError("fee-scheme/post-fee-calculation-404.json");
@@ -345,8 +351,8 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
 
       stubForGetProviderOffice(
           OFFICE_CODE,
-          Collections.emptyList(),
-          "provider-details/get-firm-schedules-openapi-200.json");
+          List.of(Parameter.param("requireOpenStatus", "false")),
+          "provider-details/incident-crime.json");
 
       stubForGetClaims(Collections.emptyList(), claimsJson);
       stubForGetFeeDetails("CAPA", "fee-scheme/get-fee-details-200.json");
@@ -407,6 +413,348 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
 
                     assertThat(actual).usingRecursiveComparison().isEqualTo(expected);
                   }));
+    }
+  }
+
+  @Nested
+  @DisplayName("Incident-shaped end-to-end submission tests")
+  class IncidentShapeEndToEndTests {
+
+    @Test
+    @DisplayName(
+        "Forward-order incident: later crime-dated claims should be authorised (no INVALID_CATEGORY errors)")
+    void incidentShapeForwardOrderShouldAuthoriseLaterCrimeClaims() throws Exception {
+      // Given: multi-claim submission (5 early CIVIL dated, 3 later CRIME dated)
+      stubForGetSubmission(
+          SUBMISSION_ID, "data-claims/get-submission/get-submission-incident-multi.json");
+      stubForUpdateSubmission(SUBMISSION_ID);
+      stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
+
+      // Ensure PATCH updates for each claim are stubbed (no-op)
+      for (String claimId :
+          List.of(
+              "11111111-1111-1111-1111-111111111111",
+              "22222222-2222-2222-2222-222222222222",
+              "33333333-3333-3333-3333-333333333333",
+              "44444444-4444-4444-4444-444444444444",
+              "55555555-5555-5555-5555-555555555555",
+              "66666666-6666-6666-6666-666666666666",
+              "77777777-7777-7777-7777-777777777777",
+              "88888888-8888-8888-8888-888888888888")) {
+        stubForUpdateClaim(SUBMISSION_ID, UUID.fromString(claimId));
+      }
+
+      // Return claims in the forward order
+      stubForGetClaims(
+          Collections.emptyList(), "data-claims/get-claims/incident-multi-forward.json");
+
+      // Provider details: for Civil effective date return an open-ended Civil schedule
+      stubForGetProviderOffice(
+          OFFICE_CODE,
+          List.of(
+              Parameter.param("effectiveDate", "01-06-2025"),
+              Parameter.param("requireOpenStatus", "false")),
+          "provider-details/incident-civil-bounded.json");
+
+      // For the later Crime date return a Crime schedule
+      stubForGetProviderOffice(
+          OFFICE_CODE,
+          List.of(
+              Parameter.param("effectiveDate", "01-07-2026"),
+              Parameter.param("requireOpenStatus", "false")),
+          "provider-details/incident-crime.json");
+
+      // Fee details and calculation
+      stubForGetFeeDetails("CAPA", "fee-scheme/get-fee-details-200.json");
+      stubForPostFeeCalculation("fee-scheme/post-fee-calculation-200.json");
+
+      // Avoid duplicate-submission check interference
+      getStubForGetSubmissionByCriteria(
+          List.of(
+              Parameter.param("offices", OFFICE_CODE),
+              Parameter.param("area_of_law", AreaOfLaw.LEGAL_HELP.name()),
+              Parameter.param("submission_period", "APR-2025")),
+          "data-claims/get-submission/get-submissions-by-filter_no_content.json");
+
+      // When
+      SubmissionValidationContext context =
+          submissionValidationService.validateSubmission(SUBMISSION_ID);
+
+      // Then: early civil claims (c1..c5) must be rejected for the CRL fee code
+      for (String claimId :
+          List.of(
+              "11111111-1111-1111-1111-111111111111",
+              "22222222-2222-2222-2222-222222222222",
+              "33333333-3333-3333-3333-333333333333",
+              "44444444-4444-4444-4444-444444444444",
+              "55555555-5555-5555-5555-555555555555")) {
+        assertClaimHasUnauthorisedCategoryError(context, claimId);
+      }
+
+      // Later crime claims (c6..c8) must be authorised and retain CRL in their PATCHes.
+      for (String claimId :
+          List.of(
+              "66666666-6666-6666-6666-666666666666",
+              "77777777-7777-7777-7777-777777777777",
+              "88888888-8888-8888-8888-888888888888")) {
+        var report = context.getClaimReport(claimId);
+        Assertions.assertTrue(report.isPresent());
+        if (report.get().hasErrors()) {
+          Assertions.fail(
+              "Expected no claim-level errors for "
+                  + claimId
+                  + " messages="
+                  + report.get().getMessages());
+        }
+        assertClaimPatchContainsCrl(claimId);
+      }
+    }
+
+    @Test
+    @DisplayName(
+        "Reverse-order incident: per-claim verdicts should match forward order (no errors for later crime claims)")
+    void incidentShapeReverseOrderShouldProduceSamePerClaimVerdicts() throws Exception {
+      // Given: same submission but claims returned in reverse (crime first)
+      stubForGetSubmission(
+          SUBMISSION_ID, "data-claims/get-submission/get-submission-incident-multi.json");
+      stubForUpdateSubmission(SUBMISSION_ID);
+      stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
+
+      for (String claimId :
+          List.of(
+              "11111111-1111-1111-1111-111111111111",
+              "22222222-2222-2222-2222-222222222222",
+              "33333333-3333-3333-3333-333333333333",
+              "44444444-4444-4444-4444-444444444444",
+              "55555555-5555-5555-5555-555555555555",
+              "66666666-6666-6666-6666-666666666666",
+              "77777777-7777-7777-7777-777777777777",
+              "88888888-8888-8888-8888-888888888888")) {
+        stubForUpdateClaim(SUBMISSION_ID, UUID.fromString(claimId));
+      }
+
+      stubForGetClaims(
+          Collections.emptyList(), "data-claims/get-claims/incident-multi-reverse.json");
+
+      // Same provider stubs as forward case
+      stubForGetProviderOffice(
+          OFFICE_CODE,
+          List.of(
+              Parameter.param("effectiveDate", "01-06-2025"),
+              Parameter.param("requireOpenStatus", "false")),
+          "provider-details/incident-civil-bounded.json");
+      stubForGetProviderOffice(
+          OFFICE_CODE,
+          List.of(
+              Parameter.param("effectiveDate", "01-07-2026"),
+              Parameter.param("requireOpenStatus", "false")),
+          "provider-details/incident-crime.json");
+
+      stubForGetFeeDetails("CAPA", "fee-scheme/get-fee-details-200.json");
+      stubForPostFeeCalculation("fee-scheme/post-fee-calculation-200.json");
+
+      getStubForGetSubmissionByCriteria(
+          List.of(
+              Parameter.param("offices", OFFICE_CODE),
+              Parameter.param("area_of_law", AreaOfLaw.LEGAL_HELP.name()),
+              Parameter.param("submission_period", "APR-2025")),
+          "data-claims/get-submission/get-submissions-by-filter_no_content.json");
+
+      // When
+      SubmissionValidationContext context =
+          submissionValidationService.validateSubmission(SUBMISSION_ID);
+
+      // Then: early civil claims must reject the CRL fee code even when crime claims are processed
+      // first.
+      for (String claimId :
+          List.of(
+              "11111111-1111-1111-1111-111111111111",
+              "22222222-2222-2222-2222-222222222222",
+              "33333333-3333-3333-3333-333333333333",
+              "44444444-4444-4444-4444-444444444444",
+              "55555555-5555-5555-5555-555555555555")) {
+        assertClaimHasUnauthorisedCategoryError(context, claimId);
+      }
+
+      // Crime claims must remain valid and their fee-calculation PATCHes must contain CRL.
+      for (String claimId :
+          List.of(
+              "66666666-6666-6666-6666-666666666666",
+              "77777777-7777-7777-7777-777777777777",
+              "88888888-8888-8888-8888-888888888888")) {
+        var report = context.getClaimReport(claimId);
+        Assertions.assertTrue(report.isPresent());
+        Assertions.assertFalse(
+            report.get().hasErrors(), "Expected no claim-level errors for " + claimId);
+        assertClaimPatchContainsCrl(claimId);
+      }
+    }
+
+    private void assertClaimHasUnauthorisedCategoryError(
+        SubmissionValidationContext context, String claimId) {
+      var report = context.getClaimReport(claimId);
+      assertThat(report).isPresent();
+      assertThat(report.orElseThrow().getMessages())
+          .contains(
+              ClaimValidationError.INVALID_CATEGORY_OF_LAW_NOT_AUTHORISED_FOR_PROVIDER.toPatch());
+    }
+
+    private void assertClaimPatchContainsCrl(String claimId) throws JsonProcessingException {
+      HttpRequest[] requests =
+          mockServerClient.retrieveRecordedRequests(
+              HttpRequest.request()
+                  .withMethod("PATCH")
+                  .withPath("/api/v1/submissions/" + SUBMISSION_ID + "/claims/" + claimId));
+
+      assertThat(requests).hasSize(1);
+      assertThat(
+              objectMapper
+                  .readTree(requests[0].getBodyAsString())
+                  .at("/fee_calculation_response/category_of_law")
+                  .asText(null))
+          .isEqualTo("CRL");
+    }
+
+    @Test
+    @DisplayName(
+        "Single-window baseline: when all claims fall in the same crime window, all claims should pass")
+    void singleWindowBaselineShouldStillPassAllClaims() throws Exception {
+      // Build a submission where every claim falls into the same Crime window (all crime dated)
+      stubForGetSubmission(
+          SUBMISSION_ID, "data-claims/get-submission/get-submission-incident-multi.json");
+      stubForUpdateSubmission(SUBMISSION_ID);
+      stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
+
+      for (String claimId :
+          List.of(
+              "11111111-1111-1111-1111-111111111111",
+              "22222222-2222-2222-2222-222222222222",
+              "33333333-3333-3333-3333-333333333333",
+              "44444444-4444-4444-4444-444444444444",
+              "55555555-5555-5555-5555-555555555555",
+              "66666666-6666-6666-6666-666666666666",
+              "77777777-7777-7777-7777-777777777777",
+              "88888888-8888-8888-8888-888888888888")) {
+        stubForUpdateClaim(SUBMISSION_ID, UUID.fromString(claimId));
+      }
+
+      // Return claims all with crime dates by reusing the forward fixture but we will stub provider
+      // to always return Crime schedule for the case date
+      stubForGetClaims(
+          Collections.emptyList(), "data-claims/get-claims/incident-multi-forward.json");
+
+      // For any effective date used in the fixture, return the Crime schedule
+      stubForGetProviderOffice(
+          OFFICE_CODE,
+          List.of(
+              Parameter.param("effectiveDate", "01-06-2025"),
+              Parameter.param("requireOpenStatus", "false")),
+          "provider-details/incident-crime.json");
+      stubForGetProviderOffice(
+          OFFICE_CODE,
+          List.of(
+              Parameter.param("effectiveDate", "01-07-2026"),
+              Parameter.param("requireOpenStatus", "false")),
+          "provider-details/incident-crime.json");
+
+      stubForGetFeeDetails("CAPA", "fee-scheme/get-fee-details-200.json");
+      stubForPostFeeCalculation("fee-scheme/post-fee-calculation-200.json");
+
+      getStubForGetSubmissionByCriteria(
+          List.of(
+              Parameter.param("offices", OFFICE_CODE),
+              Parameter.param("area_of_law", AreaOfLaw.LEGAL_HELP.name()),
+              Parameter.param("submission_period", "APR-2025")),
+          "data-claims/get-submission/get-submissions-by-filter_no_content.json");
+
+      // When
+      SubmissionValidationContext context =
+          submissionValidationService.validateSubmission(SUBMISSION_ID);
+
+      // Then: expect no claim-level errors for any claim
+      // ...existing code...
+      for (String claimId :
+          List.of(
+              "11111111-1111-1111-1111-111111111111",
+              "22222222-2222-2222-2222-222222222222",
+              "33333333-3333-3333-3333-333333333333",
+              "44444444-4444-4444-4444-444444444444",
+              "55555555-5555-5555-5555-555555555555",
+              "66666666-6666-6666-6666-666666666666",
+              "77777777-7777-7777-7777-777777777777",
+              "88888888-8888-8888-8888-888888888888")) {
+        var report = context.getClaimReport(claimId);
+        Assertions.assertTrue(report.isPresent());
+        Assertions.assertFalse(
+            report.get().hasErrors(), "Expected no claim-level errors for " + claimId);
+      }
+    }
+
+    @Test
+    @DisplayName(
+        "Genuine unauthorised claim: crime-dated claim should be flagged INVALID_CATEGORY_OF_LAW_NOT_AUTHORISED_FOR_PROVIDER")
+    void genuineUnauthorisedClaimShouldStillBeFlagged() throws Exception {
+      // Given a single claim whose date maps to a provider schedule that lacks the required
+      // category
+      stubForGetSubmission(
+          SUBMISSION_ID, "data-claims/get-submission/get-submission-incident-multi.json");
+      stubForUpdateSubmission(SUBMISSION_ID);
+      stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
+
+      // Ensure PATCH updates for each claim are stubbed (no-op) so MockServer doesn't return 502
+      for (String claimId :
+          List.of(
+              "11111111-1111-1111-1111-111111111111",
+              "22222222-2222-2222-2222-222222222222",
+              "33333333-3333-3333-3333-333333333333",
+              "44444444-4444-4444-4444-444444444444",
+              "55555555-5555-5555-5555-555555555555",
+              "66666666-6666-6666-6666-666666666666",
+              "77777777-7777-7777-7777-777777777777",
+              "88888888-8888-8888-8888-888888888888")) {
+        stubForUpdateClaim(SUBMISSION_ID, UUID.fromString(claimId));
+      }
+      // Use the forward claims fixture but stub PDA for the crime date to return CIVIL only
+      stubForGetClaims(
+          Collections.emptyList(), "data-claims/get-claims/incident-multi-forward.json");
+
+      stubForGetProviderOffice(
+          OFFICE_CODE,
+          List.of(
+              Parameter.param("effectiveDate", "01-06-2025"),
+              Parameter.param("requireOpenStatus", "false")),
+          "provider-details/incident-civil.json");
+      stubForGetProviderOffice(
+          OFFICE_CODE,
+          List.of(
+              Parameter.param("effectiveDate", "01-07-2026"),
+              Parameter.param("requireOpenStatus", "false")),
+          "provider-details/incident-civil.json");
+
+      stubForGetFeeDetails("CAPA", "fee-scheme/get-fee-details-200.json");
+      stubForPostFeeCalculation("fee-scheme/post-fee-calculation-200.json");
+
+      getStubForGetSubmissionByCriteria(
+          List.of(
+              Parameter.param("offices", OFFICE_CODE),
+              Parameter.param("area_of_law", AreaOfLaw.LEGAL_HELP.name()),
+              Parameter.param("submission_period", "APR-2025")),
+          "data-claims/get-submission/get-submissions-by-filter_no_content.json");
+
+      // When
+      SubmissionValidationContext context =
+          submissionValidationService.validateSubmission(SUBMISSION_ID);
+
+      // Then: the crime-dated claim must be flagged as
+      // INVALID_CATEGORY_OF_LAW_NOT_AUTHORISED_FOR_PROVIDER
+      var report = context.getClaimReport("66666666-6666-6666-6666-666666666666");
+      assertThat(report).isPresent();
+      assertThat(report.orElseThrow().getMessages())
+          .usingRecursiveComparison()
+          .isEqualTo(
+              List.of(
+                  ClaimValidationError.INVALID_CATEGORY_OF_LAW_NOT_AUTHORISED_FOR_PROVIDER
+                      .toPatch()));
     }
   }
 }

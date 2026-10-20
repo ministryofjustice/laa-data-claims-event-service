@@ -213,31 +213,30 @@ public class SubmissionValidationContext {
   }
 
   /**
-   * Stores the validated category of law code associated with the specified fee code. This method
+   * Stores the validated category of law code associated with the specified claim. This method
    * records the resolved category of law so that it can be retrieved later during fee calculation,
-   * patch generation, or other downstream processing. If an entry already exists for the fee code,
-   * it will be overwritten.
+   * patch generation, or other downstream processing. If an entry already exists for the claim, it
+   * will be overwritten.
    *
-   * @param feeCode the fee code for which a validated category of law is being stored
-   * @param categoryOfLawCode the resolved (valid) category of law code to associate with the fee
-   *     code; may be {@code null} if no valid category was determined
+   * @param claimId the claim ID for which a validated category of law is being stored
+   * @param categoryOfLawCode the resolved (valid) category of law code to associate with the claim;
+   *     may be {@code null} if no valid category was determined
    */
-  public void putAuthorisedCategoryOfLawCode(final String feeCode, final String categoryOfLawCode) {
-    authorisedCategoryOfLawCodes.put(feeCode, categoryOfLawCode);
+  public void putAuthorisedCategoryOfLawCode(final String claimId, final String categoryOfLawCode) {
+    authorisedCategoryOfLawCodes.put(claimId, categoryOfLawCode);
   }
 
   /**
-   * Returns the category of law that was previously validated and stored for the specified fee
-   * code. If no authorised category is associated with the given fee code, this method returns
-   * {@code null}.
+   * Returns the category of law that was previously validated and stored for the specified claim.
+   * If no authorised category is associated with the given claim, this method returns {@code null}.
    *
    * <p>A {@code null} return value indicates that no valid or authorised category of law was
-   * determined during validation for that fee code.
+   * determined during validation for that claim.
    *
-   * @param feeCode the fee code whose authorised category of law is being requested
+   * @param claimId the claim ID whose authorised category of law is being requested
    * @return the authorised category of law code, or {@code null} if none was recorded
    */
-  public String getAuthorisedCategoryOfLawCode(final String feeCode) {
-    return authorisedCategoryOfLawCodes.get(feeCode);
+  public String getAuthorisedCategoryOfLawCode(final String claimId) {
+    return authorisedCategoryOfLawCodes.get(claimId);
   }
 }
