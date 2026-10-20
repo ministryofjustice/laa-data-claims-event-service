@@ -1,7 +1,11 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.config;
 
+import io.awspring.cloud.sqs.config.SqsMessageListenerContainerFactory;
+import io.awspring.cloud.sqs.listener.acknowledgement.handler.AcknowledgementMode;
 import java.net.URI;
+import java.time.Duration;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -9,6 +13,7 @@ import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 import software.amazon.awssdk.services.sqs.SqsClient;
 
 /**
@@ -65,6 +70,49 @@ public class SqsConfig {
     return SqsClient.builder()
         .region(Region.of(region))
         .credentialsProvider(DefaultCredentialsProvider.builder().build())
+        .build();
+  }
+
+  /**
+   * Creates the default {@link SqsMessageListenerContainerFactory} used by {@code @SqsListener}
+   * methods, with an explicit, configurable shutdown budget.
+   *
+   * <p>On shutdown, the container stops polling for new messages immediately and gives in-flight
+   * message processing up to {@code listenerShutdownTimeout} to finish. Acknowledgement mode is
+   * explicitly {@link AcknowledgementMode#ON_SUCCESS}, meaning a message is only ever deleted from
+   * the queue after its listener method completes successfully - a message still processing (or
+   * interrupted) when the shutdown budget is exceeded is never acknowledged, and becomes visible
+   * again for redelivery once its SQS visibility timeout expires.
+   *
+   * @param sqsAsyncClient the async SQS client used by the listener container
+   * @param listenerShutdownTimeoutSeconds how long to wait for in-flight message processing to
+   *     finish on shutdown before stopping regardless
+   * @param acknowledgementShutdownTimeoutSeconds how long to wait for pending acknowledgements to
+   *     be flushed on shutdown; must be greater than or equal to {@code
+   *     listenerShutdownTimeoutSeconds} so a message that finishes processing just before its
+   *     deadline still has time to be acknowledged
+   * @return the configured {@link SqsMessageListenerContainerFactory}
+   */
+  @Bean
+  @ConditionalOnProperty(
+      prefix = "spring.cloud.aws.sqs",
+      name = "enabled",
+      matchIfMissing = true)
+  public SqsMessageListenerContainerFactory<Object> defaultSqsListenerContainerFactory(
+      SqsAsyncClient sqsAsyncClient,
+      @Value("${laa.bulk-claim-queue.listener-shutdown-timeout-seconds:20}")
+          int listenerShutdownTimeoutSeconds,
+      @Value("${laa.bulk-claim-queue.acknowledgement-shutdown-timeout-seconds:20}")
+          int acknowledgementShutdownTimeoutSeconds) {
+    return SqsMessageListenerContainerFactory.builder()
+        .configure(
+            options ->
+                options
+                    .acknowledgementMode(AcknowledgementMode.ON_SUCCESS)
+                    .listenerShutdownTimeout(Duration.ofSeconds(listenerShutdownTimeoutSeconds))
+                    .acknowledgementShutdownTimeout(
+                        Duration.ofSeconds(acknowledgementShutdownTimeoutSeconds)))
+        .sqsAsyncClient(sqsAsyncClient)
         .build();
   }
 }
