@@ -9,7 +9,8 @@ plugins {
 def versions = [
     sentry : '8.31.0',
     testcontainers : '1.20.1',
-    jackson : '2.21.7' // bumped to patch release to address Snyk jackson-core/jackson-databind findings
+    jackson : '2.21.7', // bumped to patch release to address Snyk jackson-core/jackson-databind findings
+    claimvalidator : '1.5.10'
 ]
 
 ext['tomcat.version'] = '11.0.26'
@@ -170,8 +171,6 @@ dependencies {
     implementation 'ch.qos.logback:logback-classic:1.6.5'
     implementation 'ch.qos.logback:logback-core:1.6.5'
 
-    implementation project(':reference-fee-scheme-platform-api')
-
     // Note: claims-validation-core pulls in reference-provider-details-api transitively, which
     // ships a stale duplicate copy of the uk.gov.justice.laadata.providers.model / .api packages
     // (missing fields such as NmsAuthDetails.uniqueAuthorisationRef) that are also provided by
@@ -179,11 +178,11 @@ dependencies {
     // happens to resolve first wins for those classes, silently shadowing the up-to-date one.
     // We only need claims-validation-core for its config classes (e.g. ProviderDetailsApiConfig),
     // so exclude the duplicate reference module to make resolution deterministic.
-    implementation('uk.gov.justice.laa.dstew.payments.claims.validation:claims-validation-core:1.5.7') {
+    implementation("uk.gov.justice.laa.dstew.payments.claims.validation:claims-validation-core:$versions.claimvalidator") {
         exclude group: 'uk.gov.justice.laa.dstew.payments.claims.validation', module: 'reference-provider-details-api'
     }
-    implementation 'uk.gov.justice.laa.dstew.payments.claims.validation:reference-fee-scheme-platform-api:1.5.4'
-    implementation 'uk.gov.justice.laa.datastewardship.payments:data-claims-api-models:1.30.6'
+    implementation "uk.gov.justice.laa.dstew.payments.claims.validation:reference-fee-scheme-platform-api:$versions.claimvalidator"
+    implementation 'uk.gov.justice.laa.datastewardship.payments:data-claims-api-models:1.35.3'
     implementation 'uk.gov.justice.laadata.providers:providers-api:1.55.2'
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
