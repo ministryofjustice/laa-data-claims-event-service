@@ -77,7 +77,7 @@ class BulkClaimUpdaterTest {
     var feeDetailsResponseWrapperHashMap = buildFeeDetailsResponseWrapperHashMap();
     var feeCalculationResponse = new FeeCalculationResponse();
 
-    context.putAuthorisedCategoryOfLawCode(FEE_CODE, "categoryOfLawCode");
+    context.putAuthorisedCategoryOfLawCode(claimResponse.getId(), "categoryOfLawCode");
 
     when(mockFeeCalculationService.calculateFee(
             eq(claimResponse), eq(context), eq(AreaOfLaw.LEGAL_HELP)))
@@ -90,7 +90,7 @@ class BulkClaimUpdaterTest {
             feeDetailsResponseWrapperHashMap
                 .get(claimResponse.getFeeCode())
                 .getFeeDetailsResponse(),
-            context.getAuthorisedCategoryOfLawCode(FEE_CODE)))
+            context.getAuthorisedCategoryOfLawCode(claimResponse.getId())))
         .thenReturn(feeCalculationPatch);
 
     // When
@@ -115,7 +115,7 @@ class BulkClaimUpdaterTest {
     assertThat(capturedPatch.getFeeCalculationResponse()).isEqualTo(feeCalculationPatch);
     assertThat(capturedPatch.getValidationMessages().isEmpty()).isTrue();
     assertThat(capturedPatch.getCreatedByUserId()).isEqualTo(ClaimValidationSource.EVENT_SERVICE);
-    assertThat(capturedPatch.getStatus()).isEqualTo(ClaimStatus.VALID);
+    assertThat(capturedPatch.getStatus()).isEqualTo(ClaimStatus.VALIDATED_PENDING_APPROVAL);
   }
 
   @Test
@@ -149,9 +149,9 @@ class BulkClaimUpdaterTest {
     assertThat(submissionIdCaptor.getValue()).isEqualTo(SUBMISSION_ID);
     assertThat(claimIdCaptor.getValue()).isEqualTo(UUID.fromString(claimResponse.getId()));
     assertThat(capturedPatch.getId()).isEqualTo(claimResponse.getId());
-    assertThat(capturedPatch.getFeeCalculationResponse()).isEqualTo(null);
+    assertThat(capturedPatch.getFeeCalculationResponse()).isNull();
     assertThat(capturedPatch.getValidationMessages().isEmpty()).isTrue();
-    assertThat(capturedPatch.getStatus()).isEqualTo(ClaimStatus.VALID);
+    assertThat(capturedPatch.getStatus()).isEqualTo(ClaimStatus.VALIDATED_PENDING_APPROVAL);
   }
 
   @Test
@@ -164,7 +164,8 @@ class BulkClaimUpdaterTest {
     var feeCalculationResponseOne = new FeeCalculationResponse().claimId(CLAIM_ID_ONE.toString());
     var context = new SubmissionValidationContext();
 
-    context.putAuthorisedCategoryOfLawCode(FEE_CODE, "categoryOfLawCode");
+    context.putAuthorisedCategoryOfLawCode(claimResponseOne.getId(), "categoryOfLawCode");
+    context.putAuthorisedCategoryOfLawCode(claimResponseTwo.getId(), "categoryOfLawCode");
 
     when(mockFeeCalculationService.calculateFee(
             any(ClaimResponse.class), any(SubmissionValidationContext.class), any(AreaOfLaw.class)))
@@ -181,7 +182,7 @@ class BulkClaimUpdaterTest {
     // When
     bulkClaimUpdater.updateClaims(
         SUBMISSION_ID,
-        List.of(claimResponseTwo, claimResponseTwo),
+        List.of(claimResponseOne, claimResponseTwo),
         AreaOfLaw.LEGAL_HELP,
         context,
         feeDetailsResponseWrapperHashMap);
@@ -204,7 +205,7 @@ class BulkClaimUpdaterTest {
     var feeDetailsResponseWrapperHashMap = buildFeeDetailsResponseWrapperHashMap();
     var feeCalculationResponseOne = new FeeCalculationResponse().claimId(CLAIM_ID_ONE.toString());
 
-    context.putAuthorisedCategoryOfLawCode(FEE_CODE, "categoryOfLawCode");
+    context.putAuthorisedCategoryOfLawCode(validClaimResponse.getId(), "categoryOfLawCode");
 
     when(mockFeeCalculationService.calculateFee(
             eq(validClaimResponse), eq(context), eq(AreaOfLaw.LEGAL_HELP)))
@@ -217,7 +218,7 @@ class BulkClaimUpdaterTest {
             feeDetailsResponseWrapperHashMap
                 .get(validClaimResponse.getFeeCode())
                 .getFeeDetailsResponse(),
-            context.getAuthorisedCategoryOfLawCode(FEE_CODE)))
+            context.getAuthorisedCategoryOfLawCode(validClaimResponse.getId())))
         .thenReturn(feeCalculationPatch);
 
     context.addClaimError(
@@ -235,7 +236,7 @@ class BulkClaimUpdaterTest {
     verify(dataClaimsRestClient, times(2)).updateClaim(any(), any(), claimPatchCaptor.capture());
     ClaimPatch capturedPatch = claimPatchCaptor.getAllValues().getFirst();
     assertThat(capturedPatch.getId()).isEqualTo(validClaimResponse.getId());
-    assertThat(capturedPatch.getStatus()).isEqualTo(ClaimStatus.VALID);
+    assertThat(capturedPatch.getStatus()).isEqualTo(ClaimStatus.VALIDATED_PENDING_APPROVAL);
     ClaimPatch capturedPatchTwo = claimPatchCaptor.getAllValues().get(1);
     assertThat(capturedPatchTwo.getId()).isEqualTo(invalidClaimResponse.getId());
     assertThat(capturedPatchTwo.getStatus()).isEqualTo(ClaimStatus.INVALID);
@@ -259,6 +260,8 @@ class BulkClaimUpdaterTest {
     var feeCalculationResponse = new FeeCalculationResponse().claimId(CLAIM_ID_ONE.toString());
     var context = new SubmissionValidationContext();
 
+    context.putAuthorisedCategoryOfLawCode(claimResponse.getId(), "categoryOfLawCode");
+
     when(mockFeeCalculationService.calculateFee(
             eq(claimResponse), eq(context), eq(AreaOfLaw.LEGAL_HELP)))
         .thenReturn(Optional.of(feeCalculationResponse));
@@ -270,10 +273,9 @@ class BulkClaimUpdaterTest {
             feeDetailsResponseWrapperHashMap
                 .get(claimResponse.getFeeCode())
                 .getFeeDetailsResponse(),
-            context.getAuthorisedCategoryOfLawCode(null)))
+            context.getAuthorisedCategoryOfLawCode(claimResponse.getId())))
         .thenReturn(feeCalculationPatch);
 
-    context.putAuthorisedCategoryOfLawCode(null, "categoryOfLawCode");
     context.addClaimReports(List.of(new ClaimValidationReport(claimResponse.getId())));
     context.flagForRetry(claimResponse.getId());
     context.addClaimError(

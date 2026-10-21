@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.listener;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.JsonBody.json;
@@ -21,6 +22,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.context.ImportTestcontainers;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
+import software.amazon.awssdk.services.sqs.model.GetQueueAttributesRequest;
+import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest;
+import software.amazon.awssdk.services.sqs.model.QueueAttributeName;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
@@ -30,14 +34,20 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MessageListenerBase;
 import uk.gov.justice.laa.dstew.payments.claimsevent.helper.MockServerIntegrationTest;
+import uk.gov.justice.laa.dstew.payments.claimsevent.helper.SqsQueueCleaningIntegrationTest;
 import uk.gov.justice.laa.dstew.payments.claimsevent.model.SubmissionEventType;
 
 @ActiveProfiles("test")
 @ImportTestcontainers(MessageListenerBase.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+    properties = {
+      "laa.bulk-claim-queue.visibility-timeout-seconds=2",
+      "laa.bulk-claim-queue.visibility-extension-interval-seconds=1"
+    })
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Import(MockServerIntegrationTest.ClaimsConfiguration.class)
-public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
+public class MessageListenerIntegrationTest extends SqsQueueCleaningIntegrationTest {
 
   private static final String OFFICE_CODE = "AQ2B3C";
   private static final AreaOfLaw AREA_OF_LAW = AreaOfLaw.LEGAL_HELP;
@@ -46,6 +56,7 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
   private static final UUID BULK_SUBMISSION_ID =
       UUID.fromString("3fa85f64-5717-4562-b3fc-2c963f66afa6");
   private static final UUID CLAIM_ID = UUID.fromString("f6bde766-a0a3-483b-bf13-bef888b4f06e");
+  private static final String QUEUE_NAME = "test-queue-name";
 
   @Autowired private SqsTemplate sqsTemplate;
   @Autowired private ObjectMapper objectMapper;
@@ -63,7 +74,7 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
     SubmissionPatch patchBodySucceeded =
         SubmissionPatch.builder()
             .submissionId(SUBMISSION_ID)
-            .status(SubmissionStatus.VALIDATION_SUCCEEDED)
+            .status(SubmissionStatus.VALIDATED_PENDING_APPROVAL)
             .build();
     stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodySucceeded);
     stubReturnNoClaims();
@@ -83,6 +94,33 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
   }
 
   @Test
+  void sendMessage_legacyValidatedSubmission_isIdempotent() throws Exception {
+    // With legacy coercion enabled in the Claims API, a pending-approval update is returned as
+    // VALIDATION_SUCCEEDED. A redelivered validation message must not re-run validation.
+    stubForGetSubmission(
+        SUBMISSION_ID, "data-claims/get-submission/get-submission-validation-succeeded.json");
+
+    sendSubmissionValidationMessage();
+
+    await()
+        .pollInterval(Duration.ofMillis(500))
+        .atMost(Duration.ofSeconds(20))
+        .untilAsserted(
+            () ->
+                mockServerClient.verify(
+                    request()
+                        .withMethod("GET")
+                        .withPath(API_VERSION_1 + "submissions/" + SUBMISSION_ID),
+                    VerificationTimes.exactly(1)));
+
+    awaitMessageAcknowledged();
+
+    mockServerClient.verify(
+        request().withMethod("PATCH").withPath(API_VERSION_1 + "submissions/" + SUBMISSION_ID),
+        VerificationTimes.exactly(0));
+  }
+
+  @Test
   void sendMessage_noErrors_withClaims() throws Exception {
     // Given a submission with a claim
     stubForGetSubmission(
@@ -96,7 +134,7 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
     SubmissionPatch patchBodySucceeded =
         SubmissionPatch.builder()
             .submissionId(SUBMISSION_ID)
-            .status(SubmissionStatus.VALIDATION_SUCCEEDED)
+            .status(SubmissionStatus.VALIDATED_PENDING_APPROVAL)
             .build();
     stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodySucceeded);
 
@@ -144,7 +182,7 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
     SubmissionPatch patchBodySucceeded =
         SubmissionPatch.builder()
             .submissionId(SUBMISSION_ID)
-            .status(SubmissionStatus.VALIDATION_SUCCEEDED)
+            .status(SubmissionStatus.VALIDATED_PENDING_APPROVAL)
             .build();
     stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodySucceeded);
 
@@ -195,7 +233,7 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
     SubmissionPatch patchBodySucceeded =
         SubmissionPatch.builder()
             .submissionId(SUBMISSION_ID)
-            .status(SubmissionStatus.VALIDATION_SUCCEEDED)
+            .status(SubmissionStatus.VALIDATED_PENDING_APPROVAL)
             .build();
     stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodySucceeded);
 
@@ -265,6 +303,84 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
     verifySubmissionRequests();
   }
 
+  @Test
+  void sendMessage_forwardsFeeValidationMessageCodeToDownstreamClaimPatch() throws Exception {
+    stubForGetSubmission(
+        SUBMISSION_ID, "data-claims/get-submission/get-submission-with-claim-crime-lower.json");
+    SubmissionPatch patchBodyInProgress =
+        SubmissionPatch.builder()
+            .submissionId(SUBMISSION_ID)
+            .status(SubmissionStatus.VALIDATION_IN_PROGRESS)
+            .build();
+    stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodyInProgress);
+    SubmissionPatch patchBodyFailed =
+        SubmissionPatch.builder()
+            .submissionId(SUBMISSION_ID)
+            .status(SubmissionStatus.VALIDATION_FAILED)
+            .build();
+    stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodyFailed);
+
+    getStubForGetSubmissionByCriteria(
+        List.of(
+            Parameter.param("offices", OFFICE_CODE),
+            Parameter.param("area_of_law", AreaOfLaw.CRIME_LOWER.name()),
+            Parameter.param("submission_period", "APR-2025")),
+        "data-claims/get-submission/get-submissions-by-filter_no_content.json");
+    stubForGetFeeDetails("CAPA", "fee-scheme/get-fee-details-200.json");
+    stubForGetProviderOffice(
+        OFFICE_CODE,
+        Collections.emptyList(),
+        "provider-details/get-firm-schedules-openapi-200.json");
+
+    stubForGetClaims(Collections.emptyList(), "data-claims/get-claims/claim-valid.json");
+    stubForPostFeeCalculation("fee-scheme/post-fee-calculation-validation-error-200.json");
+    stubForUpdateClaim(SUBMISSION_ID, CLAIM_ID);
+    stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
+
+    sendSubmissionValidationMessage();
+
+    verifyClaimRequestInvocationWithFeeCalculationValidationMessageCode();
+  }
+
+  @Test
+  void sendMessage_forwardsFeeWarningMessageCodeToDownstreamClaimPatch() throws Exception {
+    stubForGetSubmission(
+        SUBMISSION_ID, "data-claims/get-submission/get-submission-with-claim-crime-lower.json");
+    SubmissionPatch patchBodyInProgress =
+        SubmissionPatch.builder()
+            .submissionId(SUBMISSION_ID)
+            .status(SubmissionStatus.VALIDATION_IN_PROGRESS)
+            .build();
+    stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodyInProgress);
+    SubmissionPatch patchBodySucceeded =
+        SubmissionPatch.builder()
+            .submissionId(SUBMISSION_ID)
+            .status(SubmissionStatus.VALIDATED_PENDING_APPROVAL)
+            .build();
+    stubForUpdateSubmissionWithBody(SUBMISSION_ID, patchBodySucceeded);
+
+    getStubForGetSubmissionByCriteria(
+        List.of(
+            Parameter.param("offices", OFFICE_CODE),
+            Parameter.param("area_of_law", AreaOfLaw.CRIME_LOWER.name()),
+            Parameter.param("submission_period", "APR-2025")),
+        "data-claims/get-submission/get-submissions-by-filter_no_content.json");
+    stubForGetFeeDetails("CAPA", "fee-scheme/get-fee-details-200.json");
+    stubForGetProviderOffice(
+        OFFICE_CODE,
+        Collections.emptyList(),
+        "provider-details/get-firm-schedules-openapi-200.json");
+
+    stubForGetClaims(Collections.emptyList(), "data-claims/get-claims/claim-valid.json");
+    stubForPostFeeCalculation("fee-scheme/post-fee-calculation-validation-warning-200.json");
+    stubForUpdateClaim(SUBMISSION_ID, CLAIM_ID);
+    stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
+
+    sendSubmissionValidationMessage();
+
+    verifyClaimRequestInvocationWithFeeCalculationWarningMessageCode();
+  }
+
   private void sendSubmissionValidationMessage() throws JsonProcessingException {
     String messageBody = objectMapper.writeValueAsString(Map.of("submission_id", SUBMISSION_ID));
     sqsTemplate.send(
@@ -273,6 +389,35 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
                 .queue("test-queue-name")
                 .payload(messageBody)
                 .header("SubmissionEventType", SubmissionEventType.VALIDATE_SUBMISSION.toString()));
+  }
+
+  private void awaitMessageAcknowledged() {
+    String queueUrl =
+        sqsClient
+            .getQueueUrl(GetQueueUrlRequest.builder().queueName(QUEUE_NAME).build())
+            .queueUrl();
+
+    await()
+        .pollInterval(Duration.ofMillis(500))
+        .atMost(Duration.ofSeconds(20))
+        .untilAsserted(
+            () -> {
+              var attributes =
+                  sqsClient
+                      .getQueueAttributes(
+                          GetQueueAttributesRequest.builder()
+                              .queueUrl(queueUrl)
+                              .attributeNames(
+                                  QueueAttributeName.APPROXIMATE_NUMBER_OF_MESSAGES,
+                                  QueueAttributeName.APPROXIMATE_NUMBER_OF_MESSAGES_NOT_VISIBLE)
+                              .build())
+                      .attributes();
+              assertThat(attributes.get(QueueAttributeName.APPROXIMATE_NUMBER_OF_MESSAGES))
+                  .isEqualTo("0");
+              assertThat(
+                      attributes.get(QueueAttributeName.APPROXIMATE_NUMBER_OF_MESSAGES_NOT_VISIBLE))
+                  .isEqualTo("0");
+            });
   }
 
   private void verifySubmissionRequests() {
@@ -304,7 +449,10 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
 
   private void verifyClaimRequestInvocation() throws JsonProcessingException {
     ClaimPatch validClaimPatch =
-        ClaimPatch.builder().id(CLAIM_ID.toString()).status(ClaimStatus.VALID).build();
+        ClaimPatch.builder()
+            .id(CLAIM_ID.toString())
+            .status(ClaimStatus.VALIDATED_PENDING_APPROVAL)
+            .build();
     ClaimPatch feeCalculationPatch =
         ClaimPatch.builder()
             .id(CLAIM_ID.toString())
@@ -344,5 +492,63 @@ public class MessageListenerIntegrationTest extends MockServerIntegrationTest {
             .withPath(API_VERSION_1 + "submissions/" + SUBMISSION_ID + "/claims/" + CLAIM_ID)
             .withBody(json(objectMapper.writeValueAsString(invalidClaimPatch))),
         VerificationTimes.exactly(1));
+  }
+
+  private void verifyClaimRequestInvocationWithFeeCalculationValidationMessageCode()
+      throws JsonProcessingException {
+    ClaimPatch invalidClaimPatch =
+        ClaimPatch.builder()
+            .id(CLAIM_ID.toString())
+            .status(ClaimStatus.INVALID)
+            .validationMessages(
+                List.of(
+                    ValidationMessagePatch.builder()
+                        .displayMessage("A field validation message from FSP")
+                        .messageCode("ERRALL1")
+                        .build()))
+            .build();
+
+    await()
+        .pollInterval(Duration.ofMillis(500))
+        .atMost(Duration.ofSeconds(20))
+        .untilAsserted(
+            () ->
+                mockServerClient.verify(
+                    request()
+                        .withMethod("PATCH")
+                        .withPath(
+                            API_VERSION_1 + "submissions/" + SUBMISSION_ID + "/claims/" + CLAIM_ID)
+                        .withBody(json(objectMapper.writeValueAsString(invalidClaimPatch))),
+                    VerificationTimes.exactly(1)));
+  }
+
+  private void verifyClaimRequestInvocationWithFeeCalculationWarningMessageCode()
+      throws JsonProcessingException {
+    // FSP warnings don't make the claim INVALID — successful initial validation still transitions
+    // the claim to pending approval.
+    ClaimPatch expectedClaimPatch =
+        ClaimPatch.builder()
+            .id(CLAIM_ID.toString())
+            .status(ClaimStatus.VALIDATED_PENDING_APPROVAL)
+            .validationMessages(
+                List.of(
+                    ValidationMessagePatch.builder()
+                        .displayMessage("A field warning message from FSP")
+                        .messageCode("WARFAM1")
+                        .build()))
+            .build();
+
+    await()
+        .pollInterval(Duration.ofMillis(500))
+        .atMost(Duration.ofSeconds(20))
+        .untilAsserted(
+            () ->
+                mockServerClient.verify(
+                    request()
+                        .withMethod("PATCH")
+                        .withPath(
+                            API_VERSION_1 + "submissions/" + SUBMISSION_ID + "/claims/" + CLAIM_ID)
+                        .withBody(json(objectMapper.writeValueAsString(expectedClaimPatch))),
+                    VerificationTimes.exactly(1)));
   }
 }

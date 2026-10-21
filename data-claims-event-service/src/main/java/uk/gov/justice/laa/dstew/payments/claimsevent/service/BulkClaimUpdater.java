@@ -83,7 +83,7 @@ public class BulkClaimUpdater {
                 buildFeeCalculationPatch(
                     feeCalculationResponse.get(),
                     feeDetailsResponseMap.get(claim.getFeeCode()),
-                    context.getAuthorisedCategoryOfLawCode(claim.getFeeCode()));
+                    context.getAuthorisedCategoryOfLawCode(claim.getId()));
           }
 
           // If a claim was found to be invalid, make the rest of the claims invalid
@@ -115,9 +115,11 @@ public class BulkClaimUpdater {
 
   private ClaimStatus getClaimStatus(
       final String claimId, final SubmissionValidationContext context) {
+    // On successful INITIAL validation a claim is held in VALIDATED_PENDING_APPROVAL alongside its
+    // submission (awaiting the provider's final approval) rather than being accepted (VALID).
     return (context.hasSubmissionLevelErrors() || context.hasErrors(claimId))
         ? ClaimStatus.INVALID
-        : ClaimStatus.VALID;
+        : ClaimStatus.VALIDATED_PENDING_APPROVAL;
   }
 
   private Optional<FeeCalculationResponse> getFeeCalculationResponse(

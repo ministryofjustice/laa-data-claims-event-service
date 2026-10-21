@@ -1,0 +1,21 @@
+{
+  "totalPages": 0,
+  "totalElements": 0,
+  "number": 0,
+  "size": 0,
+  "content": [
+    {
+      "submission_id": "11111111-1111-1111-1111-111111111111",
+      "bulk_submission_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "office_account_number": "AQ2B3C",
+      "submission_period": "APR-2025",
+      "area_of_law": "LEGAL HELP",
+      "status": "VALIDATED_PENDING_APPROVAL",
+      "legal_help_submission_reference": "0P322F/SCH",
+      "previous_submission_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "is_nil_submission": false,
+      "number_of_claims": 30,
+      "submitted": "2025-05-01T12:31:00Z"
+    }
+  ]
+}

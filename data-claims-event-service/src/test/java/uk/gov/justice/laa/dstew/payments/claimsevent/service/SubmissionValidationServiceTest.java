@@ -1,10 +1,13 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
 import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -18,12 +21,17 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import uk.gov.justice.laa.dstew.payments.claims.validation.core.model.ValidationResult;
 import uk.gov.justice.laa.dstew.payments.claims.validation.core.service.ValidationService;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionPatch;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.BulkSubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionClaim;
@@ -32,6 +40,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.submission.SubmissionValidator;
@@ -40,8 +49,6 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.submission.Submi
 class SubmissionValidationServiceTest {
 
   @Mock private ClaimValidationService claimValidationService;
-
-  @Mock private BulkClaimUpdater bulkClaimUpdater;
 
   @Mock private DataClaimsRestClient dataClaimsRestClient;
 
@@ -59,13 +66,15 @@ class SubmissionValidationServiceTest {
         new SubmissionValidationService(
             validationService,
             claimValidationService,
-            bulkClaimUpdater,
             dataClaimsRestClient,
             singletonList(submissionValidator),
             eventServiceMetricService);
     // Ensure ValidationService.validateSubmission returns a non-null ValidationResult so
     // SubmissionValidationService can proceed without NullPointerException during tests.
-    when(validationService.validateSubmission(any()))
+    // Lenient because the VALIDATED_PENDING_APPROVAL idempotency no-op path returns before this is
+    // used.
+    org.mockito.Mockito.lenient()
+        .when(validationService.validateSubmission(any()))
         .thenReturn(ValidationResult.builder().isValid(true).issues(List.of()).build());
   }
 
@@ -127,10 +136,176 @@ class SubmissionValidationServiceTest {
 
         // Then
         verifyCommonInteractions(submission, result);
+
+        // Passing INITIAL validation holds the submission and its bulk submission in
+        // VALIDATED_PENDING_APPROVAL (awaiting the provider's final approval) rather than accepting
+        // them.
+        ArgumentCaptor<SubmissionPatch> submissionPatchCaptor =
+            ArgumentCaptor.forClass(SubmissionPatch.class);
+        verify(dataClaimsRestClient)
+            .updateSubmission(eq(submissionId.toString()), submissionPatchCaptor.capture());
+        assertThat(submissionPatchCaptor.getValue().getStatus())
+            .isEqualTo(SubmissionStatus.VALIDATED_PENDING_APPROVAL);
+
+        ArgumentCaptor<BulkSubmissionPatch> bulkSubmissionPatchCaptor =
+            ArgumentCaptor.forClass(BulkSubmissionPatch.class);
+        verify(dataClaimsRestClient)
+            .updateBulkSubmission(any(), bulkSubmissionPatchCaptor.capture());
+        assertThat(bulkSubmissionPatchCaptor.getValue().getStatus())
+            .isEqualTo(BulkSubmissionStatus.VALIDATED_PENDING_APPROVAL);
+
+        // The submission status is what the idempotency guard keys off, so it must be written
+        // last. If the bulk submission patch were to fail after the submission had already moved
+        // to VALIDATED_PENDING_APPROVAL, the redelivered message would short-circuit and leave the
+        // bulk submission stranded in VALIDATION_IN_PROGRESS.
+        InOrder inOrder = Mockito.inOrder(dataClaimsRestClient);
+        inOrder.verify(dataClaimsRestClient).updateBulkSubmission(any(), any());
+        inOrder.verify(dataClaimsRestClient).updateSubmission(any(), any());
       } else {
         // When
         result = submissionValidationService.validateSubmission(submission.getSubmissionId());
       }
+    }
+
+    @Test
+    @DisplayName(
+        "Should persist a failed submission before the bulk status and avoid claim re-validation on retry")
+    void failedValidationPersistsSubmissionBeforeBulkAndAvoidsClaimRevalidationOnRetry() {
+      UUID submissionId = new UUID(0, 0);
+      UUID claimId = new UUID(1, 1);
+      SubmissionResponse initialSubmission = buildSubmission(submissionId, claimId, false);
+      SubmissionResponse failedSubmission =
+          getSubmission(
+              SubmissionStatus.VALIDATION_FAILED,
+              submissionId,
+              AreaOfLaw.LEGAL_HELP,
+              "officeAccountNumber",
+              false,
+              List.of());
+
+      when(dataClaimsRestClient.getSubmission(submissionId))
+          .thenReturn(ResponseEntity.ok(initialSubmission), ResponseEntity.ok(failedSubmission));
+      doAnswer(
+              invocation -> {
+                SubmissionValidationContext context = invocation.getArgument(1);
+                if (invocation.<SubmissionResponse>getArgument(0).getStatus()
+                    == SubmissionStatus.VALIDATION_FAILED) {
+                  context.addSubmissionValidationError("already failed");
+                }
+                return null;
+              })
+          .when(submissionValidator)
+          .validate(any(), any());
+      doAnswer(
+              invocation -> {
+                SubmissionValidationContext context = invocation.getArgument(1);
+                context.addClaimError(
+                    claimId.toString(),
+                    ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_EXISTING_SUBMISSION);
+                return null;
+              })
+          .when(claimValidationService)
+          .validateAndUpdateClaims(any(), any());
+      when(dataClaimsRestClient.updateBulkSubmission(any(), any()))
+          .thenThrow(new RuntimeException("bulk patch failed"))
+          .thenReturn(ResponseEntity.noContent().build());
+
+      assertThatThrownBy(() -> submissionValidationService.validateSubmission(submissionId))
+          .isInstanceOf(RuntimeException.class)
+          .hasMessage("bulk patch failed");
+
+      submissionValidationService.validateSubmission(submissionId);
+
+      InOrder inOrder = Mockito.inOrder(dataClaimsRestClient);
+      inOrder.verify(dataClaimsRestClient).updateSubmission(any(), any());
+      inOrder.verify(dataClaimsRestClient).updateBulkSubmission(any(), any());
+      inOrder.verify(dataClaimsRestClient).updateSubmission(any(), any());
+      inOrder.verify(dataClaimsRestClient).updateBulkSubmission(any(), any());
+      verify(claimValidationService, times(1)).validateAndUpdateClaims(any(), any());
+    }
+
+    @Test
+    @DisplayName("Should recover when the bulk status succeeds but the submission status fails")
+    void successfulBulkPatchFollowedByFailedSubmissionPatchRecoversOnRetry() {
+      UUID submissionId = new UUID(0, 0);
+      UUID claimId = new UUID(1, 1);
+      SubmissionResponse submission = buildSubmission(submissionId, claimId, false);
+
+      when(dataClaimsRestClient.getSubmission(submissionId))
+          .thenReturn(ResponseEntity.ok(submission), ResponseEntity.ok(submission));
+      when(dataClaimsRestClient.updateSubmission(any(), any()))
+          .thenThrow(new RuntimeException("submission patch failed"))
+          .thenReturn(ResponseEntity.noContent().build());
+
+      assertThatThrownBy(() -> submissionValidationService.validateSubmission(submissionId))
+          .isInstanceOf(RuntimeException.class)
+          .hasMessage("submission patch failed");
+
+      submissionValidationService.validateSubmission(submissionId);
+
+      InOrder inOrder = Mockito.inOrder(dataClaimsRestClient);
+      inOrder.verify(dataClaimsRestClient).updateBulkSubmission(any(), any());
+      inOrder.verify(dataClaimsRestClient).updateSubmission(any(), any());
+      inOrder.verify(dataClaimsRestClient).updateBulkSubmission(any(), any());
+      inOrder.verify(dataClaimsRestClient).updateSubmission(any(), any());
+      verify(claimValidationService, times(2)).validateAndUpdateClaims(any(), any());
+    }
+
+    @Test
+    @DisplayName(
+        "Should be a no-op when the submission is already held in VALIDATED_PENDING_APPROVAL (retry)")
+    void shouldNotReprocessSubmissionAlreadyValidatedPendingApproval() {
+      // Given a redelivered validation message for a submission already awaiting final approval
+      UUID submissionId = new UUID(0, 0);
+      SubmissionResponse submission =
+          getSubmission(
+              SubmissionStatus.VALIDATED_PENDING_APPROVAL,
+              submissionId,
+              AreaOfLaw.LEGAL_HELP,
+              "officeAccountNumber",
+              false,
+              List.of());
+      when(dataClaimsRestClient.getSubmission(submissionId))
+          .thenReturn(ResponseEntity.of(Optional.of(submission)));
+
+      // When
+      SubmissionValidationContext result =
+          submissionValidationService.validateSubmission(submissionId);
+
+      // Then no re-validation, no status change and no further event/patch is produced.
+      assertThat(result.hasErrors()).isFalse();
+      verify(claimValidationService, never()).validateAndUpdateClaims(any(), any());
+      verify(submissionValidator, never()).validate(any(), any());
+      verify(dataClaimsRestClient, never()).updateSubmission(any(), any());
+      verify(dataClaimsRestClient, never()).updateBulkSubmission(any(), any());
+    }
+
+    @Test
+    @DisplayName(
+        "Should be a no-op when the submission is already VALIDATION_SUCCEEDED (legacy retry)")
+    void shouldNotReprocessLegacyValidatedSubmission() {
+      // With legacy coercion enabled in the Claims API, the pending-approval patch is stored as
+      // VALIDATION_SUCCEEDED. A redelivered validation message must remain idempotent.
+      UUID submissionId = new UUID(0, 0);
+      SubmissionResponse submission =
+          getSubmission(
+              SubmissionStatus.VALIDATION_SUCCEEDED,
+              submissionId,
+              AreaOfLaw.LEGAL_HELP,
+              "officeAccountNumber",
+              false,
+              List.of());
+      when(dataClaimsRestClient.getSubmission(submissionId))
+          .thenReturn(ResponseEntity.of(Optional.of(submission)));
+
+      SubmissionValidationContext result =
+          submissionValidationService.validateSubmission(submissionId);
+
+      assertThat(result.hasErrors()).isFalse();
+      verify(claimValidationService, never()).validateAndUpdateClaims(any(), any());
+      verify(submissionValidator, never()).validate(any(), any());
+      verify(dataClaimsRestClient, never()).updateSubmission(any(), any());
+      verify(dataClaimsRestClient, never()).updateBulkSubmission(any(), any());
     }
 
     private SubmissionResponse buildSubmission(

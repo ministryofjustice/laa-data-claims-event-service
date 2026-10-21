@@ -1,4 +1,8 @@
 line_number, """abc""", line_number: string found, integer expected (provided value: abc),
+inquest_detail, """not an object""", inquest_detail: string found,
+inquest_detail, "{""unknown_field"": ""value""}", property 'unknown_field' is not defined in the schema,
+inquest_detail, "{""is_client_means_tested"": ""false""}", inquest_detail.is_client_means_tested: string found,
+inquest_detail, "{""interested_departments"": [123]}", "inquest_detail.interested_departments[0]: integer found, string expected",
 line_number, 2.3, line_number: number found, integer expected (provided value: 2.3),
 advice_time, """abc""", advice_time: string found, integer expected (provided value: abc),
 advice_time, 2.3, advice_time: number found, integer expected (provided value: 2.3),
