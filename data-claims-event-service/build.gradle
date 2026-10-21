@@ -79,6 +79,9 @@ dependencyManagement {
         // are not covered by Spring Boot's own dependency management, so pin them explicitly here.
         dependency 'io.netty:netty-codec-classes-quic:4.2.18.Final'
         dependency 'io.netty:netty-codec-http3:4.2.18.Final'
+
+        // Upgrade to fix the reported Snyk finding in hibernate-validator
+        dependency 'org.hibernate.validator:hibernate-validator:9.1.5.Final'
     }
 }
 
