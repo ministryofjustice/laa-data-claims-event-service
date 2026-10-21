@@ -33,6 +33,9 @@ serviceAccountName: claims-event-service-prod-irsa-serviceaccount
 
 probe:
   enabled: true
+  preStop:
+    drainTimeoutSeconds: 45
+    pollIntervalSeconds: 2
 
 stickiness:
   enabled: true
