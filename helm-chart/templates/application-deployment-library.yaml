@@ -76,99 +76,35 @@ spec:
           {{- if .Values.probe.enabled }}
           livenessProbe:
             httpGet:
-              {{- if (((.Values.probe).liveness).endpoint) }}
-              path: {{ .Values.probe.liveness.endpoint }}
-              {{- else }}
-              path: "/actuator/health/liveness"
-              {{- end }}
+              path: {{ ((.Values.probe).liveness).endpoint | default "/actuator/health/liveness" | quote }}
               {{- if ((.Values.management).port) }}
               port: {{ .Values.management.port }}
               {{- end }}
-            {{- if (((.Values.probe).liveness).timeoutSeconds) }}
-            timeoutSeconds: {{ .Values.probe.liveness.timeoutSeconds }}
-            {{- else }}
-            timeoutSeconds: 1
-            {{- end }}
-            {{- if (((.Values.probe).liveness).failureThreshold) }}
-            failureThreshold: {{ .Values.probe.liveness.failureThreshold }}
-            {{- else }}
-            failureThreshold: 4
-            {{- end }}
-            {{- if (((.Values.probe).liveness).successThreshold) }}
-            successThreshold: {{ .Values.probe.liveness.successThreshold }}
-            {{- else }}
-            successThreshold: 1
-            {{- end }}
-            {{- if (((.Values.probe).liveness).periodSeconds) }}
-            periodSeconds: {{ .Values.probe.liveness.periodSeconds }}
-            {{- else }}
-            periodSeconds: 10
-            {{- end }}
-            {{- if (((.Values.probe).liveness).initialDelaySeconds) }}
-            initialDelaySeconds: {{ .Values.probe.liveness.initialDelaySeconds }}
-            {{- else }}
-            initialDelaySeconds: 10
-            {{- end }}
+            timeoutSeconds: {{ ((.Values.probe).liveness).timeoutSeconds | default 1 }}
+            failureThreshold: {{ ((.Values.probe).liveness).failureThreshold | default 4 }}
+            successThreshold: {{ ((.Values.probe).liveness).successThreshold | default 1 }}
+            periodSeconds: {{ ((.Values.probe).liveness).periodSeconds | default 10 }}
+            initialDelaySeconds: {{ ((.Values.probe).liveness).initialDelaySeconds | default 10 }}
           readinessProbe:
             httpGet:
-              {{- if (((.Values.probe).readiness).endpoint) }}
-              path: {{ .Values.probe.readiness.endpoint }}
-              {{- else }}
-              path: "/actuator/health/readiness"
-              {{- end }}
+              path: {{ ((.Values.probe).readiness).endpoint | default "/actuator/health/readiness" | quote }}
               {{- if ((.Values.management).port) }}
               port: {{ .Values.management.port }}
               {{- end }}
-            {{- if (((.Values.probe).readiness).timeoutSeconds) }}
-            timeoutSeconds: {{ .Values.probe.readiness.timeoutSeconds }}
-            {{- else }}
-            timeoutSeconds: 1
-            {{- end }}
-            {{- if (((.Values.probe).readiness).failureThreshold) }}
-            failureThreshold: {{ .Values.probe.readiness.failureThreshold }}
-            {{- else }}
-            failureThreshold: 2
-            {{- end }}
-            {{- if (((.Values.probe).readiness).successThreshold) }}
-            successThreshold: {{ .Values.probe.readiness.successThreshold }}
-            {{- else }}
-            successThreshold: 1
-            {{- end }}
-            {{- if (((.Values.probe).readiness).periodSeconds) }}
-            periodSeconds: {{ .Values.probe.readiness.periodSeconds }}
-            {{- else }}
-            periodSeconds: 5
-            {{- end }}
-            {{- if (((.Values.probe).readiness).initialDelaySeconds) }}
-            initialDelaySeconds: {{ .Values.probe.readiness.initialDelaySeconds }}
-            {{- else }}
-            initialDelaySeconds: 10
-            {{- end }}
+            timeoutSeconds: {{ ((.Values.probe).readiness).timeoutSeconds | default 1 }}
+            failureThreshold: {{ ((.Values.probe).readiness).failureThreshold | default 2 }}
+            successThreshold: {{ ((.Values.probe).readiness).successThreshold | default 1 }}
+            periodSeconds: {{ ((.Values.probe).readiness).periodSeconds | default 5 }}
+            initialDelaySeconds: {{ ((.Values.probe).readiness).initialDelaySeconds | default 10 }}
           startupProbe:
             httpGet:
-              {{- if (((.Values.probe).startup).endpoint) }}
-              path: {{ .Values.probe.startup.endpoint }}
-              {{- else }}
-              path: "/actuator/health/liveness"
-              {{- end }}
+              path: {{ ((.Values.probe).startup).endpoint | default "/actuator/health/liveness" | quote }}
               {{- if ((.Values.management).port) }}
               port: {{ .Values.management.port }}
               {{- end }}
-            {{- if (((.Values.probe).startup).timeoutSeconds) }}
-            timeoutSeconds: {{ .Values.probe.startup.timeoutSeconds }}
-            {{- else }}
-            timeoutSeconds: 1
-            {{- end }}
-            {{- if (((.Values.probe).startup).failureThreshold) }}
-            failureThreshold: {{ .Values.probe.startup.failureThreshold }}
-            {{- else }}
-            failureThreshold: 30
-            {{- end }}
-            {{- if (((.Values.probe).startup).periodSeconds) }}
-            periodSeconds: {{ .Values.probe.startup.periodSeconds }}
-            {{- else }}
-            periodSeconds: 5
-            {{- end }}
+            timeoutSeconds: {{ ((.Values.probe).startup).timeoutSeconds | default 1 }}
+            failureThreshold: {{ ((.Values.probe).startup).failureThreshold | default 30 }}
+            periodSeconds: {{ (((.Values.probe).startup).periodSeconds) | default 5 }}
           {{- end }}
           lifecycle:
             preStop:
