@@ -80,11 +80,13 @@ public class SubmissionListener {
     listenerActivityTracker.increment();
 
     String receiptHandle = message.receiptHandle();
+    boolean processedSuccessfully = false;
 
     try (SqsVisibilityExtender extender = sqsVisibilityExtenderProvider.getObject()) {
       extender.start(receiptHandle);
       SubmissionEventType submissionEventType = getSubmissionEventType(message);
       processMessageByType(message, submissionEventType);
+      processedSuccessfully = true;
     } catch (SubmissionEventProcessingException | IllegalArgumentException ex) {
       throw ex;
     } catch (Exception ex) {
@@ -96,7 +98,14 @@ public class SubmissionListener {
           "Unhandled exception in submission event processing", ex);
     } finally {
       eventServiceMetricService.stopFileParsingTimer(timerRef);
-      listenerActivityTracker.decrement();
+      if (!processedSuccessfully) {
+        // Processing failed, so under AcknowledgementMode.ON_SUCCESS no acknowledgement will
+        // ever be attempted for this message - there is no later callback to settle it, so
+        // decrement now. On success, the count is deliberately left incremented: the message
+        // is only truly settled once its acknowledgement completes, which is reported
+        // asynchronously by AcknowledgementTrackingCallback.
+        listenerActivityTracker.decrement();
+      }
     }
   }
 

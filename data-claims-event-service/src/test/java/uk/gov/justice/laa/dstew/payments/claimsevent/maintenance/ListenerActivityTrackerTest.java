@@ -32,4 +32,29 @@ class ListenerActivityTrackerTest {
 
     assertThat(tracker.getInFlightCount()).isZero();
   }
+
+  @Test
+  @DisplayName("Decrements by a given count, e.g. for a batch acknowledgement")
+  void decrementsByCount() {
+    ListenerActivityTracker tracker = new ListenerActivityTracker();
+
+    tracker.increment();
+    tracker.increment();
+    tracker.increment();
+
+    tracker.decrement(2);
+
+    assertThat(tracker.getInFlightCount()).isEqualTo(1);
+  }
+
+  @Test
+  @DisplayName("Decrementing by a count never goes negative")
+  void decrementByCountNeverGoesNegative() {
+    ListenerActivityTracker tracker = new ListenerActivityTracker();
+
+    tracker.increment();
+    tracker.decrement(5);
+
+    assertThat(tracker.getInFlightCount()).isZero();
+  }
 }

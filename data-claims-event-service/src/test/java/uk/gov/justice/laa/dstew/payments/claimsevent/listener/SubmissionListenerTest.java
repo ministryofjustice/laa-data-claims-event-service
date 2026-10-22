@@ -88,6 +88,12 @@ public class SubmissionListenerTest {
 
       verifyNoInteractions(submissionValidationService);
       verify(mockSqsVisibilityExtender).start("receiptHandle");
+
+      // On success, the in-flight count is left incremented: it is only settled once
+      // acknowledgement actually completes (via AcknowledgementTrackingCallback), not when the
+      // listener method itself returns.
+      verify(listenerActivityTracker).increment();
+      verify(listenerActivityTracker, never()).decrement();
     }
 
     @Test
@@ -190,6 +196,38 @@ public class SubmissionListenerTest {
 
       // Then
       assertThatThrownBy(result).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("Decrements the in-flight count immediately when processing fails")
+    void decrementsInFlightCountOnFailure() throws JsonProcessingException {
+      // Given
+      Message message =
+          Message.builder()
+              .body("body")
+              .receiptHandle("receiptHandle")
+              .messageAttributes(
+                  Map.of(
+                      "SubmissionEventType",
+                      MessageAttributeValue.builder()
+                          .stringValue(SubmissionEventType.PARSE_BULK_SUBMISSION.toString())
+                          .build()))
+              .build();
+
+      when(objectMapper.readValue("body", BulkSubmissionMessage.class))
+          .thenThrow(new JsonProcessingException("boom") {});
+      when(mockVisibilityExtenderProvider.getObject()).thenReturn(mockSqsVisibilityExtender);
+      doNothing().when(mockSqsVisibilityExtender).start("receiptHandle");
+
+      // When
+      ThrowingCallable result = () -> submissionListener.receiveSubmissionEvent(message);
+
+      // Then: no acknowledgement will ever be attempted for a message that failed processing,
+      // so there is no later callback to settle it - the in-flight count must be decremented
+      // immediately instead.
+      assertThatThrownBy(result).isInstanceOf(SubmissionEventProcessingException.class);
+      verify(listenerActivityTracker).increment();
+      verify(listenerActivityTracker).decrement();
     }
   }
 }

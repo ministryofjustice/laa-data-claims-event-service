@@ -6,6 +6,7 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.maintenance;
  *
  * @param listenersRunning whether at least one SQS listener container is currently running (polling
  *     for new messages)
- * @param inFlightCount the number of messages currently being processed
+ * @param inFlightCount the number of messages still unsettled - being processed, or finished
+ *     processing but not yet acknowledged
  */
 public record MaintenanceStatus(boolean listenersRunning, int inFlightCount) {}

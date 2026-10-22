@@ -15,8 +15,8 @@ import org.springframework.boot.actuate.endpoint.annotation.WriteOperation;
  *
  * <p>This is the mechanism a preStop hook (or an operator, ahead of a manual deployment) uses to
  * stop the SQS listener(s) from polling for new messages, then poll {@link #status()} until
- * in-flight processing has drained to zero before the pod is actually terminated or a deployment
- * proceeds.
+ * in-flight processing - and acknowledgement of that processing - has drained to zero before the
+ * pod is actually terminated or a deployment proceeds.
  *
  * <ul>
  *   <li>{@code POST /actuator/maintenance} - pause: stop all listener containers

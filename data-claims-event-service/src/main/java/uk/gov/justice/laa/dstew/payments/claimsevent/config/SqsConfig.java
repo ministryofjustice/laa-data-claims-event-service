@@ -16,6 +16,7 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 import software.amazon.awssdk.services.sqs.SqsClient;
+import uk.gov.justice.laa.dstew.payments.claimsevent.maintenance.AcknowledgementTrackingCallback;
 
 /**
  * Configuration class for AWS SQS integration. This class defines a bean for creating and
@@ -89,6 +90,10 @@ public class SqsConfig {
    * @param sqsProperties the auto-configured {@code spring.cloud.aws.sqs.*} properties, re-applied
    *     here (e.g. {@code queue-not-found-strategy: fail}) since replacing Spring Boot's
    *     auto-configured factory bean means those settings are no longer applied automatically
+   * @param acknowledgementTrackingCallback settles {@link
+   *     uk.gov.justice.laa.dstew.payments.claimsevent.maintenance.ListenerActivityTracker}'s
+   *     in-flight count once a message's acknowledgement actually completes, so draining reflects
+   *     acknowledgement, not just listener-method completion
    * @param listenerShutdownTimeoutSeconds how long to wait for in-flight message processing to
    *     finish on shutdown before stopping regardless
    * @param acknowledgementShutdownTimeoutSeconds how long to wait for pending acknowledgements to
@@ -102,6 +107,7 @@ public class SqsConfig {
   public SqsMessageListenerContainerFactory<Object> defaultSqsListenerContainerFactory(
       SqsAsyncClient sqsAsyncClient,
       SqsProperties sqsProperties,
+      AcknowledgementTrackingCallback acknowledgementTrackingCallback,
       @Value("${laa.bulk-claim-queue.listener-shutdown-timeout-seconds:20}")
           int listenerShutdownTimeoutSeconds,
       @Value("${laa.bulk-claim-queue.acknowledgement-shutdown-timeout-seconds:20}")
@@ -118,6 +124,7 @@ public class SqsConfig {
                 options.queueNotFoundStrategy(sqsProperties.getQueueNotFoundStrategy());
               }
             })
+        .acknowledgementResultCallback(acknowledgementTrackingCallback)
         .sqsAsyncClient(sqsAsyncClient)
         .build();
   }
