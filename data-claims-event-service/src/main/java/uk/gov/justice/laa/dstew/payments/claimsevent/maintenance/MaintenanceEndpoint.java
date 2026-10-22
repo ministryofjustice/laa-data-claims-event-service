@@ -61,12 +61,17 @@ public class MaintenanceEndpoint {
    * recover from a pause that is no longer needed, for example when a planned deployment is aborted
    * before the pod is terminated.
    *
-   * @return the maintenance status after resume was requested
+   * <p>Submitted to the same single-thread {@code maintenanceExecutor} used by {@link #pause()},
+   * so a resume requested shortly after a pause always executes after that pause's queued stop,
+   * rather than racing it and being silently undone.
+   *
+   * @return the maintenance status at the moment resume was requested
    */
   @DeleteOperation
   public MaintenanceStatus resume() {
     log.info("Maintenance resume requested - restarting SQS listener containers");
-    containerRegistry.getListenerContainers().forEach(MessageListenerContainer::start);
+    maintenanceExecutor.execute(
+        () -> containerRegistry.getListenerContainers().forEach(MessageListenerContainer::start));
     return status();
   }
 
