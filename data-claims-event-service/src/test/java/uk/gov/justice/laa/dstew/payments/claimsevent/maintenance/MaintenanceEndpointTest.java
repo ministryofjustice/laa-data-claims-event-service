@@ -17,14 +17,14 @@ import org.junit.jupiter.api.Test;
 @DisplayName("MaintenanceEndpoint")
 class MaintenanceEndpointTest {
 
-  private MessageListenerContainerRegistry containerRegistry;
   private MessageListenerContainer<?> container;
   private ListenerActivityTracker activityTracker;
   private MaintenanceEndpoint maintenanceEndpoint;
 
   @BeforeEach
   void setUp() {
-    containerRegistry = mock(MessageListenerContainerRegistry.class);
+    MessageListenerContainerRegistry containerRegistry =
+        mock(MessageListenerContainerRegistry.class);
     container = mock(MessageListenerContainer.class);
     when(containerRegistry.getListenerContainers()).thenReturn(List.of(container));
     activityTracker = new ListenerActivityTracker();
@@ -59,22 +59,26 @@ class MaintenanceEndpointTest {
   }
 
   @Test
-  @DisplayName("pause stops every listener container")
+  @DisplayName("pause stops every listener container and returns the resulting status")
   void pauseStopsEveryContainer() {
     doAnswer(_ -> null).when(container).stop();
+    when(container.isRunning()).thenReturn(false);
 
-    maintenanceEndpoint.pause();
+    MaintenanceStatus status = maintenanceEndpoint.pause();
 
     verify(container).stop();
+    assertThat(status.listenersRunning()).isFalse();
   }
 
   @Test
-  @DisplayName("resume starts every listener container")
+  @DisplayName("resume starts every listener container and returns the resulting status")
   void resumeStartsEveryContainer() {
     doAnswer(_ -> null).when(container).start();
+    when(container.isRunning()).thenReturn(true);
 
-    maintenanceEndpoint.resume();
+    MaintenanceStatus status = maintenanceEndpoint.resume();
 
     verify(container).start();
+    assertThat(status.listenersRunning()).isTrue();
   }
 }

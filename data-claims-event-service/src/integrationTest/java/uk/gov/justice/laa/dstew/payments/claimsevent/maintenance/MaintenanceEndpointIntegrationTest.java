@@ -38,9 +38,9 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.service.SubmissionValidatio
 
 /**
  * Verifies the full HTTP-driven preStop flow: {@code POST /actuator/maintenance} stops the SQS
- * listener(s) without waiting for in-flight work, {@code GET /actuator/maintenance} reports
- * polling has stopped and the in-flight count draining to zero as the handler completes, and
- * {@code DELETE /actuator/maintenance} resumes polling afterwards.
+ * listener(s) without waiting for in-flight work, {@code GET /actuator/maintenance} reports polling
+ * has stopped and the in-flight count draining to zero as the handler completes, and {@code DELETE
+ * /actuator/maintenance} resumes polling afterwards.
  */
 @ActiveProfiles("test")
 @Testcontainers
@@ -125,15 +125,15 @@ class MaintenanceEndpointIntegrationTest extends LocalstackBaseIntegrationTest {
     await()
         .atMost(Duration.ofSeconds(10))
         .untilAsserted(
-            () -> verify(bulkParsingService).parseData(eq(bulkSubmissionId), eq(secondSubmissionId)));
+            () ->
+                verify(bulkParsingService).parseData(eq(bulkSubmissionId), eq(secondSubmissionId)));
   }
 
   private void sendMessage(UUID bulkSubmissionId, UUID submissionId) throws Exception {
     String messageBody =
         objectMapper.writeValueAsString(
             Map.of(
-                "bulk_submission_id", bulkSubmissionId,
-                "submission_ids", List.of(submissionId)));
+                "bulk_submission_id", bulkSubmissionId, "submission_ids", List.of(submissionId)));
 
     sqsClient.sendMessage(
         builder ->

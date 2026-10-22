@@ -10,8 +10,8 @@ import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 import org.springframework.boot.actuate.endpoint.annotation.WriteOperation;
 
 /**
- * Actuator endpoint exposed at {@code /actuator/maintenance}, used to deliberately stop and
- * resume SQS message processing independently of pod termination.
+ * Actuator endpoint exposed at {@code /actuator/maintenance}, used to deliberately stop and resume
+ * SQS message processing independently of pod termination.
  *
  * <p>This is the mechanism a preStop hook (or an operator, ahead of a manual deployment) uses to
  * stop the SQS listener(s) from polling for new messages, then poll {@link #status()} until
@@ -44,8 +44,7 @@ public class MaintenanceEndpoint {
   /**
    * Stops every registered SQS listener container so no new messages are taken off the queue.
    * Returns immediately rather than waiting for in-flight work to drain - callers should poll
-   * {@link #status()} to observe when polling has actually stopped and in-flight work has
-   * finished.
+   * {@link #status()} to observe when polling has actually stopped and in-flight work has finished.
    *
    * @return the maintenance status at the moment pause was requested
    */
@@ -59,8 +58,8 @@ public class MaintenanceEndpoint {
 
   /**
    * Restarts every registered SQS listener container so polling for new messages resumes. Used to
-   * recover from a pause that is no longer needed, for example when a planned deployment is
-   * aborted before the pod is terminated.
+   * recover from a pause that is no longer needed, for example when a planned deployment is aborted
+   * before the pod is terminated.
    *
    * @return the maintenance status after resume was requested
    */

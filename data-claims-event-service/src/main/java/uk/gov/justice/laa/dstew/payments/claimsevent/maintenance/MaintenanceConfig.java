@@ -13,8 +13,8 @@ public class MaintenanceConfig {
 
   /**
    * A small, dedicated single-thread executor used to run the (bounded, but potentially
-   * multi-second) listener container stop operation off the HTTP request thread handling the
-   * {@code pause} actuator call, so that call returns immediately.
+   * multi-second) listener container stop operation off the HTTP request thread handling the {@code
+   * pause} actuator call, so that call returns immediately.
    *
    * @return the executor
    */
@@ -29,10 +29,7 @@ public class MaintenanceConfig {
   }
 
   @Bean
-  @ConditionalOnProperty(
-      prefix = "spring.cloud.aws.sqs",
-      name = "enabled",
-      matchIfMissing = true)
+  @ConditionalOnProperty(prefix = "spring.cloud.aws.sqs", name = "enabled", matchIfMissing = true)
   public MaintenanceEndpoint maintenanceEndpoint(
       MessageListenerContainerRegistry containerRegistry,
       ListenerActivityTracker activityTracker,

@@ -94,10 +94,7 @@ public class SqsConfig {
    * @return the configured {@link SqsMessageListenerContainerFactory}
    */
   @Bean
-  @ConditionalOnProperty(
-      prefix = "spring.cloud.aws.sqs",
-      name = "enabled",
-      matchIfMissing = true)
+  @ConditionalOnProperty(prefix = "spring.cloud.aws.sqs", name = "enabled", matchIfMissing = true)
   public SqsMessageListenerContainerFactory<Object> defaultSqsListenerContainerFactory(
       SqsAsyncClient sqsAsyncClient,
       @Value("${laa.bulk-claim-queue.listener-shutdown-timeout-seconds:20}")

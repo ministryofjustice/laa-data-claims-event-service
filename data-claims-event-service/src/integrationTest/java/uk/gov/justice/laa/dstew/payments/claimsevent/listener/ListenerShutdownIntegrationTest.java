@@ -81,8 +81,7 @@ class ListenerShutdownIntegrationTest extends LocalstackBaseIntegrationTest {
     String messageBody =
         objectMapper.writeValueAsString(
             Map.of(
-                "bulk_submission_id", bulkSubmissionId,
-                "submission_ids", List.of(submissionId)));
+                "bulk_submission_id", bulkSubmissionId, "submission_ids", List.of(submissionId)));
 
     sqsClient.sendMessage(
         builder ->
