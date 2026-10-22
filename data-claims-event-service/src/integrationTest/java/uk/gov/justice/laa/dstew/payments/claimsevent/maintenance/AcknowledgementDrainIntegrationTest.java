@@ -16,6 +16,7 @@ import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -35,6 +36,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.service.SubmissionValidatio
 @ActiveProfiles("test")
 @Testcontainers
 @SpringBootTest
+@TestPropertySource(properties = "laa.bulk-claim-queue.name=acknowledgement-drain-test-queue")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @DisplayName("Acknowledgement drain integration test")
 class AcknowledgementDrainIntegrationTest extends LocalstackBaseIntegrationTest {

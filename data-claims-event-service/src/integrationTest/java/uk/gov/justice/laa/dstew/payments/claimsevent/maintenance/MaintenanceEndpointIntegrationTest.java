@@ -47,6 +47,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.service.SubmissionValidatio
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @TestPropertySource(
     properties = {
+      "laa.bulk-claim-queue.name=maintenance-endpoint-test-queue",
       "laa.bulk-claim-queue.listener-shutdown-timeout-seconds=2",
       "laa.bulk-claim-queue.acknowledgement-shutdown-timeout-seconds=2"
     })

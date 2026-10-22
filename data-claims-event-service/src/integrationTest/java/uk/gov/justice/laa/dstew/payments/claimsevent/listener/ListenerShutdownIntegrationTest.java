@@ -42,6 +42,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.service.SubmissionValidatio
 @SpringBootTest
 @TestPropertySource(
     properties = {
+      "laa.bulk-claim-queue.name=listener-shutdown-test-queue",
       "laa.bulk-claim-queue.listener-shutdown-timeout-seconds=2",
       "laa.bulk-claim-queue.acknowledgement-shutdown-timeout-seconds=2"
     })
