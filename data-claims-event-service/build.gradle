@@ -30,8 +30,8 @@ ext['tomcat.version'] = '11.0.26'
 // Locally, export GITHUB_ACTOR and GITHUB_PACKAGES_TOKEN (or GITHUB_TOKEN as a fallback) with a
 // PAT that has read:packages, is authorized for ministryofjustice org SSO, and can read the
 // private laa-data-provider-data repository.
-def githubPackagesUsername = System.getenv('GITHUB_ACTOR')?.trim()
-def githubPackagesPassword = (System.getenv('GITHUB_PACKAGES_TOKEN') ?: System.getenv('GITHUB_TOKEN'))?.trim()
+def githubPackagesUsername = System.getenv('GITHUB_ACTOR')?.trim() ?: project.ext.gitHubPackagesUsername
+def githubPackagesPassword = System.getenv('GITHUB_PACKAGES_TOKEN')?.trim() ?: project.ext.gitHubPackagesPassword
 
 repositories.withType(MavenArtifactRepository).configureEach { repo ->
     if (repo.url.toString().startsWith('https://maven.pkg.github.com/')) {
