@@ -21,38 +21,36 @@ def versions = [
 // TODO: remove when Spring Boot ships a BOM that sets tomcat.version >= 11.0.26.
 ext['tomcat.version'] = '11.0.26'
 
-// Explicit, documented GitHub Packages repositories for LAA-internal artifacts - FALLBACK ONLY.
+// The plugin-created GitHub Packages download repository reads its password only from
+// GITHUB_TOKEN. In CI that is the repository-scoped Actions token, while the PAT with access to
+// private LAA packages is supplied separately as GITHUB_PACKAGES_TOKEN. Reconfigure GitHub
+// Packages dependency repositories to prefer that PAT. This repository handler is distinct from
+// publishing.repositories, so the plugin's publishing credentials remain unchanged.
 //
-// laa-java-gradle-plugin (applied transitively via laa-spring-boot-gradle-plugin) already
-// configures mavenCentral() + a single maven.pkg.github.com/.../laa-spring-boot-common
-// repository. It currently works for every group below, including ones not actually published
-// from laa-spring-boot-common, because GitHub Packages Maven URLs route purely on the *owner*
-// (ministryofjustice) - the repo-name path segment is not validated or used for authorization.
-// That's an observed, undocumented quirk of GitHub's implementation though, not a behaviour
-// GitHub documents or guarantees, so we don't want to depend on it being the *only* path to
-// resolution.
-//
-// The repositories below are deliberately NOT exclusive. They are added *after* the plugin's
-// repositories are already registered (repositories are tried in registration order), so in
-// practice the plugin's existing repo keeps serving every lookup first, exactly as it does
-// today - nothing changes about current, working behaviour. These entries only get used if that
-// ever stops working for a given group (e.g. GitHub starts enforcing the repo-name segment, the
-// plugin's repository config changes, or credentials diverge per-repo in future).
-//
-// Credentials:
-//   - Locally: export GITHUB_ACTOR and GITHUB_TOKEN (a PAT with read:packages, authorized for
-//     the ministryofjustice org SSO, and with read access to laa-data-provider-data since that
-//     repo is private).
-//   - In CI: the reusable gradle-build-and-publish.yml workflow sets GITHUB_PACKAGES_TOKEN
-//     (mapped from the gh_packages_token secret) in addition to GITHUB_TOKEN, so we prefer
-//     GITHUB_PACKAGES_TOKEN when present and fall back to GITHUB_TOKEN otherwise.
+// Locally, export GITHUB_ACTOR and GITHUB_PACKAGES_TOKEN (or GITHUB_TOKEN as a fallback) with a
+// PAT that has read:packages, is authorized for ministryofjustice org SSO, and can read the
+// private laa-data-provider-data repository.
+def githubPackagesUsername = System.getenv('GITHUB_ACTOR')?.trim()
+def githubPackagesPassword = (System.getenv('GITHUB_PACKAGES_TOKEN') ?: System.getenv('GITHUB_TOKEN'))?.trim()
+
+repositories.withType(MavenArtifactRepository).configureEach { repo ->
+    if (repo.url.toString().startsWith('https://maven.pkg.github.com/')) {
+        repo.credentials {
+            username = githubPackagesUsername
+            password = githubPackagesPassword
+        }
+    }
+}
+
+// Explicit, non-exclusive repositories supplement the plugin's repository if a package is not
+// available there. They are not a recovery path for an authorization failure from an earlier repo.
 repositories {
     maven {
         name = 'laaDataProviderDataFallback'
         url = uri('https://maven.pkg.github.com/ministryofjustice/laa-data-provider-data')
         credentials {
-            username = System.getenv('GITHUB_ACTOR')
-            password = System.getenv('GITHUB_PACKAGES_TOKEN') ?: System.getenv('GITHUB_TOKEN')
+            username = githubPackagesUsername
+            password = githubPackagesPassword
         }
         content {
             includeGroup 'uk.gov.justice.laadata.providers'
@@ -63,8 +61,8 @@ repositories {
         name = 'laaDataClaimsApiFallback'
         url = uri('https://maven.pkg.github.com/ministryofjustice/laa-data-claims-api')
         credentials {
-            username = System.getenv('GITHUB_ACTOR')
-            password = System.getenv('GITHUB_PACKAGES_TOKEN') ?: System.getenv('GITHUB_TOKEN')
+            username = githubPackagesUsername
+            password = githubPackagesPassword
         }
         content {
             includeGroup 'uk.gov.justice.laa.datastewardship.payments'
@@ -75,8 +73,8 @@ repositories {
         name = 'laaDataControlledWorkValidatorFallback'
         url = uri('https://maven.pkg.github.com/ministryofjustice/laa-data-controlled-work-validator')
         credentials {
-            username = System.getenv('GITHUB_ACTOR')
-            password = System.getenv('GITHUB_PACKAGES_TOKEN') ?: System.getenv('GITHUB_TOKEN')
+            username = githubPackagesUsername
+            password = githubPackagesPassword
         }
         content {
             includeGroup 'uk.gov.justice.laa.dstew.payments.claims.validation'
@@ -87,8 +85,8 @@ repositories {
         name = 'laaSpringBootCommonFallback'
         url = uri('https://maven.pkg.github.com/ministryofjustice/laa-spring-boot-common')
         credentials {
-            username = System.getenv('GITHUB_ACTOR')
-            password = System.getenv('GITHUB_PACKAGES_TOKEN') ?: System.getenv('GITHUB_TOKEN')
+            username = githubPackagesUsername
+            password = githubPackagesPassword
         }
         content {
             includeGroup 'uk.gov.laa.springboot'
