@@ -85,6 +85,39 @@ class EffectiveCategoryOfLawClaimValidatorTest {
         .validateCategoriesOfLaw(claim, feeDetailsResponseMap, providerCategoriesOfLaw, context);
   }
 
+  static Stream<Arguments> providerDetailsWithoutSchedules() {
+    return Stream.of(
+        Arguments.of(Mono.<ProviderFirmOfficeContractAndScheduleDto>empty()),
+        Arguments.of(Mono.just(new ProviderFirmOfficeContractAndScheduleDto())));
+  }
+
+  @ParameterizedTest(name = "Should validate with no schedules when provider details returns {0}")
+  @MethodSource("providerDetailsWithoutSchedules")
+  void shouldValidateWithNoSchedules(
+      Mono<ProviderFirmOfficeContractAndScheduleDto> providerSchedules) {
+    UUID claimId = new UUID(1, 1);
+    ClaimResponse claim =
+        new ClaimResponse()
+            .id(claimId.toString())
+            .feeCode("feeCode1")
+            .caseStartDate("2025-08-14")
+            .status(ClaimStatus.READY_TO_PROCESS)
+            .matterTypeCode("ab:cd");
+    Map<String, FeeDetailsResponseWrapper> feeDetailsResponseMap = Collections.emptyMap();
+
+    when(providerDetailsService.getProviderFirmSchedules(
+            eq("officeAccountNumber"), any(LocalDate.class)))
+        .thenReturn(providerSchedules);
+
+    SubmissionValidationContext context = new SubmissionValidationContext();
+
+    validator.validate(claim, context, "officeAccountNumber", feeDetailsResponseMap);
+
+    assertThat(context.hasErrors(claimId.toString())).isFalse();
+    verify(categoryOfLawValidationService, times(1))
+        .validateCategoriesOfLaw(claim, feeDetailsResponseMap, Collections.emptyList(), context);
+  }
+
   static Stream<Arguments> exceptionProvider() {
     return Stream.of(
         Arguments.of(new WebClientResponseException(401, "Unauthorised", null, null, null)),

@@ -118,7 +118,9 @@ class DuplicateClaimLegalHelpValidationServiceStrategyTest
               SubmissionStatus.VALIDATION_IN_PROGRESS,
               SubmissionStatus.READY_FOR_VALIDATION,
               SubmissionStatus.VALIDATION_SUCCEEDED,
-              SubmissionStatus.VALIDATED_PENDING_APPROVAL),
+              SubmissionStatus.VALIDATED_PENDING_APPROVAL,
+              SubmissionStatus.READY_FOR_FINAL_VALIDATION,
+              SubmissionStatus.FINAL_VALIDATION_IN_PROGRESS),
           submissionStatusArgumentCaptor.getValue());
 
       assertThat(context.hasErrors()).isFalse();

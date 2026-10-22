@@ -33,6 +33,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.core.io.ClassPathResource;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimInquestDetail;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
@@ -65,7 +66,7 @@ class JsonSchemaValidatorTest {
     SchemaValidationConfig schemaValidationConfig =
         new SchemaValidationConfig(
             mapper,
-            new ClassPathResource("schemas/submission-fields.schema.json"),
+            new ClassPathResource("schemas/event-service-submission-fields.schema.json"),
             new ClassPathResource("schemas/claim-fields.schema.json"));
     mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     mapper.configure(JsonGenerator.Feature.WRITE_BIGDECIMAL_AS_PLAIN, true);
@@ -321,6 +322,41 @@ class JsonSchemaValidatorTest {
   @Nested
   @DisplayName("Claim Schema Validation Tests")
   class ClaimValidationTests {
+
+    @Test
+    void validateNoErrorsForPopulatedInquestDetails() {
+      ClaimResponse claim = getMinimumValidClaim();
+      claim.setInquestDetail(
+          new ClaimInquestDetail()
+              .isClientMeansTested(false)
+              .deceasedForename("John")
+              .deceasedSurname("Smith")
+              .deceasedDateOfDeath("01/01/2025")
+              .coronersInquestReference("INQ-TEST-001")
+              .interestedDepartments(List.of("Ministry of Justice", "Ministry of Justice")));
+
+      final List<ValidationMessagePatch> errors =
+          jsonSchemaValidator.validate("claim", claim, AreaOfLaw.LEGAL_HELP);
+      assertThat(errors).isEmpty();
+    }
+
+    @Test
+    void validateNoErrorsForEmptyInquestDetails() {
+      ClaimResponse claim = getMinimumValidClaim();
+      claim.setInquestDetail(new ClaimInquestDetail().interestedDepartments(List.of()));
+
+      final List<ValidationMessagePatch> errors =
+          jsonSchemaValidator.validate("claim", claim, AreaOfLaw.LEGAL_HELP);
+      assertThat(errors).isEmpty();
+    }
+
+    @ParameterizedTest
+    @CsvFileSource(resources = "/testData/validInquestNullValues.csv")
+    void validateNoErrorsForNullInquestValues(String fieldName, String jsonValue) throws Exception {
+      final List<ValidationMessagePatch> errors =
+          validateForInvalidDataTypes("claim", getMinimumValidClaim(), fieldName, jsonValue);
+      assertThat(errors).isEmpty();
+    }
 
     @Test
     void validateNoErrorsForClaimWithRequiredFields() {

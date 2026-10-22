@@ -23,6 +23,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.Mock;
@@ -43,6 +45,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
+import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationContext;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.SubmissionValidationError;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.submission.SubmissionValidator;
@@ -282,6 +285,34 @@ class SubmissionValidationServiceTest {
       verify(dataClaimsRestClient, never()).updateBulkSubmission(any(), any());
     }
 
+    @ParameterizedTest
+    @EnumSource(
+        value = SubmissionStatus.class,
+        names = {"READY_FOR_FINAL_VALIDATION", "FINAL_VALIDATION_IN_PROGRESS"})
+    @DisplayName("Should be a no-op when the submission has moved on to final validation")
+    void shouldNotReprocessSubmissionInFinalValidation(SubmissionStatus status) {
+      // Given an initial validation message redelivered after the provider triggered Final Submit.
+      // Re-running initial validation here would demote the submission and its claims back to
+      // VALIDATED_PENDING_APPROVAL, racing the final run that is writing the accepted result.
+      UUID submissionId = new UUID(0, 0);
+      SubmissionResponse submission =
+          getSubmission(
+              status, submissionId, AreaOfLaw.LEGAL_HELP, "officeAccountNumber", false, List.of());
+      when(dataClaimsRestClient.getSubmission(submissionId))
+          .thenReturn(ResponseEntity.of(Optional.of(submission)));
+
+      // When
+      SubmissionValidationContext result =
+          submissionValidationService.validateSubmission(submissionId);
+
+      // Then
+      assertThat(result.hasErrors()).isFalse();
+      verify(claimValidationService, never()).validateAndUpdateClaims(any(), any());
+      verify(submissionValidator, never()).validate(any(), any());
+      verify(dataClaimsRestClient, never()).updateSubmission(any(), any());
+      verify(dataClaimsRestClient, never()).updateBulkSubmission(any(), any());
+    }
+
     @Test
     @DisplayName(
         "Should be a no-op when the submission is already VALIDATION_SUCCEEDED (legacy retry)")
@@ -363,6 +394,11 @@ class SubmissionValidationServiceTest {
               .areaOfLaw(AreaOfLaw.LEGAL_HELP)
               .officeAccountNumber("officeAccountNumber")
               .status(SubmissionStatus.FINAL_VALIDATION_IN_PROGRESS)
+              .claims(
+                  List.of(
+                      new SubmissionClaim()
+                          .claimId(new UUID(2, 2))
+                          .status(ClaimStatus.VALIDATED_PENDING_APPROVAL)))
               .build();
       when(dataClaimsRestClient.getSubmission(submissionId))
           .thenReturn(ResponseEntity.ok(submission));
@@ -383,18 +419,115 @@ class SubmissionValidationServiceTest {
 
       ArgumentCaptor<SubmissionPatch> submissionPatchCaptor =
           ArgumentCaptor.forClass(SubmissionPatch.class);
-      verify(dataClaimsRestClient)
+      InOrder inOrder = Mockito.inOrder(dataClaimsRestClient);
+      inOrder
+          .verify(dataClaimsRestClient)
           .updateSubmission(eq(submissionId.toString()), submissionPatchCaptor.capture());
       assertThat(submissionPatchCaptor.getValue().getStatus())
           .isEqualTo(SubmissionStatus.VALIDATION_FAILED);
+      assertThat(submissionPatchCaptor.getValue().getValidationMessages()).hasSize(1);
       ArgumentCaptor<BulkSubmissionPatch> bulkSubmissionPatchCaptor =
           ArgumentCaptor.forClass(BulkSubmissionPatch.class);
-      verify(dataClaimsRestClient)
+      inOrder
+          .verify(dataClaimsRestClient)
           .updateBulkSubmission(
               eq(bulkSubmissionId.toString()), bulkSubmissionPatchCaptor.capture());
       assertThat(bulkSubmissionPatchCaptor.getValue().getStatus())
           .isEqualTo(BulkSubmissionStatus.VALIDATION_FAILED);
       verify(claimValidationService, never()).validateAndUpdateClaims(any(), any(), anyBoolean());
+    }
+
+    @Test
+    @DisplayName("Should seed claim reports for claims held in VALIDATED_PENDING_APPROVAL")
+    void shouldSeedClaimReportsForPendingApprovalClaims() {
+      UUID submissionId = new UUID(0, 0);
+      UUID bulkSubmissionId = new UUID(1, 1);
+      UUID claimId = new UUID(2, 2);
+      SubmissionClaim claim = new SubmissionClaim();
+      claim.setClaimId(claimId);
+      claim.setStatus(ClaimStatus.VALIDATED_PENDING_APPROVAL);
+      SubmissionResponse submission =
+          SubmissionResponse.builder()
+              .submissionId(submissionId)
+              .bulkSubmissionId(bulkSubmissionId)
+              .areaOfLaw(AreaOfLaw.LEGAL_HELP)
+              .officeAccountNumber("officeAccountNumber")
+              .status(SubmissionStatus.READY_FOR_FINAL_VALIDATION)
+              .claims(List.of(claim))
+              .build();
+      when(dataClaimsRestClient.getSubmission(submissionId))
+          .thenReturn(ResponseEntity.ok(submission));
+      when(dataClaimsRestClient.updateSubmission(any(), any()))
+          .thenReturn(ResponseEntity.noContent().build());
+      when(dataClaimsRestClient.updateBulkSubmission(any(), any()))
+          .thenReturn(ResponseEntity.noContent().build());
+
+      SubmissionValidationContext result =
+          submissionValidationService.finalValidateSubmission(submissionId);
+
+      // Without the report the claim could not be flagged for retry when a downstream call
+      // (fee calculation or category of law) fails technically.
+      assertThat(result.getClaimReports())
+          .extracting(ClaimValidationReport::getClaimId)
+          .containsExactly(claimId.toString());
+      result.flagForRetry(claimId.toString());
+      assertThat(result.isFlaggedForRetry(claimId.toString())).isTrue();
+    }
+
+    @Test
+    void shouldRecoverFailedBulkPatchWithoutRepeatingFinalValidation() {
+      UUID submissionId = new UUID(0, 0);
+      UUID bulkSubmissionId = new UUID(1, 1);
+      SubmissionResponse submission =
+          SubmissionResponse.builder()
+              .submissionId(submissionId)
+              .bulkSubmissionId(bulkSubmissionId)
+              .status(SubmissionStatus.FINAL_VALIDATION_IN_PROGRESS)
+              .build();
+      when(dataClaimsRestClient.getSubmission(submissionId))
+          .thenReturn(ResponseEntity.ok(submission));
+      doAnswer(
+              invocation -> {
+                SubmissionValidationContext context = invocation.getArgument(1);
+                context.addSubmissionValidationError("final validation failed");
+                return null;
+              })
+          .when(submissionValidator)
+          .validate(any(), any());
+      when(dataClaimsRestClient.updateSubmission(any(), any()))
+          .thenAnswer(
+              invocation -> {
+                submission.setStatus(SubmissionStatus.VALIDATION_FAILED);
+                return ResponseEntity.noContent().build();
+              });
+      RuntimeException failure = new RuntimeException("Bulk PATCH unavailable");
+      when(dataClaimsRestClient.updateBulkSubmission(any(), any()))
+          .thenThrow(failure)
+          .thenThrow(failure)
+          .thenReturn(ResponseEntity.noContent().build());
+
+      assertThatThrownBy(() -> submissionValidationService.finalValidateSubmission(submissionId))
+          .isSameAs(failure);
+      assertThat(submission.getStatus()).isEqualTo(SubmissionStatus.VALIDATION_FAILED);
+      assertThatThrownBy(() -> submissionValidationService.finalValidateSubmission(submissionId))
+          .isSameAs(failure);
+
+      submissionValidationService.finalValidateSubmission(submissionId);
+      submissionValidationService.finalValidateSubmission(submissionId);
+
+      verify(submissionValidator).validate(eq(submission), any());
+      verifyNoInteractions(claimValidationService);
+      verify(dataClaimsRestClient).updateSubmission(eq(submissionId.toString()), any());
+      ArgumentCaptor<BulkSubmissionPatch> patches =
+          ArgumentCaptor.forClass(BulkSubmissionPatch.class);
+      verify(dataClaimsRestClient, times(4))
+          .updateBulkSubmission(eq(bulkSubmissionId.toString()), patches.capture());
+      BulkSubmissionPatch firstPatch = patches.getAllValues().getFirst();
+      assertThat(firstPatch.getStatus()).isEqualTo(BulkSubmissionStatus.VALIDATION_FAILED);
+      assertThat(firstPatch.getErrorCode()).isNotNull();
+      assertThat(firstPatch.getErrorDescription()).isNotBlank();
+      assertThat(patches.getAllValues())
+          .allSatisfy(patch -> assertThat(patch).isEqualTo(firstPatch));
     }
 
     @Test

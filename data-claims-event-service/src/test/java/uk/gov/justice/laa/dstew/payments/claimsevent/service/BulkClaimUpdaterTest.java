@@ -1,6 +1,7 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -19,6 +20,8 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
@@ -30,6 +33,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationPatch;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
+import uk.gov.justice.laa.dstew.payments.claimsevent.exception.SubmissionEventProcessingException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.mapper.FeeCalculationPatchMapper;
 import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
@@ -54,10 +58,70 @@ class BulkClaimUpdaterTest {
   @Captor private ArgumentCaptor<UUID> submissionIdCaptor;
   @Captor private ArgumentCaptor<UUID> claimIdCaptor;
 
-  private final UUID submissionId = new UUID(1, 0);
-  private final UUID claimIdOne = new UUID(1, 1);
-  private final UUID claimIdTwo = new UUID(1, 2);
+  private final UUID SUBMISSION_ID = new UUID(1, 0);
+  private final UUID CLAIM_ID_ONE = new UUID(1, 1);
+  private final UUID CLAIM_ID_TWO = new UUID(1, 2);
   private static final String FEE_CODE = "feeCode1";
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void shouldRetryFinalValidationWhenCalculationFlagsClaim(boolean hasValidationError) {
+    var context = new SubmissionValidationContext();
+    context.addClaimReports(List.of(new ClaimValidationReport(CLAIM_ID_ONE.toString())));
+    var claim = buildClaimResponse(CLAIM_ID_ONE);
+    when(mockFeeCalculationService.calculateFee(claim, context, AreaOfLaw.LEGAL_HELP))
+        .thenAnswer(
+            invocation -> {
+              context.flagForRetry(claim.getId());
+              if (hasValidationError) {
+                context.addClaimError(
+                    claim.getId(), ClaimValidationError.TECHNICAL_ERROR_FEE_CALCULATION_SERVICE);
+              }
+              return Optional.empty();
+            });
+
+    assertThatThrownBy(
+            () ->
+                bulkClaimUpdater.updateClaims(
+                    SUBMISSION_ID,
+                    List.of(claim),
+                    AreaOfLaw.LEGAL_HELP,
+                    context,
+                    buildFeeDetailsResponseWrapperHashMap(),
+                    true))
+        .isInstanceOf(SubmissionEventProcessingException.class);
+
+    verify(dataClaimsRestClient, never()).updateClaim(any(), any(), any());
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void shouldRetryFinalValidationWhenClaimAlreadyFlagged(boolean hasValidationError) {
+    var context = new SubmissionValidationContext();
+    context.addClaimReports(List.of(new ClaimValidationReport(CLAIM_ID_ONE.toString())));
+    context.flagForRetry(CLAIM_ID_ONE.toString());
+    if (hasValidationError) {
+      context.addClaimError(
+          CLAIM_ID_ONE.toString(), ClaimValidationError.TECHNICAL_ERROR_PROVIDER_DETAILS_API);
+    }
+    var claim = buildClaimResponse(CLAIM_ID_ONE);
+    when(mockFeeCalculationService.calculateFee(claim, context, AreaOfLaw.LEGAL_HELP))
+        .thenReturn(Optional.empty());
+
+    assertThatThrownBy(
+            () ->
+                bulkClaimUpdater.updateClaims(
+                    SUBMISSION_ID,
+                    List.of(claim),
+                    AreaOfLaw.LEGAL_HELP,
+                    context,
+                    buildFeeDetailsResponseWrapperHashMap(),
+                    true))
+        .isInstanceOf(SubmissionEventProcessingException.class);
+
+    verify(mockFeeCalculationService).calculateFee(claim, context, AreaOfLaw.LEGAL_HELP);
+    verify(dataClaimsRestClient, never()).updateClaim(any(), any(), any());
+  }
 
   @Test
   @DisplayName("Should not update any claims when no claims added")
@@ -69,7 +133,7 @@ class BulkClaimUpdaterTest {
         buildFeeDetailsResponseWrapperHashMap();
     // When
     bulkClaimUpdater.updateClaims(
-        submissionId,
+        SUBMISSION_ID,
         Collections.emptyList(),
         AreaOfLaw.LEGAL_HELP,
         context,
@@ -87,11 +151,11 @@ class BulkClaimUpdaterTest {
   void shouldUpdateOneClaimToValidWhenNoErrors() {
     // Given
     var context = new SubmissionValidationContext();
-    var claimResponse = buildClaimResponse(claimIdOne);
+    var claimResponse = buildClaimResponse(CLAIM_ID_ONE);
     var feeDetailsResponseWrapperHashMap = buildFeeDetailsResponseWrapperHashMap();
     var feeCalculationResponse = new FeeCalculationResponse();
 
-    context.putAuthorisedCategoryOfLawCode(FEE_CODE, "categoryOfLawCode");
+    context.putAuthorisedCategoryOfLawCode(claimResponse.getId(), "categoryOfLawCode");
 
     when(mockFeeCalculationService.calculateFee(
             eq(claimResponse), eq(context), eq(AreaOfLaw.LEGAL_HELP)))
@@ -104,12 +168,12 @@ class BulkClaimUpdaterTest {
             feeDetailsResponseWrapperHashMap
                 .get(claimResponse.getFeeCode())
                 .getFeeDetailsResponse(),
-            context.getAuthorisedCategoryOfLawCode(FEE_CODE)))
+            context.getAuthorisedCategoryOfLawCode(claimResponse.getId())))
         .thenReturn(feeCalculationPatch);
 
     // When
     bulkClaimUpdater.updateClaims(
-        submissionId,
+        SUBMISSION_ID,
         List.of(claimResponse),
         AreaOfLaw.LEGAL_HELP,
         context,
@@ -123,7 +187,7 @@ class BulkClaimUpdaterTest {
         .updateClaim(
             submissionIdCaptor.capture(), claimIdCaptor.capture(), claimPatchCaptor.capture());
     ClaimPatch capturedPatch = claimPatchCaptor.getValue();
-    assertThat(submissionIdCaptor.getValue()).isEqualTo(submissionId);
+    assertThat(submissionIdCaptor.getValue()).isEqualTo(SUBMISSION_ID);
     assertThat(claimIdCaptor.getValue()).isEqualTo(UUID.fromString(claimResponse.getId()));
     assertThat(capturedPatch.getId()).isEqualTo(claimResponse.getId());
     assertThat(capturedPatch.getFeeCalculationResponse()).isEqualTo(feeCalculationPatch);
@@ -136,7 +200,7 @@ class BulkClaimUpdaterTest {
   @DisplayName("Should update one claim to valid after final validation")
   void shouldUpdateOneClaimToValidAfterFinalValidation() {
     var context = new SubmissionValidationContext();
-    var claimResponse = buildClaimResponse(claimIdOne);
+    var claimResponse = buildClaimResponse(CLAIM_ID_ONE);
     var feeDetailsResponseWrapperHashMap = buildFeeDetailsResponseWrapperHashMap();
     var feeCalculationResponse = new FeeCalculationResponse();
 
@@ -156,7 +220,7 @@ class BulkClaimUpdaterTest {
         .thenReturn(feeCalculationPatch);
 
     bulkClaimUpdater.updateClaims(
-        submissionId,
+        SUBMISSION_ID,
         List.of(claimResponse),
         AreaOfLaw.LEGAL_HELP,
         context,
@@ -171,7 +235,7 @@ class BulkClaimUpdaterTest {
   @DisplayName("Should update a claim when fee calculation service returns null response")
   void shouldUpdateClaimsWithNullFeeResponse() {
     // Given
-    var claimResponse = buildClaimResponse(claimIdOne);
+    var claimResponse = buildClaimResponse(CLAIM_ID_ONE);
     var feeDetailsResponseWrapperHashMap = buildFeeDetailsResponseWrapperHashMap();
     var context = new SubmissionValidationContext();
 
@@ -181,7 +245,7 @@ class BulkClaimUpdaterTest {
 
     // When
     bulkClaimUpdater.updateClaims(
-        submissionId,
+        SUBMISSION_ID,
         List.of(claimResponse),
         AreaOfLaw.LEGAL_HELP,
         context,
@@ -195,7 +259,7 @@ class BulkClaimUpdaterTest {
         .updateClaim(
             submissionIdCaptor.capture(), claimIdCaptor.capture(), claimPatchCaptor.capture());
     ClaimPatch capturedPatch = claimPatchCaptor.getValue();
-    assertThat(submissionIdCaptor.getValue()).isEqualTo(submissionId);
+    assertThat(submissionIdCaptor.getValue()).isEqualTo(SUBMISSION_ID);
     assertThat(claimIdCaptor.getValue()).isEqualTo(UUID.fromString(claimResponse.getId()));
     assertThat(capturedPatch.getId()).isEqualTo(claimResponse.getId());
     assertThat(capturedPatch.getFeeCalculationResponse()).isNull();
@@ -207,13 +271,14 @@ class BulkClaimUpdaterTest {
   @DisplayName("Should update two claims to valid when no errors")
   void shouldUpdateTwoClaimToValidWhenNoErrors() {
     // Given
-    var claimResponseOne = buildClaimResponse(claimIdOne);
-    final var claimResponseTwo = buildClaimResponse(claimIdTwo);
-    final var feeDetailsResponseWrapperHashMap = buildFeeDetailsResponseWrapperHashMap();
-    var feeCalculationResponseOne = new FeeCalculationResponse().claimId(claimIdOne.toString());
+    var claimResponseOne = buildClaimResponse(CLAIM_ID_ONE);
+    var claimResponseTwo = buildClaimResponse(CLAIM_ID_TWO);
+    var feeDetailsResponseWrapperHashMap = buildFeeDetailsResponseWrapperHashMap();
+    var feeCalculationResponseOne = new FeeCalculationResponse().claimId(CLAIM_ID_ONE.toString());
     var context = new SubmissionValidationContext();
 
-    context.putAuthorisedCategoryOfLawCode(FEE_CODE, "categoryOfLawCode");
+    context.putAuthorisedCategoryOfLawCode(claimResponseOne.getId(), "categoryOfLawCode");
+    context.putAuthorisedCategoryOfLawCode(claimResponseTwo.getId(), "categoryOfLawCode");
 
     when(mockFeeCalculationService.calculateFee(
             any(ClaimResponse.class), any(SubmissionValidationContext.class), any(AreaOfLaw.class)))
@@ -229,8 +294,8 @@ class BulkClaimUpdaterTest {
 
     // When
     bulkClaimUpdater.updateClaims(
-        submissionId,
-        List.of(claimResponseTwo, claimResponseTwo),
+        SUBMISSION_ID,
+        List.of(claimResponseOne, claimResponseTwo),
         AreaOfLaw.LEGAL_HELP,
         context,
         feeDetailsResponseWrapperHashMap);
@@ -248,12 +313,12 @@ class BulkClaimUpdaterTest {
   void shouldUpdateOneClaimToInvalidWhenOtherClaimHasInvalidStatus() {
     // Given
     var context = new SubmissionValidationContext();
-    var validClaimResponse = buildClaimResponse(claimIdOne);
-    final var invalidClaimResponse = buildClaimResponse(claimIdTwo);
+    var validClaimResponse = buildClaimResponse(CLAIM_ID_ONE);
+    var invalidClaimResponse = buildClaimResponse(CLAIM_ID_TWO);
     var feeDetailsResponseWrapperHashMap = buildFeeDetailsResponseWrapperHashMap();
-    var feeCalculationResponseOne = new FeeCalculationResponse().claimId(claimIdOne.toString());
+    var feeCalculationResponseOne = new FeeCalculationResponse().claimId(CLAIM_ID_ONE.toString());
 
-    context.putAuthorisedCategoryOfLawCode(FEE_CODE, "categoryOfLawCode");
+    context.putAuthorisedCategoryOfLawCode(validClaimResponse.getId(), "categoryOfLawCode");
 
     when(mockFeeCalculationService.calculateFee(
             eq(validClaimResponse), eq(context), eq(AreaOfLaw.LEGAL_HELP)))
@@ -266,7 +331,7 @@ class BulkClaimUpdaterTest {
             feeDetailsResponseWrapperHashMap
                 .get(validClaimResponse.getFeeCode())
                 .getFeeDetailsResponse(),
-            context.getAuthorisedCategoryOfLawCode(FEE_CODE)))
+            context.getAuthorisedCategoryOfLawCode(validClaimResponse.getId())))
         .thenReturn(feeCalculationPatch);
 
     context.addClaimError(
@@ -274,7 +339,7 @@ class BulkClaimUpdaterTest {
         ClaimValidationError.INVALID_CLAIM_HAS_DUPLICATE_IN_ANOTHER_SUBMISSION);
     // When
     bulkClaimUpdater.updateClaims(
-        submissionId,
+        SUBMISSION_ID,
         List.of(validClaimResponse, invalidClaimResponse),
         AreaOfLaw.LEGAL_HELP,
         context,
@@ -303,10 +368,12 @@ class BulkClaimUpdaterTest {
       "Should update claim to invalid with validation error messages when context has errors")
   void shouldUpdateClaimToInvalidWhenContextHasErrors() {
     // Given
-    var claimResponse = buildClaimResponse(claimIdOne);
+    var claimResponse = buildClaimResponse(CLAIM_ID_ONE);
     var feeDetailsResponseWrapperHashMap = buildFeeDetailsResponseWrapperHashMap();
-    var feeCalculationResponse = new FeeCalculationResponse().claimId(claimIdOne.toString());
+    var feeCalculationResponse = new FeeCalculationResponse().claimId(CLAIM_ID_ONE.toString());
     var context = new SubmissionValidationContext();
+
+    context.putAuthorisedCategoryOfLawCode(claimResponse.getId(), "categoryOfLawCode");
 
     when(mockFeeCalculationService.calculateFee(
             eq(claimResponse), eq(context), eq(AreaOfLaw.LEGAL_HELP)))
@@ -319,10 +386,9 @@ class BulkClaimUpdaterTest {
             feeDetailsResponseWrapperHashMap
                 .get(claimResponse.getFeeCode())
                 .getFeeDetailsResponse(),
-            context.getAuthorisedCategoryOfLawCode(null)))
+            context.getAuthorisedCategoryOfLawCode(claimResponse.getId())))
         .thenReturn(feeCalculationPatch);
 
-    context.putAuthorisedCategoryOfLawCode(null, "categoryOfLawCode");
     context.addClaimReports(List.of(new ClaimValidationReport(claimResponse.getId())));
     context.flagForRetry(claimResponse.getId());
     context.addClaimError(
@@ -330,7 +396,7 @@ class BulkClaimUpdaterTest {
         ClaimValidationError.TECHNICAL_ERROR_FEE_CALCULATION_SERVICE);
     // When
     bulkClaimUpdater.updateClaims(
-        submissionId,
+        SUBMISSION_ID,
         List.of(claimResponse),
         AreaOfLaw.LEGAL_HELP,
         context,
@@ -352,7 +418,7 @@ class BulkClaimUpdaterTest {
   void shouldNotUpdateClaimToInvalidWhenTheClaimIsFlaggedForRetry() {
     // Given
 
-    var claimResponse = buildClaimResponse(claimIdOne);
+    var claimResponse = buildClaimResponse(CLAIM_ID_ONE);
     var feeDetailsResponseWrapperHashMap = buildFeeDetailsResponseWrapperHashMap();
     var context = new SubmissionValidationContext();
 
@@ -360,7 +426,7 @@ class BulkClaimUpdaterTest {
     context.flagForRetry(claimResponse.getId());
     // When
     bulkClaimUpdater.updateClaims(
-        submissionId,
+        SUBMISSION_ID,
         List.of(claimResponse),
         AreaOfLaw.LEGAL_HELP,
         context,
@@ -388,6 +454,6 @@ class BulkClaimUpdaterTest {
         .id(uuid.toString())
         .feeCode(FEE_CODE)
         .status(ClaimStatus.READY_TO_PROCESS)
-        .submissionId(submissionId.toString());
+        .submissionId(SUBMISSION_ID.toString());
   }
 }

@@ -163,6 +163,27 @@ class SubmissionValidationContextTest {
   }
 
   @Nested
+  @DisplayName("authorised category of law")
+  class AuthorisedCategoryOfLawTests {
+
+    @Test
+    @DisplayName("Stores resolved categories independently by claim ID")
+    void storesResolvedCategoriesIndependentlyByClaimId() {
+      // Given
+      submissionValidationContext = new SubmissionValidationContext();
+
+      // When
+      submissionValidationContext.putAuthorisedCategoryOfLawCode("claimId1", "CRL");
+      submissionValidationContext.putAuthorisedCategoryOfLawCode("claimId2", null);
+
+      // Then
+      assertThat(submissionValidationContext.getAuthorisedCategoryOfLawCode("claimId1"))
+          .isEqualTo("CRL");
+      assertThat(submissionValidationContext.getAuthorisedCategoryOfLawCode("claimId2")).isNull();
+    }
+  }
+
+  @Nested
   @DisplayName("isFlaggedForRetry")
   class isFlaggedForRetryTests {
 

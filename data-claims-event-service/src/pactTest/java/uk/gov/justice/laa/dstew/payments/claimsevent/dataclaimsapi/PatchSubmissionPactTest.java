@@ -10,6 +10,7 @@ import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.core.model.RequestResponsePact;
 import au.com.dius.pact.core.model.annotations.Pact;
 import java.util.List;
+import java.util.Map;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,6 +38,41 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.config.ClaimsApiPactTestCon
 public final class PatchSubmissionPactTest extends AbstractPactTest {
 
   @Autowired DataClaimsRestClient dataClaimsRestClient;
+
+  @SneakyThrows
+  @Pact(consumer = CONSUMER)
+  RequestResponsePact patchFinalValidationInProgress(PactDslWithProvider builder) {
+    return builder
+        .given(
+            "the system is ready to update a submission",
+            Map.of("status", "READY_FOR_FINAL_VALIDATION"))
+        .uponReceiving("a patch submission request starting final validation")
+        .matchPath(
+            "/api/v1/submissions/(" + UUID_REGEX + ")", "/api/v1/submissions/" + EXAMPLE_UUID)
+        .matchHeader(HttpHeaders.AUTHORIZATION, UUID_REGEX, EXAMPLE_AUTH_TOKEN)
+        .method("PATCH")
+        .body(objectMapper.writeValueAsString(getFinalValidationPatch()))
+        .matchHeader("Content-Type", "application/json")
+        .willRespondWith()
+        .status(204)
+        .toPact();
+  }
+
+  private SubmissionPatch getFinalValidationPatch() {
+    return new SubmissionPatch()
+        .submissionId(SUBMISSION_ID)
+        .status(SubmissionStatus.FINAL_VALIDATION_IN_PROGRESS);
+  }
+
+  @Test
+  @PactTestFor(pactMethod = "patchFinalValidationInProgress")
+  void shouldStartFinalValidation() {
+    assertThat(
+            dataClaimsRestClient
+                .updateSubmission(SUBMISSION_ID.toString(), getFinalValidationPatch())
+                .getStatusCode())
+        .isEqualTo(HttpStatus.NO_CONTENT);
+  }
 
   @SneakyThrows
   @Pact(consumer = CONSUMER)
