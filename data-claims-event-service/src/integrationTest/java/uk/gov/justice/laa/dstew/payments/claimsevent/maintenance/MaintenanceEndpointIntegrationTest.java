@@ -3,7 +3,9 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.maintenance;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.verify;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -113,14 +115,17 @@ class MaintenanceEndpointIntegrationTest extends LocalstackBaseIntegrationTest {
         .atMost(Duration.ofSeconds(5))
         .untilAsserted(() -> assertThat(listenersRunning()).isTrue());
 
-    // A new message sent after resume must be picked up again, proving polling genuinely
-    // restarted rather than merely reporting a stale "running" flag.
+    // A new message sent after resume must actually be consumed and handed to the handler,
+    // proving polling genuinely restarted rather than merely reporting a stale "running" flag.
+    // Asserting inFlightCount == 0 alone would be a no-op check here, since the count is already
+    // zero before the message is even sent.
     doAnswer(_ -> null).when(bulkParsingService).parseData(any(), any());
     UUID secondSubmissionId = UUID.randomUUID();
     sendMessage(bulkSubmissionId, secondSubmissionId);
     await()
         .atMost(Duration.ofSeconds(10))
-        .untilAsserted(() -> assertThat(inFlightCount()).isEqualTo(0));
+        .untilAsserted(
+            () -> verify(bulkParsingService).parseData(eq(bulkSubmissionId), eq(secondSubmissionId)));
   }
 
   private void sendMessage(UUID bulkSubmissionId, UUID submissionId) throws Exception {
