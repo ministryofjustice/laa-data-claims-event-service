@@ -117,25 +117,34 @@ spec:
                     PORT="{{ ((.Values.management).port) | default 8081 }}"
                     DRAIN_TIMEOUT_SECONDS="{{ (((.Values.probe).preStop).drainTimeoutSeconds) | default 45 }}"
                     POLL_INTERVAL_SECONDS="{{ (((.Values.probe).preStop).pollIntervalSeconds) | default 2 }}"
+                    REQUEST_TIMEOUT_SECONDS="{{ (((.Values.probe).preStop).requestTimeoutSeconds) | default 5 }}"
                     MAINTENANCE_URL="http://localhost:${PORT}/actuator/maintenance"
+                    START_TIME=$(date +%s)
 
                     # Tell the pod to stop listening to SQS. This call is asynchronous server-side
                     # and returns immediately; it does not wait for in-flight processing to finish.
-                    wget -q -O - --post-data='' "$MAINTENANCE_URL"
+                    # Bounded by REQUEST_TIMEOUT_SECONDS so a wedged app can't stall this hook.
+                    wget -q -T "$REQUEST_TIMEOUT_SECONDS" -O - --post-data='' "$MAINTENANCE_URL"
 
                     # Poll until listener polling has actually stopped and in-flight processing
                     # and acknowledgement has drained to zero, bounded by DRAIN_TIMEOUT_SECONDS so
-                    # this hook never blocks termination beyond the configured budget.
-                    elapsed=0
-                    while [ "$elapsed" -lt "$DRAIN_TIMEOUT_SECONDS" ]; do
-                      status="$(wget -q -O - "$MAINTENANCE_URL")"
+                    # this hook never blocks termination beyond the configured budget. Elapsed time
+                    # is real wall-clock time (covering both the initial POST above and every GET
+                    # below), not just the sum of sleeps, so a slow/hung request still counts
+                    # against the budget rather than silently extending it.
+                    while true; do
+                      now=$(date +%s)
+                      elapsed=$((now - START_TIME))
+                      if [ "$elapsed" -ge "$DRAIN_TIMEOUT_SECONDS" ]; then
+                        break
+                      fi
+                      status="$(wget -q -T "$REQUEST_TIMEOUT_SECONDS" -O - "$MAINTENANCE_URL")"
                       running="$(echo "$status" | grep -o '"listenersRunning":[a-z]*' | cut -d: -f2)"
                       inflight="$(echo "$status" | grep -o '"inFlightCount":[0-9]*' | cut -d: -f2)"
                       if [ "$running" = "false" ] && [ "$inflight" = "0" ]; then
                         exit 0
                       fi
                       sleep "$POLL_INTERVAL_SECONDS"
-                      elapsed=$((elapsed + POLL_INTERVAL_SECONDS))
                     done
                     # Drain did not complete within budget: proceed to termination regardless so
                     # the pod is never stuck beyond terminationGracePeriodSeconds. The listener's

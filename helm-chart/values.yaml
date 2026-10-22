@@ -36,6 +36,7 @@ probe:
   preStop:
     drainTimeoutSeconds: 45
     pollIntervalSeconds: 2
+    requestTimeoutSeconds: 5
 
 stickiness:
   enabled: true
