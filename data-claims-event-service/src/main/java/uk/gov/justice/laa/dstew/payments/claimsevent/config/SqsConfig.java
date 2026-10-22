@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.config;
 
+import io.awspring.cloud.autoconfigure.sqs.SqsProperties;
 import io.awspring.cloud.sqs.config.SqsMessageListenerContainerFactory;
 import io.awspring.cloud.sqs.listener.acknowledgement.handler.AcknowledgementMode;
 import java.net.URI;
@@ -85,6 +86,9 @@ public class SqsConfig {
    * again for redelivery once its SQS visibility timeout expires.
    *
    * @param sqsAsyncClient the async SQS client used by the listener container
+   * @param sqsProperties the auto-configured {@code spring.cloud.aws.sqs.*} properties, re-applied
+   *     here (e.g. {@code queue-not-found-strategy: fail}) since replacing Spring Boot's
+   *     auto-configured factory bean means those settings are no longer applied automatically
    * @param listenerShutdownTimeoutSeconds how long to wait for in-flight message processing to
    *     finish on shutdown before stopping regardless
    * @param acknowledgementShutdownTimeoutSeconds how long to wait for pending acknowledgements to
@@ -97,18 +101,23 @@ public class SqsConfig {
   @ConditionalOnProperty(prefix = "spring.cloud.aws.sqs", name = "enabled", matchIfMissing = true)
   public SqsMessageListenerContainerFactory<Object> defaultSqsListenerContainerFactory(
       SqsAsyncClient sqsAsyncClient,
+      SqsProperties sqsProperties,
       @Value("${laa.bulk-claim-queue.listener-shutdown-timeout-seconds:20}")
           int listenerShutdownTimeoutSeconds,
       @Value("${laa.bulk-claim-queue.acknowledgement-shutdown-timeout-seconds:20}")
           int acknowledgementShutdownTimeoutSeconds) {
     return SqsMessageListenerContainerFactory.builder()
         .configure(
-            options ->
-                options
-                    .acknowledgementMode(AcknowledgementMode.ON_SUCCESS)
-                    .listenerShutdownTimeout(Duration.ofSeconds(listenerShutdownTimeoutSeconds))
-                    .acknowledgementShutdownTimeout(
-                        Duration.ofSeconds(acknowledgementShutdownTimeoutSeconds)))
+            options -> {
+              options
+                  .acknowledgementMode(AcknowledgementMode.ON_SUCCESS)
+                  .listenerShutdownTimeout(Duration.ofSeconds(listenerShutdownTimeoutSeconds))
+                  .acknowledgementShutdownTimeout(
+                      Duration.ofSeconds(acknowledgementShutdownTimeoutSeconds));
+              if (sqsProperties.getQueueNotFoundStrategy() != null) {
+                options.queueNotFoundStrategy(sqsProperties.getQueueNotFoundStrategy());
+              }
+            })
         .sqsAsyncClient(sqsAsyncClient)
         .build();
   }
