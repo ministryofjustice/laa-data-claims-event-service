@@ -94,7 +94,10 @@ env:
         name: laa-data-claims-event-service-secrets
         key: APPLICATION_LOGGING_LEVEL
   - name: JAVA_TOOL_OPTIONS
-    value: "-XX:MaxDirectMemorySize=128m"
+    value: >-
+      -XX:MaxDirectMemorySize=128m
+      -Dcom.sun.net.ssl.checkRevocation=true
+      -Dcom.sun.security.enableCRLDP=true
 
 grafana:
   enabled: true
