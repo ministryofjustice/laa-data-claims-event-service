@@ -32,7 +32,7 @@ class OutcomeCodeClaimValidatorTest {
     SchemaValidationConfig config =
         new SchemaValidationConfig(
             new ObjectMapper(),
-            new ClassPathResource("schemas/submission-fields.schema.json"),
+            new ClassPathResource("schemas/event-service-submission-fields.schema.json"),
             new ClassPathResource("schemas/claim-fields.schema.json"));
     validator = new OutcomeCodeClaimValidator(config.schemaValidationErrorMessages());
   }

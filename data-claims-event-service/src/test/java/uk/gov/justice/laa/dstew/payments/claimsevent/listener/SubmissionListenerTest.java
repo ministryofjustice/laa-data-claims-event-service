@@ -1,7 +1,11 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.listener;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,6 +32,7 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.service.BulkParsingService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.SqsVisibilityExtender;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.SubmissionValidationService;
 
+/** Unit tests for {@link SubmissionListener}. */
 @ExtendWith(MockitoExtension.class)
 public class SubmissionListenerTest {
 
@@ -52,7 +57,7 @@ public class SubmissionListenerTest {
     @DisplayName("Handles parse bulk submission events")
     void handlesBulkSubmissionEvent() throws JsonProcessingException {
       // Given
-      Message message =
+      final Message message =
           Message.builder()
               .body("body")
               .receiptHandle("receiptHandle")
@@ -92,7 +97,7 @@ public class SubmissionListenerTest {
     @DisplayName("Handles submission validation events")
     void handlesSubmissionValidationEvent() throws JsonProcessingException {
       // Given
-      Message message =
+      final Message message =
           Message.builder()
               .body("body")
               .receiptHandle("receiptHandle")
@@ -122,6 +127,36 @@ public class SubmissionListenerTest {
       verify(submissionValidationService).validateSubmission(submissionId);
       verifyNoMoreInteractions(submissionValidationService);
 
+      verifyNoInteractions(bulkParsingService);
+      verify(mockSqsVisibilityExtender).start("receiptHandle");
+    }
+
+    @Test
+    @DisplayName("Handles final submission validation events")
+    void handlesSubmissionApprovalEvent() throws JsonProcessingException {
+      Message message =
+          Message.builder()
+              .body("body")
+              .receiptHandle("receiptHandle")
+              .messageAttributes(
+                  Map.of(
+                      "SubmissionEventType",
+                      MessageAttributeValue.builder()
+                          .stringValue(SubmissionEventType.APPROVE_SUBMISSION.toString())
+                          .build()))
+              .build();
+
+      UUID submissionId = new UUID(0, 0);
+      SubmissionValidationMessage submissionValidationMessage =
+          new SubmissionValidationMessage(submissionId);
+
+      when(objectMapper.readValue("body", SubmissionValidationMessage.class))
+          .thenReturn(submissionValidationMessage);
+      when(mockVisibilityExtenderProvider.getObject()).thenReturn(mockSqsVisibilityExtender);
+
+      submissionListener.receiveSubmissionEvent(message);
+
+      verify(submissionValidationService).finalValidateSubmission(submissionId);
       verifyNoInteractions(bulkParsingService);
       verify(mockSqsVisibilityExtender).start("receiptHandle");
     }

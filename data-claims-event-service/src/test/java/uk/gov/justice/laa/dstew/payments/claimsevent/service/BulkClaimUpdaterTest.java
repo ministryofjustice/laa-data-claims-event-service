@@ -2,9 +2,19 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,7 +24,11 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.justice.laa.dstew.payments.claimsdata.model.*;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.AreaOfLaw;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimPatch;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
+import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationPatch;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
 import uk.gov.justice.laa.dstew.payments.claimsevent.mapper.FeeCalculationPatchMapper;
 import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
@@ -116,6 +130,41 @@ class BulkClaimUpdaterTest {
     assertThat(capturedPatch.getValidationMessages().isEmpty()).isTrue();
     assertThat(capturedPatch.getCreatedByUserId()).isEqualTo(ClaimValidationSource.EVENT_SERVICE);
     assertThat(capturedPatch.getStatus()).isEqualTo(ClaimStatus.VALIDATED_PENDING_APPROVAL);
+  }
+
+  @Test
+  @DisplayName("Should update one claim to valid after final validation")
+  void shouldUpdateOneClaimToValidAfterFinalValidation() {
+    var context = new SubmissionValidationContext();
+    var claimResponse = buildClaimResponse(CLAIM_ID_ONE);
+    var feeDetailsResponseWrapperHashMap = buildFeeDetailsResponseWrapperHashMap();
+    var feeCalculationResponse = new FeeCalculationResponse();
+
+    when(mockFeeCalculationService.calculateFee(
+            eq(claimResponse), eq(context), eq(AreaOfLaw.LEGAL_HELP)))
+        .thenReturn(Optional.of(feeCalculationResponse));
+
+    var feeCalculationPatch =
+        new FeeCalculationPatch().claimId(UUID.fromString(claimResponse.getId()));
+    when(mockFeeCalculationPatchMapper.mapToFeeCalculationPatch(
+            eq(feeCalculationResponse),
+            eq(
+                feeDetailsResponseWrapperHashMap
+                    .get(claimResponse.getFeeCode())
+                    .getFeeDetailsResponse()),
+            isNull()))
+        .thenReturn(feeCalculationPatch);
+
+    bulkClaimUpdater.updateClaims(
+        SUBMISSION_ID,
+        List.of(claimResponse),
+        AreaOfLaw.LEGAL_HELP,
+        context,
+        feeDetailsResponseWrapperHashMap,
+        true);
+
+    verify(dataClaimsRestClient).updateClaim(any(), any(), claimPatchCaptor.capture());
+    assertThat(claimPatchCaptor.getValue().getStatus()).isEqualTo(ClaimStatus.VALID);
   }
 
   @Test

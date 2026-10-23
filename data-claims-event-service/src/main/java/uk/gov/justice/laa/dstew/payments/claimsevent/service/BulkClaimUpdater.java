@@ -39,15 +39,10 @@ public class BulkClaimUpdater {
   private final FeeCalculationPatchMapper feeCalculationPatchMapper;
 
   /**
-   * Calculates the fee for the claim using the Fee Scheme Platform API, and handles any returned
-   * errors.
-   *
-   * <ul>
-   *   <li>If validation errors have been recorded, update the claim status to INVALID and send
-   *       through the errors.
-   *   <li>If no errors have been recorded, update the claim status to VALID.
-   *   <li>If the context has a claim errors, then mark the claim as INVALID.
-   * </ul>
+   * Calculates fees and updates claims after initial validation. Claims without validation errors
+   * are held in {@code VALIDATED_PENDING_APPROVAL}. Claims with submission-level or their own
+   * validation errors become {@code INVALID}. Claims already flagged for retry without errors are
+   * skipped.
    *
    * @param submissionId the submission ID
    * @param claimResponses the list of claim responses
@@ -61,6 +56,30 @@ public class BulkClaimUpdater {
       AreaOfLaw areaOfLaw,
       SubmissionValidationContext context,
       Map<String, FeeDetailsResponseWrapper> feeDetailsResponseMap) {
+    updateClaims(submissionId, claimResponses, areaOfLaw, context, feeDetailsResponseMap, false);
+  }
+
+  /**
+   * Updates claims with the result of either initial or final validation.
+   *
+   * <p>Claims without validation errors become {@code VALIDATED_PENDING_APPROVAL} after initial
+   * validation or {@code VALID} after final validation. Submission-level or claim-specific errors
+   * result in {@code INVALID}. Claims already flagged for retry without errors are skipped.
+   *
+   * @param submissionId the submission ID
+   * @param claimResponses the claims being updated
+   * @param areaOfLaw the submission area of law
+   * @param context validation context
+   * @param feeDetailsResponseMap fee details used by fee calculation
+   * @param finalValidation whether the claims are being accepted after final validation
+   */
+  public void updateClaims(
+      UUID submissionId,
+      List<ClaimResponse> claimResponses,
+      AreaOfLaw areaOfLaw,
+      SubmissionValidationContext context,
+      Map<String, FeeDetailsResponseWrapper> feeDetailsResponseMap,
+      boolean finalValidation) {
     log.debug("Updating claims for submission {}", submissionId);
     AtomicInteger claimsUpdated = new AtomicInteger();
     AtomicInteger claimsFlaggedForRetry = new AtomicInteger();
@@ -86,8 +105,7 @@ public class BulkClaimUpdater {
                     context.getAuthorisedCategoryOfLawCode(claim.getId()));
           }
 
-          // If a claim was found to be invalid, make the rest of the claims invalid
-          ClaimStatus claimStatus = getClaimStatus(claim.getId(), context);
+          ClaimStatus claimStatus = getClaimStatus(claim.getId(), context, finalValidation);
           ClaimPatch claimPatch = buildClaimPatch(claim, feeCalculationPatch, context, claimStatus);
 
           // Update claim regardless of fee calculation presence
@@ -114,12 +132,13 @@ public class BulkClaimUpdater {
   }
 
   private ClaimStatus getClaimStatus(
-      final String claimId, final SubmissionValidationContext context) {
-    // On successful INITIAL validation a claim is held in VALIDATED_PENDING_APPROVAL alongside its
-    // submission (awaiting the provider's final approval) rather than being accepted (VALID).
-    return (context.hasSubmissionLevelErrors() || context.hasErrors(claimId))
-        ? ClaimStatus.INVALID
-        : ClaimStatus.VALIDATED_PENDING_APPROVAL;
+      final String claimId,
+      final SubmissionValidationContext context,
+      final boolean finalValidation) {
+    if (context.hasSubmissionLevelErrors() || context.hasErrors(claimId)) {
+      return ClaimStatus.INVALID;
+    }
+    return finalValidation ? ClaimStatus.VALID : ClaimStatus.VALIDATED_PENDING_APPROVAL;
   }
 
   private Optional<FeeCalculationResponse> getFeeCalculationResponse(

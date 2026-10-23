@@ -31,7 +31,7 @@ awslocal sns subscribe \
   --topic-arn $TOPIC_ARN \
   --protocol sqs \
   --notification-endpoint $CLAIMS_QUEUE_ARN \
-  --attributes '{"RawMessageDelivery":"true","FilterPolicy":"{\"SubmissionEventType\":[\"PARSE_BULK_SUBMISSION\",\"VALIDATE_SUBMISSION\"]}"}'
+  --attributes '{"RawMessageDelivery":"true","FilterPolicy":"{\"SubmissionEventType\":[\"PARSE_BULK_SUBMISSION\",\"VALIDATE_SUBMISSION\",\"APPROVE_SUBMISSION\"]}"}'
 # ,FilterPolicy='{"SubmissionEventType":["PARSE_BULK_SUBMISSION", "VALIDATE_SUBMISSION"]}'
 
 echo "Subscribing notify-queue to topic with filter policy"

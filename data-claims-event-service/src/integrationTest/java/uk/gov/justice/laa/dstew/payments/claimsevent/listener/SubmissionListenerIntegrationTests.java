@@ -114,4 +114,33 @@ public class SubmissionListenerIntegrationTests extends LocalstackBaseIntegratio
         .untilAsserted(
             () -> verify(submissionValidationService, times(1)).validateSubmission(submissionId));
   }
+
+  @Test
+  @DisplayName("Should process approve submission event")
+  void shouldProcessApproveSubmissionEvent() throws JsonProcessingException {
+    UUID submissionId = new UUID(1, 1);
+
+    String messageBody = objectMapper.writeValueAsString(Map.of("submission_id", submissionId));
+
+    sqsClient.sendMessage(
+        builder ->
+            builder
+                .queueUrl(this.queueUrl)
+                .messageBody(messageBody)
+                .messageAttributes(
+                    Map.of(
+                        "SubmissionEventType",
+                        MessageAttributeValue.builder()
+                            .dataType("String")
+                            .stringValue(SubmissionEventType.APPROVE_SUBMISSION.toString())
+                            .build())));
+
+    await()
+        .pollInterval(Duration.ofMillis(500))
+        .atMost(Duration.ofSeconds(10))
+        .untilAsserted(
+            () ->
+                verify(submissionValidationService, times(1))
+                    .finalValidateSubmission(submissionId));
+  }
 }

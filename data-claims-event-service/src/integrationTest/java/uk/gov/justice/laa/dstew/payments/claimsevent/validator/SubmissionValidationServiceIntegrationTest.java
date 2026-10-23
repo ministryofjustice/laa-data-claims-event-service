@@ -66,6 +66,43 @@ public class SubmissionValidationServiceIntegrationTest extends MockServerIntegr
   public static final String APR_2025 = "APR-2025";
 
   @Nested
+  @DisplayName("Final validation with claims")
+  class FinalValidationTests {
+
+    @Test
+    void shouldValidateFinalSubmissionWithClaims() throws Exception {
+      stubFinalValidationWithClaim();
+      stubForPostFeeCalculation("fee-scheme/post-fee-calculation-200.json");
+      stubForGetProviderOffice(
+          OFFICE_CODE,
+          Collections.emptyList(),
+          "provider-details/get-firm-schedules-openapi-200.json");
+
+      SubmissionValidationContext context =
+          submissionValidationService.finalValidateSubmission(SUBMISSION_ID);
+
+      assertContextHasNoErrors(context);
+    }
+
+    private void stubFinalValidationWithClaim() throws Exception {
+      stubForGetSubmission(
+          SUBMISSION_ID, "data-claims/get-submission/get-submission-final-validation.json");
+      stubForGetClaims(
+          Collections.emptyList(), "data-claims/get-claims/claim-pending-approval.json");
+      stubForUpdateClaim(SUBMISSION_ID, UUID.fromString(CLAIM_ID));
+      stubForUpdateSubmission(SUBMISSION_ID);
+      stubForUpdateBulkSubmission(BULK_SUBMISSION_ID);
+      stubForGetFeeDetails("CAPA", "fee-scheme/get-fee-details-200.json");
+      getStubForGetSubmissionByCriteria(
+          List.of(
+              Parameter.param(OFFICES_PARAM, OFFICE_CODE),
+              Parameter.param(AREA_OF_LAW_PARAM, AreaOfLaw.CRIME_LOWER.name()),
+              Parameter.param(SUBMISSION_PERIOD_PARAM, APR_2025)),
+          SUBMISSIONS_BY_FILTER_NO_CONTENT_JSON);
+    }
+  }
+
+  @Nested
   @DisplayName("Submission period tests")
   class SubmissionPeriodTests {
 

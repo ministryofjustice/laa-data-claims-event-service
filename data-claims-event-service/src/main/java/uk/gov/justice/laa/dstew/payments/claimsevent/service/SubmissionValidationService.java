@@ -3,6 +3,7 @@ package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +20,7 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.SubmissionStatus;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
+import uk.gov.justice.laa.dstew.payments.claimsevent.exception.SubmissionEventProcessingException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.util.ValidationResultComparator;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
@@ -35,6 +37,20 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.validation.submission.Submi
 @AllArgsConstructor
 public class SubmissionValidationService {
 
+  private static final Set<ClaimStatus> CLAIM_STATUSES_UNDER_VALIDATION =
+      Set.of(ClaimStatus.READY_TO_PROCESS, ClaimStatus.VALIDATED_PENDING_APPROVAL);
+
+  /**
+   * Submission statuses that prove initial validation has already completed, so a redelivered
+   * initial validation message must be a no-op.
+   */
+  private static final Set<SubmissionStatus> INITIAL_VALIDATION_COMPLETE_STATUSES =
+      Set.of(
+          SubmissionStatus.VALIDATED_PENDING_APPROVAL,
+          SubmissionStatus.READY_FOR_FINAL_VALIDATION,
+          SubmissionStatus.FINAL_VALIDATION_IN_PROGRESS,
+          SubmissionStatus.VALIDATION_SUCCEEDED);
+
   private final ValidationService validationService;
   private final ClaimValidationService claimValidationService;
   private final DataClaimsRestClient dataClaimsRestClient;
@@ -47,26 +63,37 @@ public class SubmissionValidationService {
    * @param submissionId the ID of the submission to validate
    */
   public SubmissionValidationContext validateSubmission(UUID submissionId) {
+    return validateSubmission(submissionId, false);
+  }
+
+  private SubmissionValidationContext validateSubmission(
+      UUID submissionId, boolean finalValidation) {
     log.debug("Validating submission {}", submissionId);
     eventServiceMetricService.startSubmissionValidationTimer(submissionId);
 
     SubmissionResponse submission = dataClaimsRestClient.getSubmission(submissionId).getBody();
     Assert.notNull(submission, "Submission not retrievable: " + submissionId.toString());
 
-    // Idempotency guard: a submission that has already passed INITIAL validation is held in
-    // VALIDATED_PENDING_APPROVAL for the provider's final approval. A redelivery of the validation
-    // message
-    // for such a submission must be a no-op: re-running validation would otherwise trip the status
-    // gate (SubmissionStatusValidator) and incorrectly flip the submission to VALIDATION_FAILED,
-    // as well as re-publish the initial-validation-succeeded event for the same transition.
-    if (isAlreadyValidated(submission)) {
+    if (isValidationComplete(submission, finalValidation)) {
+      // A previous attempt may have saved submission failure but failed to update the bulk status.
+      // Retry that update without rerunning validation.
+      if (finalValidation && submission.getStatus() == SubmissionStatus.VALIDATION_FAILED) {
+        dataClaimsRestClient.updateBulkSubmission(
+            submission.getBulkSubmissionId().toString(),
+            failedBulkSubmissionPatch(submission.getBulkSubmissionId()));
+      }
       log.debug(
-          "Submission {} already passed initial validation in status {}; skipping re-validation "
+          "Submission {} already completed {} validation in status {}; skipping re-validation "
               + "(no-op).",
           submissionId,
+          finalValidation ? "final" : "initial",
           submission.getStatus());
       eventServiceMetricService.stopSubmissionValidationTimer(submissionId);
       return new SubmissionValidationContext();
+    }
+
+    if (finalValidation) {
+      requireAwaitingFinalValidation(submission);
     }
 
     SubmissionValidationContext context = initialiseValidationContext(submission);
@@ -83,7 +110,7 @@ public class SubmissionValidationService {
 
     // Only validate claims if no submission level validation errors have been recorded.
     if (!context.hasSubmissionLevelErrors()) {
-      claimValidationService.validateAndUpdateClaims(submission, context);
+      claimValidationService.validateAndUpdateClaims(submission, context, finalValidation);
     } else {
       eventServiceMetricService.incrementTotalSubmissionsValidatedWithSubmissionErrors();
     }
@@ -105,23 +132,27 @@ public class SubmissionValidationService {
       submissionPatch
           .status(SubmissionStatus.VALIDATION_FAILED)
           .validationMessages(context.getSubmissionValidationErrors());
-      eventServiceMetricService.incrementTotalInvalidSubmissions();
-      bulkSubmissionPatch
-          .status(BulkSubmissionStatus.VALIDATION_FAILED)
-          .errorCode(BulkSubmissionErrorCode.V100)
-          .errorDescription(
-              "Validation completed for bulk submission %s with errors"
-                  .formatted(bulkSubmissionId));
+      if (finalValidation) {
+        eventServiceMetricService.incrementTotalFinalValidationFailed();
+      } else {
+        eventServiceMetricService.incrementTotalInvalidSubmissions();
+      }
+      bulkSubmissionPatch = failedBulkSubmissionPatch(bulkSubmissionId);
     } else {
       log.debug("Validation completed for submission {} with no errors", submissionId);
-      // INITIAL validation passed: hold the submission (and its bulk submission) in
-      // VALIDATED_PENDING_APPROVAL for the provider's final approval rather than accepting it
-      // outright.
-      // Acceptance (VALIDATION_SUCCEEDED) and post-acceptance processing happen after approval,
-      // which is out of scope here.
-      submissionPatch.status(SubmissionStatus.VALIDATED_PENDING_APPROVAL);
-      eventServiceMetricService.incrementTotalValidSubmissions();
-      bulkSubmissionPatch.status(BulkSubmissionStatus.VALIDATED_PENDING_APPROVAL);
+      submissionPatch.status(
+          finalValidation
+              ? SubmissionStatus.VALIDATION_SUCCEEDED
+              : SubmissionStatus.VALIDATED_PENDING_APPROVAL);
+      if (finalValidation) {
+        eventServiceMetricService.incrementTotalFinalValidationSucceeded();
+      } else {
+        eventServiceMetricService.incrementTotalValidSubmissions();
+      }
+      bulkSubmissionPatch.status(
+          finalValidation
+              ? BulkSubmissionStatus.VALIDATION_SUCCEEDED
+              : BulkSubmissionStatus.VALIDATED_PENDING_APPROVAL);
     }
 
     // Record what submission errors were found
@@ -149,9 +180,42 @@ public class SubmissionValidationService {
     return context;
   }
 
-  private boolean isAlreadyValidated(SubmissionResponse submission) {
-    return submission.getStatus() == SubmissionStatus.VALIDATED_PENDING_APPROVAL
-        || submission.getStatus() == SubmissionStatus.VALIDATION_SUCCEEDED;
+  /**
+   * Revalidates a submission after provider approval and completes the final validation lifecycle.
+   *
+   * @param submissionId the ID of the submission to validate
+   */
+  public SubmissionValidationContext finalValidateSubmission(UUID submissionId) {
+    return validateSubmission(submissionId, true);
+  }
+
+  private BulkSubmissionPatch failedBulkSubmissionPatch(UUID bulkSubmissionId) {
+    return new BulkSubmissionPatch()
+        .bulkSubmissionId(bulkSubmissionId)
+        .status(BulkSubmissionStatus.VALIDATION_FAILED)
+        .errorCode(BulkSubmissionErrorCode.V100)
+        .errorDescription(
+            "Validation completed for bulk submission %s with errors".formatted(bulkSubmissionId));
+  }
+
+  private boolean isValidationComplete(SubmissionResponse submission, boolean finalValidation) {
+    if (finalValidation) {
+      return submission.getStatus() == SubmissionStatus.VALIDATION_SUCCEEDED
+          || submission.getStatus() == SubmissionStatus.VALIDATION_FAILED;
+    }
+    return INITIAL_VALIDATION_COMPLETE_STATUSES.contains(submission.getStatus());
+  }
+
+  private void requireAwaitingFinalValidation(SubmissionResponse submission) {
+    SubmissionStatus currentStatus = submission.getStatus();
+    if (currentStatus != SubmissionStatus.READY_FOR_FINAL_VALIDATION
+        && currentStatus != SubmissionStatus.FINAL_VALIDATION_IN_PROGRESS) {
+      throw new SubmissionEventProcessingException(
+          "Submission "
+              + submission.getSubmissionId()
+              + " is not awaiting final validation in status: "
+              + currentStatus);
+    }
   }
 
   /**
@@ -191,7 +255,7 @@ public class SubmissionValidationService {
     }
     List<ClaimValidationReport> claimReports =
         submission.getClaims().stream()
-            .filter(claim -> ClaimStatus.READY_TO_PROCESS.equals(claim.getStatus()))
+            .filter(claim -> CLAIM_STATUSES_UNDER_VALIDATION.contains(claim.getStatus()))
             .map(SubmissionClaim::getClaimId)
             .map(UUID::toString)
             .map(ClaimValidationReport::new)

@@ -47,7 +47,8 @@ public class SchemaValidationConfig {
    */
   public SchemaValidationConfig(
       ObjectMapper mapper,
-      @Value("classpath:schemas/submission-fields.schema.json") Resource submissionSchema,
+      @Value("classpath:schemas/event-service-submission-fields.schema.json")
+          Resource submissionSchema,
       @Value("classpath:schemas/claim-fields.schema.json") Resource claimSchema) {
     mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL); // exclude nulls
     this.mapper = mapper;
@@ -145,7 +146,7 @@ public class SchemaValidationConfig {
   }
 
   public JsonSchema submissionSchema() throws IOException {
-    return loadSchema("/schemas/submission-fields.schema.json");
+    return loadSchema("/schemas/event-service-submission-fields.schema.json");
   }
 
   public JsonSchema claimSchema() throws IOException {

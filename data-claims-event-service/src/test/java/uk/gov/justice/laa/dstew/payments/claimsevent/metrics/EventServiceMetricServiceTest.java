@@ -45,6 +45,10 @@ class EventServiceMetricServiceTest {
         .register(eventServiceMetricService.getTotalValidSubmissionsCounter());
     verify(prometheusRegistry, times(1))
         .register(eventServiceMetricService.getTotalInvalidSubmissionsCounter());
+    verify(prometheusRegistry, times(1))
+        .register(eventServiceMetricService.getTotalFinalValidationSucceededCounter());
+    verify(prometheusRegistry, times(1))
+        .register(eventServiceMetricService.getTotalFinalValidationFailedCounter());
   }
 
   @Test
@@ -121,5 +125,26 @@ class EventServiceMetricServiceTest {
     eventServiceMetricService.incrementTotalInvalidSubmissions();
     // Then
     assertThat(eventServiceMetricService.getTotalInvalidSubmissionsCounter().get()).isEqualTo(1);
+  }
+
+  @Test
+  void shouldIncrementFinalValidationSucceededWithoutIncrementingInitialCounter() {
+    eventServiceMetricService.incrementTotalFinalValidationSucceeded();
+
+    assertThat(eventServiceMetricService.getTotalFinalValidationSucceededCounter().get())
+        .isEqualTo(1);
+    assertThat(eventServiceMetricService.getTotalFinalValidationFailedCounter().get()).isZero();
+    assertThat(eventServiceMetricService.getTotalValidSubmissionsCounter().get()).isZero();
+    assertThat(eventServiceMetricService.getTotalInvalidSubmissionsCounter().get()).isZero();
+  }
+
+  @Test
+  void shouldIncrementFinalValidationFailedWithoutIncrementingInitialCounter() {
+    eventServiceMetricService.incrementTotalFinalValidationFailed();
+
+    assertThat(eventServiceMetricService.getTotalFinalValidationFailedCounter().get()).isEqualTo(1);
+    assertThat(eventServiceMetricService.getTotalFinalValidationSucceededCounter().get()).isZero();
+    assertThat(eventServiceMetricService.getTotalValidSubmissionsCounter().get()).isZero();
+    assertThat(eventServiceMetricService.getTotalInvalidSubmissionsCounter().get()).isZero();
   }
 }

@@ -1,5 +1,6 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.validation.submission;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -37,11 +38,13 @@ class SubmissionStatusValidatorTest {
     validator = new SubmissionStatusValidator(dataClaimsRestClient);
   }
 
-  @Test
-  @DisplayName("Should do nothing if submission status is VALIDATION_IN_PROGRESS")
-  void shouldDoNothingIfSubmissionStatusIsValidationInProgress() {
+  @ParameterizedTest
+  @EnumSource(
+      value = SubmissionStatus.class,
+      names = {"VALIDATION_IN_PROGRESS", "FINAL_VALIDATION_IN_PROGRESS"})
+  @DisplayName("Should do nothing if submission is already under validation")
+  void shouldDoNothingIfSubmissionStatusIsValidationInProgress(SubmissionStatus status) {
     // Given
-    SubmissionStatus status = SubmissionStatus.VALIDATION_IN_PROGRESS;
     SubmissionResponse submissionResponse =
         SubmissionResponse.builder().submissionId(UUID.randomUUID()).status(status).build();
     SubmissionValidationContext submissionValidationContext = new SubmissionValidationContext();
@@ -75,6 +78,28 @@ class SubmissionStatusValidatorTest {
   }
 
   @Test
+  @DisplayName("Should start final validation when submission is ready for final validation")
+  void shouldStartFinalValidationWhenSubmissionIsReadyForFinalValidation() {
+    UUID submissionId = UUID.randomUUID();
+    SubmissionResponse submission =
+        SubmissionResponse.builder()
+            .submissionId(submissionId)
+            .status(SubmissionStatus.READY_FOR_FINAL_VALIDATION)
+            .build();
+    SubmissionValidationContext context = new SubmissionValidationContext();
+
+    validator.validate(submission, context);
+
+    assertFalse(context.hasErrors());
+    SubmissionPatch patch =
+        new SubmissionPatch()
+            .submissionId(submissionId)
+            .status(SubmissionStatus.FINAL_VALIDATION_IN_PROGRESS);
+    verify(dataClaimsRestClient).updateSubmission(eq(submissionId.toString()), eq(patch));
+    assertEquals(SubmissionStatus.FINAL_VALIDATION_IN_PROGRESS, submission.getStatus());
+  }
+
+  @Test
   @DisplayName("Should add errors if submission status is NULL")
   void shouldAddErrorIfSubmissionStatusIsNull() {
     // Given
@@ -93,7 +118,12 @@ class SubmissionStatusValidatorTest {
   @ParameterizedTest
   @EnumSource(
       value = SubmissionStatus.class,
-      names = {"READY_FOR_VALIDATION", "VALIDATION_IN_PROGRESS"},
+      names = {
+        "READY_FOR_VALIDATION",
+        "VALIDATION_IN_PROGRESS",
+        "READY_FOR_FINAL_VALIDATION",
+        "FINAL_VALIDATION_IN_PROGRESS"
+      },
       mode = EnumSource.Mode.EXCLUDE)
   void shouldAddErrorIfSubmissionStatusUnknownValue(SubmissionStatus status) {
     // Given

@@ -92,6 +92,19 @@ public class ClaimValidationService {
    */
   public void validateAndUpdateClaims(
       SubmissionResponse submission, SubmissionValidationContext context) {
+    validateAndUpdateClaims(submission, context, false);
+  }
+
+  /**
+   * Validate all claims in a submission and apply either the initial-validation hold or the final
+   * validation outcome.
+   *
+   * @param submission the submission
+   * @param context validation context
+   * @param finalValidation whether this is the provider-approved final validation
+   */
+  public void validateAndUpdateClaims(
+      SubmissionResponse submission, SubmissionValidationContext context, boolean finalValidation) {
 
     int pageNumber = 0;
     int totalPages = Integer.MAX_VALUE;
@@ -160,7 +173,8 @@ public class ClaimValidationService {
           submissionClaims,
           submission.getAreaOfLaw(),
           context,
-          feeDetailsResponseMap);
+          feeDetailsResponseMap,
+          finalValidation);
     }
   }
 

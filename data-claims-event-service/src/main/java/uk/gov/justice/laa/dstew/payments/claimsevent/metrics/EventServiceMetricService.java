@@ -31,6 +31,8 @@ public class EventServiceMetricService {
   private final Counter totalClaimsValidatedAndErrorsFoundCounter;
   private final Counter totalValidSubmissionsCounter;
   private final Counter totalInvalidSubmissionsCounter;
+  private final Counter totalFinalValidationSucceededCounter;
+  private final Counter totalFinalValidationFailedCounter;
 
   private final Counter warningTypeCounter;
   private final Counter errorTypeCounter;
@@ -85,12 +87,22 @@ public class EventServiceMetricService {
     this.totalValidSubmissionsCounter =
         Counter.builder()
             .name(METRIC_NAMESPACE + "valid_submissions")
-            .help("Total number submissions which are valid")
+            .help("Total number of successful initial submission validation outcomes")
             .register(meterRegistry);
     this.totalInvalidSubmissionsCounter =
         Counter.builder()
             .name(METRIC_NAMESPACE + "invalid_submissions")
-            .help("Total number submissions which are invalid")
+            .help("Total number of failed initial submission validation outcomes")
+            .register(meterRegistry);
+    this.totalFinalValidationSucceededCounter =
+        Counter.builder()
+            .name(METRIC_NAMESPACE + "final_validation_succeeded")
+            .help("Total number of successful final submission validation outcomes")
+            .register(meterRegistry);
+    this.totalFinalValidationFailedCounter =
+        Counter.builder()
+            .name(METRIC_NAMESPACE + "final_validation_failed")
+            .help("Total number of failed final submission validation outcomes")
             .register(meterRegistry);
 
     this.errorTypeCounter =
@@ -197,19 +209,25 @@ public class EventServiceMetricService {
   }
 
   /**
-   * Increments the total valid submissions counter. Should be called when a submission is fully
-   * finished being validated and the submission is valid (Could also include warnings)
+   * Records a successful initial submission validation outcome, including outcomes with warnings.
    */
   public void incrementTotalValidSubmissions() {
     totalValidSubmissionsCounter.inc();
   }
 
-  /**
-   * Increments the total invalid submissions counter. Should be called when a submission is fully
-   * finished being validated and the submission is invalid or rejected.
-   */
+  /** Records a failed initial submission validation outcome. */
   public void incrementTotalInvalidSubmissions() {
     totalInvalidSubmissionsCounter.inc();
+  }
+
+  /** Records a successful final submission validation outcome. */
+  public void incrementTotalFinalValidationSucceeded() {
+    totalFinalValidationSucceededCounter.inc();
+  }
+
+  /** Records a failed final submission validation outcome. */
+  public void incrementTotalFinalValidationFailed() {
+    totalFinalValidationFailedCounter.inc();
   }
 
   /**

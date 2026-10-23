@@ -29,7 +29,7 @@ public class SubmissionStatusValidator implements SubmissionValidator {
     SubmissionStatus currentStatus = submission.getStatus();
     UUID submissionId = submission.getSubmissionId();
     switch (currentStatus) {
-      case VALIDATION_IN_PROGRESS ->
+      case VALIDATION_IN_PROGRESS, FINAL_VALIDATION_IN_PROGRESS ->
           log.debug(
               "Submission {} already under validation. Attempting to complete validation.",
               submissionId);
@@ -38,6 +38,13 @@ public class SubmissionStatusValidator implements SubmissionValidator {
             "Submission {} ready for validation. Updating status to VALIDATION_IN_PROGRESS.",
             submissionId);
         updateSubmissionStatus(submissionId, SubmissionStatus.VALIDATION_IN_PROGRESS);
+      }
+      case READY_FOR_FINAL_VALIDATION -> {
+        log.debug(
+            "Submission {} ready for final validation. Updating status to FINAL_VALIDATION_IN_PROGRESS.",
+            submissionId);
+        updateSubmissionStatus(submissionId, SubmissionStatus.FINAL_VALIDATION_IN_PROGRESS);
+        submission.setStatus(SubmissionStatus.FINAL_VALIDATION_IN_PROGRESS);
       }
       case null -> {
         log.debug("Submission {} state is null", submissionId);
