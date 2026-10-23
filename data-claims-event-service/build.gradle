@@ -9,10 +9,90 @@ plugins {
 def versions = [
     sentry : '8.31.0',
     testcontainers : '1.20.1',
-    jackson : '2.21.7' // bumped to patch release to address Snyk jackson-core/jackson-databind findings
+    jackson : '2.21.7', // bumped to patch release to address Snyk jackson-core/jackson-databind findings
+    claimvalidator : '1.5.10'
 ]
 
+// Spring Boot 4.1.1 pins tomcat.version to 11.0.24, which is below the fix for the critical Snyk
+// findings SNYK-JAVA-ORGAPACHETOMCATEMBED-20302843 (Incorrect Authorization via FORM auth
+// request-method bypass, fixed in 11.0.25) and SNYK-JAVA-ORGAPACHETOMCATEMBED-20552494
+// (Authentication Bypass by Alternate Name, fixed in 11.0.26). Overriding the BOM property here
+// ensures the resolved tomcat-embed-* versions are patched.
+// TODO: remove when Spring Boot ships a BOM that sets tomcat.version >= 11.0.26.
 ext['tomcat.version'] = '11.0.26'
+
+// The plugin-created GitHub Packages download repository reads its password only from
+// GITHUB_TOKEN. In CI that is the repository-scoped Actions token, while the PAT with access to
+// private LAA packages is supplied separately as GITHUB_PACKAGES_TOKEN. Reconfigure GitHub
+// Packages dependency repositories to prefer that PAT. This repository handler is distinct from
+// publishing.repositories, so the plugin's publishing credentials remain unchanged.
+//
+// Locally, export GITHUB_ACTOR and GITHUB_PACKAGES_TOKEN (or GITHUB_TOKEN as a fallback) with a
+// PAT that has read:packages, is authorized for ministryofjustice org SSO, and can read the
+// private laa-data-provider-data repository.
+def githubPackagesUsername = System.getenv('GITHUB_ACTOR')?.trim() ?: project.ext.gitHubPackagesUsername
+def githubPackagesPassword = System.getenv('GITHUB_PACKAGES_TOKEN')?.trim() ?: project.ext.gitHubPackagesPassword
+
+repositories.withType(MavenArtifactRepository).configureEach { repo ->
+    if (repo.url.toString().startsWith('https://maven.pkg.github.com/')) {
+        repo.credentials {
+            username = githubPackagesUsername
+            password = githubPackagesPassword
+        }
+    }
+}
+
+// Explicit, non-exclusive repositories supplement the plugin's repository if a package is not
+// available there. They are not a recovery path for an authorization failure from an earlier repo.
+repositories {
+    maven {
+        name = 'laaDataProviderDataFallback'
+        url = uri('https://maven.pkg.github.com/ministryofjustice/laa-data-provider-data')
+        credentials {
+            username = githubPackagesUsername
+            password = githubPackagesPassword
+        }
+        content {
+            includeGroup 'uk.gov.justice.laadata.providers'
+        }
+    }
+
+    maven {
+        name = 'laaDataClaimsApiFallback'
+        url = uri('https://maven.pkg.github.com/ministryofjustice/laa-data-claims-api')
+        credentials {
+            username = githubPackagesUsername
+            password = githubPackagesPassword
+        }
+        content {
+            includeGroup 'uk.gov.justice.laa.datastewardship.payments'
+        }
+    }
+
+    maven {
+        name = 'laaDataControlledWorkValidatorFallback'
+        url = uri('https://maven.pkg.github.com/ministryofjustice/laa-data-controlled-work-validator')
+        credentials {
+            username = githubPackagesUsername
+            password = githubPackagesPassword
+        }
+        content {
+            includeGroup 'uk.gov.justice.laa.dstew.payments.claims.validation'
+        }
+    }
+
+    maven {
+        name = 'laaSpringBootCommonFallback'
+        url = uri('https://maven.pkg.github.com/ministryofjustice/laa-spring-boot-common')
+        credentials {
+            username = githubPackagesUsername
+            password = githubPackagesPassword
+        }
+        content {
+            includeGroup 'uk.gov.laa.springboot'
+        }
+    }
+}
 
 test {
     useJUnitPlatform()
@@ -95,8 +175,6 @@ dependencies {
     implementation 'ch.qos.logback:logback-classic:1.6.5'
     implementation 'ch.qos.logback:logback-core:1.6.5'
 
-    implementation project(':reference-fee-scheme-platform-api')
-
     // Note: claims-validation-core pulls in reference-provider-details-api transitively, which
     // ships a stale duplicate copy of the uk.gov.justice.laadata.providers.model / .api packages
     // (missing fields such as NmsAuthDetails.uniqueAuthorisationRef) that are also provided by
@@ -104,11 +182,12 @@ dependencies {
     // happens to resolve first wins for those classes, silently shadowing the up-to-date one.
     // We only need claims-validation-core for its config classes (e.g. ProviderDetailsApiConfig),
     // so exclude the duplicate reference module to make resolution deterministic.
-    implementation('uk.gov.justice.laa.dstew.payments.claims.validation:claims-validation-core:1.5.7') {
+    implementation("uk.gov.justice.laa.dstew.payments.claims.validation:claims-validation-core:$versions.claimvalidator") {
         exclude group: 'uk.gov.justice.laa.dstew.payments.claims.validation', module: 'reference-provider-details-api'
     }
-    implementation 'uk.gov.justice.laa.datastewardship.payments:data-claims-api-models:1.34.1'
-    implementation 'uk.gov.justice.laadata.providers:providers-api:1.40.1'
+    implementation "uk.gov.justice.laa.dstew.payments.claims.validation:reference-fee-scheme-platform-api:$versions.claimvalidator"
+    implementation 'uk.gov.justice.laa.datastewardship.payments:data-claims-api-models:1.35.3'
+    implementation 'uk.gov.justice.laadata.providers:providers-api:1.55.2'
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-registry-prometheus'

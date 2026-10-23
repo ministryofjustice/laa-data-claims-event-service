@@ -9,4 +9,3 @@ pluginManagement {
 rootProject.name = 'laa-data-claims-event-service'
 
 include 'data-claims-event-service'
-include 'reference-fee-scheme-platform-api'
