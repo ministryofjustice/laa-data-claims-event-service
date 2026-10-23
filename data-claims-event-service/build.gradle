@@ -45,6 +45,15 @@ repositories.withType(MavenArtifactRepository).configureEach { repo ->
 // Explicit, non-exclusive repositories supplement the plugin's repository if a package is not
 // available there. They are not a recovery path for an authorization failure from an earlier repo.
 repositories {
+    exclusiveContent {
+        forRepository {
+            mavenLocal()
+        }
+        filter {
+            includeVersion 'uk.gov.justice.laa.datastewardship.payments', 'data-claims-api-models', '0.0.0-SNAPSHOT'
+        }
+    }
+
     maven {
         name = 'laaDataProviderDataFallback'
         url = uri('https://maven.pkg.github.com/ministryofjustice/laa-data-provider-data')
@@ -186,7 +195,7 @@ dependencies {
         exclude group: 'uk.gov.justice.laa.dstew.payments.claims.validation', module: 'reference-provider-details-api'
     }
     implementation "uk.gov.justice.laa.dstew.payments.claims.validation:reference-fee-scheme-platform-api:$versions.claimvalidator"
-    implementation 'uk.gov.justice.laa.datastewardship.payments:data-claims-api-models:1.35.3'
+    implementation 'uk.gov.justice.laa.datastewardship.payments:data-claims-api-models:0.0.0-SNAPSHOT'
     implementation 'uk.gov.justice.laadata.providers:providers-api:1.55.2'
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'

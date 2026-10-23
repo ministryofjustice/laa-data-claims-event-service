@@ -39,6 +39,13 @@ public class SubmissionStatusValidator implements SubmissionValidator {
             submissionId);
         updateSubmissionStatus(submissionId, SubmissionStatus.VALIDATION_IN_PROGRESS);
       }
+      case READY_FOR_FINAL_VALIDATION -> {
+        log.debug(
+            "Submission {} ready for final validation. Updating status to FINAL_VALIDATION_IN_PROGRESS.",
+            submissionId);
+        updateSubmissionStatus(submissionId, SubmissionStatus.FINAL_VALIDATION_IN_PROGRESS);
+        submission.setStatus(SubmissionStatus.FINAL_VALIDATION_IN_PROGRESS);
+      }
       case null -> {
         log.debug("Submission {} state is null", submissionId);
         context.addSubmissionValidationError(SubmissionValidationError.SUBMISSION_STATUS_IS_NULL);

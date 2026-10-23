@@ -39,15 +39,10 @@ public class BulkClaimUpdater {
   private final FeeCalculationPatchMapper feeCalculationPatchMapper;
 
   /**
-   * Calculates the fee for the claim using the Fee Scheme Platform API, and handles any returned
-   * errors.
-   *
-   * <ul>
-   *   <li>If validation errors have been recorded, update the claim status to INVALID and send
-   *       through the errors.
-   *   <li>If no errors have been recorded, update the claim status to VALID.
-   *   <li>If the context has a claim errors, then mark the claim as INVALID.
-   * </ul>
+   * Calculates fees and updates claims after initial validation. Claims without validation errors
+   * are held in {@code VALIDATED_PENDING_APPROVAL}. Claims with submission-level or their own
+   * validation errors become {@code INVALID}. Claims already flagged for retry without errors are
+   * skipped.
    *
    * @param submissionId the submission ID
    * @param claimResponses the list of claim responses
@@ -66,6 +61,10 @@ public class BulkClaimUpdater {
 
   /**
    * Updates claims with the result of either initial or final validation.
+   *
+   * <p>Claims without validation errors become {@code VALIDATED_PENDING_APPROVAL} after initial
+   * validation or {@code VALID} after final validation. Submission-level or claim-specific errors
+   * result in {@code INVALID}. Claims already flagged for retry without errors are skipped.
    *
    * @param submissionId the submission ID
    * @param claimResponses the claims being updated
@@ -106,7 +105,6 @@ public class BulkClaimUpdater {
                     context.getAuthorisedCategoryOfLawCode(claim.getId()));
           }
 
-          // If a claim was found to be invalid, make the rest of the claims invalid
           ClaimStatus claimStatus = getClaimStatus(claim.getId(), context, finalValidation);
           ClaimPatch claimPatch = buildClaimPatch(claim, feeCalculationPatch, context, claimStatus);
 
@@ -137,8 +135,6 @@ public class BulkClaimUpdater {
       final String claimId,
       final SubmissionValidationContext context,
       final boolean finalValidation) {
-    // On successful INITIAL validation a claim is held in VALIDATED_PENDING_APPROVAL alongside its
-    // submission (awaiting the provider's final approval) rather than being accepted (VALID).
     if (context.hasSubmissionLevelErrors() || context.hasErrors(claimId)) {
       return ClaimStatus.INVALID;
     }

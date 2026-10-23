@@ -112,7 +112,7 @@ class SubmissionValidationServiceTest {
       assertTrue(submissionValidationContext.hasErrors());
       assertContextClaimError(
           submissionValidationContext, SubmissionValidationError.SUBMISSION_PERIOD_MISSING);
-      verify(claimValidationService, times(0)).validateAndUpdateClaims(any(), any());
+      verify(claimValidationService, times(0)).validateAndUpdateClaims(any(), any(), anyBoolean());
       // we need to update and mark the claims as invalid when the submission is invalid.
 
     }
@@ -210,7 +210,7 @@ class SubmissionValidationServiceTest {
                 return null;
               })
           .when(claimValidationService)
-          .validateAndUpdateClaims(any(), any());
+          .validateAndUpdateClaims(any(), any(), eq(false));
       when(dataClaimsRestClient.updateBulkSubmission(any(), any()))
           .thenThrow(new RuntimeException("bulk patch failed"))
           .thenReturn(ResponseEntity.noContent().build());
@@ -226,7 +226,7 @@ class SubmissionValidationServiceTest {
       inOrder.verify(dataClaimsRestClient).updateBulkSubmission(any(), any());
       inOrder.verify(dataClaimsRestClient).updateSubmission(any(), any());
       inOrder.verify(dataClaimsRestClient).updateBulkSubmission(any(), any());
-      verify(claimValidationService, times(1)).validateAndUpdateClaims(any(), any());
+      verify(claimValidationService, times(1)).validateAndUpdateClaims(any(), any(), eq(false));
     }
 
     @Test
@@ -253,7 +253,7 @@ class SubmissionValidationServiceTest {
       inOrder.verify(dataClaimsRestClient).updateSubmission(any(), any());
       inOrder.verify(dataClaimsRestClient).updateBulkSubmission(any(), any());
       inOrder.verify(dataClaimsRestClient).updateSubmission(any(), any());
-      verify(claimValidationService, times(2)).validateAndUpdateClaims(any(), any());
+      verify(claimValidationService, times(2)).validateAndUpdateClaims(any(), any(), eq(false));
     }
 
     @Test
@@ -279,7 +279,7 @@ class SubmissionValidationServiceTest {
 
       // Then no re-validation, no status change and no further event/patch is produced.
       assertThat(result.hasErrors()).isFalse();
-      verify(claimValidationService, never()).validateAndUpdateClaims(any(), any());
+      verify(claimValidationService, never()).validateAndUpdateClaims(any(), any(), anyBoolean());
       verify(submissionValidator, never()).validate(any(), any());
       verify(dataClaimsRestClient, never()).updateSubmission(any(), any());
       verify(dataClaimsRestClient, never()).updateBulkSubmission(any(), any());
@@ -307,7 +307,7 @@ class SubmissionValidationServiceTest {
 
       // Then
       assertThat(result.hasErrors()).isFalse();
-      verify(claimValidationService, never()).validateAndUpdateClaims(any(), any());
+      verify(claimValidationService, never()).validateAndUpdateClaims(any(), any(), anyBoolean());
       verify(submissionValidator, never()).validate(any(), any());
       verify(dataClaimsRestClient, never()).updateSubmission(any(), any());
       verify(dataClaimsRestClient, never()).updateBulkSubmission(any(), any());
@@ -335,7 +335,7 @@ class SubmissionValidationServiceTest {
           submissionValidationService.validateSubmission(submissionId);
 
       assertThat(result.hasErrors()).isFalse();
-      verify(claimValidationService, never()).validateAndUpdateClaims(any(), any());
+      verify(claimValidationService, never()).validateAndUpdateClaims(any(), any(), anyBoolean());
       verify(submissionValidator, never()).validate(any(), any());
       verify(dataClaimsRestClient, never()).updateSubmission(any(), any());
       verify(dataClaimsRestClient, never()).updateBulkSubmission(any(), any());
@@ -365,12 +365,11 @@ class SubmissionValidationServiceTest {
 
       ArgumentCaptor<SubmissionPatch> submissionPatchCaptor =
           ArgumentCaptor.forClass(SubmissionPatch.class);
-      verify(dataClaimsRestClient, times(2))
+      verify(dataClaimsRestClient)
           .updateSubmission(eq(submissionId.toString()), submissionPatchCaptor.capture());
       assertThat(submissionPatchCaptor.getAllValues())
           .extracting(SubmissionPatch::getStatus)
-          .containsExactly(
-              SubmissionStatus.FINAL_VALIDATION_IN_PROGRESS, SubmissionStatus.VALIDATION_SUCCEEDED);
+          .containsExactly(SubmissionStatus.VALIDATION_SUCCEEDED);
 
       ArgumentCaptor<BulkSubmissionPatch> bulkSubmissionPatchCaptor =
           ArgumentCaptor.forClass(BulkSubmissionPatch.class);
@@ -380,6 +379,10 @@ class SubmissionValidationServiceTest {
       assertThat(bulkSubmissionPatchCaptor.getValue().getStatus())
           .isEqualTo(BulkSubmissionStatus.VALIDATION_SUCCEEDED);
       verify(claimValidationService).validateAndUpdateClaims(eq(submission), any(), eq(true));
+      verify(eventServiceMetricService).incrementTotalFinalValidationSucceeded();
+      verify(eventServiceMetricService, never()).incrementTotalValidSubmissions();
+      verify(eventServiceMetricService, never()).incrementTotalInvalidSubmissions();
+      verify(eventServiceMetricService, never()).incrementTotalFinalValidationFailed();
     }
 
     @Test
@@ -435,6 +438,10 @@ class SubmissionValidationServiceTest {
       assertThat(bulkSubmissionPatchCaptor.getValue().getStatus())
           .isEqualTo(BulkSubmissionStatus.VALIDATION_FAILED);
       verify(claimValidationService, never()).validateAndUpdateClaims(any(), any(), anyBoolean());
+      verify(eventServiceMetricService).incrementTotalFinalValidationFailed();
+      verify(eventServiceMetricService, never()).incrementTotalValidSubmissions();
+      verify(eventServiceMetricService, never()).incrementTotalInvalidSubmissions();
+      verify(eventServiceMetricService, never()).incrementTotalFinalValidationSucceeded();
     }
 
     @Test
@@ -576,9 +583,10 @@ class SubmissionValidationServiceTest {
     private void verifyCommonInteractions(
         SubmissionResponse submissionResponse, SubmissionValidationContext context) {
       verify(claimValidationService, times(1))
-          .validateAndUpdateClaims(eq(submissionResponse), any());
+          .validateAndUpdateClaims(eq(submissionResponse), any(), eq(false));
       verify(claimValidationService, times(1))
-          .validateAndUpdateClaims(eq(submissionResponse), any(SubmissionValidationContext.class));
+          .validateAndUpdateClaims(
+              eq(submissionResponse), any(SubmissionValidationContext.class), eq(false));
     }
   }
 

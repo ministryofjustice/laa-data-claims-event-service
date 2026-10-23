@@ -93,7 +93,7 @@ public class SubmissionValidationService {
     }
 
     if (finalValidation) {
-      startFinalValidation(submission);
+      requireAwaitingFinalValidation(submission);
     }
 
     SubmissionValidationContext context = initialiseValidationContext(submission);
@@ -110,11 +110,7 @@ public class SubmissionValidationService {
 
     // Only validate claims if no submission level validation errors have been recorded.
     if (!context.hasSubmissionLevelErrors()) {
-      if (finalValidation) {
-        claimValidationService.validateAndUpdateClaims(submission, context, true);
-      } else {
-        claimValidationService.validateAndUpdateClaims(submission, context);
-      }
+      claimValidationService.validateAndUpdateClaims(submission, context, finalValidation);
     } else {
       eventServiceMetricService.incrementTotalSubmissionsValidatedWithSubmissionErrors();
     }
@@ -136,7 +132,11 @@ public class SubmissionValidationService {
       submissionPatch
           .status(SubmissionStatus.VALIDATION_FAILED)
           .validationMessages(context.getSubmissionValidationErrors());
-      eventServiceMetricService.incrementTotalInvalidSubmissions();
+      if (finalValidation) {
+        eventServiceMetricService.incrementTotalFinalValidationFailed();
+      } else {
+        eventServiceMetricService.incrementTotalInvalidSubmissions();
+      }
       bulkSubmissionPatch = failedBulkSubmissionPatch(bulkSubmissionId);
     } else {
       log.debug("Validation completed for submission {} with no errors", submissionId);
@@ -144,7 +144,11 @@ public class SubmissionValidationService {
           finalValidation
               ? SubmissionStatus.VALIDATION_SUCCEEDED
               : SubmissionStatus.VALIDATED_PENDING_APPROVAL);
-      eventServiceMetricService.incrementTotalValidSubmissions();
+      if (finalValidation) {
+        eventServiceMetricService.incrementTotalFinalValidationSucceeded();
+      } else {
+        eventServiceMetricService.incrementTotalValidSubmissions();
+      }
       bulkSubmissionPatch.status(
           finalValidation
               ? BulkSubmissionStatus.VALIDATION_SUCCEEDED
@@ -202,20 +206,10 @@ public class SubmissionValidationService {
     return INITIAL_VALIDATION_COMPLETE_STATUSES.contains(submission.getStatus());
   }
 
-  private void startFinalValidation(SubmissionResponse submission) {
+  private void requireAwaitingFinalValidation(SubmissionResponse submission) {
     SubmissionStatus currentStatus = submission.getStatus();
-    if (currentStatus == SubmissionStatus.READY_FOR_FINAL_VALIDATION) {
-      UUID submissionId = submission.getSubmissionId();
-      SubmissionPatch submissionPatch =
-          new SubmissionPatch()
-              .submissionId(submissionId)
-              .status(SubmissionStatus.FINAL_VALIDATION_IN_PROGRESS);
-      dataClaimsRestClient.updateSubmission(submissionId.toString(), submissionPatch);
-      submission.setStatus(SubmissionStatus.FINAL_VALIDATION_IN_PROGRESS);
-      return;
-    }
-
-    if (currentStatus != SubmissionStatus.FINAL_VALIDATION_IN_PROGRESS) {
+    if (currentStatus != SubmissionStatus.READY_FOR_FINAL_VALIDATION
+        && currentStatus != SubmissionStatus.FINAL_VALIDATION_IN_PROGRESS) {
       throw new SubmissionEventProcessingException(
           "Submission "
               + submission.getSubmissionId()
