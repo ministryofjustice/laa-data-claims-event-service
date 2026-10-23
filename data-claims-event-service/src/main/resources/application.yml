@@ -2,7 +2,7 @@ spring:
   application:
     name: laa-data-claims-event-service
   lifecycle:
-    timeout-per-shutdown-phase: 30s
+    timeout-per-shutdown-phase: 45s
 
   threads:
     virtual:
@@ -49,12 +49,19 @@ management:
   endpoints:
     web:
       exposure:
-        include: health, info, prometheus
+        include: health, info, prometheus, maintenance
 
   # show detailed health status
   endpoint:
     health:
       show-details: always
+      probes:
+        enabled: true
+      group:
+        readiness:
+          include: readinessState
+        liveness:
+          include: livenessState
 
 sentry:
   dsn: ${SENTRY_DSN:}
@@ -83,6 +90,8 @@ laa:
     name: ${BULK_CLAIM_QUEUE_NAME}
     visibility-timeout-seconds: 600
     visibility-extension-interval-seconds: 10
+    listener-shutdown-timeout-seconds: ${LISTENER_SHUTDOWN_TIMEOUT_SECONDS:20}
+    acknowledgement-shutdown-timeout-seconds: ${ACKNOWLEDGEMENT_SHUTDOWN_TIMEOUT_SECONDS:20}
   dstew:
     payments:
       validator:

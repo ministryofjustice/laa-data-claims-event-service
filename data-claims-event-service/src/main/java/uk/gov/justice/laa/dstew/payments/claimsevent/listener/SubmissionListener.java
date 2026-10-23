@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import software.amazon.awssdk.services.sqs.model.Message;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 import uk.gov.justice.laa.dstew.payments.claimsevent.exception.SubmissionEventProcessingException;
+import uk.gov.justice.laa.dstew.payments.claimsevent.maintenance.ListenerActivityTracker;
 import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.model.BulkSubmissionMessage;
 import uk.gov.justice.laa.dstew.payments.claimsevent.model.SubmissionEventType;
@@ -39,6 +40,7 @@ public class SubmissionListener {
   private final ObjectMapper objectMapper;
   private final EventServiceMetricService eventServiceMetricService;
   private final ObjectProvider<SqsVisibilityExtender> sqsVisibilityExtenderProvider;
+  private final ListenerActivityTracker listenerActivityTracker;
 
   /**
    * Construct a new {@code SubmissionListener}.
@@ -46,18 +48,22 @@ public class SubmissionListener {
    * @param bulkParsingService the service responsible for parsing bulk submissions
    * @param submissionValidationService the service responsible for validating parsed submissions
    * @param objectMapper object mapper for deserializing event messages
+   * @param listenerActivityTracker tracks the number of messages currently being processed, so
+   *     maintenance/drain tooling can observe when in-flight work has finished
    */
   public SubmissionListener(
       BulkParsingService bulkParsingService,
       SubmissionValidationService submissionValidationService,
       EventServiceMetricService eventServiceMetricService,
       @Qualifier("submissionEventMapper") ObjectMapper objectMapper,
-      ObjectProvider<SqsVisibilityExtender> sqsVisibilityExtenderProvider) {
+      ObjectProvider<SqsVisibilityExtender> sqsVisibilityExtenderProvider,
+      ListenerActivityTracker listenerActivityTracker) {
     this.bulkParsingService = bulkParsingService;
     this.submissionValidationService = submissionValidationService;
     this.eventServiceMetricService = eventServiceMetricService;
     this.objectMapper = objectMapper;
     this.sqsVisibilityExtenderProvider = sqsVisibilityExtenderProvider;
+    this.listenerActivityTracker = listenerActivityTracker;
   }
 
   /**
@@ -71,13 +77,16 @@ public class SubmissionListener {
 
     UUID timerRef = UUID.randomUUID();
     eventServiceMetricService.startFileParsingTimer(timerRef);
+    listenerActivityTracker.increment();
 
     String receiptHandle = message.receiptHandle();
+    boolean processedSuccessfully = false;
 
     try (SqsVisibilityExtender extender = sqsVisibilityExtenderProvider.getObject()) {
       extender.start(receiptHandle);
       SubmissionEventType submissionEventType = getSubmissionEventType(message);
       processMessageByType(message, submissionEventType);
+      processedSuccessfully = true;
     } catch (SubmissionEventProcessingException | IllegalArgumentException ex) {
       throw ex;
     } catch (Exception ex) {
@@ -89,6 +98,14 @@ public class SubmissionListener {
           "Unhandled exception in submission event processing", ex);
     } finally {
       eventServiceMetricService.stopFileParsingTimer(timerRef);
+      if (!processedSuccessfully) {
+        // Processing failed, so under AcknowledgementMode.ON_SUCCESS no acknowledgement will
+        // ever be attempted for this message - there is no later callback to settle it, so
+        // decrement now. On success, the count is deliberately left incremented: the message
+        // is only truly settled once its acknowledgement completes, which is reported
+        // asynchronously by AcknowledgementTrackingCallback.
+        listenerActivityTracker.decrement();
+      }
     }
   }
 
