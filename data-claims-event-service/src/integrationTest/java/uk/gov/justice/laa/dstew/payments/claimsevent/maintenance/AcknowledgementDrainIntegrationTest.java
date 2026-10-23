@@ -28,10 +28,10 @@ import uk.gov.justice.laa.dstew.payments.claimsevent.service.BulkParsingService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.service.SubmissionValidationService;
 
 /**
- * Verifies that the in-flight count only reaches zero once a message's acknowledgement has
- * actually completed - not merely once its listener method returns - so a preStop/shutdown hook
- * polling the in-flight count can never observe "drained" while acknowledgement of a just-finished
- * message is still being flushed.
+ * Verifies that the in-flight count only reaches zero once a message's acknowledgement has actually
+ * completed - not merely once its listener method returns - so a preStop/shutdown hook polling the
+ * in-flight count can never observe "drained" while acknowledgement of a just-finished message is
+ * still being flushed.
  */
 @ActiveProfiles("test")
 @Testcontainers
@@ -72,7 +72,8 @@ class AcknowledgementDrainIntegrationTest extends LocalstackBaseIntegrationTest 
 
     String messageBody =
         objectMapper.writeValueAsString(
-            Map.of("bulk_submission_id", bulkSubmissionId, "submission_ids", List.of(submissionId)));
+            Map.of(
+                "bulk_submission_id", bulkSubmissionId, "submission_ids", List.of(submissionId)));
 
     sqsClient.sendMessage(
         builder ->

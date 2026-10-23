@@ -10,9 +10,9 @@ import org.springframework.stereotype.Component;
  * Settles the in-flight count tracked by {@link ListenerActivityTracker} once a message's
  * acknowledgement (SQS deletion) actually completes - whether it succeeds or fails.
  *
- * <p>{@code SubmissionListener} increments the in-flight count when it starts processing a
- * message, but deliberately leaves it incremented when processing finishes successfully: under
- * {@code AcknowledgementMode.ON_SUCCESS}, the SQS acknowledgement happens asynchronously, after the
+ * <p>{@code SubmissionListener} increments the in-flight count when it starts processing a message,
+ * but deliberately leaves it incremented when processing finishes successfully: under {@code
+ * AcknowledgementMode.ON_SUCCESS}, the SQS acknowledgement happens asynchronously, after the
  * listener method has already returned. This callback is the counterpart that performs the actual
  * decrement once that acknowledgement is settled, so a preStop/shutdown hook polling the in-flight
  * count can't observe zero while a just-finished message's acknowledgement is still being flushed.

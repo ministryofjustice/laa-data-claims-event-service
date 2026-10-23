@@ -68,9 +68,9 @@ public class MaintenanceEndpoint {
    * recover from a pause that is no longer needed, for example when a planned deployment is aborted
    * before the pod is terminated.
    *
-   * <p>Submitted to the same single-thread {@code maintenanceExecutor} used by {@link #pause()},
-   * so a resume requested shortly after a pause always executes after that pause's queued stop,
-   * rather than racing it and being silently undone.
+   * <p>Submitted to the same single-thread {@code maintenanceExecutor} used by {@link #pause()}, so
+   * a resume requested shortly after a pause always executes after that pause's queued stop, rather
+   * than racing it and being silently undone.
    *
    * @return the maintenance status at the moment resume was requested
    */

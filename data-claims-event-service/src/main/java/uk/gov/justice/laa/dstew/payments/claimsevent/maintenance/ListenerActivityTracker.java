@@ -15,11 +15,11 @@ import org.springframework.stereotype.Component;
  *
  * <p>A message is only settled - and the count decremented - once its SQS acknowledgement
  * (deletion) actually completes, not merely once the listener method returns. Under {@code
- * AcknowledgementMode.ON_SUCCESS}, acknowledgement happens asynchronously after the listener
- * method returns, so treating "processing finished" as "safe to terminate" could otherwise race
- * the in-flight message's own acknowledgement and risk redelivering a message that was in fact
- * already fully processed. See {@code AcknowledgementTrackingCallback}, which performs this
- * decrement once acknowledgement is actually settled (whether it succeeds or fails).
+ * AcknowledgementMode.ON_SUCCESS}, acknowledgement happens asynchronously after the listener method
+ * returns, so treating "processing finished" as "safe to terminate" could otherwise race the
+ * in-flight message's own acknowledgement and risk redelivering a message that was in fact already
+ * fully processed. See {@code AcknowledgementTrackingCallback}, which performs this decrement once
+ * acknowledgement is actually settled (whether it succeeds or fails).
  */
 @Component
 public class ListenerActivityTracker {
