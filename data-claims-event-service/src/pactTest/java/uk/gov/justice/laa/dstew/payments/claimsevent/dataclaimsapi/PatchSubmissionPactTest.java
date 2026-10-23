@@ -66,7 +66,7 @@ public final class PatchSubmissionPactTest extends AbstractPactTest {
 
   @Test
   @PactTestFor(pactMethod = "patchFinalValidationInProgress")
-  void shouldStartFinalValidation() {
+  void shouldPatchSubmissionToFinalValidationInProgress() {
     assertThat(
             dataClaimsRestClient
                 .updateSubmission(SUBMISSION_ID.toString(), getFinalValidationPatch())

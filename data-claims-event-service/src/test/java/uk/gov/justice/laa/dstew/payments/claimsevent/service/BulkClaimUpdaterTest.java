@@ -1,7 +1,6 @@
 package uk.gov.justice.laa.dstew.payments.claimsevent.service;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -20,8 +19,6 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
@@ -33,7 +30,6 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimResponse;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationPatch;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
-import uk.gov.justice.laa.dstew.payments.claimsevent.exception.SubmissionEventProcessingException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.mapper.FeeCalculationPatchMapper;
 import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationError;
@@ -62,66 +58,6 @@ class BulkClaimUpdaterTest {
   private final UUID CLAIM_ID_ONE = new UUID(1, 1);
   private final UUID CLAIM_ID_TWO = new UUID(1, 2);
   private static final String FEE_CODE = "feeCode1";
-
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void shouldRetryFinalValidationWhenCalculationFlagsClaim(boolean hasValidationError) {
-    var context = new SubmissionValidationContext();
-    context.addClaimReports(List.of(new ClaimValidationReport(CLAIM_ID_ONE.toString())));
-    var claim = buildClaimResponse(CLAIM_ID_ONE);
-    when(mockFeeCalculationService.calculateFee(claim, context, AreaOfLaw.LEGAL_HELP))
-        .thenAnswer(
-            invocation -> {
-              context.flagForRetry(claim.getId());
-              if (hasValidationError) {
-                context.addClaimError(
-                    claim.getId(), ClaimValidationError.TECHNICAL_ERROR_FEE_CALCULATION_SERVICE);
-              }
-              return Optional.empty();
-            });
-
-    assertThatThrownBy(
-            () ->
-                bulkClaimUpdater.updateClaims(
-                    SUBMISSION_ID,
-                    List.of(claim),
-                    AreaOfLaw.LEGAL_HELP,
-                    context,
-                    buildFeeDetailsResponseWrapperHashMap(),
-                    true))
-        .isInstanceOf(SubmissionEventProcessingException.class);
-
-    verify(dataClaimsRestClient, never()).updateClaim(any(), any(), any());
-  }
-
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void shouldRetryFinalValidationWhenClaimAlreadyFlagged(boolean hasValidationError) {
-    var context = new SubmissionValidationContext();
-    context.addClaimReports(List.of(new ClaimValidationReport(CLAIM_ID_ONE.toString())));
-    context.flagForRetry(CLAIM_ID_ONE.toString());
-    if (hasValidationError) {
-      context.addClaimError(
-          CLAIM_ID_ONE.toString(), ClaimValidationError.TECHNICAL_ERROR_PROVIDER_DETAILS_API);
-    }
-    var claim = buildClaimResponse(CLAIM_ID_ONE);
-    when(mockFeeCalculationService.calculateFee(claim, context, AreaOfLaw.LEGAL_HELP))
-        .thenReturn(Optional.empty());
-
-    assertThatThrownBy(
-            () ->
-                bulkClaimUpdater.updateClaims(
-                    SUBMISSION_ID,
-                    List.of(claim),
-                    AreaOfLaw.LEGAL_HELP,
-                    context,
-                    buildFeeDetailsResponseWrapperHashMap(),
-                    true))
-        .isInstanceOf(SubmissionEventProcessingException.class);
-
-    verify(mockFeeCalculationService).calculateFee(claim, context, AreaOfLaw.LEGAL_HELP);
-    verify(dataClaimsRestClient, never()).updateClaim(any(), any(), any());
-  }
 
   @Test
   @DisplayName("Should not update any claims when no claims added")

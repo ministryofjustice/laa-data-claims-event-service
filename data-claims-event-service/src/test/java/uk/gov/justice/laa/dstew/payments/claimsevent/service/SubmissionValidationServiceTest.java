@@ -465,8 +465,6 @@ class SubmissionValidationServiceTest {
       SubmissionValidationContext result =
           submissionValidationService.finalValidateSubmission(submissionId);
 
-      // Without the report the claim could not be flagged for retry when a downstream call
-      // (fee calculation or category of law) fails technically.
       assertThat(result.getClaimReports())
           .extracting(ClaimValidationReport::getClaimId)
           .containsExactly(claimId.toString());

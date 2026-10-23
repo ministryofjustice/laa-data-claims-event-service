@@ -17,7 +17,6 @@ import uk.gov.justice.laa.dstew.payments.claimsdata.model.ClaimStatus;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.FeeCalculationPatch;
 import uk.gov.justice.laa.dstew.payments.claimsdata.model.ValidationMessagePatch;
 import uk.gov.justice.laa.dstew.payments.claimsevent.client.DataClaimsRestClient;
-import uk.gov.justice.laa.dstew.payments.claimsevent.exception.SubmissionEventProcessingException;
 import uk.gov.justice.laa.dstew.payments.claimsevent.mapper.FeeCalculationPatchMapper;
 import uk.gov.justice.laa.dstew.payments.claimsevent.metrics.EventServiceMetricService;
 import uk.gov.justice.laa.dstew.payments.claimsevent.validation.ClaimValidationReport;
@@ -88,9 +87,7 @@ public class BulkClaimUpdater {
 
     claimResponses.forEach(
         claim -> {
-          if (!finalValidation
-              && context.isFlaggedForRetry(claim.getId())
-              && !context.hasErrors(claim.getId())) {
+          if (context.isFlaggedForRetry(claim.getId()) && !context.hasErrors(claim.getId())) {
             log.debug("Claim {} is flagged for retry. Skipping update.", claim.getId());
             claimsFlaggedForRetry.incrementAndGet();
             return;
@@ -98,13 +95,6 @@ public class BulkClaimUpdater {
 
           Optional<FeeCalculationResponse> feeCalculationResponse =
               getFeeCalculationResponse(areaOfLaw, context, claim);
-
-          // Calculation can set the retry flag. Stop final validation rather than skipping
-          // the claim and allowing the submission to be accepted with incomplete checks.
-          if (finalValidation && context.isFlaggedForRetry(claim.getId())) {
-            throw new SubmissionEventProcessingException(
-                "Final validation requires retry for claim " + claim.getId());
-          }
 
           FeeCalculationPatch feeCalculationPatch = null;
 

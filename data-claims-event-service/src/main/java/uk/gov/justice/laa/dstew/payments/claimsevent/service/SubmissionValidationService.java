@@ -43,12 +43,6 @@ public class SubmissionValidationService {
   /**
    * Submission statuses that prove initial validation has already completed, so a redelivered
    * initial validation message must be a no-op.
-   *
-   * <p>This includes the final-validation statuses: a submission only reaches them by passing
-   * initial validation and then being approved. Without them a redelivered initial validation would
-   * run alongside final validation and demote the submission and its claims back to {@code
-   * VALIDATED_PENDING_APPROVAL}, racing the accepted result the final run is writing. {@code
-   * SubmissionStatusValidator} cannot catch this because it is not told which phase is running.
    */
   private static final Set<SubmissionStatus> INITIAL_VALIDATION_COMPLETE_STATUSES =
       Set.of(
@@ -81,6 +75,8 @@ public class SubmissionValidationService {
     Assert.notNull(submission, "Submission not retrievable: " + submissionId.toString());
 
     if (isValidationComplete(submission, finalValidation)) {
+      // A previous attempt may have saved submission failure but failed to update the bulk status.
+      // Retry that update without rerunning validation.
       if (finalValidation && submission.getStatus() == SubmissionStatus.VALIDATION_FAILED) {
         dataClaimsRestClient.updateBulkSubmission(
             submission.getBulkSubmissionId().toString(),
