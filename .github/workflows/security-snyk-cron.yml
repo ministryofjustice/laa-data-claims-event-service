@@ -11,7 +11,7 @@ on:
 
 jobs:
   image-scan:
-    uses: ministryofjustice/laa-data-claims-api/.github/workflows/security-snyk-scan.yml@8ea1be3209684fd2822f2ff1a9c696561f2a05c3 # v1.32.3
+    uses: ministryofjustice/laa-data-claims-api/.github/workflows/security-snyk-scan.yml@d7f5f57f61af4d54eec5a96aaf4cdeaa550ff892 # v1.34.1
     permissions:
       actions: read
       contents: read
