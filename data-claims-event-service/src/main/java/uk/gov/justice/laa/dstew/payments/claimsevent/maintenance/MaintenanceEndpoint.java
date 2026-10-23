@@ -32,6 +32,13 @@ public class MaintenanceEndpoint {
   private final ListenerActivityTracker activityTracker;
   private final Executor maintenanceExecutor;
 
+    /**
+     * Constructs a maintenance endpoint with the given dependencies.
+     *
+     * @param containerRegistry registry of all SQS listener containers
+     * @param activityTracker tracks in-flight message processing
+     * @param maintenanceExecutor executor for pausing/resuming listeners asynchronously
+     */
   public MaintenanceEndpoint(
       MessageListenerContainerRegistry containerRegistry,
       ListenerActivityTracker activityTracker,
